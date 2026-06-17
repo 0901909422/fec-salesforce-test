@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Error_Category_Level_4__c</fullName>
+    <description>Phân loại lỗi 4</description>
+    <label>Error Category Level 4</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>ID Card Not Synchronized</fullName>
+                <default>false</default>
+                <label>ID Card Not Synchronized</label>
+            </value>
+            <value>
+                <fullName>Phone Number Not Synchronized</fullName>
+                <default>false</default>
+                <label>Phone Number Not Synchronized</label>
+            </value>
+            <value>
+                <fullName>Email Not Synchronized</fullName>
+                <default>false</default>
+                <label>Email Not Synchronized</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

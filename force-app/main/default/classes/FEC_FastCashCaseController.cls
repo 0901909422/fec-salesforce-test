@@ -491,6 +491,10 @@ public without sharing class FEC_FastCashCaseController {
         if (c == null) {
             return null;
         }
+        if (String.isNotBlank(c.FEC_Disbursement_Status__c)
+            && isTerminalDisbursementStatus(c.FEC_Disbursement_Status__c)) {
+            return mapDisbursementStatusForDisplay(c.FEC_Disbursement_Status__c);
+        }
         if (c.Pending_Disbursements__r != null && !c.Pending_Disbursements__r.isEmpty()) {
             String fromPending = c.Pending_Disbursements__r[0].FEC_PD_Disbursement_Status__c;
             if (String.isNotBlank(fromPending)) {
@@ -498,6 +502,22 @@ public without sharing class FEC_FastCashCaseController {
             }
         }
         return mapDisbursementStatusForDisplay(c.FEC_Disbursement_Status__c);
+    }
+
+    @TestVisible
+    private static Boolean isTerminalDisbursementStatus(String storedStatus) {
+        if (String.isBlank(storedStatus)) {
+            return false;
+        }
+        String s = storedStatus.trim();
+        if (FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN.equalsIgnoreCase(s)
+            || FEC_ConstantCommon.DISB_API_STATUS_CANCELLED_BY_CUSTOMER.equalsIgnoreCase(s)
+            || FEC_ConstantCommon.DISB_API_STATUS_AUTO_CANCELLED.equalsIgnoreCase(s)) {
+            return true;
+        }
+        return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS.equalsIgnoreCase(s)
+            || FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED.equalsIgnoreCase(s)
+            || FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED.equalsIgnoreCase(s);
     }
 
     private static Date resolveDisbursementDateForCase(Case c) {
@@ -541,20 +561,14 @@ public without sharing class FEC_FastCashCaseController {
             LIMIT 1
         ];
         if (!rows.isEmpty()) {
-            if (!Schema.sObjectType.FEC_Pending_Disbursement__c.isUpdateable()) {
-                return;
-            }
             FEC_Pending_Disbursement__c upd = new FEC_Pending_Disbursement__c(
                 Id = rows[0].Id,
                 FEC_PD_Disbursement_Status__c = status
             );
-            List<FEC_Pending_Disbursement__c> safeUpd = (List<FEC_Pending_Disbursement__c>) Security.stripInaccessible(
-                AccessType.UPDATABLE,
-                new List<FEC_Pending_Disbursement__c>{ upd }
-            ).getRecords();
-            if (!safeUpd.isEmpty()) {
-                update safeUpd;
+            if (String.isNotBlank(applicationId)) {
+                upd.FEC_PD_Application_ID__c = applicationId;
             }
+            Database.update(upd, AccessLevel.SYSTEM_MODE);
             return;
         }
         if (!Schema.sObjectType.FEC_Pending_Disbursement__c.isCreateable()) {
@@ -567,13 +581,7 @@ public without sharing class FEC_FastCashCaseController {
         if (String.isNotBlank(applicationId)) {
             ins.FEC_PD_Application_ID__c = applicationId;
         }
-        List<FEC_Pending_Disbursement__c> safeIns = (List<FEC_Pending_Disbursement__c>) Security.stripInaccessible(
-            AccessType.CREATABLE,
-            new List<FEC_Pending_Disbursement__c>{ ins }
-        ).getRecords();
-        if (!safeIns.isEmpty()) {
-            insert safeIns;
-        }
+        Database.insert(ins, AccessLevel.SYSTEM_MODE);
     }
 
     public static void updateCustomerHistoryDisbursementDate(Id historyId, Date disbDate) {

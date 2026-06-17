@@ -205,7 +205,7 @@ private class FEC_FastCashCaseController_Test {
         System.assertEquals(1000000, state.requestedAmount);
         System.assertEquals(5000000, state.maxAmount);
         System.assertEquals(
-            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED,
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS,
             state.disbursementStatus
         );
         System.assertNotEquals(null, state.disbursementDate);
@@ -632,7 +632,47 @@ private class FEC_FastCashCaseController_Test {
             FEC_FastCashCaseController.mapApiDisbursementStatusToCaseValue('CustomStatus')
         );
         System.assertEquals(null, FEC_FastCashCaseController.mapDisbursementStatusForDisplay(null));
+        System.assertEquals(
+            true,
+            FEC_FastCashCaseController.isTerminalDisbursementStatus(
+                FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN
+            )
+        );
+        System.assertEquals(
+            false,
+            FEC_FastCashCaseController.isTerminalDisbursementStatus(
+                FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL
+            )
+        );
         Test.stopTest();
+    }
+
+    @IsTest
+    static void testGetCaseFastCashState_PendingPreferredWhenCaseNotTerminal() {
+        Case c = getMainCase();
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                FEC_Disbursement_Status__c = null
+            );
+            update new FEC_Pending_Disbursement__c(
+                Id = [SELECT Id FROM FEC_Pending_Disbursement__c WHERE FEC_Case__c = :c.Id LIMIT 1].Id,
+                FEC_PD_Disbursement_Status__c = FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        FEC_FastCashCaseController.CaseFastCashStateDTO state =
+            FEC_FastCashCaseController.getCaseFastCashState(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL,
+            state.disbursementStatus
+        );
     }
 
     @IsTest
@@ -670,12 +710,11 @@ private class FEC_FastCashCaseController_Test {
             LIMIT 1
         ];
         System.assertNotEquals(null, pending.Id, 'Phải upsert được pending disbursement.');
-        if (String.isNotBlank(pending.FEC_PD_Disbursement_Status__c)) {
-            System.assertEquals(FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS, pending.FEC_PD_Disbursement_Status__c);
-        }
-        if (String.isNotBlank(pending.FEC_PD_Application_ID__c)) {
-            System.assertEquals('APP-UPSERT-001', pending.FEC_PD_Application_ID__c);
-        }
+        System.assertEquals(
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS,
+            pending.FEC_PD_Disbursement_Status__c
+        );
+        System.assertEquals('APP-UPSERT-001', pending.FEC_PD_Application_ID__c);
 
         FEC_Customer_History__c updatedHist = [
             SELECT FEC_Disbursement_Date__c
@@ -683,5 +722,34 @@ private class FEC_FastCashCaseController_Test {
             WHERE Id = :hist.Id
         ];
         System.assertNotEquals(null, updatedHist.FEC_Disbursement_Date__c);
+    }
+
+    @IsTest
+    static void testUpsertPendingDisbursementRepairsShellRecord() {
+        Case c = getMainCase();
+        delete [SELECT Id FROM FEC_Pending_Disbursement__c WHERE FEC_Case__c = :c.Id];
+        insert new FEC_Pending_Disbursement__c(
+            FEC_Case__c = c.Id
+        );
+
+        Test.startTest();
+        FEC_FastCashCaseController.upsertPendingDisbursementStatus(
+            c.Id,
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL,
+            'S-2711'
+        );
+        Test.stopTest();
+
+        FEC_Pending_Disbursement__c pending = [
+            SELECT FEC_PD_Disbursement_Status__c, FEC_PD_Application_ID__c
+            FROM FEC_Pending_Disbursement__c
+            WHERE FEC_Case__c = :c.Id
+            LIMIT 1
+        ];
+        System.assertEquals(
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL,
+            pending.FEC_PD_Disbursement_Status__c
+        );
+        System.assertEquals('S-2711', pending.FEC_PD_Application_ID__c);
     }
 }

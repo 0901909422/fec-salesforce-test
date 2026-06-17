@@ -180,6 +180,146 @@ private class FEC_SearchController_Test {
     }
 
     @IsTest
+    static void testCreateHistory_ContractNumberClearsNonExistingPicklist() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER,
+                FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.setMock(HttpCalloutMock.class, new MultiSearchCalloutMock());
+
+        Test.startTest();
+        Id caseId = FEC_SearchController.createHistory(
+            VALID_CONTRACT_NUMBER,
+            'ContractNumber',
+            c.Id,
+            'Loan',
+            'Credit Card',
+            'CIF123',
+            '0901234567',
+            'Nguyen Van A',
+            'APP123',
+            false,
+            'POL123',
+            '0123456789',
+            '9876543210'
+        );
+        Test.stopTest();
+
+        System.assertEquals(c.Id, caseId);
+        Case updatedCase = [
+            SELECT FEC_Customer_Type__c, FEC_Account_Contract_Number_PL__c
+            FROM Case
+            WHERE Id = :c.Id
+            LIMIT 1
+        ];
+        System.assertEquals(FEC_ConstantCommon.CASE_EXISTING_CUSTOMER, updatedCase.FEC_Customer_Type__c);
+        System.assertEquals(null, updatedCase.FEC_Account_Contract_Number_PL__c);
+    }
+
+    @IsTest
+    static void testCreateHistory_UserIdClearsInternalRequestPicklist() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST,
+                FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.setMock(HttpCalloutMock.class, new MultiSearchCalloutMock());
+
+        Test.startTest();
+        Id caseId = FEC_SearchController.createHistory(
+            VALID_CONTRACT_NUMBER,
+            'UserId',
+            c.Id,
+            'Loan',
+            'Credit Card',
+            null,
+            '0901234567',
+            'Nguyen Van A',
+            null,
+            false,
+            'POL123',
+            '0123456789',
+            null
+        );
+        Test.stopTest();
+
+        System.assertEquals(c.Id, caseId);
+        Case updatedCase = [
+            SELECT FEC_Customer_Type__c, FEC_Account_Contract_Number_PL__c
+            FROM Case
+            WHERE Id = :c.Id
+            LIMIT 1
+        ];
+        System.assertEquals(FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER, updatedCase.FEC_Customer_Type__c);
+        System.assertEquals(null, updatedCase.FEC_Account_Contract_Number_PL__c);
+    }
+
+    @IsTest
+    static void testCreateHistory_ContractNumberSetsB2Picklist() {
+        RecordType rtInteraction = [
+            SELECT Id
+            FROM RecordType
+            WHERE SObjectType = 'Case' AND DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            LIMIT 1
+        ];
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case c;
+        try {
+            c = new Case(
+                Subject = 'B2 Picklist Test',
+                Status = 'New',
+                RecordTypeId = rtInteraction.Id
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.setMock(HttpCalloutMock.class, new MultiSearchCalloutMock());
+
+        Test.startTest();
+        FEC_SearchController.createHistory(
+            VALID_CONTRACT_NUMBER,
+            'ContractNumber',
+            c.Id,
+            'Loan;B2',
+            FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE,
+            'CIF123',
+            '0901234567',
+            'Nguyen Van A',
+            'APP123',
+            false,
+            'POL123',
+            '0123456789',
+            null
+        );
+        Test.stopTest();
+
+        Case updatedCase = [
+            SELECT FEC_Account_Contract_Number_PL__c
+            FROM Case
+            WHERE Id = :c.Id
+            LIMIT 1
+        ];
+        System.assertEquals(FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE, updatedCase.FEC_Account_Contract_Number_PL__c);
+    }
+
+    @IsTest
     static void testCreateHistory_ContractNumberInsuranceAndNewCase() {
         Test.setMock(HttpCalloutMock.class, new MultiSearchCalloutMock());
 
@@ -226,6 +366,16 @@ private class FEC_SearchController_Test {
         ];
         System.assertEquals(VALID_CONTRACT_NUMBER, insuranceCase.FEC_Contract_Number__c);
         System.assert(insuranceCase.FEC_Search_National_ID__c.contains('111222333'));
+        Case insurancePicklistCase = [
+            SELECT FEC_Account_Contract_Number_PL__c
+            FROM Case
+            WHERE Id = :insuranceCaseId
+            LIMIT 1
+        ];
+        System.assertEquals(
+            FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE,
+            insurancePicklistCase.FEC_Account_Contract_Number_PL__c
+        );
     }
 
     @IsTest

@@ -129,9 +129,6 @@ public with sharing class FEC_SearchController {
         objCase.FEC_CIF_Number__c = cifNumber;
         objCase.FEC_First_Access__c = true;
         objCase.FEC_Search_Products__c = searchProducts;
-        if (searchProducts == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE || searchProducts == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
-            objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE;
-        }
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
         objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
@@ -153,6 +150,8 @@ public with sharing class FEC_SearchController {
         if (fieldName == 'ContractNumber') {
             objCase.FEC_Contract_Number__c = value;
         }
+        // 17/06/2026 linhdev Dong bo picklist theo FEC_Customer_Type__c dependency (Existing/Non-Existing)
+        syncAccountContractNumberPicklist(objCase, fieldName, searchProducts, selectedType);
 
         // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case trước khi tạo History
         if (String.isNotBlank(phone)) {objCase.FEC_Search_Phone_Number__c = phone;}
@@ -588,6 +587,36 @@ public with sharing class FEC_SearchController {
     @AuraEnabled(cacheable=true)
     public static String getCurrentUserProfileName() {
         return FEC_CommonUltils.getCurrentUserProfileName();
+    }
+
+    // 17/06/2026 linhdev Đồng bộ FEC_Account_Contract_Number_PL__c theo dependency FEC_Customer_Type__c
+    private static void syncAccountContractNumberPicklist(
+        Case objCase,
+        String fieldName,
+        String searchProducts,
+        String selectedType
+    ) {
+        Boolean isInsuranceSearch = searchProducts == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE
+            || searchProducts == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
+        if (fieldName == 'AccountNumber' || fieldName == 'ContractNumber') {
+            if (isInsuranceSearch) {
+                objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE;
+            } else if (String.isNotBlank(selectedType)
+                && selectedType.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE)) {
+                objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE;
+            } else if (String.isNotBlank(selectedType)
+                && selectedType.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE)) {
+                objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE;
+            } else {
+                objCase.FEC_Account_Contract_Number_PL__c = null;
+            }
+        } else if (fieldName == 'UserId') {
+            if (isInsuranceSearch) {
+                objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE;
+            } else {
+                objCase.FEC_Account_Contract_Number_PL__c = null;
+            }
+        }
     }
 
     private static String resolveSearchNationalIds(String id1, String id2, String fallback) {

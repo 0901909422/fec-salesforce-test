@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Error Category Level 5 --></label>
+    <name>FEC_Error_Category_Level_5__c</name>
+    <picklistValues>
+        <masterLabel>Loan/Card Not Displayed or Intermittently Displayed</masterLabel>
+        <translation>Không hiển thị khoản vay/ thẻ; Hiển thị chập chờn…</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Information Lookup Error</masterLabel>
+        <translation>Lỗi tra cứu thông tin</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>OTP Not Received</masterLabel>
+        <translation>Không nhận được OTP</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Loan/Card Application Error</masterLabel>
+        <translation>Lỗi đăng ký vay/ mở thẻ</translation>
+    </picklistValues>
+</CustomFieldTranslation>

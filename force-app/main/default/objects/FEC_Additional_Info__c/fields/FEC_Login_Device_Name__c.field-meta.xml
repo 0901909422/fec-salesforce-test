@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Login_Device_Name__c</fullName>
+    <description>Tên thiết bị dùng để đăng nhập (Samsung/Iphone/...)</description>
+    <externalId>false</externalId>
+    <label>Login Device Name</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

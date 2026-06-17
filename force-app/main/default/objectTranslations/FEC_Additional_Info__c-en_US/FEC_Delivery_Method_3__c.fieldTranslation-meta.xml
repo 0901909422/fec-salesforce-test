@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Delivery Method 3 --></label>
+    <name>FEC_Delivery_Method_3__c</name>
+    <picklistValues>
+        <masterLabel>Postal Address</masterLabel>
+        <translation>Địa chỉ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Email (Debt Sale Confirmation Only)</masterLabel>
+        <translation>Email (chỉ áp dụng cho XN bán nợ)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Office Pickup (Debt Sale Confirmation Only)</masterLabel>
+        <translation>Văn phòng (chỉ áp dụng cho XN bán nợ)</translation>
+    </picklistValues>
+</CustomFieldTranslation>

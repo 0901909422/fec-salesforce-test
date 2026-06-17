@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Update_Reason_Loan__c</fullName>
+    <label>Update Reason (Loan)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Synchronization Error</fullName>
+                <default>false</default>
+                <label>Synchronization Error</label>
+            </value>
+            <value>
+                <fullName>Register FEOL 2.0 with New Phone Number</fullName>
+                <default>false</default>
+                <label>Register FEOL 2.0 with New Phone Number</label>
+            </value>
+            <value>
+                <fullName>Special Case Card - No FEOL 2.0 Account</fullName>
+                <default>false</default>
+                <label>Special Case Card - No FEOL 2.0 Account</label>
+            </value>
+            <value>
+                <fullName>Special Case Card - Existing FEOL 2.0 Account with Old Phone Number</fullName>
+                <default>false</default>
+                <label>Special Case Card - Existing FEOL 2.0 Account with Old Phone Number</label>
+            </value>
+            <value>
+                <fullName>Standard Card - Customer Forgot Login Information and No Longer Uses Old Phone Number</fullName>
+                <default>false</default>
+                <label>Standard Card - Customer Forgot Login Information and No Longer Uses Old Phone Number</label>
+            </value>
+            <value>
+                <fullName>Standard Card - App Update Function Error</fullName>
+                <default>false</default>
+                <label>Standard Card - App Update Function Error</label>
+            </value>
+            <value>
+                <fullName>Standard Card - Requested Phone Number Already Exists in System</fullName>
+                <default>false</default>
+                <label>Standard Card - Requested Phone Number Already Exists in System</label>
+            </value>
+            <value>
+                <fullName>Synchronize Phone Number Between CMS and CSM</fullName>
+                <default>false</default>
+                <label>Synchronize Phone Number Between CMS and CSM</label>
+            </value>
+            <value>
+                <fullName>Synchronize Phone Number Across CMS, FEOL 2.0 and CSM</fullName>
+                <default>false</default>
+                <label>Synchronize Phone Number Across CMS, FEOL 2.0 and CSM</label>
+            </value>
+            <value>
+                <fullName>Update Phone Number Format</fullName>
+                <default>false</default>
+                <label>Update Phone Number Format</label>
+            </value>
+            <value>
+                <fullName>Other (Specify Details)</fullName>
+                <default>false</default>
+                <label>Other (Specify Details)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
