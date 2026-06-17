@@ -100,6 +100,8 @@ public with sharing class FEC_ChatHubCaseController {
                     strJsonData,
                     FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest.class
                 );
+            System.debug('req: ');
+            System.debug(req);
             // 2. Create the Interaction Case through FEC_CreateInteractionGenesys
             FEC_CreateInteractionGenesys.InteractionResult result =
                 FEC_CreateInteractionGenesys.createInteractionFromChat(req);
@@ -188,6 +190,21 @@ public with sharing class FEC_ChatHubCaseController {
             }
         }
         
+        if (String.isBlank(strCaseId) && firstItem.containsKey('chatID')) {
+            String chatId = (String) firstItem.get('chatID');
+            if (String.isNotBlank(chatId)) {
+                List<Case> lstCasesByChatId = [
+                    SELECT Id
+                    FROM Case
+                    WHERE FEC_External_Interaction_ID__c = :chatId
+                    LIMIT 1
+                ];
+                if (!lstCasesByChatId.isEmpty()) {
+                    strCaseId = lstCasesByChatId[0].Id;
+                }
+            }
+        }
+
         // Fallback: Rarely occurs, but if not found by sessionID, use pegaID instead
         if (String.isBlank(strCaseId) && firstItem.containsKey('pegaID')) {
             strCaseId = FEC_Utils.getInteractionIdFromPegaId((String)firstItem.get('pegaID'));
@@ -313,15 +330,10 @@ public with sharing class FEC_ChatHubCaseController {
             }
         }
 
+        FEC_FileActionOnReviewService.enterChatHubFileUploadBypass();
         try {
-            Boolean priorBypass = FEC_FileActionOnReviewService.bypassChatHubFileUpload;
-            FEC_FileActionOnReviewService.bypassChatHubFileUpload = true;
-            try {
-                if(!listCvToInsert.isEmpty()) {
-                    insert listCvToInsert;
-                }
-            } finally {
-                FEC_FileActionOnReviewService.bypassChatHubFileUpload = priorBypass;
+            if(!listCvToInsert.isEmpty()) {
+                insert listCvToInsert;
             }
             if(!listHistoriesToInsert.isEmpty()) {
                 // allOrNone = false: tolerate DUPLICATE_VALUE from the unique
@@ -347,6 +359,8 @@ public with sharing class FEC_ChatHubCaseController {
             return true;
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Error_SaveChatHistory + e.getMessage());
+        } finally {
+            FEC_FileActionOnReviewService.exitChatHubFileUploadBypass();
         }
     }
     
