@@ -33,6 +33,16 @@
                 <default>false</default>
                 <label>Insurance</label>
             </value>
+            <value>
+                <fullName>B2</fullName>
+                <default>false</default>
+                <label>B2</label>
+            </value>
+            <value>
+                <fullName>Cash24</fullName>
+                <default>false</default>
+                <label>Cash24</label>
+            </value>
         </valueSetDefinition>
         <valueSettings>
             <controllingFieldValue>Existing</controllingFieldValue>
@@ -46,6 +56,7 @@
             <valueName>Non-Existing Customer</valueName>
         </valueSettings>
         <valueSettings>
+            <controllingFieldValue>Existing</controllingFieldValue>
             <controllingFieldValue>Non-existing</controllingFieldValue>
             <controllingFieldValue>All</controllingFieldValue>
             <valueName>Ubank</valueName>
@@ -53,6 +64,18 @@
         <valueSettings>
             <controllingFieldValue>All</controllingFieldValue>
             <valueName>Internal Request</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Existing</controllingFieldValue>
+            <controllingFieldValue>Non-existing</controllingFieldValue>
+            <controllingFieldValue>All</controllingFieldValue>
+            <valueName>B2</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Existing</controllingFieldValue>
+            <controllingFieldValue>Non-existing</controllingFieldValue>
+            <controllingFieldValue>All</controllingFieldValue>
+            <valueName>Cash24</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>
