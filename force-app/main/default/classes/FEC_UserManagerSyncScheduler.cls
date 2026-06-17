@@ -18,6 +18,7 @@ public without sharing class FEC_UserManagerSyncScheduler implements Schedulable
     return System.schedule(JOB_NAME, DAILY_MIDNIGHT_CRON, new FEC_UserManagerSyncScheduler());
   }
 
+  @TestVisible
   private static void abortExistingScheduledJobs() {
     for (CronTrigger ct : [
       SELECT Id
