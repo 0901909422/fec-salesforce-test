@@ -145,26 +145,54 @@ public with sharing class FEC_GetCustomerList {
                 personId
             );
 
-         String endpoint = apiSetting?.FEC_Call_Mock__c
+        String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-                    
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-        
-        responseLog = new FEC_ResponseLog(
-            'FEC_GetCustomerList',
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            soapBody,
-            res,
-            null
-        );
-        
-        if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
 
-            return parseResponse(res.getBody());
+        try {
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                null,
+                soapBody
+            );
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetCustomerList',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
+
+            if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
+                return parseResponse(res.getBody());
+            }
+            return null;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
         }
-        return null;
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
     }
     
     /* ================================

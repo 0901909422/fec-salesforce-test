@@ -9,6 +9,7 @@
  * ===============================================================
    1.0      2025-01-10     Quangdv7             Create
    1.1      2026-05-12     Agent                Billed tx: GetCardFinancialTransactions; VN column labels; sort by effectiveSortEpoch
+   1.2      2026-06-17     Agent                Sync billed transactions from API before reading DB
  
 ****************************************************************************************/
 
@@ -19,6 +20,7 @@ import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 import { setConsoleTab } from 'c/fec_CommonUtils';
 
 import loadStatementDetails from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
+import syncBilledTransactionsFromAPI from '@salesforce/apex/FEC_StatementsAccountController.syncBilledTransactionsFromAPI';
 import getBilledTransactions from '@salesforce/apex/FEC_StatementsAccountController.getBilledTransactions';
 
 import FEC_Statement from '@salesforce/label/c.FEC_Statement';
@@ -201,10 +203,11 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         this.isLoading = true;
 
         try {
-            const [statementRes, billedTxRes] = await Promise.all([
+            const [statementRes] = await Promise.all([
                 loadStatementDetails({ statementId: this.statementId }),
-                getBilledTransactions({ statementId: this.statementId })
+                syncBilledTransactionsFromAPI({ statementId: this.statementId })
             ]);
+            const billedTxRes = await getBilledTransactions({ statementId: this.statementId });
            this.statement = Array.isArray(statementRes)
             ? statementRes.find(s => s.statementId === this.statementId)
             : null;

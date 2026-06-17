@@ -14,6 +14,8 @@
 public with sharing class FEC_SearchByListPhonesServiceCallout {
     //tạo ra cho đỡ cần Metadata file
     private static final String API_NAME = 'FEC_Search_By_List_Phones';
+    public static FEC_ResponseLog responseLog;
+
     public class PhonesResponse {
         @AuraEnabled public String pxObjClass;
         @AuraEnabled public List<Result> result;
@@ -75,33 +77,56 @@ public with sharing class FEC_SearchByListPhonesServiceCallout {
         bodyMap.put('phone', phones);
 
         String requestBody = JSON.serialize(bodyMap);
-        HttpResponse resp = FEC_CommonUltils.calloutApi(
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            null,
-            null,
-            requestBody
-        );
 
-        FEC_CommonUltils.logApi(
-            API_NAME,
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            requestBody,
-            resp,
-            null
-        );
+        try {
+            HttpResponse resp = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+                null,
+                null,
+                requestBody
+            );
 
-        if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
-            return (PhonesResponse) JSON.deserialize(resp.getBody(), PhonesResponse.class);
+            responseLog = new FEC_ResponseLog(
+                API_NAME,
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                requestBody,
+                resp,
+                null
+            );
+
+            if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
+                return (PhonesResponse) JSON.deserialize(resp.getBody(), PhonesResponse.class);
+            }
+
+            PhonesResponse err = new PhonesResponse();
+            err.sys2 = new Sys2();
+            err.sys2.code2 = String.valueOf(resp.getStatusCode());
+            err.sys2.description2 = 'HTTP Error: ' + resp.getStatus();
+            err.sys2.transID2 = transactionId;
+            return err;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
         }
+    }
 
-        PhonesResponse err = new PhonesResponse();
-        err.sys2 = new Sys2();
-        err.sys2.code2 = String.valueOf(resp.getStatusCode());
-        err.sys2.description2 = 'HTTP Error: ' + resp.getStatus();
-        err.sys2.transID2 = transactionId;
-        return err;
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
     }
 }

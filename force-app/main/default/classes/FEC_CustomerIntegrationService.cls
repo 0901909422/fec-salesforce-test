@@ -918,6 +918,7 @@ public without sharing class FEC_CustomerIntegrationService {
 
         List<FEC_Card_Payment__c> toInsert = new List<FEC_Card_Payment__c>();
         List<FEC_Card_Payment__c> toUpdate = new List<FEC_Card_Payment__c>();
+        Boolean showIppAccruedInterest = FEC_CardPaymentController.resolveShowIppAccruedInterest(hist.Id);
 
         for (FEC_GetCardPlanInfo.CardPlan plan : cardPlanRes.plans) {
             if (plan == null) {
@@ -925,7 +926,7 @@ public without sharing class FEC_CustomerIntegrationService {
             }
 
             String key = buildCardPlanSyncKey(plan.recordNumber, plan.planNumber);
-            FEC_Card_Payment__c record = buildCardPaymentFromPlan(plan, hist.Id);
+            FEC_Card_Payment__c record = buildCardPaymentFromPlan(plan, hist.Id, showIppAccruedInterest);
             if (existingByKey.containsKey(key)) {
                 record.Id = existingByKey.get(key).Id;
                 toUpdate.add(record);
@@ -948,7 +949,8 @@ public without sharing class FEC_CustomerIntegrationService {
 
     private static FEC_Card_Payment__c buildCardPaymentFromPlan(
         FEC_GetCardPlanInfo.CardPlan plan,
-        Id customerHistoryId
+        Id customerHistoryId,
+        Boolean showIppAccruedInterest
     ) {
         FEC_Card_Payment__c record = new FEC_Card_Payment__c(
             FEC_Customer_History__c = customerHistoryId,
@@ -960,13 +962,13 @@ public without sharing class FEC_CustomerIntegrationService {
         );
 
         Decimal currentBalance = plan.currentBalance != null ? plan.currentBalance : 0;
-        Decimal accruedInterest = plan.accruedInterest != null ? plan.accruedInterest : 0;
-        Decimal perDiem = plan.perDiem != null ? plan.perDiem : 0;
+        Decimal accruedInterest = plan.accruedInterest != null ? plan.accruedInterest / 100 : 0;
+        Decimal perDiem = plan.perDiem != null ? plan.perDiem / 100 : 0;
         Decimal deferredInterest = plan.deferredInterest != null ? plan.deferredInterest : 0;
         Decimal ippAccruedInterest = plan.additionalAccruedInt != null ? plan.additionalAccruedInt : 0;
 
         record.FEC_Current_Balance__c = currentBalance;
-        record.FEC_Base_Rate__c = (plan.baseRate != null ? plan.baseRate / 100 : null);
+        record.FEC_Base_Rate__c = plan.baseRate;
         record.FEC_Deferred_Interest__c = deferredInterest;
         record.FEC_Accrued_Interest__c = accruedInterest;
         record.FEC_Per_Diem__c = perDiem;
@@ -974,17 +976,12 @@ public without sharing class FEC_CustomerIntegrationService {
         record.FEC_IPP_Accrued_Interest__c = ippAccruedInterest;
 
         Decimal closeFeePercent = 0;
-        if (plan.closeFeeIndicator == 'Y' && currentBalance > 0 && plan.closeFeeIndicatorAmt != null) {
-            closeFeePercent = (plan.closeFeeIndicatorAmt / currentBalance) * 100;
-            closeFeePercent = closeFeePercent.setScale(2, RoundingMode.HALF_UP);
+        if (plan.closeFeeIndicatorAmt != null) {
+            closeFeePercent = (plan.closeFeeIndicatorAmt / 100000).setScale(2, RoundingMode.HALF_UP);
         }
         record.FEC_Close_Fee__c = closeFeePercent;
-        record.FEC_Close_Fee_Amount__c = plan.closeFeeIndicatorAmt != null
-            ? plan.closeFeeIndicatorAmt
-            : 0;
-        record.FEC_Plan_Payment_Amount__c = plan.totalPaymentAmount != null
-            ? plan.totalPaymentAmount
-            : 0;
+        record.FEC_Close_Fee_Amount__c = plan.closeFeeAmount != null ? plan.closeFeeAmount : 0;
+        record.FEC_Plan_Payment_Amount__c = FEC_CardPaymentController.calculatePlanPaymentAmount(plan, showIppAccruedInterest);
 
         return record;
     }
