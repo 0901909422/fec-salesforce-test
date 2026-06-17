@@ -420,8 +420,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.MainCardPlastic.MaskedCardNumber = FEC_CommonUltils.getXmlValue(mcp2,'MaskedCardNumber');
             result.CardSecInfo.MainCardPlastic.ActivationDate = FEC_CommonUltils.getXmlValue(mcp2,'ActivationDate');
             result.CardSecInfo.MainCardPlastic.LastCodeChangeDate = FEC_CommonUltils.getXmlValue(mcp2,'LastCodeChangeDate');
-            result.CardSecInfo.MainCardPlastic.EcomActiveFlag =
-                FEC_CommonUltils.getXmlValue(mcp2,'EcomActiveFlag') == '1';
+            result.CardSecInfo.MainCardPlastic.EcomActiveFlag = FEC_CommonUltils.parseEcomActiveFlag( FEC_CommonUltils.getXmlValue(mcp2, 'EcomActiveFlag'));
         }
   
         // MainCardBalance

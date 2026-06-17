@@ -1216,6 +1216,31 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  private static final Set<String> ECOM_ACTIVE_TRUE_VALUES = new Set<String>{
+    '1', 'true', 'yes', 'y', 't'
+  };
+  private static final Set<String> ECOM_ACTIVE_FALSE_VALUES = new Set<String>{
+    '0', 'false', 'no', 'n', 'f'
+  };
+
+  public static Boolean parseEcomActiveFlag(String ecomActiveFlag) {
+    if (ecomActiveFlag == null) {
+      return null;
+    }
+    if (String.isBlank(ecomActiveFlag)) {
+      return false;
+    }
+
+    String normalized = ecomActiveFlag.trim().toLowerCase();
+    if (ECOM_ACTIVE_TRUE_VALUES.contains(normalized)) {
+      return true;
+    }
+    if (ECOM_ACTIVE_FALSE_VALUES.contains(normalized)) {
+      return false;
+    }
+    return false;
+  }
+
   public static String checkEcomFlag(Boolean eComFlag) {
     if (eComFlag == true) {
         return 'Inactive';
