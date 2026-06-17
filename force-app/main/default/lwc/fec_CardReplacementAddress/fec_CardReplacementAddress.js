@@ -264,7 +264,13 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         this.street = root.querySelector('lightning-input[data-id="street"]').value;
         const ward = this.wardOptions.find(w => w.value === this.mailingWard)?.label;
         const province = this.provinceOptions.find(p => p.value === this.mailingCity)?.label;
-        const address = this.building + ', ' + this.numberValue + ' ' + this.street + ', ' + ward + ', ' + province;
+        const address = [
+            this.building,
+            this.numberValue,
+            this.street,
+            ward,
+            province
+        ].filter((p) => p && String(p).trim()).join(', ');
         const countryId = await getCountryId();
         const addressInput = {
             caseId: this.recordId,
