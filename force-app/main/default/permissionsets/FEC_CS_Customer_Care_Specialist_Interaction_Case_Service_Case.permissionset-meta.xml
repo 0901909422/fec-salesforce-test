@@ -321,11 +321,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Conversion_Fee__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Contract_Number__c</field>
         <readable>true</readable>
@@ -451,11 +446,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_EMI__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_External_Interaction_ID__c</field>
         <readable>true</readable>
@@ -528,16 +518,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_ID_Search__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_IPP_Interest__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_IPP_Term__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -3064,11 +3044,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Notification_History__c.FEC_Email__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Notification_History__c.FEC_Notification_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -5193,4 +5168,3 @@
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>
-

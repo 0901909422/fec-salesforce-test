@@ -11,9 +11,9 @@ private class FEC_GetCheckExistUser_Test {
                 '"pxResults":"true",' +
                 '"response_GET":{' +
                 '"pxObjClass":"FEC-Data-Sys",' +
-                '"Code2":1,' +
+                '"Code":1,' +
                 '"Description":"Success",' +
-                '"DateTime2":"2026-06-04T10:00:00Z",' +
+                '"DateTime":"2026-06-04T10:00:00Z",' +
                 '"TransID":"TXN-001"' +
                 '},' +
                 '"pxReqParameters":{' +
@@ -39,7 +39,7 @@ private class FEC_GetCheckExistUser_Test {
         System.assertNotEquals(null, result);
         System.assertEquals('true', result.pxResults);
         System.assertNotEquals(null, result.Sys);
-        System.assertEquals(1, result.Sys.Code2);
+        System.assertEquals(1, result.Sys.Code);
         System.assertEquals('Success', result.Sys.Description);
         System.assertNotEquals(null, result.RequestParams);
         System.assertEquals('079123456789', result.RequestParams.NationalID);
