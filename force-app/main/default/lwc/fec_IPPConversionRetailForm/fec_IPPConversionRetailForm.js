@@ -475,6 +475,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         this.details = null;
         this.tenorSyncError = null;
         const tenorVal = parseInt(this.selectedTenor, 10);
+        console.log('[IPPConversionRetailForm] GetIPPDetails – transactionId:', this.selectedTransactionId, 'tenor:', tenorVal, 'caseId:', this.recordId);
         // 2026-06-16 linhdev – lưu FEC_IPP_Term__c trước, sau đó Service 40 GetIPPDetails (tách DML/callout)
         saveCaseIppTerm({ caseId: this.recordId, tenor: tenorVal })
             .then(() => checkIPPDetails({

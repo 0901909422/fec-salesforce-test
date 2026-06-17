@@ -201,6 +201,75 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
+    static void testCheckIPPDetails_MapsAllGetIppDetailsFields() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Transaction__c tx = [
+            SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
+                FEC_Transaction_Plan__c, FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c
+            FROM FEC_Transaction__c
+            LIMIT 1
+        ];
+        tx.FEC_Card_Seq__c = '2';
+        tx.FEC_IPP_Key__c = 'KEY-IPP-001';
+        tx.FEC_Reference_Number__c = 'REF-IPP-001';
+        update tx;
+
+        System.runAs(runAsAdmin()) {
+            Case loadedCase = [
+                SELECT Id, FEC_Account_or_Contract__c,
+                    FEC_Account_or_Contract__r.Name,
+                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                    FEC_Account_or_Contract__r.FEC_Card_Number__c
+                FROM Case
+                WHERE Id = :c.Id
+                LIMIT 1
+            ];
+            FEC_Transaction__c loadedTx = [
+                SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
+                    FEC_Transaction_Plan__c, FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c
+                FROM FEC_Transaction__c
+                WHERE Id = :tx.Id
+                LIMIT 1
+            ];
+            String accountNumber = FEC_IPPConversionController.getAccountNumberForGetIPPDetails(c.Id, ACCOUNT_NUMBER);
+            FEC_GetIPPDetailsCallout.IPPRequest req =
+                FEC_IPPConversionController.buildGetIppDetailsRequest(loadedCase, loadedTx, 9, accountNumber);
+
+            System.assertEquals(ACCOUNT_NUMBER, req.accountNumber);
+            System.assertEquals(
+                FEC_CommonUltils.formatDateYYYYMMDD(loadedTx.FEC_Effective_Date__c),
+                req.effectiveDate
+            );
+            System.assertEquals(loadedTx.FEC_Transaction_Amount__c, req.amount);
+            System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.planNumber);
+            System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.transactionPlan);
+            System.assertEquals(9, req.ippTerm);
+            System.assertEquals('REF-IPP-001', req.referenceNumber);
+            Date expectedPostDate = loadedTx.FEC_Post_Date__c != null
+                ? loadedTx.FEC_Post_Date__c
+                : (loadedTx.FEC_Effective_Date__c != null ? loadedTx.FEC_Effective_Date__c : Date.today());
+            System.assertEquals(
+                FEC_CommonUltils.formatDateYYYYMMDD(expectedPostDate),
+                req.postingDate
+            );
+            System.assertEquals(CARD_NUMBER, req.cardNumber);
+            System.assertEquals(2, req.cardSeq);
+            System.assertEquals('KEY-IPP-001', req.ippKey);
+
+            Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsMock());
+            Test.startTest();
+            FEC_IPPConversionController.IPPDetailsDTO dto =
+                FEC_IPPConversionController.checkIPPDetails(c.Id, tx.Id, 9);
+            Test.stopTest();
+            System.assertEquals(null, dto.errorMessage);
+        }
+    }
+
+    @IsTest
     static void testLoadIppTenorOptions_WithSavedCaseFields() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
@@ -1636,11 +1705,17 @@ private class FEC_IPPConversionController_Test {
 
         FEC_Transaction__c tx = [SELECT Id, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Card_Number__c FROM FEC_Transaction__c LIMIT 1];
         System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForAddIpp(tx, c));
+        System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForGetIppDetails(c));
         FEC_Transaction__c txBare = [SELECT Id, FEC_Customer_History__c FROM FEC_Transaction__c WHERE Id = :tx.Id];
         System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForAddIpp(txBare, c));
         System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForAddIpp(null, c));
 
         System.assertEquals(null, FEC_IPPConversionController.resolveCardNumberForAddIpp(null, null));
+
+        System.assertEquals(null, FEC_IPPConversionController.parseCardSeqForGetIppDetails(null));
+        System.assertEquals(null, FEC_IPPConversionController.parseCardSeqForGetIppDetails(''));
+        System.assertEquals(2, FEC_IPPConversionController.parseCardSeqForGetIppDetails('2'));
+        System.assertEquals(null, FEC_IPPConversionController.parseCardSeqForGetIppDetails('ABC'));
 
         FEC_IPPConversionController.accountContractTextForTest = ACCOUNT_NUMBER;
         try {
