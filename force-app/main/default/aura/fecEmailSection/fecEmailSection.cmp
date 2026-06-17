@@ -11,7 +11,7 @@
     <aura:attribute name="rawBody" type="String" default="" />
     <aura:attribute name="errorMsg" type="String" default="" />
     <aura:attribute name="isSending" type="Boolean" default="false" />
-    <aura:attribute name="titleReply" type="String" default="Anh/ Chi" />
+    <aura:attribute name="titleReply" type="String" default="" />
     <aura:attribute name="replyTemplate" type="String" default="" />
     <aura:attribute name="replyPrefix" type="String" default="" />
     <aura:attribute name="templateOptions" type="List" default="[]" />
