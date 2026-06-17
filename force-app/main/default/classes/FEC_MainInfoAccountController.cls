@@ -459,7 +459,7 @@ public without sharing class FEC_MainInfoAccountController {
         dto.daysPastDue = FEC_CommonUltils.decimalToString(acc.FEC_Days_Past_Due__c);
         /* ===== CARD ===== */
         dto.cardNumber  = acc.FEC_Card_Number__c;
-        dto.cardType    = acc.FEC_Card_Type__c;
+        dto.cardType    = FEC_CommonUltils.resolveCardType(acc.FEC_Card_Type__c, acc.FEC_Plastic_ID__c);
         dto.plasticID   = acc.FEC_Plastic_ID__c;
         dto.digitalCardID = acc.FEC_Digital_Card_ID__c;
         dto.expiryDate    = FEC_CommonUltils.formatDate(acc.FEC_Expiry_Date__c);
@@ -654,7 +654,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
-            FEC_Card_Type__c =  m != null ? m.DigitalCardIndicator : null,
+            FEC_Card_Type__c = m != null ? m.DigitalCardIndicator : null,
             FEC_Plastic_ID__c = m != null ? m.PlasticIndicator : null,
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
