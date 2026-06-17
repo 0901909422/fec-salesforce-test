@@ -11142,6 +11142,14 @@
         <value>Tải dữ liệu không thành công</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Load_Data_Success</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Load Data Success</shortDescription>
+        <value>Tải dữ liệu thành công</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
         <categories>Common</categories>
         <language>en_US</language>

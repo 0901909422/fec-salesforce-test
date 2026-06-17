@@ -74,6 +74,12 @@ public with sharing class FEC_GetPaymentInfo {
             }
 
             if (response.Sys != null && response.Sys.Code != 1) {
+                if (isDataNotFoundResponse(response.Sys)) {
+                    if (response.Payments == null) {
+                        response.Payments = new List<PaymentInfo>();
+                    }
+                    return response;
+                }
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
@@ -326,5 +332,20 @@ public with sharing class FEC_GetPaymentInfo {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /** Sys.Code = 3 hoặc Description "DATA NOT FOUND" — call thành công, không có payment. */
+    @TestVisible
+    private static Boolean isDataNotFoundResponse(SysResponse sys) {
+        if (sys == null) {
+            return false;
+        }
+        if (sys.Code == Integer.valueOf(FEC_ConstantCommon.CODE_FAILURE)) {
+            return true;
+        }
+        if (String.isNotBlank(sys.Description)) {
+            return sys.Description.trim().equalsIgnoreCase('DATA NOT FOUND');
+        }
+        return false;
     }
 }

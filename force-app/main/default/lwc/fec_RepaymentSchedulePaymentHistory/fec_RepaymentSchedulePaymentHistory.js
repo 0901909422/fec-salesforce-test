@@ -10,6 +10,9 @@ import FEC_Payment_History_Label from '@salesforce/label/c.FEC_Payment_History_L
 import FEC_Real_Time_Payment_Label from '@salesforce/label/c.FEC_Real_Time_Payment_Label';
 import FEC_Repayment_Schedule_Payment_History_Label from '@salesforce/label/c.FEC_Repayment_Schedule_Payment_History_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_MSG_Load_Data_Success from '@salesforce/label/c.FEC_MSG_Load_Data_Success';
+import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
+import FEC_Toast_Success from '@salesforce/label/c.FEC_Toast_Success';
 import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
 import FEC_Repay_Total_Installment_Amount_Label from '@salesforce/label/c.FEC_Repay_Total_Installment_Amount_Label';
 import FEC_Repay_Total_Principal_Label from '@salesforce/label/c.FEC_Repay_Total_Principal_Label';
@@ -92,7 +95,6 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         realTimePayment: FEC_Real_Time_Payment_Label,
         repaymentSchedulePaymentHistory: FEC_Repayment_Schedule_Payment_History_Label,
         msgErrorAPI: FEC_MSG_Error_API_Label,
-        msgLoadSuccess: 'Tải dữ liệu thành công',
         loadingAlt: FEC_Termination_Loading_Alt,
         totalInstallmentAmount: FEC_Repay_Total_Installment_Amount_Label,
         totalPrincipal: FEC_Repay_Total_Principal_Label,
@@ -504,12 +506,13 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 const realTime = Array.isArray(rows) ? rows : [];
                 this.sectionData = { ...this.sectionData, realTimePaymentTable: realTime };
                 this.refreshStatusMap.realTimePayment = 'SUCCESS';
-                this.showToast('Success', this.customLabel.msgLoadSuccess, 'success');
+                this.showToast(FEC_Toast_Success, FEC_MSG_Load_Data_Success, 'success');
             })
             .catch((err) => {
                 const apiMessage = err?.body?.message || err?.message || '';
                 const normalizedMsg = String(apiMessage).toLowerCase();
                 const isNoDataError =
+                    normalizedMsg.includes('data not found') ||
                     normalizedMsg.includes('khong co du lieu') ||
                     normalizedMsg.includes('không có dữ liệu') ||
                     normalizedMsg.includes('no data') ||
@@ -518,12 +521,12 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 if (isNoDataError) {
                     this.sectionData = { ...this.sectionData, realTimePaymentTable: [] };
                     this.refreshStatusMap.realTimePayment = 'SUCCESS';
-                    this.showToast('Success', this.customLabel.msgLoadSuccess, 'success');
+                    this.showToast(FEC_Toast_Success, FEC_MSG_Load_Data_Success, 'success');
                     return;
                 }
 
                 this.refreshStatusMap.realTimePayment = 'ERROR';
-                this.showToast('Error', this.customLabel.msgErrorAPI, 'error');
+                this.showToast(FEC_Toast_Error, FEC_MSG_Error_API_Label, 'error');
             })
             .finally(() => {
                 this.isRefreshingRealTime = false;
