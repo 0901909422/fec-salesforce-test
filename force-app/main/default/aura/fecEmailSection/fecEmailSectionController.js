@@ -5,6 +5,35 @@
         helper.loadEmails(component);
     },
 
+    onRecordIdChange: function(component, event, helper) {
+        var newId = component.get('v.recordId');
+        if (!newId) { return; }
+
+        // tungnm37 fix: close compose + teardown Quill cu de tranh stuck UI khi sang Case moi
+        if (component.get('v.showCompose')) {
+            component.set('v.showCompose', false);
+        }
+        try { helper.tearDownQuill(component); } catch (eTeardown) { /* ignore */ }
+
+        // Reset state cua Case cu de tranh stale data
+        component.set('v.emailList', []);
+        component.set('v.caseRecord', null);
+        component.set('v.isHandling', false);
+
+        // Force reload force:recordData de fetch FEC_Interaction_View_Mode__c cua Case moi
+        // (neu khong reload, onRecordUpdated khong fire => isHandling stale => Email section bi an sai)
+        try {
+            var rd = component.find('caseData');
+            if (rd && typeof rd.reloadRecord === 'function') {
+                rd.reloadRecord(true, false);
+            }
+        } catch (eReload) { /* ignore */ }
+
+        helper.loadCaseData(component);
+        helper.loadTemplates(component, null);
+        helper.loadEmails(component);
+    },
+
     onRecordUpdated: function(component, event, helper) {
         var rec = component.get('v.caseRecord');
         if (rec) {
@@ -101,9 +130,9 @@
             var allAtts = component.get('v.templateAttachments') || {};
             var tmplAtts = allAtts[templateId] || [];
             component.set('v.attachments', tmplAtts.map(function(a) {
-                helper.loadCaseFiles(component);
                 return { name: a.fileName, size: 0, _fromTemplate: true, _base64: a.base64Data, _mime: a.mimeType };
             }));
+            helper.loadCaseFiles(component);
         } else {
             component.set('v.body', '');
             component.set('v.subject', '');
