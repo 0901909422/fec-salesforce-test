@@ -159,8 +159,8 @@ public without sharing class FEC_PaymentHistoryController {
             toUpsert.add(r);
         }
 
-       for (FEC_Payment_History__c r : toUpsert) {
-            r.FEC_Total_Payment_Amount__c = totalAmount;
+       if (!toUpsert.isEmpty()) {
+            upsert toUpsert;
         }
 
         if (!toUpsert.isEmpty()) upsert toUpsert;
