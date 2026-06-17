@@ -101,6 +101,21 @@
                 <default>false</default>
                 <label>EA</label>
             </value>
+            <value>
+                <fullName>Internal Task</fullName>
+                <default>false</default>
+                <label>Internal Task</label>
+            </value>
+            <value>
+                <fullName>CIC</fullName>
+                <default>false</default>
+                <label>CIC</label>
+            </value>
+            <value>
+                <fullName>VCCA</fullName>
+                <default>false</default>
+                <label>VCCA</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

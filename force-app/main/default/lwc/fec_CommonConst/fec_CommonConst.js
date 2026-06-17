@@ -84,6 +84,7 @@ const SUB_CHANNEL_MAP = {
   Letter: [{ label: "Letter", value: "Letter" }],
   Internal: [
     { label: "Internal Email", value: "Internal Email" },
+    { label: "Internal Task", value: "Internal Task" },
     { label: "iCollect", value: "iCollect" },
     { label: "iSale", value: "iSale" },
     { label: "VTiger", value: "VTiger" },
@@ -92,6 +93,8 @@ const SUB_CHANNEL_MAP = {
     { label: "PR/MKT", value: "PR/MKT" },
     { label: "SBV", value: "SBV" },
     { label: "EA", value: "EA" },
+    { label: "CIC", value: "CIC" },
+    { label: "VCCA", value: "VCCA" },
     { label: "VPBank", value: "VPBank" },
     { label: "Website", value: "Website" },
     { label: "Zalo", value: "Zalo" },
