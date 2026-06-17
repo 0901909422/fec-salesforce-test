@@ -109,27 +109,9 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             }
 
             Case c = cases[0];
+            Boolean caseAlreadyClosed = isCaseClosedForDisbursementCallback(c.Status);
 
-            // Business rule: Case đã đóng (Resolved-Completed hoặc trạng thái cuối)
-            Set<String> closedStatuses = new Set<String>{
-                FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
-                FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
-                FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
-                FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
-                FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
-            };
-            if (closedStatuses.contains(c.Status)) {
-                response = new UpdateDisbursementStatusResponse(
-                    CODE_BUSINESS_ERROR,
-                    String.format(System.Label.FEC_UpdateDisb_Msg_AlreadyResolved, new List<String>{ reqBody.CRMID })
-                );
-                res.statusCode = 200;
-                res.responseBody = Blob.valueOf(JSON.serialize(response));
-                logRequest(reqBody, requestBodyStr, response);
-                return;
-            }
-
-            // Update Case
+            // Update Case disbursement fields (allowed even when Case already Resolved)
             c.FEC_Disbursement_Status__c = reqBody.DISB_STATUS;
             if (String.isNotBlank(reqBody.DISB_DT)) {
                 try {
@@ -142,16 +124,23 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
                 c.FEC_Remarks__c = reqBody.Desc_Field;
             }
 
-            // Update status based on DISB_STATUS - tungnm37: dùng FEC_ConstantCommon
-            if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
-                c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
-            } else if (DISB_STATUS_CANCELLED_CUSTOMER.equals(reqBody.DISB_STATUS)) {
-                c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
-            } else if (DISB_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
-                c.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
+            if (!caseAlreadyClosed) {
+                if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
+                    c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
+                } else if (DISB_STATUS_CANCELLED_CUSTOMER.equals(reqBody.DISB_STATUS)) {
+                    c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
+                } else if (DISB_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
+                    c.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
+                }
             }
 
             Database.update(c, AccessLevel.SYSTEM_MODE);
+
+            FEC_FastCashCaseController.upsertPendingDisbursementStatus(
+                c.Id,
+                FEC_FastCashCaseController.mapDisbursementStatusForDisplay(reqBody.DISB_STATUS),
+                reqBody.CRMID
+            );
 
             response = new UpdateDisbursementStatusResponse(CODE_SUCCESS, System.Label.FEC_UpdateDisb_Msg_Success);
             res.statusCode = 200;
@@ -215,6 +204,20 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
         }
         return null;
+    }
+
+    private static Boolean isCaseClosedForDisbursementCallback(String caseStatus) {
+        if (String.isBlank(caseStatus)) {
+            return false;
+        }
+        Set<String> closedStatuses = new Set<String>{
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+            FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
+        };
+        return closedStatuses.contains(caseStatus);
     }
 
     // ─── Log ─────────────────────────────────────────────────────────────────

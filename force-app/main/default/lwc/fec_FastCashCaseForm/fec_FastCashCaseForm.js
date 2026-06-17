@@ -459,7 +459,15 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     _applyDisbursementFromState(st) {
-        if (!st || !this._isBlockModalConfirmedInStorage()) {
+        if (!st) {
+            this.disbursementStatusDisplay = STR_EMPTY;
+            this.disbursementDateDisplay = STR_EMPTY;
+            return;
+        }
+        const hasPersistedDisbursement =
+            (st.disbursementStatus != null && String(st.disbursementStatus).trim() !== STR_EMPTY)
+            || st.disbursementDate != null;
+        if (!this._isBlockModalConfirmedInStorage() && !hasPersistedDisbursement) {
             this.disbursementStatusDisplay = STR_EMPTY;
             this.disbursementDateDisplay = STR_EMPTY;
             return;
@@ -759,10 +767,13 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     get showDisbursementFields() {
+        if (this.disbursementStatusDisplay || this.disbursementDateDisplay) {
+            return true;
+        }
         if (!this._isBlockModalConfirmedInStorage()) {
             return false;
         }
-        return this.isReadOnly || !!this.disbursementStatusDisplay;
+        return this.isReadOnly;
     }
 
     get showDisbursementDate() {
