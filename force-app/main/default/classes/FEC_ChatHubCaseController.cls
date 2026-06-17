@@ -314,8 +314,14 @@ public with sharing class FEC_ChatHubCaseController {
         }
 
         try {
-            if(!listCvToInsert.isEmpty()) {
-                insert listCvToInsert;
+            Boolean priorBypass = FEC_FileActionOnReviewService.bypassChatHubFileUpload;
+            FEC_FileActionOnReviewService.bypassChatHubFileUpload = true;
+            try {
+                if(!listCvToInsert.isEmpty()) {
+                    insert listCvToInsert;
+                }
+            } finally {
+                FEC_FileActionOnReviewService.bypassChatHubFileUpload = priorBypass;
             }
             if(!listHistoriesToInsert.isEmpty()) {
                 // allOrNone = false: tolerate DUPLICATE_VALUE from the unique

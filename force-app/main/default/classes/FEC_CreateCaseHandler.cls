@@ -25,12 +25,15 @@ public without sharing class FEC_CreateCaseHandler {
         // INTERACTION DATA
         // =========================
         public String transcription;
+        public String chatHistory;
         public String kycMethod;
         public String kycResult;
         public String kycStatus;
 
         /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
         public Id ownerUserId;
+
+        public Boolean isAutomationCaseChat;
     }
     
     
@@ -233,7 +236,14 @@ public without sharing class FEC_CreateCaseHandler {
             // Update field
             interaction.FEC_Account_or_Contract__c = customerHistoryId;
             interaction.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CLOSED;
-            update interaction;
+
+            Boolean priorSystemUpdate = FEC_CaseTriggerHandler.isSystemUpdate;
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            try {
+                update interaction;
+            } finally {
+                FEC_CaseTriggerHandler.isSystemUpdate = priorSystemUpdate;
+            }
             
         } catch (Exception e) {
             // Log properly
@@ -558,10 +568,13 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         // INTERACTION DATA
         // ---------------------------
-        interactionCase.FEC_Transcription__c = dto.transcription;
+        interactionCase.FEC_Chat_History__c = dto.chatHistory;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
         interactionCase.FEC_KYC_Status__c = dto.kycStatus;
         
+        if(dto.isAutomationCaseChat){
+            interactionCase.FEC_Is_Chat_Automation__c = true;
+        }
         insert interactionCase;
         
         interactionCase = [

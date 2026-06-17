@@ -42,6 +42,7 @@ public without sharing class FEC_CreateInteractionGenesys {
         public String updatedAt;
         public String topic;
         public String note;
+        public Boolean isAutomationCaseChat;
     }
     
     public class GenesysResposnse
@@ -152,12 +153,13 @@ public without sharing class FEC_CreateInteractionGenesys {
         dto.contractNumber = null;
         
         
-        dto.transcription = req.chatSession.lastMessage;
+        dto.chatHistory = req.chatSession.lastMessage;
         
         dto.kycMethod = mapKycMethod(req.customerInfo != null ? req.customerInfo.kYCStatus : null);
         dto.kycStatus =req.customerInfo.kYCStatus;
         dto.kycResult = deriveKycResult(req.customerInfo != null ? req.customerInfo.kYCStatus : null);
         
+        dto.isAutomationCaseChat = req.chatSession.isAutomationCaseChat;
         return dto;
     }
     private static String normalizeChannel(String channel) {
