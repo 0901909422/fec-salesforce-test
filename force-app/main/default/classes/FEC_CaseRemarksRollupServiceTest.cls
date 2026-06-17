@@ -1,5 +1,10 @@
 @isTest
 private class FEC_CaseRemarksRollupServiceTest {
+  private static final String BUCKET_FIELDS_SOQL =
+    'FEC_Case_Remarks_1__c, FEC_Case_Remarks_2__c, FEC_Case_Remarks_3__c, ' +
+    'FEC_Case_Remarks_Entered_By_1__c, FEC_Case_Remarks_Entered_By_2__c, FEC_Case_Remarks_Entered_By_3__c, ' +
+    'FEC_Case_Status_History_1__c, FEC_Case_Status_History_2__c, FEC_Case_Status_History_3__c';
+
   private static String strLen(Integer n) {
     String alpha = '0123456789';
     String out = '';
@@ -7,6 +12,17 @@ private class FEC_CaseRemarksRollupServiceTest {
       out += alpha;
     }
     return out.substring(0, n);
+  }
+
+  private static String bucketField(Case row, String fieldApiName) {
+    return (String) row.get(fieldApiName);
+  }
+
+  private static Case queryCase(Id caseId, String extraFields) {
+    String fields = String.isBlank(extraFields) ? BUCKET_FIELDS_SOQL : extraFields + ', ' + BUCKET_FIELDS_SOQL;
+    return Database.query(
+      'SELECT Id, ' + fields + ' FROM Case WHERE Id = :caseId LIMIT 1'
+    );
   }
 
   @isTest
@@ -34,25 +50,21 @@ private class FEC_CaseRemarksRollupServiceTest {
     };
     insert rows;
 
-    Case updated = [
-      SELECT
-        FEC_Case_Remarks_1__c,
-        FEC_Case_Remarks_2__c,
-        FEC_Case_Remarks_3__c,
-        FEC_Case_Remarks_Entered_By__c,
-        FEC_Case_Remarks_Entered_By_Role__c,
-        FEC_Case_Remarks_Entered_On__c,
-        FEC_Case_Remarks_Entered_By_1__c,
-        FEC_Case_Remarks_Entered_By_2__c,
-        FEC_Case_Remarks_Entered_By_3__c
-      FROM Case
-      WHERE Id = :c.Id
-    ];
+    Case updated = queryCase(
+      c.Id,
+      'FEC_Case_Remarks_Entered_By__c, FEC_Case_Remarks_Entered_By_Role__c, FEC_Case_Remarks_Entered_On__c'
+    );
+    String remarks1 = bucketField(updated, 'FEC_Case_Remarks_1__c');
+    String remarks2 = bucketField(updated, 'FEC_Case_Remarks_2__c');
+    String remarks3 = bucketField(updated, 'FEC_Case_Remarks_3__c');
+    String enteredBy1 = bucketField(updated, 'FEC_Case_Remarks_Entered_By_1__c');
+    String enteredBy2 = bucketField(updated, 'FEC_Case_Remarks_Entered_By_2__c');
+    String enteredBy3 = bucketField(updated, 'FEC_Case_Remarks_Entered_By_3__c');
 
     System.assert(
-      updated.FEC_Case_Remarks_1__c.contains('#1:') &&
-        updated.FEC_Case_Remarks_1__c.contains('#2:') &&
-        updated.FEC_Case_Remarks_1__c.contains('#3:'),
+      remarks1.contains('#1:') &&
+        remarks1.contains('#2:') &&
+        remarks1.contains('#3:'),
       'Ba remark đầu phải nằm ở FEC_Case_Remarks_1__c'
     );
     String myEmail = UserInfo.getUserEmail();
@@ -68,36 +80,29 @@ private class FEC_CaseRemarksRollupServiceTest {
       'Các cụm #n: phải nối bằng khoảng trắng'
     );
     System.assert(
-      updated.FEC_Case_Remarks_1__c != null &&
-        updated.FEC_Case_Remarks_1__c.length() <= 256,
-      'Trường 1 không vượt quá 256 ký tự'
+      remarks1 != null && remarks1.length() <= 255,
+      'Trường 1 không vượt quá 255 ký tự'
     );
     System.assert(
-      String.isNotBlank(updated.FEC_Case_Remarks_2__c) &&
-        updated.FEC_Case_Remarks_2__c.startsWith('#4:'),
+      String.isNotBlank(remarks2) && remarks2.startsWith('#4:'),
       'Remark thứ 4 phải bắt đầu ở FEC_Case_Remarks_2__c'
     );
-    System.assertEquals(
-      null,
-      updated.FEC_Case_Remarks_3__c,
-      'Chưa cần bucket 3 trong ví dụ BA'
-    );
+    System.assertEquals(null, remarks3, 'Chưa cần bucket 3 trong ví dụ BA');
 
     System.assert(
-      String.isNotBlank(updated.FEC_Case_Remarks_Entered_By_1__c) &&
-        updated.FEC_Case_Remarks_Entered_By_1__c.contains('#1:') &&
-        updated.FEC_Case_Remarks_Entered_By_1__c.contains('#2:') &&
-        updated.FEC_Case_Remarks_Entered_By_1__c.contains('#3:'),
+      String.isNotBlank(enteredBy1) &&
+        enteredBy1.contains('#1:') &&
+        enteredBy1.contains('#2:') &&
+        enteredBy1.contains('#3:'),
       'Entered By bucket 1 phai chua #1, #2, #3 tuong ung voi 3 remark dau'
     );
     System.assert(
-      String.isNotBlank(updated.FEC_Case_Remarks_Entered_By_2__c) &&
-        updated.FEC_Case_Remarks_Entered_By_2__c.contains('#4:'),
+      String.isNotBlank(enteredBy2) && enteredBy2.contains('#4:'),
       'Entered By bucket 2 phai chua #4 tuong ung voi remark thu 4'
     );
     System.assertEquals(
       null,
-      updated.FEC_Case_Remarks_Entered_By_3__c,
+      enteredBy3,
       'Entered By bucket 3 phai rong khi khong co remark o bucket 3'
     );
   }
@@ -118,24 +123,18 @@ private class FEC_CaseRemarksRollupServiceTest {
 
     delete r2;
 
-    Case updated = [
-      SELECT
-        FEC_Case_Remarks_1__c,
-        FEC_Case_Remarks_2__c,
-        FEC_Case_Remarks_3__c,
-        FEC_Case_Remarks_Entered_By__c,
-        FEC_Case_Remarks_Entered_By_Role__c,
-        FEC_Case_Remarks_Entered_On__c
-      FROM Case
-      WHERE Id = :c.Id
-    ];
+    Case updated = queryCase(
+      c.Id,
+      'FEC_Case_Remarks_Entered_By__c, FEC_Case_Remarks_Entered_By_Role__c, FEC_Case_Remarks_Entered_On__c'
+    );
+    String remarks1 = bucketField(updated, 'FEC_Case_Remarks_1__c');
+
     System.assert(
-      String.isNotBlank(updated.FEC_Case_Remarks_1__c) &&
-        updated.FEC_Case_Remarks_1__c.contains('#1:'),
+      String.isNotBlank(remarks1) && remarks1.contains('#1:'),
       'Sau xóa vẫn phải còn remark #1'
     );
-    System.assertEquals(null, updated.FEC_Case_Remarks_2__c);
-    System.assertEquals(null, updated.FEC_Case_Remarks_3__c);
+    System.assertEquals(null, bucketField(updated, 'FEC_Case_Remarks_2__c'));
+    System.assertEquals(null, bucketField(updated, 'FEC_Case_Remarks_3__c'));
     if (String.isNotBlank(updated.FEC_Case_Remarks_Entered_By__c)) {
       System.assert(
         updated.FEC_Case_Remarks_Entered_By__c.contains('#1:'),
@@ -170,20 +169,11 @@ private class FEC_CaseRemarksRollupServiceTest {
     };
     insert rows;
 
-    Case updated = [
-      SELECT
-        FEC_Case_Remarks_1__c,
-        FEC_Case_Remarks_2__c,
-        FEC_Case_Status_History_1__c,
-        FEC_Case_Status_History_2__c,
-        FEC_Case_Status_History_3__c
-      FROM Case
-      WHERE Id = :c.Id
-    ];
+    Case updated = queryCase(c.Id, null);
+    String status1 = bucketField(updated, 'FEC_Case_Status_History_1__c');
 
     System.assert(
-      String.isNotBlank(updated.FEC_Case_Status_History_1__c) &&
-        updated.FEC_Case_Status_History_1__c.contains('#1:'),
+      String.isNotBlank(status1) && status1.contains('#1:'),
       'Status bucket 1 phai co it nhat entry #1'
     );
   }
@@ -216,5 +206,4 @@ private class FEC_CaseRemarksRollupServiceTest {
       'Entered On phải có #1: và CreatedDate đã format'
     );
   }
-
 }
