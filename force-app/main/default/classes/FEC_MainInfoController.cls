@@ -649,6 +649,20 @@ public without sharing class FEC_MainInfoController {
         return null;
     }
 
+    private static String resolveMailingAddressDisplay(String mailingCode) {
+        if (String.isBlank(mailingCode)) {
+            return FEC_ConstantCommon.TEXT_NO;
+        }
+        String normalized = mailingCode.trim().toUpperCase();
+        if (normalized == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE
+            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_CURRES
+            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
+            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
+            return FEC_ConstantCommon.TEXT_YES;
+        }
+        return FEC_ConstantCommon.TEXT_NO;
+    }
+
     /** Xóa cache Main Info để loadMainInfo gọi lại API (sau cập nhật địa chỉ). */
     @AuraEnabled
     public static void clearMainInfoCache(Id caseId) {
@@ -1306,9 +1320,8 @@ public without sharing class FEC_MainInfoController {
             dto.addressInfoId = addr.Id != null ? String.valueOf(addr.Id) : null;
             dto.addressType = addr.FEC_Address_Type__c;
             String fullAddress = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
-            dto.mailingAddress = addr.FEC_Mailing_Address__c == true
-                ? FEC_ConstantCommon.TEXT_YES
-                : null;
+            String mailingCode = mapSfAddressTypeToApiCode(addr.FEC_Address_Type__c);
+            dto.mailingAddress = resolveMailingAddressDisplay(mailingCode);
             // Ward = tên quận/huyện từ lookup, fallback sang text nếu không có trong master
             if (addr.FEC_District__c != null) {
                 String vn = addr.FEC_District__r?.FEC_Name_VN__c;
