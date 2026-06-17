@@ -306,6 +306,36 @@ private class FEC_ContractClosureController_Test {
     }
 
     @IsTest
+    static void testUpsertTemporaryAddress_OptionalBuildingAndNumber() {
+        Case c = getClosureCase();
+        FEC_Province__c prov = getProvince();
+        String payload = JSON.serialize(new Map<String, Object>{
+            'tempAddressParts' => new Map<String, Object>{
+                'building' => '',
+                'streetNumber' => '',
+                'street' => 'Le Loi',
+                'wardLabel' => 'Ward 5',
+                'provinceLabel' => prov.FEC_Name_VN__c,
+                'provinceRecordId' => prov.Id
+            }
+        });
+
+        Test.startTest();
+        Id tempId = FEC_ContractClosureController.upsertTemporaryAddress(c.Id, payload);
+        Test.stopTest();
+
+        FEC_Address_Info__c row = [
+            SELECT FEC_Building__c, FEC_Number__c, FEC_Street__c, FEC_Full_Address__c
+            FROM FEC_Address_Info__c
+            WHERE Id = :tempId
+        ];
+        System.assertEquals(null, row.FEC_Building__c);
+        System.assertEquals(null, row.FEC_Number__c);
+        System.assertEquals('Le Loi', row.FEC_Street__c);
+        System.assert(row.FEC_Full_Address__c.contains('Le Loi'));
+    }
+
+    @IsTest
     static void testSaveForm_InvalidCase() {
         Id fakeCaseId = '500000000000000AAA';
 

@@ -434,8 +434,6 @@ public without sharing class FEC_ContractClosureController {
 
     private static void validateTempAddressParts(TempAddressPartsDTO t) {
         if (
-            String.isBlank(t.building) ||
-            String.isBlank(t.streetNumber) ||
             String.isBlank(t.street) ||
             String.isBlank(t.wardLabel) ||
             String.isBlank(t.provinceLabel)
@@ -462,16 +460,23 @@ public without sharing class FEC_ContractClosureController {
     }
 
     private static String buildTemporaryAddressLine(TempAddressPartsDTO t) {
-        return String.join(
-            new List<String>{
-                t.building.trim(),
-                t.streetNumber.trim(),
-                t.street.trim(),
-                t.wardLabel.trim(),
-                t.provinceLabel.trim()
-            },
-            ', '
-        );
+        List<String> parts = new List<String>();
+        if (String.isNotBlank(t.building)) {
+            parts.add(t.building.trim());
+        }
+        if (String.isNotBlank(t.streetNumber)) {
+            parts.add(t.streetNumber.trim());
+        }
+        if (String.isNotBlank(t.street)) {
+            parts.add(t.street.trim());
+        }
+        if (String.isNotBlank(t.wardLabel)) {
+            parts.add(t.wardLabel.trim());
+        }
+        if (String.isNotBlank(t.provinceLabel)) {
+            parts.add(t.provinceLabel.trim());
+        }
+        return String.join(parts, ', ');
     }
 
     private static Id updateExistingTemporaryAddress(Id rowId, Id caseId, Id histId, String line, TempAddressPartsDTO t) {
@@ -505,14 +510,14 @@ public without sharing class FEC_ContractClosureController {
             addr.put('FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
         }
         if (forInsert) {
-            addr.put('FEC_Building__c', t.building.trim());
-            addr.put('FEC_Number__c', t.streetNumber.trim());
+            addr.put('FEC_Building__c', String.isNotBlank(t.building) ? t.building.trim() : null);
+            addr.put('FEC_Number__c', String.isNotBlank(t.streetNumber) ? t.streetNumber.trim() : null);
             addr.put('FEC_Street__c', t.street.trim());
             addr.put('FEC_Ward_Text__c', t.wardLabel.trim());
             addr.put('FEC_Province_Text__c', t.provinceLabel.trim());
         } else {
-            addr.put('FEC_Building__c', t.building.trim());
-            addr.put('FEC_Number__c', t.streetNumber.trim());
+            addr.put('FEC_Building__c', String.isNotBlank(t.building) ? t.building.trim() : null);
+            addr.put('FEC_Number__c', String.isNotBlank(t.streetNumber) ? t.streetNumber.trim() : null);
             addr.put('FEC_Street__c', t.street.trim());
             addr.put('FEC_Ward_Text__c', t.wardLabel.trim());
             addr.put('FEC_Province_Text__c', t.provinceLabel.trim());

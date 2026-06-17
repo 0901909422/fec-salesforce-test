@@ -1120,8 +1120,6 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
             return;
         }
         if (
-            !this.modalBuilding ||
-            !this.modalNumber ||
             !this.modalStreet ||
             !this.modalWardId ||
             !this.modalProvinceId
@@ -1156,7 +1154,7 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
                 parts.street,
                 parts.wardLabel,
                 parts.provinceLabel
-            ].join(', ');
+            ].filter((p) => p && String(p).trim()).join(', ');
             this.disableAddTempAddress = true;
             this.showTempAddressModal = false;
             await this.refreshAddresses();
