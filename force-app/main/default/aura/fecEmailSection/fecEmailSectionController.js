@@ -80,7 +80,7 @@
     onTemplateChange: function(component, event, helper) {
         var templateId = event.getSource().get('v.value');
         component.set('v.replyTemplate', templateId);
-        component.set('v.titleReply', '');
+
         if (templateId) {
             var bodies = component.get('v.templateBodies');
             var subjects = component.get('v.templateSubjects');
@@ -134,7 +134,9 @@
             }));
             helper.loadCaseFiles(component);
         } else {
+            component.set('v.titleBaseBody', '');
             component.set('v.body', '');
+            component.set('v.rawBody', '');
             component.set('v.subject', '');
             component.set('v.attachments', []);
             if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }

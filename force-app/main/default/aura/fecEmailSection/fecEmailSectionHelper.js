@@ -1478,7 +1478,7 @@
     },
 
     applyTitleToBody: function(component, title) {
-        var baseBody = component.get('v.titleBaseBody') || component.get('v.body') || '';
+        var baseBody = component.get('v.titleBaseBody') || '';
         if (!baseBody) return;
         var updated = title ? this.replaceDanhXung(baseBody, title) : baseBody;
         component.set('v.body', updated);
