@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Error Category Level 6 --></label>
+    <name>FEC_Error_Category_Level_6__c</name>
+    <picklistValues>
+        <masterLabel>Unable to Update ID Card</masterLabel>
+        <translation>Không cập nhật CCCD</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unable to Update Phone Number</masterLabel>
+        <translation>Không cập nhật SĐT</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unable to Update Email</masterLabel>
+        <translation>Không cập nhật Email</translation>
+    </picklistValues>
+</CustomFieldTranslation>

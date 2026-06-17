@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Customer Request Reason --></label>
+    <name>FEC_Customer_Request_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Affected by Storms or Floods</masterLabel>
+        <translation>Bị ảnh hưởng bão, lũ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unemployed</masterLabel>
+        <translation>Thất nghiệp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Medical Condition</masterLabel>
+        <translation>Bị bệnh</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (Specify Details)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+</CustomFieldTranslation>

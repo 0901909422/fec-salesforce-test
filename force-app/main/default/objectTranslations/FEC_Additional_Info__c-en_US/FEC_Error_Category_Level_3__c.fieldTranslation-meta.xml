@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Error Category Level 3 --></label>
+    <name>FEC_Error_Category_Level_3__c</name>
+    <picklistValues>
+        <masterLabel>Account Registration Error</masterLabel>
+        <translation>Lỗi đăng ký tài khoản</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Login Error</masterLabel>
+        <translation>Lỗi đăng nhập</translation>
+    </picklistValues>
+</CustomFieldTranslation>

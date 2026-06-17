@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Update Reason (Loan) --></label>
+    <name>FEC_Update_Reason_Loan__c</name>
+    <picklistValues>
+        <masterLabel>Synchronization Error</masterLabel>
+        <translation>Lỗi không đồng bộ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Register FEOL 2.0 with New Phone Number</masterLabel>
+        <translation>Đăng ký FEOL 2.0 bằng SĐT mới</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Special Case Card - No FEOL 2.0 Account</masterLabel>
+        <translation>Thẻ thuộc TH đặc biệt - Chưa có TK FEOL 2.0</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Special Case Card - Existing FEOL 2.0 Account with Old Phone Number</masterLabel>
+        <translation>Thẻ thuộc TH đặc biệt - Đã có TK FEOL 2.0 với SĐT cũ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Standard Card - Customer Forgot Login Information and No Longer Uses Old Phone Number</masterLabel>
+        <translation>Thẻ thường - KH quên thông tin đăng nhập và không còn dùng SĐT cũ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Standard Card - App Update Function Error</masterLabel>
+        <translation>Thẻ thường - Lỗi tính năng cập nhật trên App</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Standard Card - Requested Phone Number Already Exists in System</masterLabel>
+        <translation>Thẻ thường - SĐT KH muốn cập nhật đã tồn tại trên hệ thống</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Synchronize Phone Number Between CMS and CSM</masterLabel>
+        <translation>Đồng bộ SĐT giữa CMS và CSM</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Synchronize Phone Number Across CMS, FEOL 2.0 and CSM</masterLabel>
+        <translation>Đồng bộ SĐT giữa CMS và FEOL 2.0 và CSM</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Update Phone Number Format</masterLabel>
+        <translation>Cập nhật lại định dạng SĐT</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (Specify Details)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+</CustomFieldTranslation>
