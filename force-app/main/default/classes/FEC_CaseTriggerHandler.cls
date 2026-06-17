@@ -1301,6 +1301,9 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Boolean> caseIdToIsViolating = new Map<Id, Boolean>();
             for (Case c : newCases) {
                 Case oldCase = oldMap.get(c.Id);
+                if (oldCase == null || c.IsClosed == true) {
+                    continue;
+                }
                 Boolean isWarning = String.isNotBlank(c.FEC_SLA_Warning__c)
                     && c.FEC_SLA_Warning__c != oldCase.FEC_SLA_Warning__c;
                 Boolean isViolating = String.isNotBlank(c.FEC_SLA_Violating_Warning__c)
