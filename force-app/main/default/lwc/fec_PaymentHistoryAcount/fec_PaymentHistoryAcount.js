@@ -129,9 +129,10 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
                 ...this.transformRow(row)
             }));
 
-            this.totalPaymentAmount = (data && data.length > 0)
-                ? (data[0].totalPaymentAmount || 0)
-                : 0;
+            const rowWithTotal = (data || []).find(
+                (row) => row.totalPaymentAmount !== null && row.totalPaymentAmount !== undefined
+            );
+            this.totalPaymentAmount = rowWithTotal?.totalPaymentAmount ?? null;
 
         } catch (e) {
             this.paymentHistory = [];
