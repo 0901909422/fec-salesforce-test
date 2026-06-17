@@ -93,45 +93,38 @@ public with sharing class FEC_ChatHubCaseController {
             if (String.isBlank(strJsonData)) {
                 return null;
             }
-    
-            // 1. Parse JSON
-            Map<String, Object> mapRaw = (Map<String, Object>)JSON.deserializeUntyped(strJsonData);
-            // NULL CHECK: Ensure root map is not null
-            if (mapRaw == null) return null;
-    
-            // 2. Safe Extraction of Child Maps
-            // Use instanceof guard to avoid TypeException when chatSession/customerInfo
-            // arrives as a non-object value (string, number, array, etc.)
-            Map<String, Object> mapSession = getMapSafe(mapRaw.get('chatSession'));
-            Map<String, Object> mapCustomer = getMapSafe(mapRaw.get('customerInfo'));
-    
-            // 3. Prepare DTO
-            FEC_InteractionCaseDTO dto = new FEC_InteractionCaseDTO();
-            
-            dto.channel = 'Chat';
-            
-            // Safe string extraction (handles values that arrive as number/boolean
-            // from JSON.deserializeUntyped without throwing TypeException)
-            String strRawChannel = getStringSafe(mapSession, 'chatChannel');
 
-            dto.subChannel = FEC_Utils.getInteractionChannel(strRawChannel);
-            dto.externalInteractionId = getStringSafe(mapSession, 'sessionID');
-            dto.phoneNumber = getStringSafe(mapCustomer, 'phoneNumber');
-            dto.nationalId = getStringSafe(mapCustomer, 'nationalID');
-            dto.customerName = getStringSafe(mapCustomer, 'customerName');
-            dto.kycStatus = getStringSafe(mapCustomer, 'kYCStatus');
-            dto.kycResult = FEC_Utils.mappingKYCs(dto.kycStatus);
-            // Optional: Validation
-            if (String.isBlank(dto.externalInteractionId)) {
-                throw new AuraHandledException(System.Label.FEC_Error_SessionID_Missing);
+            // 1. Deserialize payload directly into the ChatHub request wrapper
+            FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest req =
+                (FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest) JSON.deserialize(
+                    strJsonData,
+                    FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest.class
+                );
+            // 2. Create the Interaction Case through FEC_CreateInteractionGenesys
+            FEC_CreateInteractionGenesys.InteractionResult result =
+                FEC_CreateInteractionGenesys.createInteractionFromChat(req);
+
+            if (result == null || result.isSuccess != true || result.recordId == null) {
+                String strError = (result != null && result.message != null)
+                    ? result.message
+                    : System.Label.FEC_Error_CreateInteractionCase;
+                throw new AuraHandledException(strError);
             }
-    
-            String strDtoJson = JSON.serialize(dto);
-    
-            // 4. Call existing Handler to create Case
-            FEC_InteractionCaseResponse response = createInteractionCaseChat(strDtoJson);
-            return new CaseCreationResponse(response.caseId, response.caseNo);
-    
+
+            // 3. InteractionResult only returns recordId, so query Link ID to build caseNo
+            String strCaseNo = null;
+            Case createdCase = [
+                SELECT Id, FEC_Link_ID__c
+                FROM Case
+                WHERE Id = :result.recordId
+                LIMIT 1
+            ];
+            if (createdCase.FEC_Link_ID__c != null && createdCase.FEC_Link_ID__c.contains('>')) {
+                strCaseNo = createdCase.FEC_Link_ID__c.substringBetween('>', '</');
+            }
+
+            return new CaseCreationResponse(result.recordId, strCaseNo);
+
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
