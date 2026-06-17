@@ -5,5 +5,5 @@
     <mayForecastManagerShare>false</mayForecastManagerShare>
     <name>POS Sales Process Management Specialist</name>
     <opportunityAccessLevel>Read</opportunityAccessLevel>
-    <parentRole>FEC_Direct_Sales_Analysis_Process_Management_Team_Leader</parentRole>
+    <parentRole>FEC_Unit_Head_of_POS_Sales_Operations</parentRole>
 </Role>
