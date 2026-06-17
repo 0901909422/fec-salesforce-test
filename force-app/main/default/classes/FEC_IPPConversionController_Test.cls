@@ -151,6 +151,10 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(6, dto.tenorOptions[0]);
             System.assertEquals(12, dto.tenorOptions[2]);
             System.assertEquals('90003', dto.planNumber);
+            System.assertEquals(null, dto.savedTenor);
+            System.assertEquals(null, dto.savedInterestRate);
+            System.assertEquals(null, dto.savedFee);
+            System.assertEquals(null, dto.savedEmi);
         }
     }
 
@@ -197,7 +201,7 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
-    static void testGetSavedIppConversionState_WithSavedTenor() {
+    static void testLoadIppTenorOptions_WithSavedCaseFields() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
@@ -226,22 +230,24 @@ private class FEC_IPPConversionController_Test {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
 
+        Test.setMock(HttpCalloutMock.class, new IppConversionAccountDetailsMock());
+
         System.runAs(runAsAdmin()) {
             Test.startTest();
-            FEC_IPPConversionController.IppRestoreStateDTO state =
-                FEC_IPPConversionController.getSavedIppConversionState(c.Id);
+            FEC_IPPConversionController.AccountTenorDTO dto =
+                FEC_IPPConversionController.loadIppTenorOptions(c.Id);
             Test.stopTest();
 
-            System.assertEquals(true, state.hasIppData);
-            System.assertEquals(12, state.savedTenor);
+            System.assertEquals(null, dto.errorMessage);
+            System.assertEquals(12, dto.savedTenor);
             if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
-                System.assertEquals(10, state.savedInterestRate);
+                System.assertEquals(10, dto.savedInterestRate);
             }
             if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
-                System.assertEquals(50000, state.savedFee);
+                System.assertEquals(50000, dto.savedFee);
             }
             if (caseFieldMap.containsKey('FEC_EMI__c')) {
-                System.assertEquals(100000, state.savedEmi);
+                System.assertEquals(100000, dto.savedEmi);
             }
         }
     }
@@ -266,22 +272,6 @@ private class FEC_IPPConversionController_Test {
             Case updatedCase = [SELECT FEC_IPP_Term__c FROM Case WHERE Id = :c.Id LIMIT 1];
             System.assertEquals(6, updatedCase.FEC_IPP_Term__c);
         }
-    }
-
-    @IsTest
-    static void testGetSavedIppConversionState_Empty() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-
-        Case c = [SELECT Id FROM Case LIMIT 1];
-
-        Test.startTest();
-        FEC_IPPConversionController.IppRestoreStateDTO state =
-            FEC_IPPConversionController.getSavedIppConversionState(c.Id);
-        Test.stopTest();
-
-        System.assertEquals(false, state.hasIppData);
     }
 
     @IsTest
@@ -821,61 +811,6 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
-    static void testConvertIPP_MapsAllAddIppFields() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-
-        Case c = [SELECT Id FROM Case LIMIT 1];
-        FEC_Transaction__c tx = [
-            SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                FEC_Transaction_Plan__c, FEC_Transaction_Code__c
-            FROM FEC_Transaction__c
-            LIMIT 1
-        ];
-
-        System.runAs(runAsAdmin()) {
-            Case loadedCase = [
-                SELECT Id, FEC_Account_or_Contract__c,
-                    FEC_Account_or_Contract__r.Name,
-                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
-                    FEC_Account_or_Contract__r.FEC_Card_Number__c
-                FROM Case
-                WHERE Id = :c.Id
-                LIMIT 1
-            ];
-            FEC_Transaction__c loadedTx = [
-                SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                    FEC_Transaction_Plan__c, FEC_Transaction_Code__c
-                FROM FEC_Transaction__c
-                WHERE Id = :tx.Id
-                LIMIT 1
-            ];
-            String accountNumber = FEC_IPPConversionController.getAccountNumberForGetIPPDetails(c.Id, ACCOUNT_NUMBER);
-            FEC_AddIPP.IPPRequest req =
-                FEC_IPPConversionController.buildAddIppRequest(loadedCase, loadedTx, accountNumber, 9);
-
-            System.assertEquals(ACCOUNT_NUMBER, req.accountNumber);
-            Date expectedEffDate = loadedTx.FEC_Effective_Date__c != null
-                ? loadedTx.FEC_Effective_Date__c
-                : Date.today();
-            System.assertEquals(expectedEffDate, req.effectiveDate);
-            System.assertEquals(loadedTx.FEC_Transaction_Amount__c, req.amount);
-            System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.planNumber);
-            System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.transactionPlan);
-            System.assertEquals(9, req.ippTerm);
-            System.assertEquals('0105', req.referenceNumber);
-            Date expectedPostDate = loadedTx.FEC_Post_Date__c != null
-                ? loadedTx.FEC_Post_Date__c
-                : expectedEffDate;
-            System.assertEquals(expectedPostDate, req.postingDate);
-            System.assertEquals(CARD_NUMBER, req.cardNumber);
-            System.assertEquals(0, req.cardSeq);
-            System.assertEquals('0105', req.ippKey);
-        }
-    }
-
-    @IsTest
     static void testConvertIPP_AuthCodeAsReference() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
@@ -901,6 +836,148 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
+    static void testConvertIPPManualRetail_Validation() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.startTest();
+        FEC_IPPConversionController.ConvertResultDTO missingCase =
+            FEC_IPPConversionController.convertIPPManualRetail(
+                null, 'ok', 'yes', 'cust', '2026-01-01', '2026-01-02', '2026-01-03',
+                1000, 'AP1', 'PLAN01', 100, 6, 12
+            );
+        FEC_IPPConversionController.ConvertResultDTO badAmount =
+            FEC_IPPConversionController.convertIPPManualRetail(
+                c.Id, 'ok', 'yes', 'cust', '2026-01-01', '2026-01-02', '2026-01-03',
+                0, 'AP1', 'PLAN01', 100, 6, 12
+            );
+        FEC_IPPConversionController.ConvertResultDTO badTerm =
+            FEC_IPPConversionController.convertIPPManualRetail(
+                c.Id, 'ok', 'yes', 'cust', '2026-01-01', '2026-01-02', '2026-01-03',
+                1000, 'AP1', 'PLAN01', 100, 0, 12
+            );
+        FEC_IPPConversionController.ConvertResultDTO missingPlan =
+            FEC_IPPConversionController.convertIPPManualRetail(
+                c.Id, 'ok', 'yes', 'cust', '2026-01-01', '2026-01-02', '2026-01-03',
+                1000, 'AP1', null, 100, 6, 12
+            );
+        Test.stopTest();
+        System.assertNotEquals(null, missingCase.errorMessage);
+        System.assertNotEquals(null, badAmount.errorMessage);
+        System.assertNotEquals(null, badTerm.errorMessage);
+        System.assertNotEquals(null, missingPlan.errorMessage);
+    }
+
+    @IsTest
+    static void testConvertIPPManualRetail_Success() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO success =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, 'verify', 'yes', 'cust', '2026-01-01', '2026-01-02', 'bad-date',
+                    1000, null, 'PLAN01', 100, 6, 12
+                );
+            Test.stopTest();
+            System.assertEquals(true, success.success);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManualRetail_NoAccount() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case orphan = new Case(
+            Subject = 'IPP manual retail',
+            Status = 'New',
+            FEC_ID_Search__c = 'IPPCV-MR-' + String.valueOf(System.currentTimeMillis())
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert orphan;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        Test.startTest();
+        FEC_IPPConversionController.ConvertResultDTO result =
+            FEC_IPPConversionController.convertIPPManualRetail(
+                orphan.Id, 'verify', 'yes', 'cust', '2026-01-01', 'bad', '2026-01-03',
+                1000, 'AP1', 'PLAN01', 100, 6, 12
+            );
+        Test.stopTest();
+        System.assertNotEquals(null, result.errorMessage);
+    }
+
+    @IsTest
+    static void testConvertIPPManual_Validation() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.startTest();
+        FEC_IPPConversionController.ConvertResultDTO missingCase =
+            FEC_IPPConversionController.convertIPPManual(null, 1000, 6, 'PLAN01', '2026-01-01', null, null, null, null);
+        FEC_IPPConversionController.ConvertResultDTO badAmount =
+            FEC_IPPConversionController.convertIPPManual(c.Id, 0, 6, 'PLAN01', '2026-01-01', null, null, null, null);
+        FEC_IPPConversionController.ConvertResultDTO badTenor =
+            FEC_IPPConversionController.convertIPPManual(c.Id, 1000, 0, 'PLAN01', '2026-01-01', null, null, null, null);
+        FEC_IPPConversionController.ConvertResultDTO missingPlan =
+            FEC_IPPConversionController.convertIPPManual(c.Id, 1000, 6, null, '2026-01-01', null, null, null, null);
+        Test.stopTest();
+        System.assertNotEquals(null, missingCase.errorMessage);
+        System.assertNotEquals(null, badAmount.errorMessage);
+        System.assertNotEquals(null, badTenor.errorMessage);
+        System.assertNotEquals(null, missingPlan.errorMessage);
+    }
+
+    @IsTest
+    static void testConvertIPPManual_Success() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO success =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 1000, 6, null, 'bad-date', '2026-01-01', null, 'PLAN-IPP', 100
+                );
+            Test.stopTest();
+            System.assertEquals(true, success.success);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManual_NoAccount() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case orphan = new Case(
+            Subject = 'IPP manual balance',
+            Status = 'New',
+            FEC_ID_Search__c = 'IPPCV-MB-' + String.valueOf(System.currentTimeMillis())
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert orphan;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        Test.startTest();
+        FEC_IPPConversionController.ConvertResultDTO result =
+            FEC_IPPConversionController.convertIPPManual(orphan.Id, 1000, 6, 'PLAN01', '2026-01-01', null, null, null, null);
+        Test.stopTest();
+        System.assertNotEquals(null, result.errorMessage);
+    }
+
+    @IsTest
     static void testGetEligibleTransactions_FullFieldMapping() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
@@ -915,16 +992,11 @@ private class FEC_IPPConversionController_Test {
             FEC_Transaction_Plan__c = 'PLAN99',
             FEC_Effective_Date__c = Date.today(),
             FEC_Post_Date__c = Date.today(),
-            FEC_Transaction_Code__c = '0106',
+            FEC_Transaction_Code__c = 'TXN99',
             FEC_Authorization_Code__c = 'AUTH01',
-            FEC_Merchant_Description__c = 'Merchant X',
-            FEC_IPPEligibilityFlag__c = 'R',
-            FEC_Type__c = 'Unbilled'
+            FEC_Merchant_Description__c = 'Merchant X'
         );
         System.runAs(runAsAdmin()) {
-            FEC_IPPConversionController.unbilledApiTestMode = 1;
-            FEC_IPPConversionController.unbilledApiTestResponse = new FEC_GetUnbilledTransactions.ResponseWrapper();
-            FEC_IPPConversionController.unbilledApiTestResponse.Transactions = new List<FEC_GetUnbilledTransactions.TransactionRecord>();
             Test.startTest();
             List<FEC_IPPConversionController.EligibleTransactionDTO> txs =
                 FEC_IPPConversionController.getEligibleTransactions(c.Id);
@@ -1118,6 +1190,98 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
+    static void testConvertIPPManualRetail_MissingCard() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        update new FEC_Customer_History__c(
+            Id = c.FEC_Account_or_Contract__c,
+            FEC_Card_Number__c = null
+        );
+        Test.startTest();
+        FEC_IPPConversionController.ConvertResultDTO result =
+            FEC_IPPConversionController.convertIPPManualRetail(
+                c.Id, 'verify', 'yes', 'cust', '2026-01-01', 'bad', '2026-01-03',
+                1000, 'AP1', 'PLAN01', 100, 6, 12
+            );
+        Test.stopTest();
+        System.assertNotEquals(null, result.errorMessage);
+    }
+
+    @IsTest
+    static void testConvertIPPManualRetail_CalloutException() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppThrowMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, 'verify', 'yes', 'cust', '2026-01-01', '2026-01-01', '2026-01-03',
+                    1000, 'AP1', 'PLAN01', 100, 6, 12
+                );
+            Test.stopTest();
+            System.assertNotEquals(null, result.errorMessage);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManual_MissingCard() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        update new FEC_Customer_History__c(
+            Id = c.FEC_Account_or_Contract__c,
+            FEC_Card_Number__c = null
+        );
+        Test.startTest();
+        FEC_IPPConversionController.ConvertResultDTO missingCard =
+            FEC_IPPConversionController.convertIPPManual(c.Id, 1000, 6, 'PLAN01', '2026-01-01', null, null, null, null);
+        Test.stopTest();
+        System.assertNotEquals(null, missingCard.errorMessage);
+    }
+
+    @IsTest
+    static void testConvertIPPManual_WithPlanNumber() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO withPlanNumber =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 1000, 6, 'PLAN01', null, '2026-01-01', '2026-01-02', null, null
+                );
+            Test.stopTest();
+            System.assertEquals(true, withPlanNumber.success);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManual_CalloutException() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppThrowMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 1000, 6, null, null, '2026-01-01', null, 'PLAN-IPP', null
+                );
+            Test.stopTest();
+            System.assertNotEquals(null, result.errorMessage);
+        }
+    }
+
+    @IsTest
     static void testConvertIPP_CalloutException() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
@@ -1227,7 +1391,7 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
-    static void testConvertIPP_UsesTransactionIdAsReferenceFallback() {
+    static void testConvertIPP_TransactionIdAsReference() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
@@ -1246,67 +1410,12 @@ private class FEC_IPPConversionController_Test {
             FEC_IPPConversionController.ConvertResultDTO result =
                 FEC_IPPConversionController.convertIPP(c.Id, tx.Id, 6);
             Test.stopTest();
-            System.assertNotEquals(null, result);
-        }
-    }
-
-    @IsTest
-    static void testConvertIPPManualRetail_SuccessWithMock() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-        Case c = [SELECT Id FROM Case LIMIT 1];
-        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
-        System.runAs(runAsAdmin()) {
-            Test.startTest();
-            FEC_IPPConversionController.ConvertResultDTO result =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, 'VER001', 'CB001', 'MAIN',
-                    String.valueOf(Date.today()), String.valueOf(Date.today()),
-                    String.valueOf(Date.today()), 1500, 'AUTH01', 'PLAN01',
-                    500, 6, 12
-                );
-            Test.stopTest();
             System.assertEquals(true, result.success);
-            System.assertNotEquals(null, result.message);
         }
     }
 
     @IsTest
-    static void testConvertIPPManualRetail_ValidationErrors() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-        Case c = [SELECT Id FROM Case LIMIT 1];
-        System.runAs(runAsAdmin()) {
-            FEC_IPPConversionController.ConvertResultDTO missingCase =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    null, null, null, null, null, null, null, 100, null, 'PLAN01', null, 6, null
-                );
-            System.assertNotEquals(null, missingCase.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO invalidAmount =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, null, null, null, null, null, null, 0, null, 'PLAN01', null, 6, null
-                );
-            System.assertNotEquals(null, invalidAmount.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO missingTerm =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, null, null, null, null, null, null, 100, null, 'PLAN01', null, null, null
-                );
-            System.assertNotEquals(null, missingTerm.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO missingPlan =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, null, null, null, null, null, null, 100, null, null, null, 6, null
-                );
-            System.assertNotEquals(null, missingPlan.errorMessage);
-        }
-    }
-
-    @IsTest
-    static void testConvertIPPManual_SuccessWithMock() {
+    static void testConvertIPPManual_BlankEffectiveBadStatement() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
@@ -1316,40 +1425,41 @@ private class FEC_IPPConversionController_Test {
             Test.startTest();
             FEC_IPPConversionController.ConvertResultDTO result =
                 FEC_IPPConversionController.convertIPPManual(
-                    c.Id, 2000, 9, 'PLAN02', String.valueOf(Date.today()),
-                    String.valueOf(Date.today()), null, 'PLAN02', 300
+                    c.Id, 1000, 6, 'PLAN01', null, 'bad-stmt', null, 'PLAN-IPP', 100
                 );
             Test.stopTest();
             System.assertEquals(true, result.success);
-            System.assertNotEquals(null, result.message);
         }
     }
 
     @IsTest
-    static void testConvertIPPManual_ValidationErrors() {
+    static void testConvertIPPManual_BadPostDate() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
         Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
         System.runAs(runAsAdmin()) {
-            FEC_IPPConversionController.ConvertResultDTO missingCase =
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
                 FEC_IPPConversionController.convertIPPManual(
-                    null, 100, 6, 'PLAN01', null, null, null, null, null
+                    c.Id, 1000, 6, 'PLAN01', '2026-01-01', 'bad-stmt', null, 'PLAN-IPP', 100
                 );
-            System.assertNotEquals(null, missingCase.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO invalidAmount =
-                FEC_IPPConversionController.convertIPPManual(
-                    c.Id, 0, 6, 'PLAN01', null, null, null, null, null
-                );
-            System.assertNotEquals(null, invalidAmount.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO missingPlan =
-                FEC_IPPConversionController.convertIPPManual(
-                    c.Id, 100, 6, null, null, null, null, null, null
-                );
-            System.assertNotEquals(null, missingPlan.errorMessage);
+            Test.stopTest();
+            System.assertEquals(true, result.success);
         }
+    }
+
+    @IsTest
+    static void testSaveCaseIppTerm_InvalidTenor() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.startTest();
+        FEC_IPPConversionController.saveCaseIppTerm(null, 6);
+        FEC_IPPConversionController.saveCaseIppTerm(c.Id, 0);
+        Test.stopTest();
     }
 
     @IsTest
@@ -1363,6 +1473,43 @@ private class FEC_IPPConversionController_Test {
             FEC_IPPConversionController.getConvertActionStatus(fakeCaseId);
         Test.stopTest();
         System.assertEquals(true, status.canConvert);
+    }
+
+    @IsTest
+    static void testConvertIPPManualRetail_BadStatementDate() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, 'verify', 'yes', 'cust', 'bad-statement', '2026-01-02', '2026-01-03',
+                    1000, 'AP1', 'PLAN01', 100, 6, 12
+                );
+            Test.stopTest();
+            System.assertEquals(true, result.success);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManual_StatementDateOnly() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 1000, 6, 'PLAN01', 'bad-eff', '2026-01-01', 'bad-due', 'PLAN-IPP', 100
+                );
+            Test.stopTest();
+            System.assertEquals(true, result.success);
+        }
     }
 
     @IsTest
@@ -1419,6 +1566,8 @@ private class FEC_IPPConversionController_Test {
             LIMIT 1
         ];
         FEC_IPPConversionController.AccountTenorDTO tenorDto = new FEC_IPPConversionController.AccountTenorDTO();
+        FEC_IPPConversionController.applySavedIppFieldsToTenorDto(null, tenorDto);
+        FEC_IPPConversionController.applySavedIppFieldsToTenorDto(c, null);
 
         FEC_IPPConversionController.ConvertResultDTO convertDto = new FEC_IPPConversionController.ConvertResultDTO();
         FEC_IPPConversionController.applyAddIppResultToConvertResult(null, convertDto);
@@ -1474,19 +1623,24 @@ private class FEC_IPPConversionController_Test {
         okResp.status = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
         System.assertEquals(true, FEC_IPPConversionController.isGetIPPDetailsResponseSuccess(okResp));
 
-        FEC_Transaction__c tx = [SELECT Id, FEC_Transaction_Code__c, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Card_Number__c FROM FEC_Transaction__c LIMIT 1];
-        System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForGetIppDetails(c));
-        System.assertEquals(null, FEC_IPPConversionController.resolveCardNumberForGetIppDetails(null));
+        FEC_IPPConversionController.clearCaseIppDetailFields(null);
+        FEC_IPPConversionController.updateCaseIppConversionFields(null, 6, 1, 1, 1);
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            FEC_IPPConversionController.clearCaseIppDetailFields(c.Id);
+            FEC_IPPConversionController.updateCaseIppConversionFields(c.Id, 6, 10, 20, 30);
+        }
 
-        System.assertEquals('0105', FEC_IPPConversionController.resolveReferenceNumberForIpp(tx, tx.Id));
-        System.assertEquals('AUTH99', FEC_IPPConversionController.resolveReferenceNumberForIpp(
-            new FEC_Transaction__c(FEC_Authorization_Code__c = 'AUTH99'),
-            tx.Id
-        ));
-        System.assertEquals(String.valueOf(tx.Id), FEC_IPPConversionController.resolveReferenceNumberForIpp(
-            new FEC_Transaction__c(),
-            tx.Id
-        ));
+        FEC_IPPConversionController.updateCaseIppTermOnly(null, 6);
+        FEC_IPPConversionController.updateCaseIppTermOnly(c.Id, 0);
+
+        FEC_Transaction__c tx = [SELECT Id, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Card_Number__c FROM FEC_Transaction__c LIMIT 1];
+        System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForAddIpp(tx, c));
+        FEC_Transaction__c txBare = [SELECT Id, FEC_Customer_History__c FROM FEC_Transaction__c WHERE Id = :tx.Id];
+        System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForAddIpp(txBare, c));
+        System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForAddIpp(null, c));
+
+        System.assertEquals(null, FEC_IPPConversionController.resolveCardNumberForAddIpp(null, null));
 
         FEC_IPPConversionController.accountContractTextForTest = ACCOUNT_NUMBER;
         try {
@@ -1504,26 +1658,6 @@ private class FEC_IPPConversionController_Test {
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
-
-        FEC_Transaction__c eligibleNoFlag = new FEC_Transaction__c(
-            FEC_Transaction_Code__c = '0105'
-        );
-        System.assertEquals(true, FEC_IPPConversionController.isIppEligibleForDisplay(eligibleNoFlag));
-
-        FEC_Transaction__c eligibleFlagR = new FEC_Transaction__c(
-            FEC_Transaction_Code__c = '0105',
-            FEC_IPPEligibilityFlag__c = 'R'
-        );
-        System.assertEquals(true, FEC_IPPConversionController.isIppEligibleForDisplay(eligibleFlagR));
-
-        FEC_Transaction__c ineligibleFlag = new FEC_Transaction__c(
-            FEC_Transaction_Code__c = '0105',
-            FEC_IPPEligibilityFlag__c = 'X'
-        );
-        System.assertEquals(false, FEC_IPPConversionController.isIppEligibleForDisplay(ineligibleFlag));
-
-        System.assertEquals(6, FEC_IPPConversionController.resolveIppTermForGetIppDetails(eligibleFlagR, 6));
-        System.assertEquals(true, FEC_IPPConversionController.collectSyncedTransactionIds(null, null).isEmpty());
     }
 
     @IsTest
@@ -1536,6 +1670,7 @@ private class FEC_IPPConversionController_Test {
 
         FEC_IPPConversionController.denyTransactionAccessForTest = true;
         try {
+            System.assertEquals(0, FEC_IPPConversionController.loadEligibleTransactionsFromDb(c.Id).size());
             FEC_IPPConversionController.IPPDetailsDTO deniedDetails =
                 FEC_IPPConversionController.checkIPPDetails(c.Id, tx.Id, 6);
             System.assertNotEquals(null, deniedDetails.errorMessage);
@@ -1555,6 +1690,13 @@ private class FEC_IPPConversionController_Test {
             FEC_IPPConversionController.denyCaseAccessForTest = false;
         }
 
+        FEC_IPPConversionController.denyIppTermUpdateForTest = true;
+        try {
+            FEC_IPPConversionController.saveCaseIppTerm(c.Id, 6);
+        } finally {
+            FEC_IPPConversionController.denyIppTermUpdateForTest = false;
+        }
+
         FEC_IPPConversionController.denyActionCountUpdateForTest = true;
         try {
             FEC_IPPConversionController.updateCaseActionCountForConvertResult(c, true);
@@ -1566,6 +1708,13 @@ private class FEC_IPPConversionController_Test {
         try {
             System.runAs(runAsAdmin()) {
                 System.assertNotEquals(null, FEC_IPPConversionController.convertIPP(c.Id, tx.Id, 6).errorMessage);
+                System.assertNotEquals(null, FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, 'verify', 'yes', 'cust', '2026-01-01', '2026-01-02', '2026-01-03',
+                    1000, 'AP1', 'PLAN01', 100, 6, 12
+                ).errorMessage);
+                System.assertNotEquals(null, FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 1000, 6, 'PLAN01', null, null, null, 'PLAN-IPP', 100
+                ).errorMessage);
             }
         } finally {
             FEC_IPPConversionController.addIppTestMode = 0;
@@ -1688,6 +1837,155 @@ private class FEC_IPPConversionController_Test {
                 '</soapenv:Body></soapenv:Envelope>'
             );
             return res;
+        }
+    }
+
+    private class IppConversionAccountDetailsEmptyMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><NS1:GetAccountDetailsResponse xmlns:NS1="http://esbservice.fecredit.org/EStatementService/">' +
+                '<NS1:SysResponse><Status>0</Status></NS1:SysResponse>' +
+                '<NS1:AccountRecords></NS1:AccountRecords>' +
+                '</NS1:GetAccountDetailsResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionAccountDetailsRetailOnlyMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><NS1:GetAccountDetailsResponse xmlns:NS1="http://esbservice.fecredit.org/EStatementService/">' +
+                '<NS1:SysResponse><Status>0</Status><Description>Success</Description></NS1:SysResponse>' +
+                '<NS1:AccountRecords><AccountRecord><AccountNumber>0001500060000003</AccountNumber>' +
+                '<RetailIPPInfo><PlanNumber>80001</PlanNumber></RetailIPPInfo>' +
+                '</AccountRecord></NS1:AccountRecords>' +
+                '</NS1:GetAccountDetailsResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionIppDetailsEmptyMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('');
+            return res;
+        }
+    }
+
+    private class IppConversionIppDetailsInstallmentMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetIPPDetailsResponse>' +
+                '<SysResponse><Status>Success</Status></SysResponse>' +
+                '<InterestRate>10</InterestRate><ConversionFee>1000</ConversionFee>' +
+                '<InstallmentAmount>500000</InstallmentAmount>' +
+                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionIppDetailsStatusCodeMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetIPPDetailsResponse>' +
+                '<SysResponse><Status>0</Status></SysResponse>' +
+                '<InterestRate>11</InterestRate><ConversionFee>2000</ConversionFee><EMI>3000</EMI>' +
+                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionIppDetailsThrowMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            throw new CalloutException('Simulated callout failure');
+        }
+    }
+
+    private class IppConversionAddIppSuccessMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"' +
+                ' xmlns:est="http://esbservice.fecredit.org/EStatementService/">' +
+                '<soapenv:Body><est:AddIPPResponse><SysResponse>' +
+                '<Status>1</Status><Description>Converted successfully</Description>' +
+                '</SysResponse></est:AddIPPResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionAddIppFailureMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"' +
+                ' xmlns:est="http://esbservice.fecredit.org/EStatementService/">' +
+                '<soapenv:Body><est:AddIPPResponse><SysResponse>' +
+                '<Status>0</Status><Description>Add IPP failed</Description>' +
+                '</SysResponse></est:AddIPPResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionAccountDetailsThrowMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            throw new CalloutException('Simulated account details failure');
+        }
+    }
+
+    private class IppConversionIppDetailsNotSuccessMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetIPPDetailsResponse>' +
+                '<SysResponse><Status>FAILED</Status></SysResponse>' +
+                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionIppDetailsSysMessageMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetIPPDetailsResponse>' +
+                '<SysResponse><Description>Success</Description></SysResponse>' +
+                '<InterestRate>8</InterestRate><ConversionFee>100</ConversionFee><EMI>200</EMI>' +
+                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class IppConversionAddIppThrowMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            throw new CalloutException('Simulated AddIPP failure');
         }
     }
 }

@@ -8,7 +8,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionController.getEligibleTransactions';
 import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.loadIppTenorOptions';
-import getSavedIppConversionState from '@salesforce/apex/FEC_IPPConversionController.getSavedIppConversionState';
 import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
@@ -136,9 +135,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track manualConversionInterest = null;
     @track manualSubmitLoading = false;
 
-    _savedIppState = null;
-    _ippRestorePending = false;
-
     ippRetailUi = IPP_RETAIL_UI;
 
     pageSize = 20;
@@ -192,30 +188,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         if (!this.recordId) {
             return;
         }
-        // 2026-06-16 linhdev – chờ saved state + transactions xong rồi mới restore (tránh race)
-        Promise.all([
-            this.loadSavedIppState(),
-            this.loadEligibleTransactions()
-        ]).then(() => {
-            this.tryRestoreIppTenorSection();
-        }).catch(() => {
-        });
-    }
-
-    // 2026-06-16 linhdev – đọc IPP đã lưu trên Case để restore sau refresh / Save & Closed
-    loadSavedIppState() {
-        if (!this.recordId) {
-            return Promise.resolve();
-        }
-        return getSavedIppConversionState({ caseId: this.recordId })
-            .then((res) => {
-                if (res && res.hasIppData) {
-                    this._savedIppState = res;
-                    this._ippRestorePending = true;
-                }
-            })
-            .catch(() => {
-            });
+        this.loadEligibleTransactions();
     }
 
     loadConvertActionStatus() {
@@ -294,11 +267,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.tenorBlockReady = false;
             this.showTenorSection = false;
             this.tenorSyncError = null;
-            // 2026-06-16 linhdev – restore Tenor picklist nếu Case đã có dữ liệu IPP
-            if (this._savedIppState && this._savedIppState.hasIppData) {
-                this._ippRestorePending = true;
-                this.tryRestoreIppTenorSection();
-            }
             return;
         }
         if (selectedRows.length === 0) {
@@ -436,20 +404,18 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
         }
-        this.loadTenorOptionsFromApi(false);
+        this.loadTenorOptionsFromApi();
     }
 
     // 2026-06-16 linhdev – Service 38 GetAccountDetails: load Tenor picklist (không auto gọi Service 40)
-    loadTenorOptionsFromApi(isRestore) {
+    loadTenorOptionsFromApi() {
         this.tenorBlockReady = false;
         this.detailsLoading = true;
-        if (!isRestore) {
-            this.ippDetailsLoading = false;
-            this.details = null;
-            this.tenorSyncError = null;
-            this.showTenorSection = false;
-            this.selectedTenor = null;
-        }
+        this.ippDetailsLoading = false;
+        this.details = null;
+        this.tenorSyncError = null;
+        this.showTenorSection = false;
+        this.selectedTenor = null;
         loadIppTenorOptions({ caseId: this.recordId })
             .then((res) => {
                 this.applyTenorOptionsResponse(res);
@@ -499,25 +465,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         } else {
             this.details = null;
         }
-    }
-
-    // 2026-06-16 linhdev – restore Tenor section khi mở lại Case đã có FEC_IPP_Term__c / IPP details
-    tryRestoreIppTenorSection() {
-        if (!this._ippRestorePending || !this._savedIppState || !this._savedIppState.hasIppData) {
-            return;
-        }
-        if (this.isReadOnly || !this.recordId) {
-            return;
-        }
-        if (!this.selectedTransactionId && (this.transactions || []).length === 1) {
-            this.selectedTransactionId = this.transactions[0].transactionId;
-            this._bumpTableKey();
-        }
-        if (!this.selectedTransactionId) {
-            return;
-        }
-        this._ippRestorePending = false;
-        this.loadTenorOptionsFromApi(true);
     }
 
     loadIppDetailsForSelectedTenor() {
