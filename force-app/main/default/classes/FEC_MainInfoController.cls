@@ -1320,9 +1320,7 @@ public without sharing class FEC_MainInfoController {
             dto.addressInfoId = addr.Id != null ? String.valueOf(addr.Id) : null;
             dto.addressType = addr.FEC_Address_Type__c;
             String fullAddress = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
-            String mailingCode = addr.FEC_Mailing_Address__c == true
-                ? mapSfAddressTypeToApiCode(addr.FEC_Address_Type__c)
-                : null;
+            String mailingCode = mapSfAddressTypeToApiCode(addr.FEC_Address_Type__c);
             dto.mailingAddress = resolveMailingAddressDisplay(mailingCode);
             // Ward = tên quận/huyện từ lookup, fallback sang text nếu không có trong master
             if (addr.FEC_District__c != null) {
