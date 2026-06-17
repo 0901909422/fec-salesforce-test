@@ -1,5 +1,10 @@
 <template>
     <lightning-card>
+        <div class="slds-p-horizontal_medium slds-p-top_medium">
+            <h2 class="slds-text-heading_small">
+                National ID: {nationalId}
+            </h2>
+        </div>
         <template if:true={isHandlingMode}>
             <div class="slds-p-around_medium">
 
@@ -39,9 +44,9 @@
                         </template>
 
                         <!-- BUTTON -->
-                            <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
-                                onclick={openModal} disabled={isUpdateButtonDisabled}>
-                            </lightning-button>
+                        <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
+                            onclick={openModal} disabled={isUpdateButtonDisabled}>
+                        </lightning-button>
 
                         <template if:true={errorMessage}>
 
@@ -57,9 +62,9 @@
             </div>
         </template>
         <template if:true={showResultSection}>
-        <div>
-            <c-fec_-do-not-bother-result-view record-id={recordId}></c-fec_-do-not-bother-result-view>
-        </div>
+            <div>
+                <c-fec_-do-not-bother-result-view record-id={recordId}></c-fec_-do-not-bother-result-view>
+            </div>
         </template>
     </lightning-card>
     <!-- MODAL -->

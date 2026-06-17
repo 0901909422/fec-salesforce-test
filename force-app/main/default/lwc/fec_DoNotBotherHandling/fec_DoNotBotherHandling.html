@@ -5,7 +5,7 @@
             Do Not Bother
         </div>
         <div><template if:true={isCustormerExisting}>
-                <c-fec_-do-not-bother-existing-customer record-id={recordId}></c-fec_-do-not-bother-existing-customer>
+                <c-fec_-do-not-bother-existing-customer-container record-id={recordId}></c-fec_-do-not-bother-existing-customer-container>
             </template>
             <template if:false={isCustormerExisting}>
                 <c-fec_-do-not-bother-non-existing-customer

@@ -810,6 +810,8 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   buildPayload() {
+    const seen = new Set();
+
     return this.data
       .filter((row) => row.active)
       .map((row) => ({
@@ -825,8 +827,17 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
           row.channel === "Email"
             ? row.contact
             : this.normalizePhone(row.contact),
-        // contract_id: this.contractId || "UNKNOWN",
-      }));
+      }))
+      .filter((item) => {
+        const key = `${item.type_value}|${item.type}|${item.nid}`;
+
+        if (seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
   }
   mapType(channel) {
     switch (channel) {

@@ -5,7 +5,7 @@ import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
 import checkDNBExisting from "@salesforce/apex/FEC_DNBHandler.checkDNBExisting";
 import createExistingDNBRows from "@salesforce/apex/FEC_DNBHandler.createExistingDNBRows";
-import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBs";
+import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBsExistingCustomer";
 import updateFieldDoNotBother from "@salesforce/apex/FEC_DNBHandler.updateFieldDoNotBother";
 import updateDNBProcessCount from "@salesforce/apex/FEC_DNBHandler.updateDNBProcessCount";
 
@@ -54,13 +54,13 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   messageContext;
   subscription = null;
   @api recordId;
+  @api nationalId;
   @track selectedOption = "no";
   @track initialHasDNBData = null;
   @track data = [];
   @track pagedData = [];
   isReadonlyMode = false;
   customerName = "";
-  nationalId = "";
   contractId = "";
   radioOptions = [
     { label: "Không", value: "no" },
@@ -201,8 +201,6 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
       this.customerName = result.customerName;
 
-      this.nationalId = result.nationalId;
-
       this.contractId = result.contractId;
 
       this.retryCount = result.processActionCount || 0;
@@ -237,12 +235,14 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
     return await checkDNBExisting({
       caseId: this.recordId,
+      nationalId: this.nationalId,
     });
   }
 
   async createDNBRows() {
     await createExistingDNBRows({
       caseId: this.recordId,
+      nationalId: this.nationalId,
     });
   }
 
@@ -269,12 +269,11 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         return;
       }
 
-       /*
+      /*
        * DEFAULT UI
        */
       this.hasDNBData = result?.result.length > 0;
       this.initialHasDNBData = this.hasDNBData;
-
 
       /*
        * STEP 2:
@@ -288,7 +287,6 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
        */
       await this.loadDNBRecords();
 
-     
       // this.selectedOption = this.hasDNBData ? "yes" : "no";
     } catch (e) {
       console.error("initializeDNBFlow ERROR", e);
@@ -341,6 +339,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
     try {
       const result = await getListDNBs({
         caseId: this.recordId,
+        nationalId: this.nationalId,
       });
 
       console.log("RESULT TABLE:", JSON.stringify(result));
@@ -769,6 +768,8 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   }
 
   buildPayload() {
+    const seen = new Set();
+
     return this.data
       .filter((row) => row.active)
       .map((row) => ({
@@ -778,15 +779,23 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         remarks: row.remarks,
         full_name: this.customerName || "UNKNOWN",
         nid: this.nationalId || "000000000000",
-        // nid:  "001098035301",
         do_not_bother: true,
         type: this.mapType(row.channel),
         type_value:
           row.channel === "Email"
             ? row.contact
             : this.normalizePhone(row.contact),
-        // contract_id: this.contractId || "UNKNOWN",
-      }));
+      }))
+      .filter((item) => {
+        const key = `${item.type_value}|${item.type}|${item.nid}`;
+
+        if (seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
   }
 
   mapType(channel) {
