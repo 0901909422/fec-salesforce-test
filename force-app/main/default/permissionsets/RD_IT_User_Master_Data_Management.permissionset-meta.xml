@@ -2396,10 +2396,6 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>FEC_Enhanced_Letterhead__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
         <tab>FEC_Hold_Case__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
@@ -2417,10 +2413,6 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Notification_Template_Channel__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>FEC_Notification__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -2459,8 +2451,4 @@
         <tab>FEC_Sub_Code__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
-    <tabSettings>
-        <tab>Templates</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-</PermissionSet>
+    </PermissionSet>
