@@ -1337,9 +1337,14 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType apiRes =
             FEC_IntegrationFraudService.callUpdateFraudCaseService(reqWrapper, sys, cust, req, creator);
             log('LOG-callUpdateFraudCaseService: '+ apiRes);
+            
             // 4. Handle response
             result = handleUpdateResponse(apiRes, reqWrapper, sys, cust, reqOr, creator);
             log('LOG-handleUpdateResponse: '+ result);
+            if (result.success && String.isNotBlank(result.fraudCaseId)) {                
+                // ET5 - Send success notification email to Declarer
+                sendFraudCaseCreatedEmail(result.fraudCaseId, reqWrapper.caseDataId);
+            }
 
             log('========= SUBMIT UPDATE FRAUD CASE END =========');
             return result;
@@ -1486,6 +1491,13 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             }
 
             rec.OwnerId = UserInfo.getUserId();
+
+            // Set business "Created Time" only when creating a new record so it is not
+            // overwritten on subsequent upserts.
+            if (existing.isEmpty()) {
+                rec.FEC_Created_Time__c = Datetime.now();
+            }
+
             log('LOG-upsertFraudCaseService RECORD: '+ JSON.serialize(rec));
 
             // =============================================================
@@ -2149,7 +2161,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
      */
     private static void sendFraudCaseCreatedEmail(String fraudCaseId, String caseDataId) {
         try {
-            if (String.isBlank(fraudCaseId) || String.isBlank(caseDataId)) {
+            if (String.isBlank(fraudCaseId)) {
                 log('[sendFraudCaseCreatedEmail] Missing fraudCaseId or caseDataId, skip email.');
                 return;
             }
