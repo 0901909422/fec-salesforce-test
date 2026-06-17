@@ -22,6 +22,14 @@
             <fullName>Ubank</fullName>
             <default>false</default>
         </values>
+        <values>
+            <fullName>B2</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Cash24</fullName>
+            <default>false</default>
+        </values>
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Actions_Taken_D2C_Assessment__c</picklist>
