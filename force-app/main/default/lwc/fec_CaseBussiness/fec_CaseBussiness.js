@@ -625,14 +625,12 @@ function shouldHideRevertConfirmSubSection(subSectionName, sourceStage, isRc27Fl
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
-  const hideD2c = n.includes("confirm") && n.includes("d2c");
-  const hideCsSp =
-    n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
+  // Revert 2→1 (OM): ẩn subsection CS SP; revert 3→1 (Support): ẩn subsection D2C.
   if (sourceStage === 2) {
-    return isRc27Flow ? hideCsSp : hideD2c;
+    return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
   }
   if (sourceStage === 3) {
-    return isRc27Flow ? hideD2c : hideCsSp;
+    return n.includes("confirm") && n.includes("d2c");
   }
   return false;
 }
@@ -1312,13 +1310,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     const isRc27Flow = this._isRc27CardReplacementFlow();
     const hideApi =
-      sourceStage === 2
-        ? isRc27Flow
-          ? CONFIRM_CS_SP_ASSESMENT
-          : CONFIRM_D2C_ASSESMENT
-        : isRc27Flow
-          ? CONFIRM_D2C_ASSESMENT
-          : CONFIRM_CS_SP_ASSESMENT;
+      sourceStage === 2 ? CONFIRM_CS_SP_ASSESMENT : CONFIRM_D2C_ASSESMENT;
     let changed = false;
     this.business.sectionlst?.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
