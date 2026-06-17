@@ -61,27 +61,13 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
     }
 
     //=============== MAIN CALL METHOD ===============//
-    @AuraEnabled 
-    public static CollectionDataResponse fetchCollectionData(String contractNumber, String recordType) {
-        //PhongBT11: Giữ nguyên signature cũ, delegate sang method mới với default date values
-        // để không break các caller hiện tại
-        return fetchCollectionDataWithDates(contractNumber, recordType, '20251212', '99991212', null);
-    }
-
     @AuraEnabled
-    public static CollectionDataResponse fetchCollectionData(String contractNumber, String recordType, Id caseId) {
-        return fetchCollectionDataWithDates(contractNumber, recordType, '20251212', '99991212', caseId);
-    }
-
-    // Overload mới: thêm startDate và endDate
-    @AuraEnabled
-    public static CollectionDataResponse fetchCollectionDataWithDates(
+    public static CollectionDataResponse fetchCollectionData(
         String contractNumber,
         String recordType,
-        String startDate,
-        String endDate
+        Id caseId
     ) {
-        return fetchCollectionDataWithDates(contractNumber, recordType, startDate, endDate, null);
+        return fetchCollectionDataWithDates(contractNumber, recordType, '20251212', '99991212', caseId);
     }
 
     @AuraEnabled
