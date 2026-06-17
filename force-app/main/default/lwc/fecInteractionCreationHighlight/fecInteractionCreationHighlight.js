@@ -9,6 +9,7 @@ import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetVie
 import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
 import canExecuteCase from '@salesforce/apex/FEC_CaseExecuteService.canExecute';
 import canExecuteUbankEmailInteraction from '@salesforce/apex/FEC_CaseExecuteService.canExecuteUbankEmailInteraction';
+import executeUbankEmailInteraction from '@salesforce/apex/FEC_CaseExecuteService.executeUbankEmailInteraction';
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
@@ -239,6 +240,20 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
       return;
     }
     try {
+      // Ubank Email queue: change owner from queue to current user before resetViewMode
+      if (this.ubankExecuteAccess === true) {
+        try {
+          const ownerChanged = await executeUbankEmailInteraction({
+            caseId: this.recordId,
+          });
+          console.log("executeUbankEmailInteraction ownerChanged =", ownerChanged);
+          if (ownerChanged === true) {
+            await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+          }
+        } catch (ubankError) {
+          console.error("Error in executeUbankEmailInteraction:", ubankError);
+        }
+      }
       await resetViewMode({
         recordId: this.recordId,
         viewMode: "handling",

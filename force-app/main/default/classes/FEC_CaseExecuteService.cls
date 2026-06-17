@@ -126,7 +126,33 @@ public without sharing class FEC_CaseExecuteService {
   }
 
 
-  @AuraEnabled(cacheable=true)
+  @AuraEnabled(cacheable=false)
+  public static Boolean canExecuteUbankEmailInteractionFresh(Id caseId) {
+    return canExecuteUbankEmailInteraction(caseId);
+  }
+
+  /**
+   * Execute interaction cho user thuộc queue Ubank Email.
+   * Chỉ change owner khi owner hiện tại ĐÚNG là queue Ubank Email và user là thành viên.
+   * Trả về true nếu đã đổi owner (để LWC biết đây là luồng Ubank).
+   * Các queue/owner khác: no-op, không ảnh hưởng luồng hiện có.
+   */
+  @AuraEnabled
+  public static Boolean executeUbankEmailInteraction(Id caseId) {
+    if (caseId == null) {
+      return false;
+    }
+
+    // Tận dụng đúng điều kiện kiểm tra Ubank Email queue + membership.
+    if (!canExecuteUbankEmailInteraction(caseId)) {
+      return false;
+    }
+
+    executeCase(caseId);
+    return true;
+  }
+
+    @AuraEnabled(cacheable=true)
   public static Boolean canExecuteUbankEmailInteraction(Id caseId) {
     if (caseId == null) {
       return false;
