@@ -654,7 +654,12 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
-            FEC_Card_Type__c = m != null ? m.DigitalCardIndicator : null,
+            FEC_Card_Type__c = m != null
+                ? FEC_CommonUltils.resolveCardType(
+                    m.DigitalCardIndicator,
+                    m.PlasticIndicator
+                )
+                : null,
             FEC_Plastic_ID__c = m != null ? m.PlasticIndicator : null,
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,

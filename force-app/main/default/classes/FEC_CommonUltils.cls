@@ -2054,6 +2054,12 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static String resolveCardType(String digitalCardIndicator, String plasticId) {
+    if (digitalCardIndicator == 'Digital'
+        || digitalCardIndicator == 'Physical'
+        || digitalCardIndicator == 'Other') {
+      return digitalCardIndicator;
+    }
+
     String indicator = String.isNotBlank(digitalCardIndicator)
       ? digitalCardIndicator.trim()
       : null;
@@ -2061,15 +2067,12 @@ public with sharing class FEC_CommonUltils {
     Set<String> digitalPlasticIds = new Set<String>{ 'VC1', 'MT1' };
     Boolean isDigitalPlastic = plastic != null && digitalPlasticIds.contains(plastic);
 
-    if (indicator != '0' && indicator != '2') {
-      return 'Other';
-    }
     if (indicator == '2' || isDigitalPlastic) {
       return 'Digital';
     }
-    if (indicator == '0' && !isDigitalPlastic) {
+    if (indicator == '0') {
       return 'Physical';
     }
-    return null;
+    return 'Other';
   }
 }
