@@ -131,7 +131,6 @@ public without sharing class FEC_PaymentHistoryController {
         }
 
         List<FEC_Payment_History__c> toUpsert = new List<FEC_Payment_History__c>();
-        Decimal totalAmount = 0;
 
         for (FEC_GetCardSecInfo.FinancialTransaction ft
                 : cardSecRes.CardSecInfo.FinancialTransactions) {
@@ -155,18 +154,12 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Payment_Amount__c = amount;
             r.FEC_Particulars__c    = ft.RRN;
 
-            if (ft.TRNXAmount != null) totalAmount += ft.TRNXAmount;
             toUpsert.add(r);
         }
 
        if (!toUpsert.isEmpty()) {
             upsert toUpsert;
         }
-
-        update new FEC_Customer_History__c(
-            Id = customerHistoryId,
-            FEC_Total_Payment_Amount__c = totalAmount
-        );
     }
 
     /* =====================================================
