@@ -103,8 +103,9 @@ public with sharing class FEC_ChatHubCaseController {
                     strJsonData,
                     FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest.class
                 );
-            System.debug('req: ');
-            System.debug(req);
+            if (req == null || req.chatSession == null || String.isBlank(req.chatSession.sessionID)) {
+                throw new AuraHandledException('Missing sessionID'); 
+            }
             // 3. Create the Interaction Case through FEC_CreateInteractionGenesys
             FEC_CreateInteractionGenesys.InteractionResult result =
                 FEC_CreateInteractionGenesys.createInteractionFromChat(req);
