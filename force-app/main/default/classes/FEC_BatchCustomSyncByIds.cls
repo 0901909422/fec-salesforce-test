@@ -36,7 +36,8 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
             LIMIT 1
         ];
 
-        String fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
+        Set<String> fieldSet = FEC_BatchCustomSync.extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
+        String fieldList = String.join(new List<String>(fieldSet), ', ');
         String queryString = 'SELECT ' + fieldList + ' FROM ' + cus.FEC_Target_Object__c + ' WHERE Id IN :recordIds';
         return Database.getQueryLocator(queryString);
     }

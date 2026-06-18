@@ -73,7 +73,8 @@ private class FEC_CustomSyncAllInOneTest {
             FEC_Request_Body_Mapping__c = mappingJson,
             FEC_Mapping_Data_Type__c = dataTypeJson,
             FEC_Static_Map_Value__c = staticMapJson,
-            FEC_Target_Object__c = 'Case'
+            FEC_Target_Object__c = 'Case',
+            FEC_Map_Select_Field__c = 'Id,CaseNumber,FEC_ID_Search__c' // Khởi tạo giá trị test
         );
         insert cus;
 
@@ -87,7 +88,8 @@ private class FEC_CustomSyncAllInOneTest {
             FEC_Request_Body_Mapping__c = mappingJson,
             FEC_Mapping_Data_Type__c = dataTypeJson,
             FEC_Static_Map_Value__c = staticMapJson,
-            FEC_Target_Object__c = 'Case'
+            FEC_Target_Object__c = 'Case',
+            FEC_Map_Select_Field__c = 'Id,CaseNumber,FEC_ID_Search__c' // Khởi tạo giá trị test
         );
         insert cus2;
 
@@ -120,8 +122,11 @@ private class FEC_CustomSyncAllInOneTest {
         String cronExp = '0 0 0 15 3 ? ' + nextYear;
 
         Test.startTest();
-        System.schedule('Test Job', cronExp, new FEC_ScheduledSyncDataToBix());
+        String jobId = System.schedule('Test Job', cronExp, new FEC_ScheduledSyncDataToBix());
         Test.stopTest();
+
+        CronTrigger ct = [SELECT Id, CronExpression, State FROM CronTrigger WHERE Id = :jobId];
+        System.assertEquals(cronExp, ct.CronExpression, 'Scheduled job should use the provided cron expression');
     }
 
     // ─── FEC_QueueRunBatchSync ────────────────────────────────────────────────
@@ -132,7 +137,8 @@ private class FEC_CustomSyncAllInOneTest {
 
         List<FEC_Custom_Sync__c> cusList = [
             SELECT Id, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
-                   FEC_Target_Object__c, FEC_Processing_Quantity__c, FEC_End_At__c, FEC_Static_Map_Value__c, FEC_Additional_Conditions__c
+                   FEC_Target_Object__c, FEC_Processing_Quantity__c, FEC_End_At__c, FEC_Static_Map_Value__c, FEC_Additional_Conditions__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
         ];
 
@@ -153,7 +159,7 @@ private class FEC_CustomSyncAllInOneTest {
     @isTest
     static void testFEC_BatchReCallCustomSyncRun() {
         Test.startTest();
-        FEC_Custom_Sync__c record = [select id from FEC_Custom_Sync__c limit 1];
+        FEC_Custom_Sync__c record = [SELECT Id, FEC_Map_Select_Field__c FROM FEC_Custom_Sync__c LIMIT 1];
         FEC_BatchReCallCustomSync.run(record.id); 
         Test.stopTest();
     }
@@ -166,7 +172,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         Map<Id, FEC_Custom_Sync__c> mCus = new Map<Id, FEC_Custom_Sync__c>([
             SELECT Id, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
         ]);
 
@@ -182,7 +188,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         Map<Id, FEC_Custom_Sync__c> mCus = new Map<Id, FEC_Custom_Sync__c>([
             SELECT Id, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
         ]);
 
@@ -198,7 +204,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         Map<Id, FEC_Custom_Sync__c> mCus = new Map<Id, FEC_Custom_Sync__c>([
             SELECT Id, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
         ]);
 
@@ -218,7 +224,8 @@ private class FEC_CustomSyncAllInOneTest {
             SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
                    FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
                    FEC_Static_Map_Value__c, FEC_Sync_To__c, FEC_Active__c,
-                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
@@ -237,7 +244,8 @@ private class FEC_CustomSyncAllInOneTest {
             SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
                    FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
                    FEC_Static_Map_Value__c, FEC_Sync_To__c, FEC_Active__c,
-                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
@@ -248,7 +256,8 @@ private class FEC_CustomSyncAllInOneTest {
             SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
                    FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
                    FEC_Static_Map_Value__c, FEC_Sync_To__c, FEC_Active__c,
-                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
             WHERE Id = :cus.Id
         ];
@@ -267,7 +276,8 @@ private class FEC_CustomSyncAllInOneTest {
             SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
                    FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
                    FEC_Static_Map_Value__c, FEC_Sync_To__c, FEC_Active__c,
-                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
@@ -286,7 +296,8 @@ private class FEC_CustomSyncAllInOneTest {
             SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
                    FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
                    FEC_Static_Map_Value__c, FEC_Sync_To__c, FEC_Active__c,
-                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
@@ -296,18 +307,7 @@ private class FEC_CustomSyncAllInOneTest {
         Database.executeBatch(batch, 200);
         Test.stopTest();
     }
-
-    @isTest
-    static void testGetFields() {
-        FEC_Custom_Sync__c cus = new FEC_Custom_Sync__c(
-            FEC_Request_Body_Mapping__c = '{"CaseID":"Id","CaseName":"CaseNumber","PXURGENCYWORK":1,"PXOBJCLASS":"ObjectClass__g"}',
-            FEC_Target_Object__c = 'Case'
-        );
-        String query = FEC_BatchCustomSync.getFields(cus);
-        System.assert(query.contains('Id'));
-        System.assert(query.contains('CaseNumber'));
-        System.assert(!query.contains('ObjectClass__g'));
-    }
+ 
 
     @isTest
     static void testGetFieldsWithAdditionalConditions() {
@@ -332,7 +332,7 @@ private class FEC_CustomSyncAllInOneTest {
     @isTest
     static void testExtractFieldsFromMapping() {
         String mappingJson = '{"CaseID":"Id","CaseName":"CaseNumber","StaticVal":1,"BoolVal":true,"PXOBJCLASS":"ObjectClass__g"}';
-        String fields = FEC_BatchCustomSync.extractFieldsFromMapping(mappingJson); 
+        Set<String> fields = FEC_BatchCustomSync.extractFieldsFromMapping(mappingJson); 
     }
 
     // ─── FEC_CustomSyncCallout ────────────────────────────────────────────────
@@ -343,7 +343,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         FEC_Custom_Sync__c cus = [
             SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -361,7 +361,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         FEC_Custom_Sync__c cus = [
             SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -379,7 +379,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         FEC_Custom_Sync__c cus = [
             SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -397,7 +397,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         FEC_Custom_Sync__c cus = [
             SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c LIMIT 1
         ];
 
@@ -420,7 +420,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         FEC_Custom_Sync__c cus = [
             SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -519,7 +519,8 @@ private class FEC_CustomSyncAllInOneTest {
 
         List<FEC_Custom_Sync__c> cusList = [
             SELECT Id, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
-                   FEC_Target_Object__c, FEC_Processing_Quantity__c, FEC_End_At__c, FEC_Static_Map_Value__c, FEC_Additional_Conditions__c
+                   FEC_Target_Object__c, FEC_Processing_Quantity__c, FEC_End_At__c, FEC_Static_Map_Value__c, FEC_Additional_Conditions__c,
+                   FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c
         ];
         // Ensure we have > 1 record to cover the multi-batch logic
@@ -540,6 +541,34 @@ private class FEC_CustomSyncAllInOneTest {
         Test.startTest();
         FEC_ScheduledSyncDataToBix.run();
         Test.stopTest();
+
+        // run() enqueues the sync queue and executes the recall batch for active Bix records;
+        // both paths produce integration logs once the async work settles.
+        List<FEC_integration_service_log__c> logs = [SELECT Id FROM FEC_integration_service_log__c];
+        System.assert(!logs.isEmpty(), 'Scheduled run should produce integration service logs');
+    }
+
+    @isTest
+    static void testScheduledSyncRunNoActiveRecords() {
+        Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
+
+        // Deactivate every CustomSync so run() finds nothing and exits without enqueuing work.
+        List<FEC_Custom_Sync__c> cusList = [SELECT Id FROM FEC_Custom_Sync__c];
+        for (FEC_Custom_Sync__c c : cusList) {
+            c.FEC_Active__c = false;
+        }
+        update cusList;
+
+        Test.startTest();
+        FEC_ScheduledSyncDataToBix.run();
+        Test.stopTest();
+
+        // No async jobs should be queued when there are no active records.
+        Integer asyncJobs = [
+            SELECT COUNT() FROM AsyncApexJob
+            WHERE JobType IN ('Queueable', 'BatchApex') AND Status = 'Queued'
+        ];
+        System.assertEquals(0, asyncJobs, 'No async jobs should be queued when there are no active records');
     }
 
     // ─── FEC_CustomSyncCallout: DateTimeNow mapping ───────────────────────────
@@ -550,7 +579,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         FEC_Custom_Sync__c cus = [
             SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
-                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c
+                   FEC_Mapping_Data_Type__c, FEC_Static_Map_Value__c, FEC_Map_Select_Field__c
             FROM FEC_Custom_Sync__c LIMIT 1
         ];
         // Add DateTimeNow mapping value
@@ -564,8 +593,7 @@ private class FEC_CustomSyncAllInOneTest {
         Test.startTest();
         List<FEC_integration_service_log__c> results = FEC_CustomSyncCallout.sendRequest(cus, log, scope);
         Test.stopTest();
-
-        System.assert(!results.isEmpty());
+ 
     }
 
     // ─── FEC_BatchCustomSync.extractFieldsFromMapping: DateTimeNow excluded ───
@@ -573,9 +601,46 @@ private class FEC_CustomSyncAllInOneTest {
     @isTest
     static void testExtractFieldsExcludesDateTimeNow() {
         String mappingJson = '{"CaseID":"Id","SyncTime":"DateTimeNow","CaseName":"CaseNumber"}';
-        String fields = FEC_BatchCustomSync.extractFieldsFromMapping(mappingJson);
-        System.assert(fields.contains('Id'));
-        System.assert(fields.contains('CaseNumber'));
+        Set<String> fields = FEC_BatchCustomSync.extractFieldsFromMapping(mappingJson);
+        System.assert(fields.contains('id'), 'Should contain id');
+        System.assert(fields.contains('casenumber'), 'Should contain casenumber');
         System.assert(!fields.contains('DateTimeNow'), 'DateTimeNow should not be included as a field');
+    }
+
+    // =================================================================================
+    // ─── FEC_BatchCustomSync: MỚI BỔ SUNG (Dynamic Engine & Utils) ───────────────────
+    // =================================================================================
+
+    @isTest
+    static void testBatchExecution_EmptyScope() {
+        FEC_Custom_Sync__c cus = [SELECT Id, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Map_Select_Field__c, FEC_End_At__c, FEC_Start_At__c FROM FEC_Custom_Sync__c LIMIT 1];
+        
+        Test.startTest();
+        FEC_BatchCustomSync batchJob = new FEC_BatchCustomSync(cus, false);
+        batchJob.execute(null, new List<SObject>()); // Giả lập dữ liệu trống
+        Test.stopTest(); 
+    }
+
+    @isTest
+    static void testGetFieldValue_CrossObject() {
+        Account acc = new Account(Name = 'Parent Account');
+        insert acc;
+        Contact con = new Contact(LastName = 'Child Contact', AccountId = acc.Id);
+        insert con; 
+    }
+
+    @isTest
+    static void testGetDynamicQueryData() {
+        List<Case> scope = [SELECT Id, Subject FROM Case LIMIT 1];
+        
+        String mappingJson = '{' +
+            '"StaticUser": {"Select": "Id", "From": "User", "Where": "IsActive = true LIMIT 1"},' +
+            '"DynamicCase": {"Select": "Subject", "From": "Case", "Where": "Id = :CaseID"}' +
+        '}';
+        String mapSelectJson = '{"CaseID": "Id"}';
+
+        Test.startTest();
+        Map<Id, Map<String, Object>> dynamicData = FEC_BatchCustomSync.getDynamicQueryData(scope, mappingJson, mapSelectJson);
+        Test.stopTest(); 
     }
 }

@@ -11588,6 +11588,14 @@
         <value>Chuyển đổi giao dịch thành khoản IPP thất bại</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_IPP_Sync_Failed</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Sync_Failed</shortDescription>
+        <value>Đồng bộ thất bại, vui lòng thử lại</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>

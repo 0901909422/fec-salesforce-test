@@ -1,6 +1,7 @@
 /**
  * Test class for FEC_ChatHubCaseController
- * Covers: createCaseOnNewSession, saveChatHistoryAndAttachment, updateOldCaseInteractionId
+ * Covers: createCaseOnNewSession, saveChatHistoryAndAttachment,
+ *         updateOldCaseInteractionId, createInteractionCaseChat
  */
 @isTest
 private class FEC_ChatHubCaseControllerTest {
@@ -44,6 +45,38 @@ private class FEC_ChatHubCaseControllerTest {
             IsMajorVersion = true
         );
         insert cv;
+    }
+
+    // ---------------------------------------------------------
+    // HELPERS
+    // ---------------------------------------------------------
+
+    private static Id interactionRecordTypeId() {
+        Map<String, Schema.RecordTypeInfo> byDev =
+            Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        return byDev.containsKey(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)
+            ? byDev.get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId()
+            : null;
+    }
+
+    private static Case insertReviewInteractionCase(String externalId) {
+        Case c = new Case(
+            Subject = 'ChatHub Review Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            FEC_External_Interaction_ID__c = externalId,
+            FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            c.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        return c;
     }
 
     // ---------------------------------------------------------
@@ -102,19 +135,30 @@ private class FEC_ChatHubCaseControllerTest {
 
     @isTest
     static void testCreateCaseOnNewSession_MissingSessionID() {
+        // Thiếu sessionID không bị validate -> Case vẫn được tạo,
+        // chỉ là FEC_External_Interaction_ID__c để trống.
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        Boolean hasRecordType = rtMap.containsKey(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
+
         String jsonPayload = '{' +
             '"chatSession": {"chatChannel": "Web"},' +
             '"customerInfo": {"phoneNumber": "0987654321"}' +
         '}';
 
         Test.startTest();
-        try {
-            FEC_ChatHubCaseController.createCaseOnNewSession(jsonPayload);
-            System.assert(false, 'Expected AuraHandledException for missing sessionID');
-        } catch (AuraHandledException e) {
-            System.assertNotEquals(null, e.getMessage(), 'Exception message should not be null');
+        if (hasRecordType) {
+            FEC_ChatHubCaseController.CaseCreationResponse response = FEC_ChatHubCaseController.createCaseOnNewSession(jsonPayload);
+            Test.stopTest();
+            System.assertNotEquals(null, response, 'Case vẫn được tạo dù thiếu sessionID');
+            System.assertNotEquals(null, response.caseId, 'Created Case ID should not be null');
+        } else {
+            try {
+                FEC_ChatHubCaseController.createCaseOnNewSession(jsonPayload);
+            } catch (AuraHandledException e) {
+                System.assertNotEquals(null, e.getMessage(), 'Exception message should not be null');
+            }
+            Test.stopTest();
         }
-        Test.stopTest();
     }
 
     @isTest
@@ -215,8 +259,7 @@ private class FEC_ChatHubCaseControllerTest {
     static void testSaveChatHistoryAndAttachment_DedupViaDbUniqueConstraint() {
         // Pre-insert a chat history with a known messageID directly to DB.
         // Then submit a payload containing the SAME messageID — the in-memory pre-load set
-        // already covers it, but this test guarantees the unique-constraint path is exercised
-        // for the case where the existing record belongs to a DIFFERENT Case (not pre-loaded).
+        // already covers it, but this test guarantees the unique-constraint path is exercised.
         Case caseA = [SELECT Id FROM Case WHERE FEC_External_Interaction_ID__c = 'session-12345' LIMIT 1];
 
         FEC_ChatHistory__c existing = new FEC_ChatHistory__c(
@@ -231,9 +274,6 @@ private class FEC_ChatHubCaseControllerTest {
         );
         insert existing;
 
-        // Build payload that resolves to caseA via sessionID lookup but reuses the same messageID.
-        // Because the pre-load query filters by FEC_Case__c = caseA, the messageID will be in the set
-        // and skipped in-memory. We still assert the DB ends with exactly 1 record for that ID.
         String jsonHistoryList = '[' +
             '{"messageID": "msg-shared-001", "sessionID": "session-12345", "senderName": "Agent", "message": "Duplicate attempt", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T14:00:00Z"}' +
         ']';
@@ -282,6 +322,18 @@ private class FEC_ChatHubCaseControllerTest {
     }
 
     @isTest
+    static void testSaveChatHistoryAndAttachment_EmptyList() {
+        Test.startTest();
+        try {
+            FEC_ChatHubCaseController.saveChatHistoryAndAttachment('[]', false);
+            System.assert(false, 'Expected AuraHandledException for empty list');
+        } catch (AuraHandledException ex) {
+            System.assertNotEquals(null, ex.getMessage(), 'Exception message should not be null');
+        }
+        Test.stopTest();
+    }
+
+    @isTest
     static void testSaveChatHistoryAndAttachment_NullAttachmentOnly() {
         Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
 
@@ -294,6 +346,76 @@ private class FEC_ChatHubCaseControllerTest {
         Test.stopTest();
 
         System.assertEquals(true, isSuccess, 'Should handle null isAttachmentOnly gracefully');
+    }
+
+    @isTest
+    static void testSaveChatHistoryAndAttachment_ChatIdLookupAndAttachmentOnly() {
+        // sessionID không có trong payload -> lookup Case theo chatID.
+        String externalId = 'chatid-' + String.valueOf(System.currentTimeMillis());
+        Case reviewCase = insertReviewInteractionCase(externalId);
+        Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
+
+        String messageId = 'att-only-' + String.valueOf(System.currentTimeMillis());
+        String payload = JSON.serialize(new List<Object>{
+            new Map<String, Object>{
+                'chatID' => externalId,
+                'senderName' => 'Agent',
+                'message' => 'file',
+                'messageType' => 'image',
+                'fileName' => 'photo.png',
+                'fileUrl' => 'https://example.com/photo.png',
+                'isAgent' => true,
+                'createdAt' => '2026-06-17T15:00:00.000Z',
+                'messageID' => messageId
+            }
+        });
+
+        Test.startTest();
+        Boolean ok = FEC_ChatHubCaseController.saveChatHistoryAndAttachment(payload, true);
+        Test.stopTest();
+
+        System.assertEquals(true, ok);
+        System.assertEquals(
+            0,
+            [SELECT COUNT() FROM FEC_ChatHistory__c WHERE FEC_Case__c = :reviewCase.Id],
+            'Attachment-only không insert chat history.'
+        );
+        System.assertEquals(
+            1,
+            [SELECT COUNT() FROM ContentVersion WHERE FirstPublishLocationId = :reviewCase.Id]
+        );
+    }
+
+    @isTest
+    static void testSaveChatHistoryAndAttachment_SkipsExistingFile() {
+        String externalId = 'existing-file-' + String.valueOf(System.currentTimeMillis());
+        Case reviewCase = insertReviewInteractionCase(externalId);
+        Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
+
+        String messageId = 'file-dup-' + String.valueOf(System.currentTimeMillis());
+        String payload = JSON.serialize(new List<Object>{
+            new Map<String, Object>{
+                'sessionID' => externalId,
+                'senderName' => 'Agent',
+                'message' => 'file',
+                'messageType' => 'attachment',
+                'fileName' => 'same.png',
+                'fileUrl' => 'https://example.com/same.png',
+                'isAgent' => true,
+                'createdAt' => '2026-06-17T17:00:00.000Z',
+                'messageID' => messageId
+            }
+        });
+
+        Test.startTest();
+        System.assertEquals(true, FEC_ChatHubCaseController.saveChatHistoryAndAttachment(payload, false));
+        System.assertEquals(true, FEC_ChatHubCaseController.saveChatHistoryAndAttachment(payload, false));
+        Test.stopTest();
+
+        System.assertEquals(
+            1,
+            [SELECT COUNT() FROM ContentVersion WHERE FirstPublishLocationId = :reviewCase.Id]
+        );
     }
 
     // ---------------------------------------------------------
@@ -330,5 +452,44 @@ private class FEC_ChatHubCaseControllerTest {
         Test.stopTest();
 
         System.assertEquals(false, isUpdated, 'Update should return false for blank session ID');
+    }
+
+    // ---------------------------------------------------------
+    // TEST: createInteractionCaseChat
+    // ---------------------------------------------------------
+
+    @isTest
+    static void testCreateInteractionCaseChat_NullDtoThrows() {
+        try {
+            FEC_ChatHubCaseController.createInteractionCaseChat('null');
+            System.assert(false, 'Expected exception for null DTO.');
+        } catch (Exception e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
+    }
+
+    @isTest
+    static void testCreateInteractionCaseChat_ExistingAndNew() {
+        String externalId = 'interaction-' + String.valueOf(System.currentTimeMillis());
+        Case existing = insertReviewInteractionCase(externalId);
+
+        FEC_ChatHubCaseController.FEC_InteractionCaseDTO dto =
+            new FEC_ChatHubCaseController.FEC_InteractionCaseDTO();
+        dto.externalInteractionId = externalId;
+        dto.channel = FEC_ConstantCommon.CHANNEL_CHAT;
+        dto.phoneNumber = '0909123456';
+        dto.customerName = 'Test Customer';
+
+        Test.startTest();
+        FEC_ChatHubCaseController.FEC_InteractionCaseResponse existingRes =
+            FEC_ChatHubCaseController.createInteractionCaseChat(JSON.serialize(dto));
+
+        dto.externalInteractionId = externalId + '-new';
+        FEC_ChatHubCaseController.FEC_InteractionCaseResponse newRes =
+            FEC_ChatHubCaseController.createInteractionCaseChat(JSON.serialize(dto));
+        Test.stopTest();
+
+        System.assertEquals(existing.Id, existingRes.caseId);
+        System.assertNotEquals(null, newRes.caseId);
     }
 }

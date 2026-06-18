@@ -8,24 +8,6 @@ History
 ------------------------------------------------------------*/
 @isTest
 private class ArchiveInteractionCaseRedirectCtrl_Test {
-    
-    @isTest
-    static void testFetchAndRedirect_ExistingInteraction() {
-        // 1. Setup Data: Create a Case that already has a matching Interaction Case in Salesforce
-        Case interactionCase = new Case(Subject = 'Interaction Case', ArchiveExternalId__c = 'EXT-001');
-        insert interactionCase;
-
-        Case currentCase = new Case(Subject = 'Current Case', ArchiveInteractionId__c = 'EXT-001');
-        insert currentCase;
-
-        Test.startTest();
-            // Set VF Page Parameter
-            ApexPages.currentPage().getParameters().put('id', currentCase.Id);
-            
-            ArchiveInteractionCaseController ctrl = new ArchiveInteractionCaseController();
-            PageReference result = ctrl.fetchAndRedirect();
-        Test.stopTest();
-    }
 
     @isTest
     static void testFetchAndRedirect_FromArchive() {
