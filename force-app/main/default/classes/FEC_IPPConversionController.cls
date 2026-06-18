@@ -325,8 +325,7 @@ public without sharing class FEC_IPPConversionController {
         Map<String, FEC_Transaction__c> existingByKey = new Map<String, FEC_Transaction__c>();
         String unbilledType = FEC_ConstantCommon.TRANSACTION_TYPE_UNBILLED;
         Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
-        String query = 'SELECT Id, FEC_Post_Date__c, FEC_Transaction_Amount__c, FEC_Transaction_Code__c,' +
-            ' FEC_Reference_Number__c';
+        String query = 'SELECT Id, FEC_Post_Date__c, FEC_Transaction_Amount__c, FEC_Transaction_Code__c';
         if (txFieldMap.containsKey('FEC_Type__c')) {
             query += ', FEC_Type__c';
         }
@@ -369,9 +368,6 @@ public without sharing class FEC_IPPConversionController {
         rec.FEC_Transaction_Code__c = row.TransactionCode;
         rec.FEC_Effective_Date__c = resolveEffectiveDateFromApi(row);
         rec.FEC_Transaction_Plan__c = row.TransactionPlan;
-        rec.FEC_Card_Seq__c = row.CardSeq;
-        rec.FEC_IPP_Key__c = row.IPPKey;
-        rec.FEC_Reference_Number__c = row.ReferenceNumber;
         if (txFieldMap.containsKey('FEC_IPPEligibilityFlag__c')) {
             rec.put('FEC_IPPEligibilityFlag__c', row.IPPEligibilityFlag);
         }
@@ -394,9 +390,6 @@ public without sharing class FEC_IPPConversionController {
     private static String buildUnbilledSyncKey(FEC_Transaction__c tx) {
         if (tx == null) {
             return null;
-        }
-        if (String.isNotBlank(tx.FEC_Reference_Number__c)) {
-            return 'REF:' + tx.FEC_Reference_Number__c.trim();
         }
         String code = tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c.trim() : '';
         String post = tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : '';
@@ -652,8 +645,7 @@ public without sharing class FEC_IPPConversionController {
         }
         List<FEC_Transaction__c> txs = [
             SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Plan__c,
-                   FEC_Transaction_Code__c, FEC_Reference_Number__c, FEC_Authorization_Code__c, FEC_Customer_History__c,
-                   FEC_Card_Seq__c, FEC_IPP_Key__c,
+                   FEC_Transaction_Code__c, FEC_Authorization_Code__c, FEC_Customer_History__c,
                    FEC_Customer_History__r.FEC_Account_Number__c,
                    FEC_Customer_History__r.FEC_Card_Number__c
             FROM FEC_Transaction__c
@@ -792,7 +784,7 @@ public without sharing class FEC_IPPConversionController {
         }
         List<FEC_Transaction__c> txs = [
             SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Plan__c,
-                   FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c, FEC_Customer_History__c
+                   FEC_Transaction_Code__c, FEC_Authorization_Code__c, FEC_Customer_History__c
             FROM FEC_Transaction__c
             WHERE Id = :transactionId
             LIMIT 1
@@ -819,19 +811,6 @@ public without sharing class FEC_IPPConversionController {
         String accountNumber = getAccountNumberForGetIPPDetails(caseId, null);
         if (String.isBlank(accountNumber)) {
             result.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
-            return result;
-        }
-        if (String.isBlank(tx.FEC_Reference_Number__c)) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Reference Number' });
-            return result;
-        }
-        Integer cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
-        if (cardSeq == null) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Seq' });
-            return result;
-        }
-        if (String.isBlank(tx.FEC_IPP_Key__c)) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'IPP Key' });
             return result;
         }
         if (String.isBlank(resolveCardNumberForGetIppDetails(c))) {
@@ -885,12 +864,11 @@ public without sharing class FEC_IPPConversionController {
             req.transactionPlan = transactionPlan;
         }
         req.ippTerm = resolveIppTermForGetIppDetails(tx, tenor);
-        if (String.isNotBlank(tx.FEC_Reference_Number__c)) {
-            req.referenceNumber = tx.FEC_Reference_Number__c;
+        String refNo = resolveReferenceNumberForIpp(tx, tx.Id);
+        if (String.isNotBlank(refNo)) {
+            req.referenceNumber = refNo;
         }
         req.cardNumber = resolveCardNumberForGetIppDetails(c);
-        req.cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
-        req.ippKey = tx.FEC_IPP_Key__c;
         return req;
     }
 
@@ -909,12 +887,13 @@ public without sharing class FEC_IPPConversionController {
         req.amount = tx.FEC_Transaction_Amount__c;
         req.planNumber = tx.FEC_Transaction_Plan__c;
         req.ippTerm = ippTerm;
-        req.referenceNumber = tx.FEC_Reference_Number__c;
+        String refNo = resolveReferenceNumberForIpp(tx, tx.Id);
+        req.referenceNumber = refNo;
         req.transactionPlan = tx.FEC_Transaction_Plan__c;
         req.postingDate = postDate;
         req.cardNumber = resolveCardNumberForGetIppDetails(c);
-        req.cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
-        req.ippKey = tx.FEC_IPP_Key__c;
+        req.cardSeq = 0;
+        req.ippKey = refNo;
         return req;
     }
 
@@ -966,32 +945,14 @@ public without sharing class FEC_IPPConversionController {
     }
 
     @TestVisible
-    private static Integer parseCardSeqForGetIppDetails(String cardSeqText) {
-        if (String.isBlank(cardSeqText)) {
-            return null;
+    private static String resolveReferenceNumberForIpp(FEC_Transaction__c tx, Id transactionId) {
+        if (tx != null && String.isNotBlank(tx.FEC_Transaction_Code__c)) {
+            return tx.FEC_Transaction_Code__c;
         }
-        try {
-            return Integer.valueOf(cardSeqText.trim());
-        } catch (Exception e) {
-            return null;
+        if (tx != null && String.isNotBlank(tx.FEC_Authorization_Code__c)) {
+            return tx.FEC_Authorization_Code__c;
         }
-    }
-
-    @TestVisible
-    private static String resolveCardNumberForAddIpp(FEC_Transaction__c tx, Case c) {
-        if (tx != null && tx.FEC_Customer_History__c != null) {
-            Map<String, Object> txPop = tx.getPopulatedFieldsAsMap();
-            if (txPop.containsKey('FEC_Customer_History__r')) {
-                FEC_Customer_History__c chRel = (FEC_Customer_History__c) tx.getSObject('FEC_Customer_History__r');
-                if (chRel != null && String.isNotBlank(chRel.FEC_Card_Number__c)) {
-                    return chRel.FEC_Card_Number__c;
-                }
-            }
-        }
-        if (c != null && c.FEC_Account_or_Contract__r != null) {
-            return c.FEC_Account_or_Contract__r.FEC_Card_Number__c;
-        }
-        return null;
+        return transactionId != null ? String.valueOf(transactionId) : null;
     }
 
     private static Case loadCaseForIPPConversion(Id caseId) {
