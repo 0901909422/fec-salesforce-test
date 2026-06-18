@@ -450,4 +450,9 @@ private class FEC_VMXAUTHDETAILINQ_Test {
 
         System.assertEquals(0, res.VMXMsgOut.Auths.size());
     }
+
+    @IsTest
+    static void testLogApiResponse_Null() {
+        FEC_VMXAUTHDETAILINQ.logApiResponse();
+    }
 }

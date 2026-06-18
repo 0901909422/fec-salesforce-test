@@ -15,8 +15,13 @@ private class FEC_GetUnbilledTransactions_Test {
         '      <TransactionRecords>' +
         '        <TransactionRecord>' +
         '          <TransactionDate>2025-12-15</TransactionDate>' +
+        '          <PostingDate>2025-12-15</PostingDate>' +
+        '          <EffectiveDate>2025-12-15</EffectiveDate>' +
         '          <Amount>150000</Amount>' +
         '          <Description>Shopping</Description>' +
+        '          <TransactionCode>0105</TransactionCode>' +
+        '          <TransactionPlan>60001</TransactionPlan>' +
+        '          <IPPEligibilityFlag>R</IPPEligibilityFlag>' +
         '        </TransactionRecord>' +
         '      </TransactionRecords>' +
         '    </ns1:GetUnbilledTransactionsResponse>' +
@@ -42,6 +47,8 @@ private class FEC_GetUnbilledTransactions_Test {
         System.assertEquals(0, res.Sys.Status, 'Status trả về phải là 0.');
         System.assertEquals(1, res.Transactions.size(), 'Phải có 1 giao dịch được parse.');
         System.assertEquals(150000, res.Transactions[0].Amount);
+        System.assertEquals('0105', res.Transactions[0].TransactionCode);
+        System.assertEquals('R', res.Transactions[0].IPPEligibilityFlag);
     }
 
     @IsTest
@@ -96,5 +103,10 @@ private class FEC_GetUnbilledTransactions_Test {
             res.setHeader('Content-Type', 'text/xml');
             return res;
         }
+    }
+
+    @IsTest
+    static void testLogApiResponse_Null() {
+        FEC_GetUnbilledTransactions.logApiResponse();
     }
 }

@@ -11,6 +11,8 @@
 ****************************************************************************************/
  
 public with sharing class FEC_GetUnbilledTransactions {
+
+    private static FEC_ResponseLog responseLog;
  
     // =========================================================================
     // PUBLIC METHOD
@@ -45,6 +47,15 @@ public with sharing class FEC_GetUnbilledTransactions {
                 ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetUnbilledTransactions',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
             
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -63,9 +74,19 @@ public with sharing class FEC_GetUnbilledTransactions {
             return response;
  
         } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             System.debug('### UNBILLED TXN ERROR: ' + ex.getMessage());
             throw ex;
+        } finally {
+            logApiResponse();
         }
+    }
+
+    public static void logApiResponse() {
+        FEC_CommonUltils.logApiResponse(responseLog);
+        responseLog = null;
     }
 
     /* =====================================================
@@ -152,15 +173,16 @@ public with sharing class FEC_GetUnbilledTransactions {
         Set<String> validRequestorIds = new Set<String>{
             FEC_ConstantCommon.REQUESTOR_CRM,
             FEC_ConstantCommon.REQUESTOR_PORTAL,
-            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            FEC_ConstantCommon.REQUESTOR_PEGA
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
  
-        try {
-            Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
-        } catch (Exception e) {
+        if (!isValidUnbilledRequestDateTime(dateTimeStr)) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr})
             );
@@ -174,6 +196,22 @@ public with sharing class FEC_GetUnbilledTransactions {
  
     }
  
+  @TestVisible
+    private static Boolean isValidUnbilledRequestDateTime(String dateTimeStr) {
+        if (String.isBlank(dateTimeStr)) {
+            return false;
+        }
+        if (dateTimeStr.endsWith(FEC_ConstantCommon.TRANSFER_CALL_DATETIME_SUFFIX_GMT)) {
+            return true;
+        }
+        try {
+            Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     // =========================================================================
     // SOAP RESPONSE PARSER
     // =========================================================================
@@ -237,6 +275,12 @@ public with sharing class FEC_GetUnbilledTransactions {
                 tr.MerchantName = FEC_CommonUltils.getValueSafe(txn, 'MerchantName');
                 tr.MCC = FEC_CommonUltils.getValueSafe(txn, 'MCC');
                 tr.Location = FEC_CommonUltils.getValueSafe(txn, 'Location');
+                tr.CardSeq = FEC_CommonUltils.getValueSafe(txn, 'CardSeq');
+                tr.IPPKey = FEC_CommonUltils.getValueSafe(txn, 'IPPKey');
+                tr.TransactionCode = FEC_CommonUltils.getValueSafe(txn, 'TransactionCode');
+                tr.EffectiveDate = FEC_CommonUltils.getValueSafe(txn, 'EffectiveDate');
+                tr.TransactionPlan = FEC_CommonUltils.getValueSafe(txn, 'TransactionPlan');
+                tr.IPPEligibilityFlag = FEC_CommonUltils.getValueSafe(txn, 'IPPEligibilityFlag');
 
                 result.Transactions.add(tr);
             }
@@ -270,6 +314,12 @@ public with sharing class FEC_GetUnbilledTransactions {
         public String TransactionType;     
         public String MerchantName;        
         public String MCC;                 
-        public String Location;            
+        public String Location;
+        public String CardSeq;
+        public String IPPKey;
+        public String TransactionCode;
+        public String EffectiveDate;
+        public String TransactionPlan;
+        public String IPPEligibilityFlag;
     }
 }

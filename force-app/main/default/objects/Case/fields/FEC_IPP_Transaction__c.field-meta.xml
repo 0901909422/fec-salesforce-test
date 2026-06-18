@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_IPP_Transaction__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Transaction selected for IPP Conversion on this Case.</description>
+    <label>IPP Transaction</label>
+    <referenceTo>FEC_Transaction__c</referenceTo>
+    <relationshipLabel>Cases (IPP Conversion)</relationshipLabel>
+    <relationshipName>Cases_IPP_Conversion</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

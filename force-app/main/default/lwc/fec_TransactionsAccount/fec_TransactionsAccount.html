@@ -1,7 +1,7 @@
 <template>
     <div class="customer-info-container slds-card slds-p-around_small">
         <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
-            <lightning-accordion-section name="unbilledTransactions" label="Unbilled Transactions">
+            <lightning-accordion-section name="unbilledTransactions" label={unbilledSectionLabel}>
 
                 <c-fec_-related-list-paging records={unbilledTransactions}
                  data-section="unbilled"

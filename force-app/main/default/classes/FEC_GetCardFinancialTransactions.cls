@@ -11,6 +11,8 @@
 ****************************************************************************************/
  
 public with sharing class FEC_GetCardFinancialTransactions {
+
+    private static FEC_ResponseLog responseLog;
  
     // =========================================================================
     // RESPONSE MODELS
@@ -89,6 +91,15 @@ public with sharing class FEC_GetCardFinancialTransactions {
                 ? FEC_MockupEndpoint.GET_CARD_FINANCIAL_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetCardFinancialTransactions',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
             
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -107,9 +118,19 @@ public with sharing class FEC_GetCardFinancialTransactions {
             return response;
  
         } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             System.debug('### FIN TXN ERROR: ' + ex.getMessage());
             throw ex;
+        } finally {
+            logApiResponse();
         }
+    }
+
+    public static void logApiResponse() {
+        FEC_CommonUltils.logApiResponse(responseLog);
+        responseLog = null;
     }
 
     // =========================================================================

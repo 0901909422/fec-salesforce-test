@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SearchCustomization xmlns="http://soap.sforce.com/2006/04/metadata">
     <channel>GlobalSearch</channel>
-    <masterLabel>FEC_Search_Configuration</masterLabel>
+    <masterLabel>FEC_Search_Configuration_Other_Depts</masterLabel>
     <objectOverride>
         <objectApiName>LegalEntity</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_IPP__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Payment_History__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -147,10 +139,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Application_List__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>MultipartyInfoAuthRequest</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -219,6 +207,10 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
+        <objectApiName>FEC_Additional_Field__c</objectApiName>
+        <searchable>false</searchable>
+    </objectOverride>
+    <objectOverride>
         <objectApiName>FEC_Application_History__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -259,23 +251,11 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Transaction__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Undelivered_Card__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>DocumentChecklistItem</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
         <objectApiName>ProductCategory</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Statement__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -319,11 +299,11 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>ClaimItemRelatedObject</objectApiName>
+        <objectApiName>Opportunity</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>Opportunity</objectApiName>
+        <objectApiName>ClaimItemRelatedObject</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -364,10 +344,6 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>LoanApplicantIncome</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Additional_Info__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -447,10 +423,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Card_Delivery__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>FEC_Case_Assignment__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -480,10 +452,6 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>Idea</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Process_Action_History__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -527,10 +495,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Address_Info__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>AttributeCategory</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -556,7 +520,19 @@
     </objectOverride>
     <objectOverride>
         <fieldOverride>
+            <fieldApiName>FEC_National_ID_Passport_ID__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_External_Interaction_ID__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
             <fieldApiName>FEC_SLA_Violating_Warning__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Phone_Number__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -605,6 +581,10 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Updated_Info_Email__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Interaction_Email__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -664,6 +644,10 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
+            <fieldApiName>FEC_Case_Email__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
             <fieldApiName>FEC_CIF_Number__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
@@ -701,6 +685,10 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Short_Name__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Case_Phone_Number__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -753,6 +741,10 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Follow_Up_User__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Contract_Number__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -900,6 +892,14 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
+            <fieldApiName>FEC_Application_ID__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Account_Number__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
+        <fieldOverride>
             <fieldApiName>FEC_Customer_Name__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
@@ -1014,6 +1014,10 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
+        <objectApiName>FEC_Undelivered_Card__c</objectApiName>
+        <searchable>false</searchable>
+    </objectOverride>
+    <objectOverride>
         <objectApiName>ProductCategoryDisqual</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -1046,19 +1050,11 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Card_Payment__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>DocumentDecisionRequirement</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
         <objectApiName>AuthorizedInsuranceLine</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Notification_History__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -1079,10 +1075,6 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>EngagementInteraction</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_KYC_Result__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -1230,10 +1222,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Routing_Action__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>GroupClass</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -1261,6 +1249,5 @@
         <objectApiName>Claim</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
-    <selectedProfile>cs frontline</selectedProfile>
-    <selectedProfile>cs back office</selectedProfile>
+    <selectedProfile>relevant depts</selectedProfile>
 </SearchCustomization>

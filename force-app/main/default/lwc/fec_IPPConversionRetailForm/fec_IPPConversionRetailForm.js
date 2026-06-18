@@ -7,6 +7,10 @@ import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionController.getEligibleTransactions';
+import getSavedIppTransactionId from '@salesforce/apex/FEC_IPPConversionController.getSavedIppTransactionId';
+import saveSelectedTransaction from '@salesforce/apex/FEC_IPPConversionController.saveSelectedTransaction';
+import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.loadIppTenorOptions';
+import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
 import convertIPPManualRetail from '@salesforce/apex/FEC_IPPConversionController.convertIPPManualRetail';
@@ -33,7 +37,7 @@ import FEC_Btn_Next from '@salesforce/label/c.FEC_Btn_Next';
 import { STR_EMPTY, FORM_STATE_LOADING, FORM_STATE_NONE, FORM_STATE_HAS_DATA } from 'c/fec_CommonConst';
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
 
-const IPP_RETAIL_PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+const IPP_RETAIL_PAGE_SIZE_OPTIONS = [10, 20];
 
 function parseIppRetailUiBundled(raw) {
     const p = (raw || STR_EMPTY).split('##');
@@ -68,7 +72,6 @@ const CONST = {
     COL_TRX_PLAN: 'Transaction Plan',
     COL_TRX_AMT: 'Transaction Amount',
     COL_POST_DATE: 'Post Date',
-    COL_AUTH_CODE: 'Authorization Code',
     COL_MERCHANT: 'Merchant Description',
     CASE_ID_PARAM: 'Case Id'
 };
@@ -164,7 +167,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         { label: CONST.COL_TRX_PLAN, fieldName: 'transactionPlan', type: 'text' },
         { label: CONST.COL_TRX_AMT, fieldName: 'amountDisplay', type: 'text' },
         { label: CONST.COL_POST_DATE, fieldName: 'postingDateStr', type: 'text' },
-        { label: CONST.COL_AUTH_CODE, fieldName: 'authorizationCode', type: 'text' },
         { label: CONST.COL_MERCHANT, fieldName: 'merchant', type: 'text' }
     ];
 
@@ -210,15 +212,21 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             return;
         }
         this.isLoading = true;
-        getEligibleTransactions({ caseId: this.recordId })
-            .then((data) => {
+        return Promise.all([
+            getEligibleTransactions({ caseId: this.recordId }),
+            getSavedIppTransactionId({ caseId: this.recordId })
+        ])
+            .then(([data, savedId]) => {
                 this.transactions = (data || []).map(t => ({
                     ...t,
                     amountDisplay: t.amount != null ? this.formatAmount(t.amount) : STR_EMPTY,
                     effectiveDateStr: formatToDDMMYYYY(t.effectiveDateStr) || t.effectiveDateStr || STR_EMPTY,
                     postingDateStr: formatToDDMMYYYY(t.postingDateStr) || t.postingDateStr || STR_EMPTY
                 }));
-                this.selectedTransactionId = null;
+                const savedTxId = savedId ? String(savedId) : null;
+                const savedStillEligible = savedTxId
+                    && (this.transactions || []).some((t) => String(t.transactionId) === savedTxId);
+                this.selectedTransactionId = savedStillEligible ? savedTxId : null;
                 this.details = null;
                 this.selectedTenor = null;
                 this.tenorBlockReady = false;
@@ -251,6 +259,13 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.details = null;
             this.selectedTenor = null;
             this.tenorBlockReady = false;
+            this.showTenorSection = false;
+            this.tenorSyncError = null;
+            saveSelectedTransaction({
+                caseId: this.recordId,
+                transactionId: this.selectedTransactionId
+            }).catch(() => {
+            });
             return;
         }
         if (selectedRows.length === 0) {
@@ -264,6 +279,13 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.details = null;
             this.selectedTenor = null;
             this.tenorBlockReady = false;
+            this.showTenorSection = false;
+            this.tenorSyncError = null;
+            saveSelectedTransaction({
+                caseId: this.recordId,
+                transactionId: null
+            }).catch(() => {
+            });
         }
     }
 

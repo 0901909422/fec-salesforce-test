@@ -12,6 +12,8 @@
 
 public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
+    private static FEC_ResponseLog responseLog;
+
     private static final String NS_VMX  = 'http://fecredit.com.vn/cms/ws/v2';
 
     /* =====================================================
@@ -93,50 +95,73 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String org,
         String acct
     ) {
-        validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
+        try {
+            validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
 
-        String soapBody = buildSoapRequest(
-                transID, 
-                requestorId, 
-                dateTimeStr, 
-                vmxVersion,
-                context,
-                signOnName,
-                org,
-                acct
-                );
+            String soapBody = buildSoapRequest(
+                    transID,
+                    requestorId,
+                    dateTimeStr,
+                    vmxVersion,
+                    context,
+                    signOnName,
+                    org,
+                    acct
+                    );
 
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MFASOUTSTANDINGAUTHINQ');
-        
-        String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MFASOUTSTANDINGAUTHINQ');
+
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                    ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
+                    : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-            
-        if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException( String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
-        }
 
-        ResponseWrapper response = parseResponse(res.getBody());
-
-        if (response.Sys == null || response.Sys.Code != 1) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
+            responseLog = new FEC_ResponseLog(
+                'FEC_MFASOUTSTANDINGAUTHINQ',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
             );
-        }
-        if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F'){
-            String errorMsg = System.Label.FEC_MSG_API_Error;
-            if (response.VMXMsgOut.RC_DATA != null 
-                && !response.VMXMsgOut.RC_DATA.isEmpty()) {
-        
-                errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
-            }
-        
-            throw new CalloutException(errorMsg);
-        }
 
-        return response;
+            if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
+                throw new CalloutException( String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
+            }
+
+            ResponseWrapper response = parseResponse(res.getBody());
+
+            if (response.Sys == null || response.Sys.Code != 1) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
+                );
+            }
+            if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F'){
+                String errorMsg = System.Label.FEC_MSG_API_Error;
+                if (response.VMXMsgOut.RC_DATA != null
+                    && !response.VMXMsgOut.RC_DATA.isEmpty()) {
+
+                    errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
+                }
+
+                throw new CalloutException(errorMsg);
+            }
+
+            return response;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
+        }
+    }
+
+    public static void logApiResponse() {
+        FEC_CommonUltils.logApiResponse(responseLog);
+        responseLog = null;
     }
 
     /* =====================================================
