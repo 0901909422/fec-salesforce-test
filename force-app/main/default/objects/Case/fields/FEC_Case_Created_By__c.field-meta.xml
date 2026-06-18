@@ -3,16 +3,18 @@
     <fullName>FEC_Case_Created_By__c</fullName>
     <description>Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu. Hiển thị Email ID của người tạo Case</description>
     <externalId>false</externalId>
-    <formula>IF(
-    OR(
-        TRIM(LOWER(CreatedBy.LastName)) = &quot;platform integration user&quot;,
-        TRIM(LOWER(CreatedBy.Alias)) = &quot;platint&quot;
-    ),
-    &quot;system&quot;,
+    <formula>IF (NOT(ISBLANK(ArchiveCaseCreatedBy__c)), ArchiveCaseCreatedBy__c,
     IF(
-        RecordType.Name &lt;&gt; &quot;Interaction&quot;,
-        LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
-        &quot;&quot;
+        OR(
+            TRIM(LOWER(CreatedBy.LastName)) = &quot;platform integration user&quot;,
+            TRIM(LOWER(CreatedBy.Alias)) = &quot;platint&quot;
+        ),
+        &quot;system&quot;,
+        IF(
+            RecordType.Name &lt;&gt; &quot;Interaction&quot;,
+            LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
+            &quot;&quot;
+        )
     )
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>

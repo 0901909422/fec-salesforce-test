@@ -131,7 +131,6 @@ public without sharing class FEC_PaymentHistoryController {
         }
 
         List<FEC_Payment_History__c> toUpsert = new List<FEC_Payment_History__c>();
-        Decimal totalAmount = 0;
 
         for (FEC_GetCardSecInfo.FinancialTransaction ft
                 : cardSecRes.CardSecInfo.FinancialTransactions) {
@@ -155,15 +154,12 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Payment_Amount__c = amount;
             r.FEC_Particulars__c    = ft.RRN;
 
-            if (ft.TRNXAmount != null) totalAmount += ft.TRNXAmount;
             toUpsert.add(r);
         }
 
-        for (FEC_Payment_History__c r : toUpsert) {
-            r.FEC_Total_Payment_Amount__c = totalAmount;
+       if (!toUpsert.isEmpty()) {
+            upsert toUpsert;
         }
-
-        if (!toUpsert.isEmpty()) upsert toUpsert;
     }
 
     /* =====================================================
@@ -189,13 +185,19 @@ public without sharing class FEC_PaymentHistoryController {
         List<PaymentHistoryDTO> result = new List<PaymentHistoryDTO>();
         Integer idx = 1;
 
+        FEC_Customer_History__c ch = [
+            SELECT FEC_Total_Payment_Amount__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
+            LIMIT 1
+        ];
+
         for (FEC_Payment_History__c r : [
             SELECT
                 FEC_Payment_Date__c,
                 FEC_Booking_Date__c,
                 FEC_Payment_Amount__c,
-                FEC_Particulars__c,
-                FEC_Total_Payment_Amount__c
+                FEC_Particulars__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
             AND FEC_Payment_Channel__c = NULL
@@ -207,7 +209,7 @@ public without sharing class FEC_PaymentHistoryController {
             dto.bookingDate        = r.FEC_Booking_Date__c;
             dto.paymentAmount      = r.FEC_Payment_Amount__c;
             dto.particulars        = r.FEC_Particulars__c;
-            dto.totalPaymentAmount = r.FEC_Total_Payment_Amount__c;
+            dto.totalPaymentAmount = ch.FEC_Total_Payment_Amount__c;
             result.add(dto);
         }
 
@@ -268,14 +270,23 @@ public without sharing class FEC_PaymentHistoryController {
             WHERE FEC_Customer_History__c = :customerHistoryId
             AND FEC_Payment_Channel__c != NULL
         ]) {
-            String key = String.valueOf(h.FEC_Payment_Date__c) + '|' + h.FEC_Payment_Channel__c + '|' + String.valueOf(h.FEC_Payment_Amount__c);
-            existingMap.put(key, h);
+            String key = buildRealtimePaymentKey(
+                h.FEC_Payment_Date__c,
+                h.FEC_Payment_Channel__c,
+                h.FEC_Payment_Amount__c
+            );
+            if (String.isNotBlank(key)) {
+                existingMap.put(key, h);
+            }
         }
 
-        List<FEC_Payment_History__c> toUpsert = new List<FEC_Payment_History__c>();
+        Map<String, FEC_Payment_History__c> toUpsertByKey = new Map<String, FEC_Payment_History__c>();
         for (FEC_GetPaymentInfo.PaymentInfo p : apiRes.Payments) {
             Date paymentDate = FEC_CommonUltils.parseDate(p.TransactionDate);
-            String key = String.valueOf(paymentDate) + '|' + p.Username + '|' + String.valueOf(p.AmountPaid);
+            String key = buildRealtimePaymentKey(paymentDate, p.Username, p.AmountPaid);
+            if (String.isBlank(key) || toUpsertByKey.containsKey(key)) {
+                continue;
+            }
 
             FEC_Payment_History__c r =
                 existingMap.containsKey(key)
@@ -287,10 +298,32 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Payment_Date__c    = paymentDate;
             r.FEC_Payment_Amount__c  = p.AmountPaid;
             r.FEC_Payment_Channel__c = p.Username;
-            toUpsert.add(r);
+            toUpsertByKey.put(key, r);
         }
 
-        if (!toUpsert.isEmpty()) upsert toUpsert;
+        if (!toUpsertByKey.isEmpty()) {
+            upsert toUpsertByKey.values();
+        }
+    }
+
+    private static String buildRealtimePaymentKey(
+        Date paymentDate,
+        String paymentChannel,
+        Decimal paymentAmount
+    ) {
+        if (paymentDate == null) {
+            return null;
+        }
+        return String.valueOf(paymentDate)
+            + '|' + (String.isBlank(paymentChannel) ? '' : paymentChannel.trim())
+            + '|' + formatPaymentKeyAmount(paymentAmount);
+    }
+
+    private static String formatPaymentKeyAmount(Decimal amount) {
+        if (amount == null) {
+            return '';
+        }
+        return amount.setScale(2, System.RoundingMode.HALF_UP).toPlainString();
     }
 
     /* =====================================================

@@ -18398,14 +18398,15 @@
         <protected>false</protected>
         <shortDescription>TECH_ARCHIEVE_MAPPING_DEV_FIELD</shortDescription>
         <value>{
-  &quot;createddate&quot;: &quot;ArchiveCreatedDate__c&quot;,
-  &quot;LastModifiedDate&quot;: &quot;ArchiveLastModifiedDate__c&quot;,
-  &quot;FEC_Interaction_ID__c&quot;: &quot;ArchiveInteractionId__c&quot;,
-  &quot;FEC_Service_Case_Owner__c&quot;: &quot;ArchiveServiceCaseOwner__c&quot;,
-  &quot;FEC_Case_Created_By__c&quot;: &quot;ArchiveCaseCreatedBy__c&quot;,
-  &quot;FEC_Last_Updated_By__c&quot;: &quot;ArchiveLastUpdatedBy__c&quot;,
-  &quot;FEC_Account_or_Contract__c&quot;: &quot;ArchiveAccOrContract__c&quot;,
-  &quot;FEC_Selected_Address__c&quot;: &quot;ArchiveSelectedAddress__c&quot;
+&quot;createddate&quot;:&quot;ArchiveCreatedDate__c&quot;,
+&quot;LastModifiedDate&quot;:&quot;ArchiveLastModifiedDate__c&quot;,
+&quot;FEC_Interaction_ID__c&quot;:&quot;ArchiveInteractionId__c&quot;,
+&quot;FEC_Service_Case_Owner__c&quot;:&quot;ArchiveServiceCaseOwner__c&quot;,
+&quot;FEC_Case_Created_By__c&quot;:&quot;ArchiveCaseCreatedBy__c&quot;,
+&quot;FEC_Last_Updated_By__c&quot;:&quot;ArchiveLastUpdatedBy__c&quot;,
+&quot;FEC_Account_or_Contract__c&quot;:&quot;ArchiveAccOrContract__c&quot;,
+&quot;FEC_Selected_Address__c&quot;:&quot;ArchiveSelectedAddress__c&quot;,
+&quot;Status&quot;:&quot;ArchiveStatus__c&quot;
 }</value>
     </labels>
     <labels>
@@ -18483,21 +18484,21 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_LIST_OBJ_DEL_ARCHIVE_CASE</shortDescription>
-        <value>Case,FEC_Actual_Nature_of_Case__c,FEC_Customer_History__c,FEC_Product_Type__c,FEC_Category__c,FEC_Sub_Category__c,FEC_Sub_Code__c,FEC_Business_Process__c,FEC_IPP__c,FEC_Card_Payment__c,FEC_Process_Action__c,FEC_Integration_Case__c,FEC_Case_Stage__c</value>
+        <value>Case,FEC_Actual_Nature_of_Case__c,FEC_Customer_History__c,FEC_Product_Type__c,FEC_Category__c,FEC_Sub_Category__c,FEC_Sub_Code__c,FEC_Business_Process__c,FEC_IPP__c,FEC_Card_Payment__c,FEC_Process_Action__c,FEC_Integration_Case__c,FEC_Case_Stage__c,FEC_CustomerAdditionalInfoConfig__c</value>
     </labels>
     <labels>
         <fullName>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</shortDescription>
-        <value>FEC_IPP__c,FEC_Card_Payment__c,FEC_Process_Action__c,FEC_Integration_Case__c</value>
+        <value>FEC_IPP__c,FEC_Card_Payment__c,FEC_Process_Action__c,FEC_Integration_Case__c,FEC_CustomerAdditionalInfoConfig__c</value>
     </labels>
     <labels>
         <fullName>TECH_LIST_OBJ_IS_MASTER_DETAIL</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_LIST_OBJ_IS_MASTER_DETAIL</shortDescription>
-        <value>FEC_Additional_Info__c,FEC_Assignment__c,FEC_Case_Flow_History__c,FEC_Case_Refund_Details__c,FEC_Case_Remarks__c,FEC_Customer_History__c,FEC_KYC_Result__c,FEC_Incorrect_Payment_Info__c,FEC_Pending_Disbursement__c,FEC_Process_Action_History__c,FEC_Relevant_Ticket__c,FEC_Routing_Action_History__c,FEC_Sensitive_Data__c,FEC_Watcher__c,FEC_RePayment_Schedule__c,FEC_Notification_History__c,FEC_Do_Not_Bother__c,FEC_ChatHistory__c,FEC_Card_Delivery__c,FEC_Asset__c,FEC_Application_History__c</value>
+        <value>FEC_Additional_Info__c,FEC_Assignment__c,FEC_Case_Flow_History__c,FEC_Case_Refund_Details__c,FEC_Case_Remarks__c,FEC_Customer_History__c,FEC_KYC_Result__c,FEC_Incorrect_Payment_Info__c,FEC_Pending_Disbursement__c,FEC_Process_Action_History__c,FEC_Relevant_Ticket__c,FEC_Routing_Action_History__c,FEC_Sensitive_Data__c,FEC_Watcher__c,FEC_RePayment_Schedule__c,FEC_Notification_History__c,FEC_Do_Not_Bother__c,FEC_ChatHistory__c,FEC_Card_Delivery__c,FEC_Asset__c,FEC_Application_History__c,FEC_Contract_List_for_Remove_Phone__c</value>
     </labels>
     <labels>
         <fullName>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</fullName>
@@ -18506,7 +18507,8 @@
         <shortDescription>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</shortDescription>
         <value>{
   &quot;FEC_Account_or_Contract__c&quot;: &quot;FEC_Customer_History__c&quot;,
-  &quot;FEC_Selected_Address__c&quot;: &quot;FEC_Address_Info__c&quot;
+  &quot;FEC_Selected_Address__c&quot;: &quot;FEC_Address_Info__c&quot;,
+  &quot;FEC_IPP_To_Close__c&quot;: &quot;FEC_IPP__c&quot;
 }</value>
     </labels>
     <labels>
@@ -18663,5 +18665,26 @@
         <protected>false</protected>
         <shortDescription>Manual Chat Customer Username Required</shortDescription>
         <value>Customer Username is required for manual Chat interaction.</value>
+    </labels>
+	<labels>
+        <fullName>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</shortDescription>
+        <value>https://sf-csm-service-dev.fecredit.cloud/dispatcher/api/v1/attachments/download?s3Key=</value>
+    </labels>
+	<labels>
+        <fullName>TECH_CASE_ARCHIVE_NOT_FOUND</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_ARCHIVE_NOT_FOUND</shortDescription>
+        <value>This Archive Case does not exist.</value>
+    </labels>
+	<labels>
+        <fullName>TECH_LIST_OBJ_NON_CHILD_OF_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_OBJ_NON_CHILD_OF_CASE</shortDescription>
+        <value>FEC_CustomerAdditionalInfoConfig__c,FEC_CustomerAdditionalInfo__c</value>
     </labels>
 </CustomLabels>

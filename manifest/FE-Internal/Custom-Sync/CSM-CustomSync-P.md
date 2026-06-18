@@ -1,13 +1,29 @@
 # Permission entries for package: CSM-CustomSync
 
-> Source package: manifest/FE-internal/Custom-Sync/CSM-CustomSync.xml
-> Generated from branch: Resync-CustomSync
-> Generated at: 2026-05-29T10:00:00.000Z
-> Mode: generated
+> Source package: manifest/FE-Internal/Custom-Sync/CSM-CustomSync.xml
+> Generated from branch: uat
+> Generated at: 2026-06-15T10:00:00.000Z
+> Mode: refreshed
 
 ## PermissionSet: FEC_Common_System_Setting
 
 ```xml
+<classAccesses>
+    <apexClass>FEC_BatchCustomSync</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_BatchCustomSyncByIds</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_BatchCustomSyncByIdsTest</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_BatchReCallCustomSync</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
 <classAccesses>
     <apexClass>FEC_CustomSyncAllInOneTest</apexClass>
     <enabled>true</enabled>
@@ -47,7 +63,17 @@
 </fieldPermissions>
 <fieldPermissions>
     <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Additional_Conditions__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
     <field>FEC_Custom_Sync__c.FEC_Case_Business_Code__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Created_Date_Field__c</field>
     <readable>true</readable>
 </fieldPermissions>
 <fieldPermissions>
@@ -58,6 +84,11 @@
 <fieldPermissions>
     <editable>true</editable>
     <field>FEC_Custom_Sync__c.FEC_Mapping_Data_Type__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Modified_Date_Field__c</field>
     <readable>true</readable>
 </fieldPermissions>
 <fieldPermissions>
@@ -73,6 +104,184 @@
 <fieldPermissions>
     <editable>true</editable>
     <field>FEC_Custom_Sync__c.FEC_Start_At__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Static_Map_Value__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Sync_Failed__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Sync_Successfully__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Sync_To__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Total_Record_Sync__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>CustomSyncSetting__c.ApiKey__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>CustomSyncSetting__c.Endpoint__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>CustomSyncSetting__c.LimitQuanitySync__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Bix_Is_Success__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Custom_Sync__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Endpoint__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Error_Message__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Method__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Quantity_Call__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Request_Data__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Response_Data__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.FEC_Status_Code__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_integration_service_log__c.Records__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+```
+
+## PermissionSet: RD_IT_User_System_Management
+
+```xml
+<classAccesses>
+    <apexClass>FEC_CustomSyncAllInOneTest</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_CustomSyncCallout</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_CustomSyncValidator</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_CustomSyncValidatorTest</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_QueueReportCustomSyncBix</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_QueueRunBatchSync</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<classAccesses>
+    <apexClass>FEC_ScheduledSyncDataToBix</apexClass>
+    <enabled>true</enabled>
+</classAccesses>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Active__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Additional_Conditions__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Case_Business_Code__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Created_Date_Field__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_End_At__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Mapping_Data_Type__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Modified_Date_Field__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Processing_Quantity__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Request_Body_Mapping__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Start_At__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Custom_Sync__c.FEC_Static_Map_Value__c</field>
     <readable>true</readable>
 </fieldPermissions>
 <fieldPermissions>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Callback_Reason_MRC__c</fullName>
+    <label>Callback Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>CS Callback Scheduled</fullName>
+                <default>false</default>
+                <label>CS Callback Scheduled</label>
+            </value>
+            <value>
+                <fullName>Relative Requested Callback</fullName>
+                <default>false</default>
+                <label>Relative Requested Callback</label>
+            </value>
+            <value>
+                <fullName>Customer Busy</fullName>
+                <default>false</default>
+                <label>Customer Busy</label>
+            </value>
+            <value>
+                <fullName>Customer Requests Delivery Address Verification</fullName>
+                <default>false</default>
+                <label>Customer Requests Delivery Address Verification</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

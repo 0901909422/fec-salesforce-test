@@ -156,11 +156,13 @@ export default class Fec_allocationHistory extends LightningElement {
                     contractNumber: this._contractNumber,
                     recordType: Fetch_Collection_Data_Record_Type_Allocation_History,
                     startDate: this._startDate,
-                    endDate: this._endDate
+                    endDate: this._endDate,
+                    caseId: this.recordId
                 })
                 : await fetchCollectionData({
                     contractNumber: this._contractNumber,
-                    recordType: Fetch_Collection_Data_Record_Type_Allocation_History
+                    recordType: Fetch_Collection_Data_Record_Type_Allocation_History,
+                    caseId: this.recordId
                 });
 
             if (!response || response.Success === false) {

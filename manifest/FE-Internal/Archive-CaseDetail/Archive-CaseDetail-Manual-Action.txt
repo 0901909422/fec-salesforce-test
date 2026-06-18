@@ -1,0 +1,17 @@
+1) Open the Setup page >> External Objects >> Choose "AthenaCases"
+>> Buttons, Links, and Actions >> Click Edit "View"
+In "Salesforce Classic Override" choose Visualforce page.
+In Combobox, choose "ArchiveCaseRedirect". Then click Save
+
+1.1) Click "Edit" button to change the Object label
+Label: Archival data
+Plural Label: Archival data
+
+1.2) Click "Edit" (Field Label section) on "_migration_source" field to change it to "migration_source"
+
+
+2) Open the Developer Console and run this script to insert the Schedule Job
+
+String sched = '0 0 0 * * ?'; // Daily Midnight 0:00
+DeleteArchiveCaseBatch delArchiveCase = new DeleteArchiveCaseBatch();
+System.schedule('Delete Archive Case Temp', sched, delArchiveCase);
