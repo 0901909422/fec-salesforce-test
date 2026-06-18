@@ -645,7 +645,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
     async handleCreateCaseRequest(data) {
         if (data.customerInfo.nationalID !== '') {
             const dataNationID = await decryptDataKYC(data.customerInfo.nationalID, this.#secretKey)
-            data.customerInfo.nationalID = dataNationID;
+            data.customerInfo.decryptNationalID = dataNationID;
         }
         if (data.customerInfo.phoneNumber !== '') {
             const dataPhoneNumber = await decryptDataKYC(data.customerInfo.phoneNumber, this.#secretKey)
