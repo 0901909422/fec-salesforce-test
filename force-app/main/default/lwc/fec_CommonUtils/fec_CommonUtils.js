@@ -53,6 +53,61 @@ const formatDateTime = (curr) => {
 };
 
 /**
+ * Effective Date (Transactions): dd/mm/yyyy hh:mm:ss — e.g. 19/05/2026 00:00:00
+ */
+const formatEffectiveDateTimeDisplay = (val) => {
+  if (val == null || val === '' || val === '-' || val === '\u2014') {
+    return null;
+  }
+
+  const raw = String(val).trim();
+
+  const vnDateTime = raw.match(
+    /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/
+  );
+  if (vnDateTime) {
+    const [, day, month, year, h, m, s] = vnDateTime;
+    return h != null
+      ? `${day}/${month}/${year} ${h}:${m}:${s}`
+      : `${day}/${month}/${year}`;
+  }
+
+  const isoLike = raw.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}):(\d{2}))?/
+  );
+  if (isoLike) {
+    const [, year, month, day, h, m, s] = isoLike;
+    return h != null
+      ? `${day}/${month}/${year} ${h}:${m}:${s}`
+      : `${day}/${month}/${year}`;
+  }
+
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) {
+    return raw;
+  }
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${day}/${month}/${year} ${h}:${m}:${s}`;
+};
+
+/** Dual column "BasicInfo | M_FAS" — each part uses Effective Date format. */
+const formatEffectiveDualDisplay = (raw) => {
+  if (raw == null || raw === '' || raw === '-' || raw === '\u2014') {
+    return null;
+  }
+  return String(raw)
+    .trim()
+    .split(' | ')
+    .map((part) => formatEffectiveDateTimeDisplay((part || '').trim()) || (part || '').trim() || '-')
+    .join(' | ');
+};
+
+/**
  * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
  */
 const formatDateTimeVN = (val) => {
@@ -1222,6 +1277,8 @@ function deriveInsuranceStatus(expiryDateStr, cancelDateStr) {
 export {
   formatDate,
   formatDateTime,
+  formatEffectiveDateTimeDisplay,
+  formatEffectiveDualDisplay,
   formatDateTimeVN,
   formatDateTimeVNShort,
   mask,

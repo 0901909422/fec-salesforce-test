@@ -19,6 +19,7 @@ public without sharing class FEC_CreateCaseHandler {
         public String nationalId;
         public String accountNumber;
         public String contractNumber;
+        public String applicationId;
         public String email;
         
         // =========================
@@ -29,6 +30,7 @@ public without sharing class FEC_CreateCaseHandler {
         public String kycMethod;
         public String kycResult;
         public String kycStatus;
+        public Boolean isAutomationCaseChat;
 
         /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
         public Id ownerUserId;
@@ -564,6 +566,10 @@ public without sharing class FEC_CreateCaseHandler {
         interactionCase.FEC_Search_Account_Number__c = dto.accountNumber;
         interactionCase.FEC_Contract_Number__c = dto.contractNumber;
         interactionCase.FEC_Search_Contract_Number__c = dto.contractNumber;
+        interactionCase.FEC_Application_ID__c = dto.applicationId;
+        interactionCase.FEC_Search_Application_ID__c = dto.applicationId;
+        interactionCase.FEC_Interaction_Email__c = dto.email;
+        interactionCase.FEC_Search_Email_Address__c = dto.email;
         
         // ---------------------------
         // INTERACTION DATA
@@ -571,10 +577,11 @@ public without sharing class FEC_CreateCaseHandler {
         interactionCase.FEC_Chat_History__c = dto.chatHistory;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
         interactionCase.FEC_KYC_Status__c = dto.kycStatus;
-        
-        if(dto.isAutomationCaseChat){
-            interactionCase.FEC_Is_Chat_Automation__c = true;
+        interactionCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        if (dto.isAutomationCaseChat == true && hasCaseField('FEC_Is_Chat_Automation__c')) {
+            interactionCase.put('FEC_Is_Chat_Automation__c', true);
         }
+
         insert interactionCase;
         
         interactionCase = [
@@ -596,5 +603,9 @@ public without sharing class FEC_CreateCaseHandler {
         
         return res;
     }
-    
+
+    private static Boolean hasCaseField(String fieldApiName) {
+        return String.isNotBlank(fieldApiName)
+            && Schema.SObjectType.Case.fields.getMap().containsKey(fieldApiName);
+    }
 }

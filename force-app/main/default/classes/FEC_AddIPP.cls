@@ -80,7 +80,10 @@ public with sharing class FEC_AddIPP {
     try {
       Case c = [
         SELECT FEC_Account_Contract_Number_Text__c,
-          FEC_Is_Test_API__c
+          FEC_Account_Number__c,
+          FEC_Is_Test_API__c,
+          FEC_Account_or_Contract__r.Name,
+          FEC_Account_or_Contract__r.FEC_Account_Number__c
         FROM Case
         WHERE Id = :caseId
         WITH SECURITY_ENFORCED
@@ -101,7 +104,7 @@ public with sharing class FEC_AddIPP {
       ];
 
       IPPRequest request = new IPPRequest();
-      request.accountNumber = c.FEC_Account_Contract_Number_Text__c;
+      request.accountNumber = resolveAccountNumberFromCase(c);
       request.effectiveDate = t.FEC_Effective_Date__c;
       request.amount = t.FEC_Transaction_Amount__c;
       request.planNumber = t.FEC_Transaction_Plan__c;
@@ -119,7 +122,7 @@ public with sharing class FEC_AddIPP {
     validate(request);
     AddIPPResult finalResult = new AddIPPResult();
     String transId = FEC_CommonUltils.generateTransactionId();
-    String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
+    String timestamp = FEC_CommonUltils.formatTransferCallRequestDateTime(Datetime.now());
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
     FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
     String accountNumberParam = FEC_ConstantCommon.STR_EMPTY;
@@ -134,20 +137,21 @@ public with sharing class FEC_AddIPP {
 
     Dom.Document doc = buildRequestDocument(request, transId, timestamp);
 
+    String endpoint = apiSetting?.FEC_Call_Mock__c
+      ? FEC_MockupEndpoint.ADD_IPP_ENDPOINT_MOCKUP
+      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+    String requestXml = doc.toXmlString();
+
     try {
       HttpResponse res = sendRequest(doc);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
 
-      String endpoint = apiSetting?.FEC_Call_Mock__c
-        ? FEC_MockupEndpoint.ADD_IPP_ENDPOINT_MOCKUP
-        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
       responseLog = new FEC_ResponseLog(
         'FEC_AddIPP',
         endpoint,
         FEC_ConstantCommon.API_METHOD_POST,
-        doc.toXmlString(),
+        requestXml,
         res,
         null
       );
@@ -164,10 +168,29 @@ public with sharing class FEC_AddIPP {
         finalResult.rawResponse = body;
       }
     } catch (Exception ex) {
+      if (responseLog != null) {
+        responseLog.errorMessage = ex.getMessage();
+      } else {
+        responseLog = new FEC_ResponseLog(
+          'FEC_AddIPP',
+          endpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          requestXml,
+          null,
+          ex.getMessage()
+        );
+      }
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
+    } finally {
+      logApiResponse();
     }
     return finalResult;
+  }
+
+  public static void logApiResponse() {
+    FEC_CommonUltils.logApiResponse(responseLog);
+    responseLog = null;
   }
 
   public static Dom.Document buildRequestDocument(
@@ -196,7 +219,7 @@ public with sharing class FEC_AddIPP {
     );
     sysRequestNode.addChildElement('TransID', null, null).addTextNode(transId);
     sysRequestNode.addChildElement('RequestorID', null, null)
-      .addTextNode(FEC_ConstantCommon.REQUESTOR_APS);
+      .addTextNode(FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN);
     sysRequestNode.addChildElement('DateTime', null, null)
       .addTextNode(timestamp);
 
@@ -407,6 +430,34 @@ public with sharing class FEC_AddIPP {
     }
 
     return result;
+  }
+
+  private static String resolveAccountNumberFromCase(Case c) {
+    if (c == null) {
+      return null;
+    }
+    Map<String, Object> cPopulated = c.getPopulatedFieldsAsMap();
+    if (cPopulated.containsKey('FEC_Account_or_Contract__r')) {
+      String accFromName = accountNumberIfValidFormat(c.FEC_Account_or_Contract__r?.Name);
+      if (accFromName != null) {
+        return accFromName;
+      }
+      if (String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
+        return c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim();
+      }
+    }
+    if (cPopulated.containsKey('FEC_Account_Contract_Number_Text__c') && String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+      return c.FEC_Account_Contract_Number_Text__c.trim();
+    }
+    return cPopulated.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null;
+  }
+
+  private static String accountNumberIfValidFormat(String raw) {
+    if (String.isBlank(raw)) {
+      return null;
+    }
+    String t = raw.trim();
+    return Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, t) ? t : null;
   }
 
   private static void validate(IPPRequest request) {

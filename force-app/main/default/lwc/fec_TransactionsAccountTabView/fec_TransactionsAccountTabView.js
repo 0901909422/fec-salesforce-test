@@ -16,7 +16,7 @@
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import loadTransactionDetail from '@salesforce/apex/FEC_TransactionsController.loadTransactionDetail';
-import { setConsoleTab, formatDateTime, formatDateVNI, isNegative } from 'c/fec_CommonUtils';
+import { setConsoleTab, formatEffectiveDateTimeDisplay, formatEffectiveDualDisplay, formatDateVNI, isNegative } from 'c/fec_CommonUtils';
 import { LOCALE_ENG } from 'c/fec_CommonConst';
 
 import FEC_Transaction from '@salesforce/label/c.FEC_Transaction';
@@ -197,9 +197,20 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
                 f.dualFieldName != null &&
                 dualRaw != null &&
                 String(dualRaw).trim() !== '';
-            const value = useDual
-                ? dualRaw
-                : this.formatValue(f.fieldName, this.transaction[f.fieldName]);
+            let value;
+            if (f.fieldName === 'effectiveDate') {
+                if (useDual) {
+                    value = formatEffectiveDualDisplay(dualRaw) || '-';
+                } else if (this.transaction.effectiveDateTime) {
+                    value = formatEffectiveDateTimeDisplay(this.transaction.effectiveDateTime) || '-';
+                } else {
+                    value = formatEffectiveDateTimeDisplay(this.transaction[f.fieldName]) || '-';
+                }
+            } else {
+                value = useDual
+                    ? dualRaw
+                    : this.formatValue(f.fieldName, this.transaction[f.fieldName]);
+            }
             const helpText = f.apiName ? helpTexts[f.apiName] : null;
 
             return {
@@ -241,7 +252,7 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         }
 
         if (fieldName === 'effectiveDate') {
-            return formatDateTime(value) || '-';
+            return formatEffectiveDateTimeDisplay(value) || '-';
         }
 
         if (fieldName === 'postingDate') {

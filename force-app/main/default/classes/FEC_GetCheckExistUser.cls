@@ -162,14 +162,17 @@ public with sharing class FEC_GetCheckExistUser {
             : (String) root.get('pxStatus');
 
         Object responseGetObj = root.get('response_GET');
-        if (responseGetObj != null) {
-            Map<String, Object> responseGet = (Map<String, Object>) responseGetObj;
+        Map<String, Object> sysMap = responseGetObj instanceof Map<String, Object>
+            ? (Map<String, Object>) responseGetObj
+            : (root.containsKey('Code') ? root : null);
+
+        if (sysMap != null) {
             result.Sys = new SysResponse();
-            result.Sys.pxObjClass = (String) responseGet.get('pxObjClass');
-            result.Sys.Code = toInteger(responseGet.get('Code'));
-            result.Sys.Description = (String) responseGet.get('Description');
-            result.Sys.DateTimeStr = (String) responseGet.get('DateTime');
-            result.Sys.TransID = (String) responseGet.get('TransID');
+            result.Sys.pxObjClass = (String) sysMap.get('pxObjClass');
+            result.Sys.Code = toInteger(sysMap.get('Code'));
+            result.Sys.Description = (String) sysMap.get('Description');
+            result.Sys.DateTimeStr = (String) sysMap.get('DateTime');
+            result.Sys.TransID = (String) sysMap.get('TransID');
         }
 
         Object reqParamsObj = root.containsKey('pxReqParameters')

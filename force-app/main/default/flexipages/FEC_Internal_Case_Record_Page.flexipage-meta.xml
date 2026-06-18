@@ -2083,6 +2083,55 @@
                 <identifier>c_fec_CaseEditNOC</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ManualNotification</componentName>
+                <identifier>c_fec_ManualNotification</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CO</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CL</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CP</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>PM</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>DS</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>TS</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CA</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>IA</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
         <name>sidebar</name>
         <type>Region</type>
     </flexiPageRegions>

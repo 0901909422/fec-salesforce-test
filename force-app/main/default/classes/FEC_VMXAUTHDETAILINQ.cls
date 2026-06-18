@@ -18,6 +18,8 @@
 
 public with sharing class FEC_VMXAUTHDETAILINQ {
 
+    private static FEC_ResponseLog responseLog;
+
     private static final String NS_VMX                      = 'http://fecredit.com.vn/cms/ws/v2';
     private static final String SERVICE_VMX_AUTH_DETAIL_INQ = 'VMX_AUTH_DETAIL_INQ';
     private static final String VMX_VERSION_E8V6            = 'E8V6';
@@ -130,75 +132,106 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         String acctNbr,
         String contData
     ) {
-        FEC_API_Setting__c  apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig  =
-            FEC_API_Config__mdt.getInstance('FEC_VMX_AUTH_DETAIL_INQ');
+        try {
+            FEC_API_Setting__c  apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig  =
+                FEC_API_Config__mdt.getInstance('FEC_VMX_AUTH_DETAIL_INQ');
 
-        String acctForCall = resolveAccountForCall(acctNbr);
+            String acctForCall = resolveAccountForCall(acctNbr, apiSetting, apiConfig);
 
-        String ctx     = String.isNotBlank(context)
-                             ? context.trim()
-                             : FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
-        String msgName = String.isNotBlank(name)
-                             ? name.trim()
-                             : FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
-        String ver     = String.isNotBlank(vmxVersion)
-                             ? vmxVersion.trim()
-                             : VMX_VERSION_E8V6;
-        String cont    = contData != null ? contData : '';
+            String ctx     = String.isNotBlank(context)
+                                 ? context.trim()
+                                 : FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
+            String msgName = String.isNotBlank(name)
+                                 ? name.trim()
+                                 : FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
+            String ver     = String.isNotBlank(vmxVersion)
+                                 ? vmxVersion.trim()
+                                 : VMX_VERSION_E8V6;
+            String cont    = contData != null ? contData : '';
 
-        validateRequest(transID, requestorId, dateTimeStr, ctx, msgName, acctForCall);
+            validateRequest(transID, requestorId, dateTimeStr, ctx, msgName, acctForCall);
 
-        String soapBody = buildSoapRequest(
-            transID, requestorId, dateTimeStr, ver,
-            ctx, msgName, acctForCall, cont
-        );
-
-        String endpoint = apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
-        String soapAction = apiConfig?.FEC_SOAP_Action__c;
-
-        HttpResponse res = FEC_CommonUltils.calloutApi(
-            endpoint, 'POST',
-            FEC_ConstantCommon.API_CONTENT_TYPE,
-            soapAction, null, soapBody
-        );
-
-        if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException(
-                String.format(
-                    System.Label.FEC_MSG_HTTP_Error,
-                    new List<String>{ res.getStatusCode().toString() }
-                )
+            String soapBody = buildSoapRequest(
+                transID, requestorId, dateTimeStr, ver,
+                ctx, msgName, acctForCall, cont
             );
-        }
 
-        ResponseWrapper response = parseResponse(res.getBody());
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-        if (response.Sys == null || response.Sys.Code != 1) {
-            String sysDesc = response.Sys != null ? response.Sys.Description : '';
-            throw new CalloutException(
-                String.format(
-                    System.Label.FEC_MSG_API_Error,
-                    new List<String>{ sysDesc }
-                )
+            String soapAction = apiConfig?.FEC_SOAP_Action__c;
+
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint, 'POST',
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                soapAction, null, soapBody
             );
-        }
-        if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F') {
-            String errorMsg = System.Label.FEC_MSG_API_Error;
-            if (response.VMXMsgOut.RC_DATA != null
-                && !response.VMXMsgOut.RC_DATA.isEmpty()) {
-                errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_VMXAUTHDETAILINQ',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
+
+            if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
+                throw new CalloutException(
+                    String.format(
+                        System.Label.FEC_MSG_HTTP_Error,
+                        new List<String>{ res.getStatusCode().toString() }
+                    )
+                );
             }
-            throw new CalloutException(errorMsg);
-        }
 
-        return response;
+            ResponseWrapper response = parseResponse(res.getBody());
+
+            if (response.Sys == null || response.Sys.Code != 1) {
+                String sysDesc = response.Sys != null ? response.Sys.Description : '';
+                throw new CalloutException(
+                    String.format(
+                        System.Label.FEC_MSG_API_Error,
+                        new List<String>{ sysDesc }
+                    )
+                );
+            }
+            if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F') {
+                String errorMsg = System.Label.FEC_MSG_API_Error;
+                if (response.VMXMsgOut.RC_DATA != null
+                    && !response.VMXMsgOut.RC_DATA.isEmpty()) {
+                    errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
+                }
+                throw new CalloutException(errorMsg);
+            }
+
+            return response;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
+        }
     }
 
-    private static String resolveAccountForCall(String acctNbr) {
+    public static void logApiResponse() {
+        FEC_CommonUltils.logApiResponse(responseLog);
+        responseLog = null;
+    }
+
+    private static String resolveAccountForCall(
+        String acctNbr,
+        FEC_API_Setting__c  apiSetting,
+        FEC_API_Config__mdt apiConfig
+    ) {
+        if (apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
+            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+            return apiConfig.FEC_Account_Number_Hard_Code__c.trim();
+        }
         return String.isNotBlank(acctNbr) ? acctNbr.trim() : acctNbr;
     }
 

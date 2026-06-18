@@ -1056,7 +1056,18 @@ public with sharing class FEC_ConstantCommon {
     public static final String PASS_PORT ='PASSPORT';
     public static final String INPUT_SEPARATOR_REGEX_12 =  '^\\d{12}$';
     public static final String INPUT_SEPARATOR_REGEX_9 =  '^\\d{9}$';
-    public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$'; 
+    public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$';
+
+    /** IPP Conversion (API 41): IPPEligibilityFlag value for retail eligible transactions. */
+    public static final String IPP_ELIGIBILITY_FLAG_RETAIL = 'R';
+    /** IPP Conversion: FEC_Transaction__c.FEC_Type__c value for unbilled sync. */
+    public static final String TRANSACTION_TYPE_UNBILLED = 'Unbilled';
+
+    public static final Set<String> IPP_ELIGIBLE_TRANSACTION_CODES = new Set<String>{
+        '0105', '0106', '0112', '0121', '0126', '0235', '0243', '2100', '2102', '2601',
+        '4123', '4131', '4225', '4241', '4251', '5001', '3002', '3006', '2139', '2141',
+        '2147', '2149', '2703', '4227', '4243', '8669', '8671', '8677', '8679'
+    };
     public static final String ERROR_SAVING_SEARCH_HISTORY = 'Error saving search history';
     public static final String STATUS_ACTIVE = 'Còn hiệu lực';
     public static final String STATUS_EXPIRED = 'Hết hiệu lực';

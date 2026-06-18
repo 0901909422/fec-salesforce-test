@@ -94,12 +94,25 @@ private class FEC_AddIPP_Test {
      * KHOỞI TẠO DỮ LIỆU: Tạo lập bản ghi Case, Customer History và Transaction mẫu
      * ============================================================ */
     private static Map<String, Id> createTestData() {
+        FEC_Product_Type__c productType = new FEC_Product_Type__c(
+            Name = FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE,
+            FEC_Code__c = 'CC',
+            FEC_Active__c = true
+        );
+        insert productType;
+
         Case testCase = new Case(
             Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
             Origin = 'Phone',
-            FEC_Is_Test_API__c = true
+            FEC_Is_Test_API__c = true,
+            FEC_Product_Type__c = productType.Id
         );
-        insert testCase;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert testCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
 
         // FEC_Case__c (MD) + FEC_Customer_History__c (MD cha của Transaction)
         FEC_Customer_History__c history = new FEC_Customer_History__c(
@@ -111,10 +124,15 @@ private class FEC_AddIPP_Test {
         insert history;
 
         // Cập nhật mối quan hệ để công thức FEC_Account_Contract_Number_Text__c hoạt động
-        update new Case(
-            Id = testCase.Id,
-            FEC_Account_or_Contract__c = history.Id
-        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = testCase.Id,
+                FEC_Account_or_Contract__c = history.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
 
         FEC_Transaction__c testTransaction = new FEC_Transaction__c(
             FEC_Customer_History__c = history.Id,
