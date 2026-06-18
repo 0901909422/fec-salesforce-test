@@ -178,8 +178,12 @@ private class FEC_SecondaryController_Test {
 
         update new FEC_Customer_History__c(
             Id = c.FEC_Account_or_Contract__c,
-            FEC_API_Cache_Secondary_Demo__c = JSON.serialize(mockDto)
+            FEC_API_Cache_Secondary_Demo__c = JSON.serialize(mockDto),
+            FEC_Zalo_Follower__c = 'Yes',
+            FEC_Email__c = 'cache@fec.com'
         );
+
+        Test.setMock(HttpCalloutMock.class, new MultiSecondarySoapMock(200));
 
         Test.startTest();
         FEC_SecondaryController.SecondaryInfoDTO result =
