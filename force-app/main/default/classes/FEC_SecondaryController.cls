@@ -90,10 +90,12 @@ public without sharing class FEC_SecondaryController {
                 );
 
             Boolean selfServiceUpdated = syncSelfServiceChannels(hist);
+
+            dto.zaloFollower     = hist.FEC_Zalo_Follower__c;
+            dto.websiteAccount   = hist.FEC_Website_Account__c;
+            dto.mobileAppAccount = hist.FEC_Mobile_App_Account__c;
+
             if (selfServiceUpdated) {
-                dto.zaloFollower     = hist.FEC_Zalo_Follower__c;
-                dto.websiteAccount   = hist.FEC_Website_Account__c;
-                dto.mobileAppAccount = hist.FEC_Mobile_App_Account__c;
                 hist.FEC_API_Cache_Secondary_Demo__c = JSON.serialize(dto);
                 update hist;
             }
@@ -265,7 +267,7 @@ public without sharing class FEC_SecondaryController {
                 if (checkExistRes != null && checkExistRes.Sys != null && checkExistRes.Sys.Code != null) {
                     String socialStatus = FEC_CommonUltils.mapCheckExistUserCode2ToSocialStatus(checkExistRes.Sys.Code);
                     String mobileAppStatus = FEC_CommonUltils.normalizeInsuranceFlag(socialStatus);
-                    if (hist.FEC_Mobile_App_Account__c != mobileAppStatus) {
+                    if (mobileAppStatus != null) {
                         hist.FEC_Mobile_App_Account__c = mobileAppStatus;
                         updated = true;
                     }
