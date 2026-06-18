@@ -12,6 +12,7 @@
    1.2      2026-05-12     Agent                Unbilled table: Currency Code, Merchant Category Code, OTP Sent columns
    1.3      2026-05-12     Agent                Pending: columns per sheet; M_FAS AUTHS rows; dual vs VMX detail (detail null); no row nav without Id
    1.4      2026-05-21     Agent                Unbilled table: dd/MM/yyyy HH:mm:ss, post date, currency(18,0), null → '-'
+   1.5      2026-06-17     Agent                Unbilled: show API load error; no history fallback
  
 ****************************************************************************************/
 
@@ -21,7 +22,8 @@ import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTr
 import {
     formatDateFlexibleVN,
     formatCurrency0,
-    formatDateTime,
+    formatEffectiveDateTimeDisplay,
+    formatEffectiveDualDisplay,
     formatNumber
 } from 'c/fec_CommonUtils';
 
@@ -33,21 +35,24 @@ const isBlankUnbilled = (value) =>
     value === UNBILLED_DASH ||
     value === '\u2014';
 
-const formatUnbilledEffectiveDateTime = (value) => {
-    if (isBlankUnbilled(value)) {
-        return UNBILLED_DASH;
+/** Apex effectiveDateDualDisplay uses dd/MM/yyyy HH:mm:ss. */
+const formatUnbilledEffectiveDateTime = (value) =>
+    formatEffectiveDateTimeDisplay(value) || UNBILLED_DASH;
+
+const formatUnbilledEffectiveFromDateTime = (value) =>
+    formatEffectiveDateTimeDisplay(value) || UNBILLED_DASH;
+
+const resolveUnbilledEffectiveDisplay = (tx) => {
+    if (tx.effectiveDateDualDisplay) {
+        const formatted = formatEffectiveDualDisplay(tx.effectiveDateDualDisplay);
+        if (formatted) {
+            return formatted;
+        }
     }
-    const d = new Date(value);
-    if (isNaN(d.getTime())) {
-        return UNBILLED_DASH;
+    if (tx.effectiveDateTime) {
+        return formatUnbilledEffectiveFromDateTime(tx.effectiveDateTime);
     }
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
-    const s = String(d.getSeconds()).padStart(2, '0');
-    return `${day}/${month}/${year} ${h}:${m}:${s}`;
+    return formatUnbilledEffectiveDateTime(tx.effectiveDate);
 };
 
 const formatUnbilledPostDate = (value) => {
@@ -98,6 +103,7 @@ import FEC_Pending_Transactions from '@salesforce/label/c.FEC_Pending_Transactio
 import FEC_Authorization_Response from '@salesforce/label/c.FEC_Authorization_Response';
 import FEC_Decline_Description from '@salesforce/label/c.FEC_Decline_Description';
 import FEC_Approval_Code from '@salesforce/label/c.FEC_Approval_Code';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 
 export default class Fec_TransactionsAccount extends NavigationMixin(LightningElement) {
 
@@ -108,6 +114,9 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
     @track unbilledTransactions = [];
     @track pendingTransactions = [];
     @track isLoading = false;
+    @track unbilledLoadFailed = false;
+
+    errorApiLabel = FEC_MSG_Error_API_Label;
 
     activeSections = [
         'unbilledTransactions',
@@ -131,6 +140,13 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
         authorizationResponseLabel: FEC_Authorization_Response,
         declineDescriptionLabel: FEC_Decline_Description,
         approvalCodeLabel: FEC_Approval_Code
+    }
+
+    get unbilledSectionLabel() {
+        if (this.unbilledLoadFailed) {
+            return `${this.customLabel.unbilledTransactionsLabel} - ${this.errorApiLabel}`;
+        }
+        return this.customLabel.unbilledTransactionsLabel;
     }
 
     /* ================= COLUMNS ================= */
@@ -309,9 +325,13 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
 
         loadTransactions({ caseId: this.recordId })
             .then(res => {
-                const unbilled = Array.isArray(res?.unbilledTransactions)
-                    ? res.unbilledTransactions
-                    : [];
+                this.unbilledLoadFailed = res?.unbilledLoadFailed === true;
+
+                const unbilled = this.unbilledLoadFailed
+                    ? []
+                    : Array.isArray(res?.unbilledTransactions)
+                        ? res.unbilledTransactions
+                        : [];
 
                 const pending = Array.isArray(res?.pendingTransactions)
                     ? res.pendingTransactions
@@ -327,6 +347,7 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             })
             .catch(err => {
                 console.error('[FEC] loadTransactions error', err);
+                this.unbilledLoadFailed = true;
                 this.unbilledTransactions = [];
                 this.pendingTransactions = [];
             })
@@ -340,9 +361,11 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
         const effectiveSortEpoch =
             tx.effectiveSortEpoch != null && tx.effectiveSortEpoch !== undefined
                 ? Number(tx.effectiveSortEpoch)
-                : tx.effectiveDate
-                    ? Date.parse(tx.effectiveDate)
-                    : 0;
+                : tx.effectiveDateTime
+                    ? Date.parse(tx.effectiveDateTime)
+                    : tx.effectiveDate
+                        ? Date.parse(tx.effectiveDate)
+                        : 0;
 
         return {
             Id: tx.Id,
@@ -351,12 +374,7 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             merchantDescription: displayOrDash(tx.merchantDescription),
             creditDebitFlag: displayOrDash(tx.creditDebitFlag),
 
-            effectiveDateDualDisplay: tx.effectiveDateDualDisplay
-                ? formatUnbilledDualDisplay(
-                      tx.effectiveDateDualDisplay,
-                      formatUnbilledEffectiveDateTime
-                  )
-                : formatUnbilledEffectiveDateTime(tx.effectiveDate),
+            effectiveDateDualDisplay: resolveUnbilledEffectiveDisplay(tx),
             postDateDualDisplay: tx.postDateDualDisplay
                 ? formatUnbilledDualDisplay(
                       tx.postDateDualDisplay,
@@ -409,7 +427,10 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             effectiveSortEpoch,
 
             effectiveDateDualDisplay:
-                tx.effectiveDateDualDisplay || formatDateTime(tx.effectiveDate),
+                tx.effectiveDateDualDisplay ||
+                formatEffectiveDateTimeDisplay(tx.effectiveDateTime) ||
+                formatEffectiveDateTimeDisplay(tx.effectiveDate) ||
+                UNBILLED_DASH,
             transactionAmountDualDisplay:
                 tx.transactionAmountDualDisplay ||
                 formatNumber(tx.transactionAmount),
@@ -429,7 +450,10 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             declineDescriptionDualDisplay:
                 tx.declineDescriptionDualDisplay || (tx.declineDescription || ''),
 
-            effectiveDate: formatDateTime(tx.effectiveDate),
+            effectiveDate:
+                formatEffectiveDateTimeDisplay(tx.effectiveDateTime) ||
+                formatEffectiveDateTimeDisplay(tx.effectiveDate) ||
+                UNBILLED_DASH,
             transactionAmount: formatNumber(tx.transactionAmount),
             merchantDescription: tx.merchantDescription || '',
             transactionPlan: tx.transactionPlan || '',
