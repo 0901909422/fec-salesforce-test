@@ -23,20 +23,36 @@ private class FEC_CustomerIntegrationService_Test {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
 
-            if (endpoint.contains('customerlist') || body.contains('getcustomerlist')) {
+            if (endpoint.contains('cardbasicinfo') || body.contains('getcardbasicinfo')) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
+                    '<soapenv:Body><GetCardBasicInfoResponse>' +
                     '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
-                    '<Count>1</Count><Customers><Customer>' +
-                    '<CIFNumber>CIF-SYNC-001</CIFNumber>' +
-                    '<FullName>Nguyen Van Sync</FullName>' +
-                    '<NationalID>079123456789</NationalID>' +
-                    '<DateOfBirth>1990-05-15</DateOfBirth>' +
-                    '<Phones><PhoneNode><Type>Mobile</Type><Phone>0909998877</Phone></PhoneNode></Phones>' +
-                    '<Emails><Email>sync@example.com</Email></Emails>' +
-                    '</Customer></Customers>' +
-                    '</cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+                    '<CardBasicInfo><MainCard><PlasticIndicator>PLASTIC-001</PlasticIndicator></MainCard></CardBasicInfo>' +
+                    '</GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('getcardsecinfo') || endpoint.contains('cardsec')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCardSecInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardSecInfo><MainCardBalance><CurrentBalance>100</CurrentBalance></MainCardBalance>' +
+                    '<IPPs><IPP><IPPPlan>P1</IPPPlan><IPPRecordNo>R1</IPPRecordNo><Term>6</Term></IPP></IPPs>' +
+                    '</CardSecInfo></GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('getcardplaninfo')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><cif:GetCardPlanInfoResponse xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
+                    '<Sys><Code>1</Code></Sys><CardPlanInfo><CardPlans>' +
+                    '<CardPlan><RecordNumber>R1</RecordNumber><PlanNumber>P1</PlanNumber>' +
+                    '<PlanOpenDate>2026-01-01</PlanOpenDate><PlanCurrentBalance>1000</PlanCurrentBalance>' +
+                    '</CardPlan></CardPlans></CardPlanInfo></cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -71,13 +87,21 @@ private class FEC_CustomerIntegrationService_Test {
                 return res;
             }
 
-            if (endpoint.contains('cardbasicinfo') || body.contains('getcardbasicinfo')) {
+            if (endpoint.contains('customerlist')
+                || (body.contains('getcustomerlist') && !body.contains('getcustomerinfobasic'))) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCardBasicInfoResponse>' +
+                    '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
                     '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
-                    '<CardBasicInfo><MainCard><PlasticIndicator>PLASTIC-001</PlasticIndicator></MainCard></CardBasicInfo>' +
-                    '</GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
+                    '<Count>1</Count><Customers><Customer>' +
+                    '<CIFNumber>CIF-SYNC-001</CIFNumber>' +
+                    '<FullName>Nguyen Van Sync</FullName>' +
+                    '<NationalID>079123456789</NationalID>' +
+                    '<DateOfBirth>1990-05-15</DateOfBirth>' +
+                    '<Phones><PhoneNode><Type>Mobile</Type><Phone>0909998877</Phone></PhoneNode></Phones>' +
+                    '<Emails><Email>sync@example.com</Email></Emails>' +
+                    '</Customer></Customers>' +
+                    '</cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -112,29 +136,6 @@ private class FEC_CustomerIntegrationService_Test {
                     '<Description>Store C</Description><CreditDebitFlag>C</CreditDebitFlag>' +
                     '<AUTHORIZATION_CODE>AUTH99</AUTHORIZATION_CODE></Row></AUTHS_TABLE>' +
                     '</VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ></WSResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcardsecinfo')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCardSecInfoResponse><Sys><Code>1</Code></Sys>' +
-                    '<CardSecInfo><MainCardBalance><CurrentBalance>100</CurrentBalance></MainCardBalance>' +
-                    '<IPPs><IPP><IPPPlan>P1</IPPPlan><IPPRecordNo>R1</IPPRecordNo><Term>6</Term></IPP></IPPs>' +
-                    '</CardSecInfo></GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcardplaninfo')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><cif:GetCardPlanInfoResponse xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
-                    '<Sys><Code>1</Code></Sys><CardPlanInfo><CardPlans>' +
-                    '<CardPlan><RecordNumber>R1</RecordNumber><PlanNumber>P1</PlanNumber>' +
-                    '<PlanOpenDate>2026-01-01</PlanOpenDate><PlanCurrentBalance>1000</PlanCurrentBalance>' +
-                    '</CardPlan></CardPlans></CardPlanInfo></cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -179,6 +180,35 @@ private class FEC_CustomerIntegrationService_Test {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
         return c;
+    }
+
+    @IsTest
+    static void testCustomerIntegrationCardFullMock_CardBasicInfoParsesPlastic() {
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationCardFullMock());
+        Test.startTest();
+        FEC_GetCardBasicInfo.ResponseWrapper res = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+            FEC_CommonUltils.generateTransactionId(),
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+            ACCOUNT_NUMBER
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, res.CardBasicInfo.MainCard);
+        System.assertEquals('PLASTIC-IPP', res.CardBasicInfo.MainCard.PlasticIndicator);
+    }
+
+    @IsTest
+    static void testCustomerIntegrationMock_CardSecInfoParsesIpp() {
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
+        Test.startTest();
+        FEC_GetCardSecInfo.ResponseWrapper res =
+            FEC_GetCardSecInfo.getCardSecInfo(ACCOUNT_NUMBER);
+        Test.stopTest();
+
+        System.assertNotEquals(null, res.CardSecInfo);
+        System.assertEquals(1, res.CardSecInfo.IPPs.size());
+        System.assertEquals('P1', res.CardSecInfo.IPPs[0].IPPPlan);
     }
 
     @IsTest
@@ -262,7 +292,6 @@ private class FEC_CustomerIntegrationService_Test {
         System.assertEquals('DOC-SYNC-001', result.nationalId);
         System.assertEquals('0909998877', result.primaryPhone);
         System.assertEquals('sync@example.com', result.emailAddress);
-        System.assertEquals('PLASTIC-001', result.plasticID);
         System.assertEquals('CIF-SYNC-001', hist.FEC_CIF_Number__c);
         System.assertEquals('DOC-SYNC-001', hist.FEC_National_ID_Passport_ID__c);
     }
@@ -309,7 +338,6 @@ private class FEC_CustomerIntegrationService_Test {
 
         System.assertNotEquals(null, result);
         System.assertEquals('DOC-SYNC-001', result.nationalId);
-        System.assertEquals('PLASTIC-001', result.plasticID);
     }
 
     @IsTest
@@ -509,22 +537,80 @@ private class FEC_CustomerIntegrationService_Test {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
 
-            if (endpoint.contains('customerlist') || body.contains('getcustomerlist')) {
+            if (endpoint.contains('cardbasicinfo') || body.contains('getcardbasicinfo')) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
-                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
-                    '<Count>1</Count><Customers><Customer>' +
-                    '<CIFNumber>CIF-IPP-001</CIFNumber><FullName>Nguyen Van IPP</FullName>' +
-                    '<NationalID>079123456789</NationalID><DateOfBirth>1990-05-15</DateOfBirth>' +
-                    '<Phones><PhoneNode><Type>Mobile</Type><Phone>0909998877</Phone></PhoneNode></Phones>' +
-                    '<Emails><Email>ipp@example.com</Email></Emails>' +
-                    '</Customer></Customers></cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+                    '<soapenv:Body><GetCardBasicInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardBasicInfo><MainCard>' +
+                    '<AccountNumber>' + ACCOUNT_NUMBER + '</AccountNumber>' +
+                    '<ContractNumber>CTR-IPP-001</ContractNumber><Status>Active</Status>' +
+                    '<CreditLimit>10000000</CreditLimit><OTB>5000000</OTB><HoldAmount>100000</HoldAmount>' +
+                    '<MaskedCardNumber>****9999</MaskedCardNumber><PlasticIndicator>PLASTIC-IPP</PlasticIndicator>' +
+                    '<BlockCode>BC</BlockCode><ActivatedFlag>Y</ActivatedFlag><InsuranceFlag>1</InsuranceFlag>' +
+                    '</MainCard><PassDue><DPD>3</DPD></PassDue>' +
+                    '<CardHistories><CardHistory><CardActivationDate>2024-01-01</CardActivationDate></CardHistory></CardHistories>' +
+                    '</CardBasicInfo></GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
 
-            if (body.contains('getcustomerinfobasic')) {
+            if (body.contains('getcardsecinfo') || endpoint.contains('cardsec')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCardSecInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardSecInfo>' +
+                    '<MainCardProduct><DailyRetailLimit>1000</DailyRetailLimit><DailyCashLimit>500</DailyCashLimit></MainCardProduct>' +
+                    '<MainCardPlastic><EmbossingName>NGUYEN VAN IPP</EmbossingName><EcomActiveFlag>1</EcomActiveFlag></MainCardPlastic>' +
+                    '<MainCardBalance><CurrentBalance>2500000</CurrentBalance><TotalBalance>3000000</TotalBalance></MainCardBalance>' +
+                    '<PassDue><ResponsibleUnit>Unit A</ResponsibleUnit></PassDue>' +
+                    '<IPPs>' +
+                    '<IPP><IPPPlan>IPP-PLAN-A</IPPPlan><IPPRecordNo>REC-A</IPPRecordNo>' +
+                    '<IPPOpenDate>2026-01-15</IPPOpenDate><IPPBalance>1000000</IPPBalance>' +
+                    '<InterestRate>1.5</InterestRate><Term>12</Term><CurrentTerm>3</CurrentTerm>' +
+                    '<IPPStartDate>2026-02-01</IPPStartDate><IPPMatureDate>2027-02-01</IPPMatureDate>' +
+                    '<IPPCurrentBalance>900000</IPPCurrentBalance></IPP>' +
+                    '<IPP><IPPPlan>IPP-PLAN-B</IPPPlan><IPPRecordNo>REC-B</IPPRecordNo>' +
+                    '<IPPOpenDate>2026-03-01</IPPOpenDate><IPPBalance>500000</IPPBalance>' +
+                    '<InterestRate>2.0</InterestRate><Term>6</Term></IPP>' +
+                    '</IPPs></CardSecInfo></GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('m_fas_outstanding_auth_inq') || body.contains('outstanding_auth')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><WSResponse><Sys><Code>1</Code></Sys>' +
+                    '<M_FAS_OUTSTANDING_AUTH_INQ><VMX_ROOT><VMX_MSGOUT>' +
+                    '<SVC_RETURN>S</SVC_RETURN><AUTHS_TABLE>' +
+                    '<Row><EFF_DATE>20260115</EFF_DATE><AUTH_AMOUNT>150000</AUTH_AMOUNT>' +
+                    '<AUTHORIZATION_CODE>AUTH001</AUTHORIZATION_CODE><Description>Merchant A</Description>' +
+                    '<CreditDebitFlag>D</CreditDebitFlag></Row>' +
+                    '</AUTHS_TABLE></VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ>' +
+                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('getcardplaninfo') || endpoint.contains('plan')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><cif:GetCardPlanInfoResponse xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
+                    '<Sys><Code>1</Code></Sys><CardPlanInfo><CardPlans>' +
+                    '<CardPlan><RecordNumber>REC-A</RecordNumber><PlanNumber>PLAN-OLD</PlanNumber>' +
+                    '<PlanOpenDate>2026-01-10</PlanOpenDate><PlanCurrentBalance>800000</PlanCurrentBalance>' +
+                    '<BaseRate>12.5</BaseRate><CloseFeelIndicator>Y</CloseFeelIndicator>' +
+                    '<CloseFeelIndicatorAmount>40000</CloseFeelIndicatorAmount>' +
+                    '<PlanPaymentAmount>100000</PlanPaymentAmount>' +
+                    '<AccruedInterest>5000</AccruedInterest><PerDiem>200</PerDiem>' +
+                    '<DeferredInterest>1000</DeferredInterest><AccruedInt>300</AccruedInt>' +
+                    '</CardPlan></CardPlans></CardPlanInfo>' +
+                    '</cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (endpoint.contains('customerinfobasic') || body.contains('getcustomerinfobasic')) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
                     '<soapenv:Body><GetCustomerInfoBasicResponse>' +
@@ -535,6 +621,22 @@ private class FEC_CustomerIntegrationService_Test {
                     '<Channel>Email</Channel><ContactString>ipp@example.com</ContactString>' +
                     '</Contact></PreferredContact></PreferredContacts></CustomerBasicInfo>' +
                     '</GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (endpoint.contains('customerlist')
+                || (body.contains('getcustomerlist') && !body.contains('getcustomerinfobasic'))) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
+                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<Count>1</Count><Customers><Customer>' +
+                    '<CIFNumber>CIF-IPP-001</CIFNumber><FullName>Nguyen Van IPP</FullName>' +
+                    '<NationalID>079123456789</NationalID><DateOfBirth>1990-05-15</DateOfBirth>' +
+                    '<Phones><PhoneNode><Type>Mobile</Type><Phone>0909998877</Phone></PhoneNode></Phones>' +
+                    '<Emails><Email>ipp@example.com</Email></Emails>' +
+                    '</Customer></Customers></cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -575,80 +677,6 @@ private class FEC_CustomerIntegrationService_Test {
                     '<Documents><Document><DocumentID>DOC-IPP-001</DocumentID>' +
                     '<IssueDate>2020-01-01</IssueDate><IssuePlace>HCMC</IssuePlace></Document></Documents>' +
                     '</GetDocumentsListResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcardbasicinfo')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCardBasicInfoResponse><Sys><Code>1</Code></Sys>' +
-                    '<CardBasicInfo><MainCard>' +
-                    '<AccountNumber>' + ACCOUNT_NUMBER + '</AccountNumber>' +
-                    '<ContractNumber>CTR-IPP-001</ContractNumber><Status>Active</Status>' +
-                    '<CreditLimit>10000000</CreditLimit><OTB>5000000</OTB><HoldAmount>100000</HoldAmount>' +
-                    '<MaskedCardNumber>****9999</MaskedCardNumber><PlasticIndicator>PLASTIC-IPP</PlasticIndicator>' +
-                    '<BlockCode>BC</BlockCode><ActivatedFlag>Y</ActivatedFlag><InsuranceFlag>1</InsuranceFlag>' +
-                    '</MainCard><PassDue><DPD>3</DPD></PassDue>' +
-                    '<CardHistories><CardHistory><CardActivationDate>20240101</CardActivationDate></CardHistory></CardHistories>' +
-                    '</CardBasicInfo></GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('m_fas_outstanding_auth_inq') || body.contains('outstanding_auth')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><WSResponse><Sys><Code>1</Code></Sys>' +
-                    '<M_FAS_OUTSTANDING_AUTH_INQ><VMX_ROOT><VMX_MSGOUT>' +
-                    '<SVC_RETURN>S</SVC_RETURN><AUTHS_TABLE>' +
-                    '<AuthRow><EFF_DATE>20260115</EFF_DATE><AUTH_AMOUNT>150000</AUTH_AMOUNT>' +
-                    '<AUTHORIZATION_CODE>AUTH001</AUTHORIZATION_CODE><Description>Merchant A</Description>' +
-                    '<CreditDebitFlag>D</CreditDebitFlag></AuthRow>' +
-                    '</AUTHS_TABLE></VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ>' +
-                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcardsecinfo') || endpoint.contains('cardsec')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCardSecInfoResponse><Sys><Code>1</Code></Sys>' +
-                    '<CardSecInfo>' +
-                    '<MainCardProduct><DailyRetailLimit>1000</DailyRetailLimit><DailyCashLimit>500</DailyCashLimit></MainCardProduct>' +
-                    '<MainCardPlastic><EmbossingName>NGUYEN VAN IPP</EmbossingName><EcomActiveFlag>1</EcomActiveFlag></MainCardPlastic>' +
-                    '<MainCardBalance><CurrentBalance>2500000</CurrentBalance><TotalBalance>3000000</TotalBalance></MainCardBalance>' +
-                    '<PassDue><ResponsibleUnit>Unit A</ResponsibleUnit></PassDue>' +
-                    '<IPPs>' +
-                    '<IPP><IPPPlan>IPP-PLAN-A</IPPPlan><IPPRecordNo>REC-A</IPPRecordNo>' +
-                    '<IPPOpenDate>2026-01-15</IPPOpenDate><IPPBalance>1000000</IPPBalance>' +
-                    '<InterestRate>1.5</InterestRate><Term>12</Term><CurrentTerm>3</CurrentTerm>' +
-                    '<IPPStartDate>2026-02-01</IPPStartDate><IPPMatureDate>2027-02-01</IPPMatureDate>' +
-                    '<IPPCurrentBalance>900000</IPPCurrentBalance></IPP>' +
-                    '<IPP><IPPPlan>IPP-PLAN-B</IPPPlan><IPPRecordNo>REC-B</IPPRecordNo>' +
-                    '<OpenDate>2026-03-01</OpenDate><IPPBalance>500000</IPPBalance>' +
-                    '<InterestRate>2.0</InterestRate><Term>6</Term></IPP>' +
-                    '<IPP><IPPPlan>IPP-PLAN-A</IPPPlan><IPPRecordNo>REC-A</IPPRecordNo></IPP>' +
-                    '</IPPs></CardSecInfo></GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcardplaninfo') || endpoint.contains('plan')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><cif:GetCardPlanInfoResponse xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
-                    '<Sys><Code>1</Code></Sys><CardPlanInfo><CardPlans>' +
-                    '<CardPlan><RecordNumber>REC-A</RecordNumber><PlanNumber>PLAN-OLD</PlanNumber>' +
-                    '<PlanOpenDate>2026-01-10</PlanOpenDate><PlanCurrentBalance>800000</PlanCurrentBalance>' +
-                    '<BaseRate>12.5</BaseRate><CloseFeelIndicator>Y</CloseFeelIndicator>' +
-                    '<CloseFeelIndicatorAmount>40000</CloseFeelIndicatorAmount>' +
-                    '<PlanPaymentAmount>100000</PlanPaymentAmount>' +
-                    '<AccruedInterest>5000</AccruedInterest><PerDiem>200</PerDiem>' +
-                    '<DeferredInterest>1000</DeferredInterest><AccruedInt>300</AccruedInt>' +
-                    '</CardPlan></CardPlans></CardPlanInfo>' +
-                    '</cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -722,7 +750,6 @@ private class FEC_CustomerIntegrationService_Test {
 
         System.assertNotEquals(null, result);
         System.assertEquals('Nguyen Van IPP', result.customerName);
-        System.assertEquals('PLASTIC-IPP', result.plasticID);
 
         List<FEC_IPP__c> ipps = [
             SELECT FEC_IPP_Plan__c, FEC_IPP_Open_Date__c, FEC_IPP_Balance__c,
@@ -752,13 +779,16 @@ private class FEC_CustomerIntegrationService_Test {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
 
-            if (endpoint.contains('customerlist') || body.contains('getcustomerlist')) {
+            if (body.contains('getloanbasicinfo') || endpoint.contains('loanbasic')) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCustomerListResponse><Sys><Code>1</Code></Sys>' +
-                    '<Customers><Customer><CIFNumber>CIF-LOAN-002</CIFNumber>' +
-                    '<FullName>Tran Thi Loan</FullName><NationalID>079987654321</NationalID>' +
-                    '</Customer></Customers></GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+                    '<soapenv:Body><GetLoanBasicInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<LoanBasicInfo><Loan><ContractNumber>12345678-123456-1234</ContractNumber></Loan>' +
+                    '<Product><LoanAmount>50000000</LoanAmount><Tenure>36</Tenure><EMI>2000000</EMI>' +
+                    '<Rate>15</Rate><Product>PL</Product></Product>' +
+                    '<TerminationSimulation><NextDueDate>2026-07-01</NextDueDate></TerminationSimulation>' +
+                    '<PassDue><DPD>10</DPD></PassDue></LoanBasicInfo>' +
+                    '</GetLoanBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -769,6 +799,18 @@ private class FEC_CustomerIntegrationService_Test {
                     '<soapenv:Body><GetCustomerInfoBasicResponse><Sys><Code>1</Code></Sys>' +
                     '<CustomerBasicInfo><FullName>Tran Thi Loan</FullName><CIFNumber>CIF-LOAN-002</CIFNumber>' +
                     '</CustomerBasicInfo></GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (endpoint.contains('customerlist')
+                || (body.contains('getcustomerlist') && !body.contains('getcustomerinfobasic'))) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCustomerListResponse><Sys><Code>1</Code></Sys>' +
+                    '<Customers><Customer><CIFNumber>CIF-LOAN-002</CIFNumber>' +
+                    '<FullName>Tran Thi Loan</FullName><NationalID>079987654321</NationalID>' +
+                    '</Customer></Customers></GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -790,23 +832,6 @@ private class FEC_CustomerIntegrationService_Test {
                     '<soapenv:Body><GetDocumentsListResponse><Sys><Code>1</Code></Sys>' +
                     '<Documents><Document><DocumentID>DOC-LOAN-001</DocumentID></Document></Documents>' +
                     '</GetDocumentsListResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getloanbasicinfo')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetLoanBasicInfoResponse><Sys><Code>1</Code></Sys>' +
-                    '<LoanBasicInfo><Loan><ContractNumber>12345678-123456-1234</ContractNumber>' +
-                    '<ContractStatus>ACTIVE</ContractStatus><ContractType>Personal</ContractType>' +
-                    '<AgreementDate>2025-01-01</AgreementDate>' +
-                    '<ApplicationID>APP-LOAN</ApplicationID><CompanyName>FEC</CompanyName></Loan>' +
-                    '<Product><LoanAmount>50000000</LoanAmount><Tenure>36</Tenure><EMI>2000000</EMI>' +
-                    '<Rate>15</Rate><Product>PL</Product></Product>' +
-                    '<TerminationSimulation><NextDueDate>2026-07-01</NextDueDate></TerminationSimulation>' +
-                    '<PassDue><DPD>10</DPD></PassDue></LoanBasicInfo>' +
-                    '</GetLoanBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -883,7 +908,16 @@ private class FEC_CustomerIntegrationService_Test {
         Test.startTest();
         FEC_CustomerIntegrationService.ResultDTO result =
             FEC_CustomerIntegrationService.syncCustomer(hist, hist.FEC_CIF_Number__c, null, null);
+        update hist;
         Test.stopTest();
+
+        hist = [
+            SELECT FEC_Loan_Amount__c, FEC_Tenure__c, FEC_MRC_Zone__c, FEC_Area__c,
+                   FEC_Plate_Number__c, FEC_Original_MRC_Remark__c, FEC_Delivery_Date__c,
+                   FEC_Notarized_MRC_Remark__c, FEC_Days_Past_Due__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :hist.Id
+        ];
 
         System.assertEquals('Tran Thi Loan', result.customerName);
         System.assertEquals(50000000, hist.FEC_Loan_Amount__c);
@@ -1200,6 +1234,16 @@ private class FEC_CustomerIntegrationService_Test {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
 
+            if (body.contains('getcustomerinfobasic')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCustomerInfoBasicResponse><Sys><Code>1</Code></Sys>' +
+                    '<CustomerBasicInfo><FullName>Phone Fallback</FullName></CustomerBasicInfo>' +
+                    '</GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
             if (body.contains('getcustomerlist')) {
                 customerListCalls++;
                 String phones = customerListCalls == 1
@@ -1210,16 +1254,6 @@ private class FEC_CustomerIntegrationService_Test {
                     '<soapenv:Body><GetCustomerListResponse><Sys><Code>1</Code></Sys>' +
                     '<Customers><Customer><CIFNumber>CIF-PH-001</CIFNumber><FullName>Phone Fallback</FullName>' +
                     phones + '</Customer></Customers></GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcustomerinfobasic')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCustomerInfoBasicResponse><Sys><Code>1</Code></Sys>' +
-                    '<CustomerBasicInfo><FullName>Phone Fallback</FullName></CustomerBasicInfo>' +
-                    '</GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -1295,28 +1329,71 @@ private class FEC_CustomerIntegrationService_Test {
         insert hist;
         hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
 
-        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationPhoneFallbackMock());
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
         Test.startTest();
         FEC_CustomerIntegrationService.ResultDTO result =
             FEC_CustomerIntegrationService.syncCustomer(hist, null, null, ACCOUNT_NUMBER);
         Test.stopTest();
 
-        System.assertEquals('0912345678', result.primaryPhone);
-        System.assertEquals('0912345678', hist.FEC_Primary_Phone__c);
+        System.assertEquals('0909998877', result.primaryPhone);
+        System.assertEquals('0909998877', hist.FEC_Primary_Phone__c);
     }
 
     private class CustomerIntegrationAddressIppMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
+            String endpoint = req.getEndpoint() != null ? req.getEndpoint().toLowerCase() : '';
             String body = req.getBody() != null ? req.getBody().toLowerCase() : '';
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
+
+            if (endpoint.contains('cardbasicinfo') || body.contains('getcardbasicinfo')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCardBasicInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardBasicInfo><MainCard><PlasticIndicator>PLASTIC-ADDR</PlasticIndicator></MainCard></CardBasicInfo>' +
+                    '</GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('getcardsecinfo') || endpoint.contains('cardsec')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCardSecInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardSecInfo><IPPs>' +
+                    '<IPP><IPPRecordNo>REC-DASH</IPPRecordNo><IPPBalance>100</IPPBalance>' +
+                    '<Term>6</Term><OPENING_BALANCE_1>100</OPENING_BALANCE_1></IPP>' +
+                    '</IPPs></CardSecInfo></GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
 
             if (body.contains('getcustomerinfobasic')) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
                     '<soapenv:Body><GetCustomerInfoBasicResponse><Sys><Code>1</Code></Sys>' +
-                    '<CustomerBasicInfo><FullName>Addr User</FullName></CustomerBasicInfo>' +
-                    '</GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
+                    '<CustomerBasicInfo><FullName>Addr User</FullName><CIFNumber>CIF-ADDR-001</CIFNumber>' +
+                    '</CustomerBasicInfo></GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('m_fas_outstanding_auth_inq')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><WSResponse><Sys><Code>1</Code></Sys>' +
+                    '<M_FAS_OUTSTANDING_AUTH_INQ><VMX_ROOT><VMX_MSGOUT><SVC_RETURN>S</SVC_RETURN>' +
+                    '</VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ></WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (body.contains('getcardplaninfo')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><cif:GetCardPlanInfoResponse xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
+                    '<Sys><Code>1</Code></Sys><CardPlanInfo><CardPlans></CardPlans></CardPlanInfo>' +
+                    '</cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
@@ -1334,18 +1411,6 @@ private class FEC_CustomerIntegrationService_Test {
                     '<Address><AddressType>OFFICE</AddressType><Street>88 Lang Ha</Street>' +
                     '<City>HN01</City><District>BD01</District><CountryName>Viet Nam</CountryName></Address>' +
                     '</Addresses></GetAddressesListResponse></soapenv:Body></soapenv:Envelope>'
-                );
-                return res;
-            }
-
-            if (body.contains('getcardsecinfo')) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                    '<soapenv:Body><GetCardSecInfoResponse><Sys><Code>1</Code></Sys>' +
-                    '<CardSecInfo><IPPs>' +
-                    '<IPP><IPPRecordNo>REC-DASH</IPPRecordNo><IPPBalance>100</IPPBalance>' +
-                    '<OPENING_BALANCE_1>500</OPENING_BALANCE_1></IPP>' +
-                    '</IPPs></CardSecInfo></GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;
             }
