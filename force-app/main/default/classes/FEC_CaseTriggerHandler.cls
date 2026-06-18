@@ -591,6 +591,7 @@ public without sharing class FEC_CaseTriggerHandler {
             List<Case> cases = [SELECT FEC_ID_Search__c 
                                FROM Case 
                                WHERE FEC_ID_Search__c LIKE :likePatterns
+                               AND (ArchiveExternalId__c = NULL OR ArchiveExternalId__c = '') 
                                LIMIT 50000];
             
             // Parse and find max for each prefix in memory
