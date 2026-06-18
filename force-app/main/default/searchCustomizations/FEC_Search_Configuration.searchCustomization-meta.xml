@@ -568,23 +568,7 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Transcription__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_SLA_Warning__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_Phone_Number__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_Middle_Name__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_Last_Name__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -597,14 +581,6 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>SuppliedCompany</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_First_Name__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_Email__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -629,10 +605,6 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Draft_Remarks__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Transfer_Data_to_Collections__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -680,14 +652,6 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Team__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Task__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Customer_Username__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
@@ -700,31 +664,7 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Short_Name__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Send_To__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Case_Participants__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Zip_Code__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_User_Email_ID__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_Place_of_Issue__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_Phone_Type__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -732,15 +672,7 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Updated_Info_National_ID__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_First_Name__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Title__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -764,39 +696,11 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Search_Account_Number__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Search_Application_ID__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Routing_Action__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Search_Email_Address__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>Subject</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Search_National_ID__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Search_Contract_Number__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Search_Customer_Number__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Search_Phone_Number__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -812,19 +716,11 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Transfer_Time__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>SuppliedEmail</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Coll_Sub_Action_Code__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Transfer_Status__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -884,10 +780,6 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Search_Products__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Interaction_Remarks__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
@@ -901,10 +793,6 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Customer_Name__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Stage__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <objectApiName>Case</objectApiName>
