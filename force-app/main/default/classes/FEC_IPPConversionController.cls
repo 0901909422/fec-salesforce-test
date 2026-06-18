@@ -1,11 +1,60 @@
 /****************************************************************************************
  * File Name    : FEC_IPPConversionController.cls
- * Description  : Controller for IPP Conversion (RC34.01 Retail, RC34.02 Balance). Eligible transactions, Check IPP Details, Convert IPP (AddIPP).
+ * Description  : RC34.01/RC34.02 IPP Conversion: API 41 GetUnbilledTransactions → eligible tx → Tenor (GetAccountDetails) → details (GetIPPDetails) → convertIPP (AddIPP).
  ****************************************************************************************/
 
 public without sharing class FEC_IPPConversionController {
 
     public static final Integer MAX_RETRY_COUNT = 3;
+
+    @TestVisible private static Boolean denyTransactionAccessForTest = false;
+    @TestVisible private static Boolean denyCaseAccessForTest = false;
+    @TestVisible private static Boolean denyCaseUpdateForTest = false;
+    @TestVisible private static Boolean denyIppTermUpdateForTest = false;
+    @TestVisible private static Boolean denyActionCountUpdateForTest = false;
+    @TestVisible private static Integer addIppTestMode = 0;
+    @TestVisible private static Integer unbilledApiTestMode = 0;
+    @TestVisible private static FEC_GetUnbilledTransactions.ResponseWrapper unbilledApiTestResponse;
+    @TestVisible private static String accountContractTextForTest;
+
+    @TestVisible
+    private static Boolean isTransactionReadable() {
+        return !denyTransactionAccessForTest && Schema.sObjectType.FEC_Transaction__c.isAccessible();
+    }
+
+    @TestVisible
+    private static Boolean isCaseReadable() {
+        return !denyCaseAccessForTest && Schema.sObjectType.Case.isAccessible();
+    }
+
+    @TestVisible
+    private static Boolean isCaseUpdatable() {
+        return !denyCaseUpdateForTest && Schema.sObjectType.Case.isUpdateable();
+    }
+
+    @TestVisible
+    private static Boolean isIppTermFieldUpdateable() {
+        if (denyIppTermUpdateForTest) {
+            return false;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.sObjectType.Case.fields.getMap();
+        return caseFieldMap.containsKey('FEC_IPP_Term__c')
+            && caseFieldMap.get('FEC_IPP_Term__c').getDescribe().isUpdateable();
+    }
+
+    @TestVisible
+    private static Boolean isActionCountFieldUpdateable() {
+        return !denyActionCountUpdateForTest
+            && Schema.sObjectType.Case.fields.FEC_Process_Action_Count__c.isUpdateable();
+    }
+
+    @TestVisible
+    private static FEC_AddIPP.AddIPPResult callAddIpp(FEC_AddIPP.IPPRequest req, Boolean isTestApi) {
+        if (addIppTestMode == 1) {
+            throw new CalloutException('Simulated AddIPP failure');
+        }
+        return FEC_AddIPP.addIPP(req, isTestApi);
+    }
 
     public class EligibleTransactionDTO {
         @AuraEnabled public String transactionId;
@@ -40,15 +89,420 @@ public without sharing class FEC_IPPConversionController {
     }
 
     /**
-     * Get eligible retail transactions (unbilled, valid for IPP conversion). Uses FEC_TransactionsController.loadTransactions.
-     * Fallback: when API returns no unbilled, load from FEC_Transaction__c by Case's Customer History (e.g. for test data).
+     * Get eligible retail transactions via API 41 GetUnbilledTransactions, sync to FEC_Transaction__c, apply display filter.
+     * Fallback: load from FEC_Transaction__c by Case Customer History when API returns no eligible rows.
      */
     @AuraEnabled(cacheable=false)
     public static List<EligibleTransactionDTO> getEligibleTransactions(Id caseId) {
         if (caseId == null) {
             return new List<EligibleTransactionDTO>();
         }
-        FEC_TransactionsController.TransactionsResponse res = FEC_TransactionsController.loadTransactions(caseId);
+        List<EligibleTransactionDTO> fromApi = loadIppUnbilledTransactions(caseId);
+        if (!fromApi.isEmpty()) {
+            return fromApi;
+        }
+        return loadEligibleTransactionsFromDb(caseId);
+    }
+
+    /**
+     * RC34.01 – lưu/xóa Transaction đã chọn trên Case.FEC_IPP_Transaction__c khi user chọn/bỏ chọn radio.
+     */
+    @AuraEnabled
+    public static void saveSelectedTransaction(Id caseId, Id transactionId) {
+        if (caseId == null || !isCaseUpdatable()) {
+            return;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Transaction__c')
+            || !caseFieldMap.get('FEC_IPP_Transaction__c').getDescribe().isUpdateable()) {
+            return;
+        }
+        if (transactionId == null) {
+            FEC_CaseTriggerHandler.isExecuting = true;
+            try {
+                update new Case(Id = caseId, FEC_IPP_Transaction__c = null);
+            } finally {
+                FEC_CaseTriggerHandler.isExecuting = false;
+            }
+            return;
+        }
+        if (!isTransactionReadable()) {
+            return;
+        }
+        List<FEC_Transaction__c> txs = [
+            SELECT Id, FEC_Customer_History__c
+            FROM FEC_Transaction__c
+            WHERE Id = :transactionId
+            LIMIT 1
+        ];
+        if (txs.isEmpty()) {
+            return;
+        }
+        Case c = loadCaseForIPPConversion(caseId);
+        if (c == null || c.FEC_Account_or_Contract__c == null
+            || txs[0].FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+            return;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = caseId, FEC_IPP_Transaction__c = transactionId);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+    }
+
+    /**
+     * RC34.01 – khôi phục Transaction đã chọn trước đó khi user mở lại IPP Conversion.
+     */
+    @AuraEnabled(cacheable=false)
+    public static String getSavedIppTransactionId(Id caseId) {
+        if (caseId == null || !isCaseReadable()) {
+            return null;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Transaction__c')) {
+            return null;
+        }
+        List<Case> cases = [
+            SELECT Id, FEC_IPP_Transaction__c, FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty()) {
+            return null;
+        }
+        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, cases);
+        if (decision.getRecords().isEmpty()) {
+            return null;
+        }
+        Case c = (Case) decision.getRecords()[0];
+        Map<String, Object> populated = c.getPopulatedFieldsAsMap();
+        if (!populated.containsKey('FEC_IPP_Transaction__c') || c.FEC_IPP_Transaction__c == null) {
+            return null;
+        }
+        if (!isTransactionReadable()) {
+            return null;
+        }
+        List<FEC_Transaction__c> txs = [
+            SELECT Id, FEC_Customer_History__c
+            FROM FEC_Transaction__c
+            WHERE Id = :c.FEC_IPP_Transaction__c
+            LIMIT 1
+        ];
+        if (txs.isEmpty() || txs[0].FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+            return null;
+        }
+        return txs[0].Id;
+    }
+
+    @TestVisible
+    private static List<EligibleTransactionDTO> loadIppUnbilledTransactions(Id caseId) {
+        List<EligibleTransactionDTO> result = new List<EligibleTransactionDTO>();
+        Case c = loadCaseForIPPConversion(caseId);
+        if (c == null || c.FEC_Account_or_Contract__c == null) {
+            return result;
+        }
+        String accountNumber = getAccountNumberForGetIPPDetails(caseId, null);
+        if (String.isBlank(accountNumber)) {
+            return result;
+        }
+        FEC_GetUnbilledTransactions.ResponseWrapper apiRes;
+        try {
+            apiRes = callGetUnbilledTransactionsApi(accountNumber);
+        } catch (Exception e) {
+            System.debug('### loadIppUnbilledTransactions API ERROR: ' + e.getMessage());
+            return result;
+        }
+        if (apiRes == null || apiRes.Transactions == null || apiRes.Transactions.isEmpty()) {
+            return result;
+        }
+        List<FEC_Transaction__c> synced = syncUnbilledTransactionsFromApi(
+            caseId,
+            c.FEC_Account_or_Contract__c,
+            apiRes.Transactions
+        );
+        for (FEC_Transaction__c tx : synced) {
+            if (!isIppEligibleForDisplay(tx)) {
+                continue;
+            }
+            result.add(mapTransactionToEligibleDto(tx));
+        }
+        result.sort(new EligibleTransactionDateComparator());
+        return result;
+    }
+
+    @TestVisible
+    private static FEC_GetUnbilledTransactions.ResponseWrapper callGetUnbilledTransactionsApi(String accountNumber) {
+        if (unbilledApiTestMode == 1) {
+            return unbilledApiTestResponse;
+        }
+        return FEC_GetUnbilledTransactions.callGetUnbilledTransactions(
+            FEC_CommonUltils.generateTransactionId(),
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+            FEC_CommonUltils.formatTransferCallRequestDateTime(Datetime.now()),
+            accountNumber
+        );
+    }
+
+    @TestVisible
+    private static List<FEC_Transaction__c> syncUnbilledTransactionsFromApi(
+        Id caseId,
+        Id customerHistoryId,
+        List<FEC_GetUnbilledTransactions.TransactionRecord> apiRows
+    ) {
+        List<FEC_Transaction__c> result = new List<FEC_Transaction__c>();
+        if (caseId == null || customerHistoryId == null || apiRows == null || apiRows.isEmpty()) {
+            return result;
+        }
+
+        Map<String, FEC_Transaction__c> existingByKey = loadExistingUnbilledTransactionsByKey(customerHistoryId);
+        Map<String, FEC_Transaction__c> toUpsertByKey = new Map<String, FEC_Transaction__c>();
+        Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+
+        for (FEC_GetUnbilledTransactions.TransactionRecord row : apiRows) {
+            if (row == null) {
+                continue;
+            }
+            FEC_Transaction__c rec = mapApiRowToTransaction(caseId, customerHistoryId, row, txFieldMap);
+            if (rec == null) {
+                continue;
+            }
+            String key = buildUnbilledSyncKey(rec);
+            if (String.isBlank(key)) {
+                continue;
+            }
+            if (existingByKey.containsKey(key)) {
+                rec.Id = existingByKey.get(key).Id;
+            }
+            toUpsertByKey.put(key, rec);
+        }
+        if (toUpsertByKey.isEmpty()) {
+            return result;
+        }
+        try {
+            upsert toUpsertByKey.values();
+        } catch (Exception e) {
+            System.debug('### syncUnbilledTransactionsFromApi upsert: ' + e.getMessage());
+            for (FEC_Transaction__c rec : toUpsertByKey.values()) {
+                if (rec.Id == null) {
+                    String failKey = buildUnbilledSyncKey(rec);
+                    if (existingByKey.containsKey(failKey)) {
+                        rec.Id = existingByKey.get(failKey).Id;
+                    }
+                }
+            }
+        }
+        Set<Id> syncedIds = collectSyncedTransactionIds(toUpsertByKey.values(), existingByKey);
+        if (syncedIds.isEmpty()) {
+            return result;
+        }
+        String selectFields = 'Id, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Amount__c,' +
+            ' FEC_Merchant_Description__c, FEC_Transaction_Plan__c, FEC_Transaction_Code__c';
+        if (txFieldMap.containsKey('FEC_IPPEligibilityFlag__c')) {
+            selectFields += ', FEC_IPPEligibilityFlag__c';
+        }
+        for (FEC_Transaction__c tx : Database.query(
+            'SELECT ' + selectFields + ' FROM FEC_Transaction__c WHERE Id IN :syncedIds'
+        )) {
+            result.add(tx);
+        }
+        return result;
+    }
+
+    @TestVisible
+    private static Map<String, FEC_Transaction__c> loadExistingUnbilledTransactionsByKey(Id customerHistoryId) {
+        Map<String, FEC_Transaction__c> existingByKey = new Map<String, FEC_Transaction__c>();
+        String unbilledType = FEC_ConstantCommon.TRANSACTION_TYPE_UNBILLED;
+        Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+        String query = 'SELECT Id, FEC_Post_Date__c, FEC_Transaction_Amount__c, FEC_Transaction_Code__c,' +
+            ' FEC_Reference_Number__c';
+        if (txFieldMap.containsKey('FEC_Type__c')) {
+            query += ', FEC_Type__c';
+        }
+        query += ' FROM FEC_Transaction__c WHERE FEC_Customer_History__c = :customerHistoryId';
+        if (txFieldMap.containsKey('FEC_Type__c')) {
+            query += ' AND FEC_Type__c = :unbilledType';
+        }
+        for (FEC_Transaction__c tx : Database.query(query)) {
+            String key = buildUnbilledSyncKey(tx);
+            if (String.isNotBlank(key)) {
+                existingByKey.put(key, tx);
+            }
+        }
+        return existingByKey;
+    }
+
+    @TestVisible
+    private static FEC_Transaction__c mapApiRowToTransaction(
+        Id caseId,
+        Id customerHistoryId,
+        FEC_GetUnbilledTransactions.TransactionRecord row,
+        Map<String, Schema.SObjectField> txFieldMap
+    ) {
+        Date postDate = FEC_CommonUltils.toDateStr(row.PostingDate);
+        if (postDate == null || row.Amount == null) {
+            return null;
+        }
+        FEC_Transaction__c rec = new FEC_Transaction__c(
+            FEC_Customer_History__c = customerHistoryId
+        );
+        if (txFieldMap.containsKey('FEC_Case__c')) {
+            rec.put('FEC_Case__c', caseId);
+        }
+        if (txFieldMap.containsKey('FEC_Type__c')) {
+            rec.put('FEC_Type__c', FEC_ConstantCommon.TRANSACTION_TYPE_UNBILLED);
+        }
+        rec.FEC_Post_Date__c = postDate;
+        rec.FEC_Transaction_Amount__c = row.Amount;
+        rec.FEC_Merchant_Description__c = row.Description;
+        rec.FEC_Transaction_Code__c = row.TransactionCode;
+        rec.FEC_Effective_Date__c = resolveEffectiveDateFromApi(row);
+        rec.FEC_Transaction_Plan__c = row.TransactionPlan;
+        rec.FEC_Card_Seq__c = row.CardSeq;
+        rec.FEC_IPP_Key__c = row.IPPKey;
+        rec.FEC_Reference_Number__c = row.ReferenceNumber;
+        if (txFieldMap.containsKey('FEC_IPPEligibilityFlag__c')) {
+            rec.put('FEC_IPPEligibilityFlag__c', row.IPPEligibilityFlag);
+        }
+        return rec;
+    }
+
+    @TestVisible
+    private static Date resolveEffectiveDateFromApi(FEC_GetUnbilledTransactions.TransactionRecord row) {
+        if (row == null) {
+            return null;
+        }
+        Date eff = FEC_CommonUltils.toDateStr(row.EffectiveDate);
+        if (eff != null) {
+            return eff;
+        }
+        return FEC_CommonUltils.toDateStr(row.TransactionDate);
+    }
+
+    @TestVisible
+    private static String buildUnbilledSyncKey(FEC_Transaction__c tx) {
+        if (tx == null) {
+            return null;
+        }
+        if (String.isNotBlank(tx.FEC_Reference_Number__c)) {
+            return 'REF:' + tx.FEC_Reference_Number__c.trim();
+        }
+        String code = tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c.trim() : '';
+        String post = tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : '';
+        String amt = tx.FEC_Transaction_Amount__c != null ? String.valueOf(tx.FEC_Transaction_Amount__c) : '';
+        if (String.isBlank(code) && String.isBlank(post) && String.isBlank(amt)) {
+            return null;
+        }
+        return code + '|' + post + '|' + amt;
+    }
+
+    @TestVisible
+    private static Boolean isIppEligibleForDisplay(FEC_Transaction__c tx) {
+        if (tx == null) {
+            return false;
+        }
+        String txCode = tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c.trim() : '';
+        if (String.isBlank(txCode) || !FEC_ConstantCommon.IPP_ELIGIBLE_TRANSACTION_CODES.contains(txCode)) {
+            return false;
+        }
+        Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+        if (!txFieldMap.containsKey('FEC_IPPEligibilityFlag__c')) {
+            return true;
+        }
+        Map<String, Object> populated = tx.getPopulatedFieldsAsMap();
+        if (!populated.containsKey('FEC_IPPEligibilityFlag__c')) {
+            return true;
+        }
+        Object flagObj = populated.get('FEC_IPPEligibilityFlag__c');
+        String flag = flagObj != null ? String.valueOf(flagObj).trim() : '';
+        return flag == FEC_ConstantCommon.IPP_ELIGIBILITY_FLAG_RETAIL;
+    }
+
+    @TestVisible
+    private static Set<Id> collectSyncedTransactionIds(
+        List<FEC_Transaction__c> upserted,
+        Map<String, FEC_Transaction__c> existingByKey
+    ) {
+        Set<Id> syncedIds = new Set<Id>();
+        if (upserted == null || upserted.isEmpty()) {
+            return syncedIds;
+        }
+        for (FEC_Transaction__c tx : upserted) {
+            if (tx == null) {
+                continue;
+            }
+            if (tx.Id != null) {
+                syncedIds.add(tx.Id);
+                continue;
+            }
+            String key = buildUnbilledSyncKey(tx);
+            if (String.isNotBlank(key) && existingByKey != null && existingByKey.containsKey(key)) {
+                Id existingId = existingByKey.get(key).Id;
+                if (existingId != null) {
+                    syncedIds.add(existingId);
+                }
+            }
+        }
+        return syncedIds;
+    }
+
+    @TestVisible
+    private static EligibleTransactionDTO mapTransactionToEligibleDto(FEC_Transaction__c tx) {
+        EligibleTransactionDTO dto = new EligibleTransactionDTO();
+        dto.transactionId = tx.Id;
+        dto.transactionCode = tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.effectiveDateStr = tx.FEC_Effective_Date__c != null ? String.valueOf(tx.FEC_Effective_Date__c) : FEC_ConstantCommon.STR_EMPTY;
+        dto.transactionPlan = tx.FEC_Transaction_Plan__c != null ? tx.FEC_Transaction_Plan__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.amount = tx.FEC_Transaction_Amount__c;
+        dto.postingDateStr = tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : FEC_ConstantCommon.STR_EMPTY;
+        dto.merchant = tx.FEC_Merchant_Description__c != null ? tx.FEC_Merchant_Description__c : FEC_ConstantCommon.STR_EMPTY;
+        return dto;
+    }
+
+    private class EligibleTransactionDateComparator implements System.Comparator<EligibleTransactionDTO> {
+        public Integer compare(EligibleTransactionDTO a, EligibleTransactionDTO b) {
+            Date da = parseEligibleDate(a != null ? a.effectiveDateStr : null);
+            Date db = parseEligibleDate(b != null ? b.effectiveDateStr : null);
+            if (da == null && db == null) {
+                return 0;
+            }
+            if (da == null) {
+                return 1;
+            }
+            if (db == null) {
+                return -1;
+            }
+            if (da == db) {
+                return 0;
+            }
+            return da > db ? -1 : 1;
+        }
+    }
+
+    @TestVisible
+    private static Date parseEligibleDate(String raw) {
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        try {
+            return Date.valueOf(raw.trim());
+        } catch (Exception e) {
+            return FEC_CommonUltils.toDateStr(raw);
+        }
+    }
+
+    @TestVisible
+    private static List<EligibleTransactionDTO> resolveEligibleTransactions(Id caseId, FEC_TransactionsController.TransactionsResponse res) {
+        List<EligibleTransactionDTO> apiMapped = mapUnbilledApiTransactions(res);
+        if (!apiMapped.isEmpty()) {
+            return apiMapped;
+        }
+        return loadEligibleTransactionsFromDb(caseId);
+    }
+
+    @TestVisible
+    private static List<EligibleTransactionDTO> mapUnbilledApiTransactions(FEC_TransactionsController.TransactionsResponse res) {
         List<EligibleTransactionDTO> result = new List<EligibleTransactionDTO>();
         if (res != null && res.unbilledTransactions != null && !res.unbilledTransactions.isEmpty()) {
             for (FEC_TransactionsController.TransactionDTO tx : res.unbilledTransactions) {
@@ -72,35 +526,24 @@ public without sharing class FEC_IPPConversionController {
     private static List<EligibleTransactionDTO> loadEligibleTransactionsFromDb(Id caseId) {
         List<EligibleTransactionDTO> result = new List<EligibleTransactionDTO>();
         if (caseId == null) return result;
-        if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_Transaction__c.isAccessible()) {
-            return result;
-        }
         List<Case> cases = [SELECT FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1];
         if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) {
             return result;
         }
         Id chId = cases[0].FEC_Account_or_Contract__c;
-        List<FEC_Transaction__c> txs = [
-            SELECT Id, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Amount__c, FEC_Merchant_Description__c,
-                   FEC_Transaction_Plan__c, FEC_Transaction_Code__c, FEC_Authorization_Code__c
-            FROM FEC_Transaction__c
-            WHERE FEC_Customer_History__c = :chId
-            ORDER BY FEC_Effective_Date__c DESC
-        ];
-        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, txs);
-        for (SObject so : decision.getRecords()) {
-            FEC_Transaction__c tx = (FEC_Transaction__c) so;
-            Map<String, Object> txPopulated = tx.getPopulatedFieldsAsMap();
-            EligibleTransactionDTO dto = new EligibleTransactionDTO();
-            dto.transactionId = tx.Id;
-            dto.transactionCode = txPopulated.containsKey('FEC_Transaction_Code__c') && tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.effectiveDateStr = txPopulated.containsKey('FEC_Effective_Date__c') && tx.FEC_Effective_Date__c != null ? String.valueOf(tx.FEC_Effective_Date__c) : FEC_ConstantCommon.STR_EMPTY;
-            dto.transactionPlan = txPopulated.containsKey('FEC_Transaction_Plan__c') && tx.FEC_Transaction_Plan__c != null ? tx.FEC_Transaction_Plan__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.amount = txPopulated.containsKey('FEC_Transaction_Amount__c') ? tx.FEC_Transaction_Amount__c : null;
-            dto.postingDateStr = txPopulated.containsKey('FEC_Post_Date__c') && tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : FEC_ConstantCommon.STR_EMPTY;
-            dto.authorizationCode = txPopulated.containsKey('FEC_Authorization_Code__c') && tx.FEC_Authorization_Code__c != null ? tx.FEC_Authorization_Code__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.merchant = txPopulated.containsKey('FEC_Merchant_Description__c') && tx.FEC_Merchant_Description__c != null ? tx.FEC_Merchant_Description__c : FEC_ConstantCommon.STR_EMPTY;
-            result.add(dto);
+        Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+        String query = 'SELECT Id, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Amount__c,' +
+            ' FEC_Merchant_Description__c, FEC_Transaction_Plan__c, FEC_Transaction_Code__c';
+        if (txFieldMap.containsKey('FEC_IPPEligibilityFlag__c')) {
+            query += ', FEC_IPPEligibilityFlag__c';
+        }
+        query += ' FROM FEC_Transaction__c WHERE FEC_Customer_History__c = :chId ORDER BY FEC_Effective_Date__c DESC';
+        List<FEC_Transaction__c> txs = Database.query(query);
+        for (FEC_Transaction__c tx : txs) {
+            if (!isIppEligibleForDisplay(tx)) {
+                continue;
+            }
+            result.add(mapTransactionToEligibleDto(tx));
         }
         return result;
     }
@@ -482,13 +925,102 @@ public without sharing class FEC_IPPConversionController {
         }
     }
 
-    private static String resolveCardNumberForAddIpp(FEC_Transaction__c tx, Case c) {
-        if (tx != null && tx.FEC_Customer_History__c != null && tx.FEC_Customer_History__r != null
-                && String.isNotBlank(tx.FEC_Customer_History__r.FEC_Card_Number__c)) {
-            return tx.FEC_Customer_History__r.FEC_Card_Number__c;
+    @TestVisible
+    private static FEC_GetIPPDetailsCallout.IPPRequest buildGetIppDetailsRequest(
+        Case c,
+        FEC_Transaction__c tx,
+        Integer tenor,
+        String accountNumber
+    ) {
+        Date effDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
+        Date postDate = tx.FEC_Post_Date__c != null ? tx.FEC_Post_Date__c : effDate;
+        FEC_GetIPPDetailsCallout.IPPRequest req = new FEC_GetIPPDetailsCallout.IPPRequest();
+        req.accountNumber = accountNumber;
+        req.effectiveDate = FEC_CommonUltils.formatDateYYYYMMDD(effDate);
+        req.amount = tx.FEC_Transaction_Amount__c;
+        req.postingDate = FEC_CommonUltils.formatDateYYYYMMDD(postDate);
+        String transactionPlan = tx.FEC_Transaction_Plan__c;
+        if (String.isNotBlank(transactionPlan)) {
+            req.planNumber = transactionPlan;
+            req.transactionPlan = transactionPlan;
         }
-        if (c != null && c.FEC_Account_or_Contract__r != null) {
-            return c.FEC_Account_or_Contract__r.FEC_Card_Number__c;
+        req.ippTerm = resolveIppTermForGetIppDetails(tx, tenor);
+        if (String.isNotBlank(tx.FEC_Reference_Number__c)) {
+            req.referenceNumber = tx.FEC_Reference_Number__c;
+        }
+        req.cardNumber = resolveCardNumberForGetIppDetails(c);
+        req.cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
+        req.ippKey = tx.FEC_IPP_Key__c;
+        return req;
+    }
+
+    @TestVisible
+    private static FEC_AddIPP.IPPRequest buildAddIppRequest(
+        Case c,
+        FEC_Transaction__c tx,
+        String accountNumber,
+        Integer ippTerm
+    ) {
+        Date effDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
+        Date postDate = tx.FEC_Post_Date__c != null ? tx.FEC_Post_Date__c : effDate;
+        FEC_AddIPP.IPPRequest req = new FEC_AddIPP.IPPRequest();
+        req.accountNumber = accountNumber;
+        req.effectiveDate = effDate;
+        req.amount = tx.FEC_Transaction_Amount__c;
+        req.planNumber = tx.FEC_Transaction_Plan__c;
+        req.ippTerm = ippTerm;
+        req.referenceNumber = tx.FEC_Reference_Number__c;
+        req.transactionPlan = tx.FEC_Transaction_Plan__c;
+        req.postingDate = postDate;
+        req.cardNumber = resolveCardNumberForGetIppDetails(c);
+        req.cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
+        req.ippKey = tx.FEC_IPP_Key__c;
+        return req;
+    }
+
+    @TestVisible
+    private static Integer resolveIppTermForGetIppDetails(FEC_Transaction__c tx, Integer tenor) {
+        if (tx != null) {
+            Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+            if (txFieldMap.containsKey('FEC_IPP_Term__c')) {
+                Map<String, Object> populated = tx.getPopulatedFieldsAsMap();
+                if (populated.containsKey('FEC_IPP_Term__c') && tx.get('FEC_IPP_Term__c') != null) {
+                    Integer savedTerm = Integer.valueOf(String.valueOf(tx.get('FEC_IPP_Term__c')));
+                    if (savedTerm > 0) {
+                        return savedTerm;
+                    }
+                }
+            }
+        }
+        return tenor;
+    }
+
+    @TestVisible
+    private static Integer resolveIppTermForAddIpp(Case c, Integer tenor) {
+        if (c != null) {
+            Map<String, Object> populated = c.getPopulatedFieldsAsMap();
+            Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+            if (caseFieldMap.containsKey('FEC_IPP_Term__c') && populated.containsKey('FEC_IPP_Term__c') && c.get('FEC_IPP_Term__c') != null) {
+                Integer savedTerm = Integer.valueOf(String.valueOf(c.get('FEC_IPP_Term__c')));
+                if (savedTerm > 0) {
+                    return savedTerm;
+                }
+            }
+        }
+        return tenor;
+    }
+
+    @TestVisible
+    private static String resolveCardNumberForGetIppDetails(Case c) {
+        if (c == null || c.FEC_Account_or_Contract__c == null) {
+            return null;
+        }
+        Map<String, Object> cPop = c.getPopulatedFieldsAsMap();
+        if (cPop.containsKey('FEC_Account_or_Contract__r')) {
+            FEC_Customer_History__c chRel = (FEC_Customer_History__c) c.getSObject('FEC_Account_or_Contract__r');
+            if (chRel != null && String.isNotBlank(chRel.FEC_Card_Number__c)) {
+                return chRel.FEC_Card_Number__c;
+            }
         }
         return null;
     }
@@ -516,11 +1048,20 @@ public without sharing class FEC_IPPConversionController {
             return null;
         }
         Map<String, Object> cPopulated = c.getPopulatedFieldsAsMap();
+        if (accountContractTextForTest != null && String.isNotBlank(accountContractTextForTest)) {
+            return accountContractTextForTest.trim();
+        }
+        if (cPopulated.containsKey('FEC_Account_or_Contract__r')) {
+            String accFromName = accountNumberIfValidFormat(c.FEC_Account_or_Contract__r?.Name);
+            if (accFromName != null) {
+                return accFromName;
+            }
+            if (String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
+                return c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim();
+            }
+        }
         if (cPopulated.containsKey('FEC_Account_Contract_Number_Text__c') && String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
             return c.FEC_Account_Contract_Number_Text__c.trim();
-        }
-        if (cPopulated.containsKey('FEC_Account_or_Contract__c') && c.FEC_Account_or_Contract__c != null && String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
-            return c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
         }
         return cPopulated.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null;
     }

@@ -1,5 +1,7 @@
 public with sharing class FEC_GetIPPDetailsCallout {
 
+    private static FEC_ResponseLog responseLog;
+
     //=============== VALIDATION CLASS ===============//
 
     public class ValidationResult {
@@ -112,7 +114,8 @@ public with sharing class FEC_GetIPPDetailsCallout {
         if (String.isBlank(dateTimeValue)) {
             return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'SysRequest.DateTime' }));
         }
-        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE_TIME, dateTimeValue)) {
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE_TIME, dateTimeValue)
+            && !dateTimeValue.endsWith(FEC_ConstantCommon.TRANSFER_CALL_DATETIME_SUFFIX_GMT)) {
             return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{ 'SysRequest.DateTime', dateTimeValue }));
         }
 
@@ -131,70 +134,100 @@ public with sharing class FEC_GetIPPDetailsCallout {
     //=============== MAIN CALLOUT METHOD ===============//
 
     public static IPPDetailsResponse getIPPDetails(IPPRequest reqData) {
+        try {
+            ValidationResult validation = validateRequest(reqData);
+            if (!validation.isValid) {
+                responseLog = new FEC_ResponseLog(
+                    'FEC_GetIPPDetailsCallout',
+                    null,
+                    FEC_ConstantCommon.API_METHOD_POST,
+                    null,
+                    null,
+                    validation.errorMessage
+                );
+                IPPDetailsResponse errorResponse = new IPPDetailsResponse();
+                errorResponse.status = 'ERROR';
+                errorResponse.sysMessage = validation.errorMessage;
+                return errorResponse;
+            }
 
-        ValidationResult validation = validateRequest(reqData);
-        if (!validation.isValid) {
-            IPPDetailsResponse errorResponse = new IPPDetailsResponse();
-            errorResponse.status = 'ERROR';
-            errorResponse.sysMessage = validation.errorMessage;
-            return errorResponse;
-        }
+            String transId = String.valueOf(UUID.randomUUID());
+            String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+            String dateTimeValue = FEC_CommonUltils.formatTransferCallRequestDateTime(Datetime.now());
 
-        String transId = String.valueOf(UUID.randomUUID());
-        String requestorId = FEC_ConstantCommon.REQUESTOR_SD;
-        String dateTimeValue = Datetime.now().formatGmt(FEC_ConstantCommon.DATETIME_FORMAT);
+            ValidationResult sysValidation = validateSysRequestHeaders(transId, requestorId, dateTimeValue);
+            if (!sysValidation.isValid) {
+                responseLog = new FEC_ResponseLog(
+                    'FEC_GetIPPDetailsCallout',
+                    null,
+                    FEC_ConstantCommon.API_METHOD_POST,
+                    null,
+                    null,
+                    sysValidation.errorMessage
+                );
+                IPPDetailsResponse errorResponse = new IPPDetailsResponse();
+                errorResponse.status = 'ERROR';
+                errorResponse.sysMessage = sysValidation.errorMessage;
+                return errorResponse;
+            }
 
-        ValidationResult sysValidation = validateSysRequestHeaders(transId, requestorId, dateTimeValue);
-        if (!sysValidation.isValid) {
-            IPPDetailsResponse errorResponse = new IPPDetailsResponse();
-            errorResponse.status = 'ERROR';
-            errorResponse.sysMessage = sysValidation.errorMessage;
-            return errorResponse;
-        }
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_IPP_Detail');
 
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_IPP_Detail');
+            // Hard code toàn bộ payload khi môi trường Non-Production (chỉ combination dữ liệu này có response thật ở API mock/non-prod)
+            if (apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
+                && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+                reqData.accountNumber   = apiConfig.FEC_Account_Number_Hard_Code__c;
+                reqData.effectiveDate   = '2026-05-04';
+                reqData.amount          = 2250000;
+                reqData.planNumber      = '97102';
+                reqData.ippTerm         = 9;
+                reqData.referenceNumber = 'MT260840161000010000177';
+                reqData.transactionPlan = '60001';
+                reqData.postingDate     = '2026-05-04';
+                reqData.cardNumber      = '539146XXXXX04271';
+                reqData.cardSeq         = 1;
+                reqData.ippKey          = '1500001500060000003944000000001';
+            }
 
-        // Hard code toàn bộ payload khi môi trường Non-Production (chỉ combination dữ liệu này có response thật ở API mock/non-prod)
-        if (apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
-            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
-            reqData.accountNumber   = apiConfig.FEC_Account_Number_Hard_Code__c;
-            reqData.effectiveDate   = '2026-05-04';
-            reqData.amount          = 2250000;
-            reqData.planNumber      = '97102';
-            reqData.ippTerm         = 9;
-            reqData.referenceNumber = 'MT260840161000010000177';
-            reqData.transactionPlan = '60001';
-            reqData.postingDate     = '2026-05-04';
-            reqData.cardNumber      = '539146XXXXX04271';
-            reqData.cardSeq         = 1;
-            reqData.ippKey          = '1500001500060000003944000000001';
-        }
+            // Step 3: Build and send request
+            Dom.Document doc = buildSoapRequestXml(reqData, transId, requestorId, dateTimeValue);
+            String requestXml = doc.toXmlString();
 
-        // Step 3: Build and send request
-        Dom.Document doc = buildSoapRequestXml(reqData, transId, requestorId, dateTimeValue);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
 
-        String endpoint = apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
-
-        FEC_CommonUltils.logApi(
-            'FEC_GetIPPDetailsCallout',
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            doc.toXmlString(),
-            res,
-            null
-        );
-
-        if (res.getStatusCode() != 200) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{ res.getStatus() + ' ' + res.getBody() })
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetIPPDetailsCallout',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                requestXml,
+                res,
+                null
             );
-        }
 
-        return parseResponse(res.getBody());
+            if (res.getStatusCode() != 200) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{ res.getStatus() + ' ' + res.getBody() })
+                );
+            }
+
+            return parseResponse(res.getBody());
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
+        }
+    }
+
+    public static void logApiResponse() {
+        FEC_CommonUltils.logApiResponse(responseLog);
+        responseLog = null;
     }
 
     //=============== BUILD SOAP REQUEST (XML NODE) ===============//
