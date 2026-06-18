@@ -100,19 +100,32 @@
                 class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
               >
                 <div class="slds-form-element">
-                  <template if:true={tenorBlockReady}>
+                    <template if:true={tenorBlockReady}>
                     <lightning-combobox
                       label={lblTenor}
                       name="tenor"
                       value={selectedTenor}
+                      placeholder={lblTenorPlaceholder}
                       options={tenorOptions}
                       onchange={handleTenorChange}
                       required
                       disabled={isReadOnly}
                     ></lightning-combobox>
                   </template>
+                  <template if:true={tenorSyncError}>
+                    <p class="slds-m-top_x-small validation-msg validation-msg-red">{tenorSyncError}</p>
+                  </template>
                 </div>
               </div>
+              <template if:true={ippDetailsLoading}>
+                <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+                  <lightning-spinner
+                    alternative-text={lblSpinnerDetails}
+                    size="small"
+                  ></lightning-spinner>
+                </div>
+              </template>
+              <template if:true={showIppDetailsFields}>
               <div
                 class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
               >
@@ -149,8 +162,10 @@
                   ></lightning-input>
                 </div>
               </div>
+              </template>
             </div>
           </div>
+          <template if:true={showConvertIppButton}>
           <div class="slds-m-top_small">
             <lightning-button
               label={ippRetailUi.btnConvert}
@@ -168,6 +183,7 @@
               <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti10Message}</p>
             </template>
           </div>
+          </template>
         </template>
       </template>
     </template>

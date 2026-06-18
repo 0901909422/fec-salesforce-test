@@ -58,6 +58,9 @@ private class FEC_IPPConversionController_Test {
             FEC_Effective_Date__c = Date.today(),
             FEC_Post_Date__c = Date.today(),
             FEC_Transaction_Code__c = '0105',
+            FEC_Reference_Number__c = 'REF-IPP-001',
+            FEC_Card_Seq__c = '0',
+            FEC_IPP_Key__c = 'KEY-IPP-001',
             FEC_IPPEligibilityFlag__c = 'R',
             FEC_Type__c = 'Unbilled'
         );
@@ -151,6 +154,10 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(6, dto.tenorOptions[0]);
             System.assertEquals(12, dto.tenorOptions[2]);
             System.assertEquals('90003', dto.planNumber);
+            System.assertEquals(null, dto.savedTenor);
+            System.assertEquals(null, dto.savedInterestRate);
+            System.assertEquals(null, dto.savedFee);
+            System.assertEquals(null, dto.savedEmi);
         }
     }
 
@@ -162,6 +169,15 @@ private class FEC_IPPConversionController_Test {
 
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            FEC_CaseTriggerHandler.isExecuting = true;
+            try {
+                FEC_IPPConversionController.saveCaseIppTerm(c.Id, 9);
+            } finally {
+                FEC_CaseTriggerHandler.isExecuting = false;
+            }
+        }
         Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsMock());
 
         System.runAs(runAsAdmin()) {
@@ -174,6 +190,16 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(12, dto.interestRate);
             System.assertEquals(60000, dto.fee);
             System.assertEquals(709465, dto.emi);
+            // 2026-06-16 linhdev – FEC_IPP_Term__c lưu khi user chọn Tenor (trước GetIPPDetails)
+            if (caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+                Case updatedCase = [
+                    SELECT FEC_IPP_Term__c
+                    FROM Case
+                    WHERE Id = :c.Id
+                    LIMIT 1
+                ];
+                System.assertEquals(9, updatedCase.FEC_IPP_Term__c);
+            }
         }
     }
 
@@ -186,10 +212,14 @@ private class FEC_IPPConversionController_Test {
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Transaction__c tx = [
             SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                FEC_Transaction_Plan__c, FEC_Transaction_Code__c
+                FEC_Transaction_Plan__c, FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c
             FROM FEC_Transaction__c
             LIMIT 1
         ];
+        tx.FEC_Card_Seq__c = '2';
+        tx.FEC_IPP_Key__c = 'KEY-IPP-001';
+        tx.FEC_Reference_Number__c = 'REF-IPP-001';
+        update tx;
 
         System.runAs(runAsAdmin()) {
             Case loadedCase = [
@@ -203,7 +233,7 @@ private class FEC_IPPConversionController_Test {
             ];
             FEC_Transaction__c loadedTx = [
                 SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                    FEC_Transaction_Plan__c, FEC_Transaction_Code__c
+                    FEC_Transaction_Plan__c, FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c
                 FROM FEC_Transaction__c
                 WHERE Id = :tx.Id
                 LIMIT 1
@@ -221,7 +251,7 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.planNumber);
             System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.transactionPlan);
             System.assertEquals(9, req.ippTerm);
-            System.assertEquals('0105', req.referenceNumber);
+            System.assertEquals('REF-IPP-001', req.referenceNumber);
             Date expectedPostDate = loadedTx.FEC_Post_Date__c != null
                 ? loadedTx.FEC_Post_Date__c
                 : (loadedTx.FEC_Effective_Date__c != null ? loadedTx.FEC_Effective_Date__c : Date.today());
@@ -230,8 +260,8 @@ private class FEC_IPPConversionController_Test {
                 req.postingDate
             );
             System.assertEquals(CARD_NUMBER, req.cardNumber);
-            System.assertEquals(null, req.cardSeq);
-            System.assertEquals(null, req.ippKey);
+            System.assertEquals(2, req.cardSeq);
+            System.assertEquals('KEY-IPP-001', req.ippKey);
 
             Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsMock());
             Test.startTest();
@@ -243,13 +273,109 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
-    static void testCheckIPPDetails_FailureReturnsError() {
+    static void testLoadIppTenorOptions_WithSavedCaseFields() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            return;
+        }
+
+        Case caseUpdate = new Case(Id = c.Id, FEC_IPP_Term__c = 12);
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            caseUpdate.FEC_IPP_Interest__c = 10;
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+            caseUpdate.FEC_Conversion_Fee__c = 50000;
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c')) {
+            caseUpdate.FEC_EMI__c = 100000;
+        }
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update caseUpdate;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.setMock(HttpCalloutMock.class, new IppConversionAccountDetailsMock());
+
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.AccountTenorDTO dto =
+                FEC_IPPConversionController.loadIppTenorOptions(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(null, dto.errorMessage);
+            System.assertEquals(12, dto.savedTenor);
+            if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+                System.assertEquals(10, dto.savedInterestRate);
+            }
+            if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+                System.assertEquals(50000, dto.savedFee);
+            }
+            if (caseFieldMap.containsKey('FEC_EMI__c')) {
+                System.assertEquals(100000, dto.savedEmi);
+            }
+        }
+    }
+
+    @IsTest
+    static void testSaveCaseIppTerm() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            return;
+        }
+
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.saveCaseIppTerm(c.Id, 6);
+            Test.stopTest();
+
+            Case updatedCase = [SELECT FEC_IPP_Term__c FROM Case WHERE Id = :c.Id LIMIT 1];
+            System.assertEquals(6, updatedCase.FEC_IPP_Term__c);
+        }
+    }
+
+    @IsTest
+    static void testCheckIPPDetails_FailureClearsDetailFields() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
 
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            return;
+        }
+
+        Case caseUpdate = new Case(Id = c.Id, FEC_IPP_Term__c = 9);
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            caseUpdate.FEC_IPP_Interest__c = 10;
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+            caseUpdate.FEC_Conversion_Fee__c = 50000;
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c')) {
+            caseUpdate.FEC_EMI__c = 100000;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update caseUpdate;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
         Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsErrorMock());
 
         System.runAs(runAsAdmin()) {
@@ -259,6 +385,22 @@ private class FEC_IPPConversionController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, dto.errorMessage);
+            Case updatedCase = [
+                SELECT FEC_IPP_Term__c, FEC_IPP_Interest__c, FEC_Conversion_Fee__c, FEC_EMI__c
+                FROM Case
+                WHERE Id = :c.Id
+                LIMIT 1
+            ];
+            System.assertEquals(9, updatedCase.FEC_IPP_Term__c);
+            if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+                System.assertEquals(null, updatedCase.FEC_IPP_Interest__c);
+            }
+            if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+                System.assertEquals(null, updatedCase.FEC_Conversion_Fee__c);
+            }
+            if (caseFieldMap.containsKey('FEC_EMI__c')) {
+                System.assertEquals(null, updatedCase.FEC_EMI__c);
+            }
         }
     }
 
@@ -749,10 +891,14 @@ private class FEC_IPPConversionController_Test {
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Transaction__c tx = [
             SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                FEC_Transaction_Plan__c, FEC_Transaction_Code__c
+                FEC_Transaction_Plan__c, FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c
             FROM FEC_Transaction__c
             LIMIT 1
         ];
+        tx.FEC_Card_Seq__c = '2';
+        tx.FEC_IPP_Key__c = 'KEY-IPP-002';
+        tx.FEC_Reference_Number__c = 'REF-IPP-002';
+        update tx;
 
         System.runAs(runAsAdmin()) {
             Case loadedCase = [
@@ -766,7 +912,7 @@ private class FEC_IPPConversionController_Test {
             ];
             FEC_Transaction__c loadedTx = [
                 SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                    FEC_Transaction_Plan__c, FEC_Transaction_Code__c
+                    FEC_Transaction_Plan__c, FEC_Reference_Number__c, FEC_Card_Seq__c, FEC_IPP_Key__c
                 FROM FEC_Transaction__c
                 WHERE Id = :tx.Id
                 LIMIT 1
@@ -784,14 +930,14 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.planNumber);
             System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.transactionPlan);
             System.assertEquals(9, req.ippTerm);
-            System.assertEquals('0105', req.referenceNumber);
+            System.assertEquals('REF-IPP-002', req.referenceNumber);
             Date expectedPostDate = loadedTx.FEC_Post_Date__c != null
                 ? loadedTx.FEC_Post_Date__c
                 : expectedEffDate;
             System.assertEquals(expectedPostDate, req.postingDate);
             System.assertEquals(CARD_NUMBER, req.cardNumber);
-            System.assertEquals(0, req.cardSeq);
-            System.assertEquals('0105', req.ippKey);
+            System.assertEquals(2, req.cardSeq);
+            System.assertEquals('KEY-IPP-002', req.ippKey);
         }
     }
 
@@ -807,7 +953,10 @@ private class FEC_IPPConversionController_Test {
             FEC_Transaction_Amount__c = 800,
             FEC_Transaction_Plan__c = 'PLAN02',
             FEC_Effective_Date__c = Date.today(),
-            FEC_Authorization_Code__c = 'AUTH99'
+            FEC_Authorization_Code__c = 'AUTH99',
+            FEC_Reference_Number__c = 'REF-AUTH99',
+            FEC_Card_Seq__c = '1',
+            FEC_IPP_Key__c = 'KEY-AUTH99'
         );
         insert tx;
         Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
@@ -1147,7 +1296,7 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
-    static void testConvertIPP_UsesTransactionIdAsReferenceFallback() {
+    static void testConvertIPP_MissingReferenceNumber() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
@@ -1157,7 +1306,9 @@ private class FEC_IPPConversionController_Test {
             FEC_Customer_History__c = ch.Id,
             FEC_Transaction_Amount__c = 900,
             FEC_Transaction_Plan__c = 'PLAN03',
-            FEC_Effective_Date__c = Date.today()
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Card_Seq__c = '0',
+            FEC_IPP_Key__c = 'KEY-IPP-003'
         );
         insert tx;
         Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
@@ -1166,110 +1317,21 @@ private class FEC_IPPConversionController_Test {
             FEC_IPPConversionController.ConvertResultDTO result =
                 FEC_IPPConversionController.convertIPP(c.Id, tx.Id, 6);
             Test.stopTest();
-            System.assertNotEquals(null, result);
+            System.assertEquals(false, result.success);
+            System.assertNotEquals(null, result.errorMessage);
         }
     }
 
     @IsTest
-    static void testConvertIPPManualRetail_SuccessWithMock() {
+    static void testSaveCaseIppTerm_InvalidTenor() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
         Case c = [SELECT Id FROM Case LIMIT 1];
-        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
-        System.runAs(runAsAdmin()) {
-            Test.startTest();
-            FEC_IPPConversionController.ConvertResultDTO result =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, 'VER001', 'CB001', 'MAIN',
-                    String.valueOf(Date.today()), String.valueOf(Date.today()),
-                    String.valueOf(Date.today()), 1500, 'AUTH01', 'PLAN01',
-                    500, 6, 12
-                );
-            Test.stopTest();
-            System.assertEquals(true, result.success);
-            System.assertNotEquals(null, result.message);
-        }
-    }
-
-    @IsTest
-    static void testConvertIPPManualRetail_ValidationErrors() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-        Case c = [SELECT Id FROM Case LIMIT 1];
-        System.runAs(runAsAdmin()) {
-            FEC_IPPConversionController.ConvertResultDTO missingCase =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    null, null, null, null, null, null, null, 100, null, 'PLAN01', null, 6, null
-                );
-            System.assertNotEquals(null, missingCase.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO invalidAmount =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, null, null, null, null, null, null, 0, null, 'PLAN01', null, 6, null
-                );
-            System.assertNotEquals(null, invalidAmount.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO missingTerm =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, null, null, null, null, null, null, 100, null, 'PLAN01', null, null, null
-                );
-            System.assertNotEquals(null, missingTerm.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO missingPlan =
-                FEC_IPPConversionController.convertIPPManualRetail(
-                    c.Id, null, null, null, null, null, null, 100, null, null, null, 6, null
-                );
-            System.assertNotEquals(null, missingPlan.errorMessage);
-        }
-    }
-
-    @IsTest
-    static void testConvertIPPManual_SuccessWithMock() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-        Case c = [SELECT Id FROM Case LIMIT 1];
-        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
-        System.runAs(runAsAdmin()) {
-            Test.startTest();
-            FEC_IPPConversionController.ConvertResultDTO result =
-                FEC_IPPConversionController.convertIPPManual(
-                    c.Id, 2000, 9, 'PLAN02', String.valueOf(Date.today()),
-                    String.valueOf(Date.today()), null, 'PLAN02', 300
-                );
-            Test.stopTest();
-            System.assertEquals(true, result.success);
-            System.assertNotEquals(null, result.message);
-        }
-    }
-
-    @IsTest
-    static void testConvertIPPManual_ValidationErrors() {
-        if (Type.forName('FEC_IPPConversionController') == null) {
-            return;
-        }
-        Case c = [SELECT Id FROM Case LIMIT 1];
-        System.runAs(runAsAdmin()) {
-            FEC_IPPConversionController.ConvertResultDTO missingCase =
-                FEC_IPPConversionController.convertIPPManual(
-                    null, 100, 6, 'PLAN01', null, null, null, null, null
-                );
-            System.assertNotEquals(null, missingCase.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO invalidAmount =
-                FEC_IPPConversionController.convertIPPManual(
-                    c.Id, 0, 6, 'PLAN01', null, null, null, null, null
-                );
-            System.assertNotEquals(null, invalidAmount.errorMessage);
-
-            FEC_IPPConversionController.ConvertResultDTO missingPlan =
-                FEC_IPPConversionController.convertIPPManual(
-                    c.Id, 100, 6, null, null, null, null, null, null
-                );
-            System.assertNotEquals(null, missingPlan.errorMessage);
-        }
+        Test.startTest();
+        FEC_IPPConversionController.saveCaseIppTerm(null, 6);
+        FEC_IPPConversionController.saveCaseIppTerm(c.Id, 0);
+        Test.stopTest();
     }
 
     @IsTest
@@ -1339,6 +1401,8 @@ private class FEC_IPPConversionController_Test {
             LIMIT 1
         ];
         FEC_IPPConversionController.AccountTenorDTO tenorDto = new FEC_IPPConversionController.AccountTenorDTO();
+        FEC_IPPConversionController.applySavedIppFieldsToTenorDto(null, tenorDto);
+        FEC_IPPConversionController.applySavedIppFieldsToTenorDto(c, null);
 
         FEC_IPPConversionController.ConvertResultDTO convertDto = new FEC_IPPConversionController.ConvertResultDTO();
         FEC_IPPConversionController.applyAddIppResultToConvertResult(null, convertDto);
@@ -1394,19 +1458,25 @@ private class FEC_IPPConversionController_Test {
         okResp.status = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
         System.assertEquals(true, FEC_IPPConversionController.isGetIPPDetailsResponseSuccess(okResp));
 
-        FEC_Transaction__c tx = [SELECT Id, FEC_Transaction_Code__c, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Card_Number__c FROM FEC_Transaction__c LIMIT 1];
+        FEC_IPPConversionController.clearCaseIppDetailFields(null);
+        FEC_IPPConversionController.updateCaseIppConversionFields(null, 6, 1, 1, 1);
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            FEC_IPPConversionController.clearCaseIppDetailFields(c.Id);
+            FEC_IPPConversionController.updateCaseIppConversionFields(c.Id, 6, 10, 20, 30);
+        }
+
+        FEC_IPPConversionController.updateCaseIppTermOnly(null, 6);
+        FEC_IPPConversionController.updateCaseIppTermOnly(c.Id, 0);
+
+        FEC_Transaction__c tx = [SELECT Id, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Card_Number__c FROM FEC_Transaction__c LIMIT 1];
         System.assertEquals(CARD_NUMBER, FEC_IPPConversionController.resolveCardNumberForGetIppDetails(c));
         System.assertEquals(null, FEC_IPPConversionController.resolveCardNumberForGetIppDetails(null));
 
-        System.assertEquals('0105', FEC_IPPConversionController.resolveReferenceNumberForIpp(tx, tx.Id));
-        System.assertEquals('AUTH99', FEC_IPPConversionController.resolveReferenceNumberForIpp(
-            new FEC_Transaction__c(FEC_Authorization_Code__c = 'AUTH99'),
-            tx.Id
-        ));
-        System.assertEquals(String.valueOf(tx.Id), FEC_IPPConversionController.resolveReferenceNumberForIpp(
-            new FEC_Transaction__c(),
-            tx.Id
-        ));
+        System.assertEquals(null, FEC_IPPConversionController.parseCardSeqForGetIppDetails(null));
+        System.assertEquals(null, FEC_IPPConversionController.parseCardSeqForGetIppDetails(''));
+        System.assertEquals(2, FEC_IPPConversionController.parseCardSeqForGetIppDetails('2'));
+        System.assertEquals(null, FEC_IPPConversionController.parseCardSeqForGetIppDetails('ABC'));
 
         FEC_IPPConversionController.accountContractTextForTest = ACCOUNT_NUMBER;
         try {
@@ -1473,6 +1543,13 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(System.Label.FEC_MSG_Not_Account_Linked, deniedTenor.errorMessage);
         } finally {
             FEC_IPPConversionController.denyCaseAccessForTest = false;
+        }
+
+        FEC_IPPConversionController.denyIppTermUpdateForTest = true;
+        try {
+            FEC_IPPConversionController.saveCaseIppTerm(c.Id, 6);
+        } finally {
+            FEC_IPPConversionController.denyIppTermUpdateForTest = false;
         }
 
         FEC_IPPConversionController.denyActionCountUpdateForTest = true;
