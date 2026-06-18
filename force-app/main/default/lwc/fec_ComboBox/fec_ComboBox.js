@@ -163,12 +163,13 @@ export default class Fec_ComboBox extends LightningElement {
     this.dispatchEvent(event);
   }
 
-  handleFocus(e) {
-    e.preventDefault();
-    e.stopPropagation();
+    handleFocus(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-    this.openSearch = true;
-  }
+        this.openSearch = true;
+        this.dispatchEvent(new CustomEvent('dropdownopen'));
+    }
 
   handleOptionMouseDown(e) {
     e.preventDefault();

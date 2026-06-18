@@ -9,9 +9,12 @@
           value={incorrectContract}
           option={formattedIncorrectContractOption}
           disabled={isReadOnly}
+          enable-search-change
           onremove={handleRemoveIncorrectContract}
           onchange={handleChangeIncorrectContract}
           onblurcommit={handleIncorrectContractBlurCommit}
+          onsearchchange={handleIncorrectContractSearchChange}
+          ondropdownopen={handleIncorrectContractDropdownOpen}
         ></c-fec_-combo-box>
         <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
           {customLabel.incorrectContractHint}
@@ -48,7 +51,7 @@
               <lightning-datatable
                 key={keyItem.id}
                 key-field="id"
-                data={paymentHistory}
+                data={pagedPaymentHistory}
                 columns={paymentHistoryColumns}
                 max-row-selection={datatableMaxRowSelection}
                 selected-rows={selectedRowIds}
@@ -57,6 +60,23 @@
               </lightning-datatable>
             </template>
           </lightning-layout-item>
+          <template if:true={showPaymentHistoryPagination}>
+            <lightning-layout-item size="12" padding="horizontal-small">
+              <div class="slds-grid slds-grid_align-spread slds-p-vertical_x-small">
+                <lightning-button
+                  label="Previous"
+                  onclick={handlePaymentHistoryPrev}
+                  disabled={isPaymentHistoryFirstPage}
+                ></lightning-button>
+                <span class="slds-align-middle">{paymentHistoryPageLabel}</span>
+                <lightning-button
+                  label="Next"
+                  onclick={handlePaymentHistoryNext}
+                  disabled={isPaymentHistoryLastPage}
+                ></lightning-button>
+              </div>
+            </lightning-layout-item>
+          </template>
         </template>
         <template if:false={hasPaymentHistory}>
           <template if:true={incorrectContractTrimmed}>
@@ -165,9 +185,12 @@
                     option={formattedCorrectContractOption}
                     disabled={isReadOnly}
                     required
+                    enable-search-change
                     onremove={handleAdjustmentCorrectContractRemove}
                     onchange={handleAdjustmentCorrectContractChange}
                     onblurcommit={handleAdjustmentCorrectContractBlurCommit}
+                    onsearchchange={handleCorrectContractSearchChange}
+                    ondropdownopen={handleCorrectContractDropdownOpen}
                   ></c-fec_-combo-box>
                 </lightning-layout-item>
                 <lightning-layout-item size="4" padding="around-small">
