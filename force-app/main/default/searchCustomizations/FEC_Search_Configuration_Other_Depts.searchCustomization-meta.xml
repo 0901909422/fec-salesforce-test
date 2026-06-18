@@ -428,10 +428,6 @@
             <searchable>true</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Last_Updated_By_View__c</fieldApiName>
-            <searchable>true</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Updated_Info_Current_Address__c</fieldApiName>
             <searchable>true</searchable>
         </fieldOverride>
