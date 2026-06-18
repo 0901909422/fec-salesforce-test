@@ -9,8 +9,6 @@ import { NavigationMixin } from 'lightning/navigation';
 import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionController.getEligibleTransactions';
 import getSavedIppTransactionId from '@salesforce/apex/FEC_IPPConversionController.getSavedIppTransactionId';
 import saveSelectedTransaction from '@salesforce/apex/FEC_IPPConversionController.saveSelectedTransaction';
-import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.loadIppTenorOptions';
-import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
 import convertIPPManualRetail from '@salesforce/apex/FEC_IPPConversionController.convertIPPManualRetail';
