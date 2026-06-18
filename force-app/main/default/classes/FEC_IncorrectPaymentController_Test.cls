@@ -13,6 +13,12 @@ private class FEC_IncorrectPaymentController_Test {
     @TestSetup
     static void setup() {
         String suffix = String.valueOf(System.currentTimeMillis());
+        FEC_API_Setting__c apiSetting = new FEC_API_Setting__c(
+            FEC_Enviroment__c = FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION,
+            FEC_Call_Mock__c = false,
+            FEC_Endpoint__c = 'https://test.com/api'
+        );
+        insert apiSetting;
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
             insert new Case(
@@ -27,9 +33,10 @@ private class FEC_IncorrectPaymentController_Test {
 
     @IsTest
     static void testGetPaymentHistoryFromSOAP_Success() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
         Test.startTest();
         try {
-            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP('CON123');
+            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP(c.Id, 'CON123');
         } catch (Exception e) {
             System.assert(true, 'Expected without SOAP mock: ' + e.getMessage());
         }
@@ -74,6 +81,7 @@ private class FEC_IncorrectPaymentController_Test {
             System.assertEquals('CON_BAD', updatedCase.FEC_Incorrect_Contract_Number__c);
             System.assertEquals('Bank Transfers', updatedCase.FEC_Payment_Method__c);
             System.assertEquals('1', updatedCase.FEC_Correct_Contract_Number__c);
+            System.assertEquals('1', updatedCase.FEC_Input_Correct_Contract_Number__c);
             System.assertEquals(1000, updatedCase.FEC_Bill_Amount__c);
 
             List<FEC_Incorrect_Payment_Info__c> infoRows = [
@@ -101,9 +109,10 @@ private class FEC_IncorrectPaymentController_Test {
 
     @IsTest
     static void testGetPaymentHistoryFromSOAP_BlankContract() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
         Test.startTest();
         List<FEC_IncorrectPaymentController.PaymentDTO> empty =
-            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP('');
+            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP(c.Id, '');
         Test.stopTest();
 
         System.assertEquals(0, empty.size());
@@ -111,15 +120,31 @@ private class FEC_IncorrectPaymentController_Test {
 
     @IsTest
     static void testGetPaymentHistoryFromSOAP_WithMock() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            Name = 'IPP-PH-TEST',
+            FEC_Contract_Number__c = '20170108-0005091',
+            FEC_Case__c = c.Id
+        );
+        insert hist;
+        update new Case(Id = c.Id, FEC_Account_or_Contract__c = hist.Id);
         Test.setMock(HttpCalloutMock.class, new MockLoanSecInfoSuccess());
 
         Test.startTest();
         List<FEC_IncorrectPaymentController.PaymentDTO> payments =
-            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP('CON123');
+            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP(c.Id, '20170108-0005091');
         Test.stopTest();
 
         System.assertEquals(1, payments.size());
         System.assertEquals('1', payments[0].paymentNo);
+        List<FEC_Payment_History__c> saved = [
+            SELECT Id, FEC_Payment_No__c, FEC_Payment_Amount__c, FEC_Customer_History__c
+            FROM FEC_Payment_History__c
+            WHERE FEC_Customer_History__c = :hist.Id
+        ];
+        System.assertEquals(1, saved.size());
+        System.assertEquals(1, saved[0].FEC_Payment_No__c);
+        System.assertEquals(620.00, saved[0].FEC_Payment_Amount__c);
     }
 
     @IsTest
@@ -130,7 +155,7 @@ private class FEC_IncorrectPaymentController_Test {
         List<FEC_CommonUltils.PicklistOption> paymentMethods =
             FEC_IncorrectPaymentController.getPaymentMethodOptions();
         List<FEC_CommonUltils.PicklistOption> correctContracts =
-            FEC_IncorrectPaymentController.getCorrectContractOptions();
+            FEC_IncorrectPaymentController.getCorrectContractOptions(c.Id);
         List<FEC_CommonUltils.PicklistOption> incorrectContracts =
             FEC_IncorrectPaymentController.getIncorrectContractOptions(c.Id);
         List<FEC_CommonUltils.PicklistOption> nullCase =
@@ -141,6 +166,31 @@ private class FEC_IncorrectPaymentController_Test {
         System.assertNotEquals(null, correctContracts);
         System.assertNotEquals(null, incorrectContracts);
         System.assertEquals(0, nullCase.size());
+    }
+
+    @IsTest
+    static void testGetLoanContractOptionsFromApi_WithMock() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        update new Case(
+            Id = c.Id,
+            FEC_Contract_Number__c = '20170108-0005091'
+        );
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
+
+        Test.startTest();
+        List<FEC_CommonUltils.PicklistOption> options =
+            FEC_IncorrectPaymentController.getLoanContractOptionsFromApi(c.Id);
+        Test.stopTest();
+
+        System.assert(!options.isEmpty(), 'Should include contract options.');
+        Set<String> values = new Set<String>();
+        for (FEC_CommonUltils.PicklistOption opt : options) {
+            if (opt != null && String.isNotBlank(opt.value)) {
+                values.add(opt.value);
+            }
+        }
+        System.assert(values.contains('20170108-0005091'), 'Should include contract from Case.');
+        System.assert(values.contains('20170108-0005092'), 'Should include ContractNumber from GetCustomerList Applications.');
     }
 
     @IsTest
@@ -228,12 +278,28 @@ private class FEC_IncorrectPaymentController_Test {
 
     @IsTest
     static void testGetPaymentHistoryFromSOAP_FailureResponse() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
         Test.setMock(HttpCalloutMock.class, new MockLoanSecInfoFailure());
 
         Test.startTest();
         try {
-            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP('CON-FAIL');
+            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP(c.Id, 'CON-FAIL');
             System.assert(false, 'Non-success SOAP response should throw.');
+        } catch (AuraHandledException e) {
+            System.assert(true);
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testGetPaymentHistoryFromSOAP_EmptyHistories() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new MockLoanSecInfoEmptyHistory());
+
+        Test.startTest();
+        try {
+            FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP(c.Id, 'CON-EMPTY');
+            System.assert(false, 'Empty payment histories should throw.');
         } catch (AuraHandledException e) {
             System.assert(true);
         }
@@ -266,6 +332,37 @@ private class FEC_IncorrectPaymentController_Test {
             System.assert(true);
         }
         Test.stopTest();
+    }
+
+    @IsTest
+    static void testSaveSelectedPaymentHistory() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            Name = 'IPP-SEL-PH',
+            FEC_Contract_Number__c = '20170108-0005091',
+            FEC_Case__c = c.Id
+        );
+        insert hist;
+        FEC_Payment_History__c ph = new FEC_Payment_History__c(
+            FEC_Customer_History__c = hist.Id,
+            FEC_Payment_No__c = 1,
+            FEC_Payment_Amount__c = 100
+        );
+        insert ph;
+
+        System.runAs(adminUser()) {
+            Test.startTest();
+            FEC_IncorrectPaymentController.saveSelectedPaymentHistory(c.Id, ph.Id);
+            FEC_IncorrectPaymentController.saveSelectedPaymentHistory(c.Id, null);
+            Test.stopTest();
+
+            Case updated = [
+                SELECT FEC_Selected_Payment_History__c
+                FROM Case
+                WHERE Id = :c.Id
+            ];
+            System.assertEquals(null, updated.FEC_Selected_Payment_History__c);
+        }
     }
 
     @IsTest
@@ -331,6 +428,36 @@ private class FEC_IncorrectPaymentController_Test {
             System.assert(true);
         }
         Test.stopTest();
+    }
+
+    private class MockGetCustomerListSuccess implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
+                '<Sys><Code>1</Code><Description>DATA FOUND</Description></Sys><Count>1</Count>' +
+                '<Customers><Customer><Applications><Application>' +
+                '<ContractNumber>20170108-0005092</ContractNumber><AccountNumber>0001500100000030081</AccountNumber>' +
+                '</Application></Applications></Customer></Customers>' +
+                '</cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class MockLoanSecInfoEmptyHistory implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetLoanSecInfoResponse><Sys><Code>1</Code></Sys>' +
+                '<LoanSecInfo><PaymentHistories/></LoanSecInfo></GetLoanSecInfoResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
     }
 
     private class MockLoanSecInfoSuccess implements HttpCalloutMock {

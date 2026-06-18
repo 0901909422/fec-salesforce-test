@@ -8,10 +8,10 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPaymentHistoryFromSOAP from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP';
 import getSubCodeConfig from '@salesforce/apex/FEC_IncorrectPaymentController.getSubCodeConfig';
 import getIncorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getIncorrectContractOptions';
-import getCorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getCorrectContractOptions';
 import getPaymentMethodOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentMethodOptions';
 import saveAdjustment from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustment';
 import saveAdjustmentDraft from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustmentDraft';
+import saveSelectedPaymentHistory from '@salesforce/apex/FEC_IncorrectPaymentController.saveSelectedPaymentHistory';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
@@ -59,7 +59,9 @@ const CONST = {
     LOCALE_EN_US: 'en-US',
     TH1_CODES: ['RL08.01', 'RL08.02', 'RL08.03', 'RL08.04', 'RL08.08'],
     TH2_CODES: ['RL08.05', 'RL08.06', 'RL08.07'],
-    DRAFT_KEY_PREFIX: 'fec-incorrect-payment-draft-'
+    DRAFT_KEY_PREFIX: 'fec-incorrect-payment-draft-',
+    PAYMENT_HISTORY_PAGE_SIZE: 20,
+    PAYMENT_ID_PREFIX: 'pay_'
 };
 
 export default class Fec_IncorrectPaymentForm extends LightningElement {
@@ -95,11 +97,13 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track paymentHistoryLoading = false;
     @track configLoaded = false;
     @track paymentHistoryTableKey = 0;
+    @track paymentHistoryPage = 1;
     @track incorrectContractOptionlst = [];
     @track correctContractOptionlst = [];
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = STR_EMPTY;
     _pendingSelectedPaymentId = null;
+    _loanContractOptionsLoaded = false;
 
     customLabel = {
         loading: Loading,
@@ -243,6 +247,35 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         return this.paymentHistory && this.paymentHistory.length > 0;
     }
 
+    // 18/06/2026 16:00 linhdev - phân trang Payment History tối đa 20 dòng/trang
+    get pagedPaymentHistory() {
+        const all = this.paymentHistory || [];
+        const pageSize = CONST.PAYMENT_HISTORY_PAGE_SIZE;
+        const start = (this.paymentHistoryPage - 1) * pageSize;
+        return all.slice(start, start + pageSize);
+    }
+
+    get showPaymentHistoryPagination() {
+        return (this.paymentHistory || []).length > CONST.PAYMENT_HISTORY_PAGE_SIZE;
+    }
+
+    get paymentHistoryTotalPages() {
+        const total = (this.paymentHistory || []).length;
+        return Math.max(1, Math.ceil(total / CONST.PAYMENT_HISTORY_PAGE_SIZE));
+    }
+
+    get paymentHistoryPageLabel() {
+        return this.paymentHistoryPage + ' / ' + this.paymentHistoryTotalPages;
+    }
+
+    get isPaymentHistoryFirstPage() {
+        return this.paymentHistoryPage <= 1;
+    }
+
+    get isPaymentHistoryLastPage() {
+        return this.paymentHistoryPage >= this.paymentHistoryTotalPages;
+    }
+
     get adjustmentRows() {
         const rows = this.adjustments || [];
         const baseAmountLabel = this.adjustmentAmountFieldLabel;
@@ -374,6 +407,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     const adjRow = { id: 1, correctContract: STR_EMPTY, adjustedAmount: null };
                     if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
                         adjRow.correctContract = String(data.correctContractNumber).trim();
+                    } else if (data.inputCorrectContractNumber != null && String(data.inputCorrectContractNumber).trim()) {
+                        adjRow.correctContract = String(data.inputCorrectContractNumber).trim();
                     }
                     if (data.adjustedAmount != null && data.adjustedAmount !== undefined) {
                         adjRow.adjustedAmount = data.adjustedAmount;
@@ -396,21 +431,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 } else {
                     this.manualBillAmount = null;
                 }
+                if (data.selectedPaymentHistoryId != null && String(data.selectedPaymentHistoryId).trim()) {
+                    this._pendingSelectedPaymentId = String(data.selectedPaymentHistoryId).trim();
+                }
                 
-                const incorrectContractPromise = getIncorrectContractOptions({ caseId: this.recordId })
-                    .then((contractOpts) => {
-                        this.incorrectContractOptionlst = contractOpts || [];
-                    })
-                    .catch(() => {
-                        this.incorrectContractOptionlst = [];
-                    });
-                const correctContractPromise = getCorrectContractOptions()
-                    .then((pickOpts) => {
-                        this.correctContractOptionlst = pickOpts || [];
-                    })
-                    .catch(() => {
-                        this.correctContractOptionlst = [];
-                    });
+                const incorrectContractPromise = this.loadLoanContractOptions();
+                const correctContractPromise = Promise.resolve();
                 
                 // Load payment method options
                 const paymentMethodPromise = getPaymentMethodOptions()
@@ -439,6 +465,92 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             });
     }
 
+    // 18/06/2026 10:00 linhdev - API 20 GetCustomerList: danh sách Loan cho Incorrect/Correct Contract
+    loadLoanContractOptions() {
+        if (!this.recordId) {
+            this.incorrectContractOptionlst = [];
+            this.correctContractOptionlst = [];
+            return Promise.resolve();
+        }
+        return getIncorrectContractOptions({ caseId: this.recordId })
+            .then((contractOpts) => {
+                const opts = contractOpts || [];
+                this.incorrectContractOptionlst = opts;
+                this.correctContractOptionlst = opts;
+                this._loanContractOptionsLoaded = true;
+            })
+            .catch(() => {
+                this.incorrectContractOptionlst = [];
+                this.correctContractOptionlst = [];
+            });
+    }
+
+    handleIncorrectContractSearchChange() {
+        this.loadLoanContractOptions();
+    }
+
+    // 18/06/2026 16:00 linhdev - focus dropdown Incorrect Contract: refresh API 20
+    handleIncorrectContractDropdownOpen() {
+        this.loadLoanContractOptions();
+    }
+
+    handleCorrectContractSearchChange() {
+        this.loadLoanContractOptions();
+    }
+
+    // 18/06/2026 16:00 linhdev - focus dropdown Correct Contract: refresh API 20
+    handleCorrectContractDropdownOpen() {
+        this.loadLoanContractOptions();
+    }
+
+    handlePaymentHistoryPrev() {
+        if (this.paymentHistoryPage > 1) {
+            this.paymentHistoryPage -= 1;
+            this.paymentHistoryTableKey += 1;
+        }
+    }
+
+    handlePaymentHistoryNext() {
+        if (this.paymentHistoryPage < this.paymentHistoryTotalPages) {
+            this.paymentHistoryPage += 1;
+            this.paymentHistoryTableKey += 1;
+        }
+    }
+
+    _isPaymentHistoryRecordId(id) {
+        if (id == null || id === STR_EMPTY) {
+            return false;
+        }
+        const s = String(id).trim();
+        if (!s || s.toLowerCase().startsWith(CONST.PAYMENT_ID_PREFIX)) {
+            return false;
+        }
+        return (s.length === 15 || s.length === 18) && /^[a-zA-Z0-9]+$/.test(s);
+    }
+
+    _persistSelectedPaymentHistory(paymentHistoryId) {
+        if (!this.recordId || this.isReadOnly) {
+            return Promise.resolve();
+        }
+        const phId = paymentHistoryId && this._isPaymentHistoryRecordId(paymentHistoryId)
+            ? paymentHistoryId
+            : null;
+        return saveSelectedPaymentHistory({
+            caseId: this.recordId,
+            paymentHistoryId: phId
+        }).catch(() => Promise.resolve());
+    }
+
+    _ensureSelectedPaymentPageVisible() {
+        if (!this.selectedPaymentId || !(this.paymentHistory || []).length) {
+            return;
+        }
+        const idx = this.paymentHistory.findIndex((p) => String(p.id) === String(this.selectedPaymentId));
+        if (idx >= 0) {
+            this.paymentHistoryPage = Math.floor(idx / CONST.PAYMENT_HISTORY_PAGE_SIZE) + 1;
+        }
+    }
+
     handleRemoveIncorrectContract() {
         const element = this.template.querySelector(
             'c-fec_-combo-box[data-id="incorrect-contract"]'
@@ -449,9 +561,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         this.incorrectContract = STR_EMPTY;
         this.paymentHistory = [];
         this.paymentHistoryTableKey += 1;
+        this.paymentHistoryPage = 1;
         this.selectedPaymentId = null;
         this.selectedRowIds = [];
         this._lastLoadedContract = STR_EMPTY;
+        this._persistSelectedPaymentHistory(null);
     }
 
     handleChangeIncorrectContract(e) {
@@ -498,7 +612,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         this.paymentHistoryLoading = true;
         this.selectedPaymentId = null;
         this.selectedRowIds = [];
-        return getPaymentHistoryFromSOAP({ contractNumber: contract })
+        this.paymentHistoryPage = 1;
+        return getPaymentHistoryFromSOAP({ caseId: this.recordId, contractNumber: contract })
             .then((data) => {
                 this.paymentHistory = (data || []).map((p, idx) => ({
                     ...p,
@@ -511,6 +626,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     if (matched) {
                         this.selectedPaymentId = pendingId;
                         this.selectedRowIds = [pendingId];
+                        this._ensureSelectedPaymentPageVisible();
                     }
                     this._pendingSelectedPaymentId = null;
                 }
@@ -520,6 +636,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             .catch((err) => {
                 this.paymentHistory = [];
                 this.paymentHistoryTableKey += 1;
+                this.paymentHistoryPage = 1;
                 this.paymentHistoryLoading = false;
                 this.dispatchEvent(new ShowToastEvent({
                     title: FEC_Toast_Error,
@@ -568,6 +685,9 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
         if (newId == null) {
             this.resetBillStateOnDeselect();
+            this._persistSelectedPaymentHistory(null);
+        } else if (this._isPaymentHistoryRecordId(newId)) {
+            this._persistSelectedPaymentHistory(newId);
         }
     }
 
@@ -617,6 +737,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     handleAddAdjustment() {
+        // 18/06/2026 10:00 linhdev - Add Item: refresh danh sách Loan từ API 20 cho Correct Account/Contract
+        this.loadLoanContractOptions();
         this.adjustments = [...this.adjustments, { id: this.nextAdjustmentId, correctContract: STR_EMPTY, adjustedAmount: null }];
         this.nextAdjustmentId += 1;
     }
