@@ -415,6 +415,38 @@
             <fieldApiName>FEC_Stage__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Global_Search__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_ID_Search__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Input_Correct_Contract_Number__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Last_Updated_By_View__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Updated_Info_Current_Address__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Updated_Info_Office_Address__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_Updated_Info_Permanent_Address__c</fieldApiName>
+            <searchable>true</searchable>
+        </fieldOverride>
+        <fieldOverride>
+            <fieldApiName>FEC_User_Email_ID__c</fieldApiName>
+            <searchable>false</searchable>
+        </fieldOverride>
         <objectApiName>Case</objectApiName>
     </objectOverride>
     <selectedProfile>relevant depts</selectedProfile>
