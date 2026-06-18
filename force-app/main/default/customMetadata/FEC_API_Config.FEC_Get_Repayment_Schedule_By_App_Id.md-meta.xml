@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/intapp/internal-apps-api/sales/repayment-schedule</value>
+        <value xsi:type="xsd:string">/intapp/ext/sales/repayment-schedule</value>
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>

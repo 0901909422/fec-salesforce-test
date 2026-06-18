@@ -4,9 +4,11 @@ import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'light
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
-
-import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
-import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
+import {
+    COLLECTION_CASE_FIELDS,
+    parseCollectionCaseRecord,
+    getCollectionApiContractNumber
+} from 'c/fec_CollectionDataUtils';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
 import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
@@ -23,7 +25,7 @@ import FEC_Address from '@salesforce/label/c.FEC_Address';
 
 import { PREVIEW_COMMUNICATION_HISTORY } from './fec_communicationHistoryPreviewData';
 
-const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
+const CASE_FIELDS = COLLECTION_CASE_FIELDS;
 
 const SECTION_LABEL = 'Communication History';
 
@@ -36,8 +38,7 @@ export default class Fec_communicationHistory extends LightningElement {
      */
     @api previewSampleData = false;
 
-    _contractNumber;
-    _recordTypeName;
+    _caseInfo;
 
     /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
     @track communicationHistories;
@@ -96,8 +97,7 @@ export default class Fec_communicationHistory extends LightningElement {
     @wire(getRecord, { recordId: '$recordId', fields: CASE_FIELDS })
     wiredCase({ data, error }) {
         if (data) {
-            this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
-            this._recordTypeName = data.fields.RecordType?.displayValue;
+            this._caseInfo = parseCollectionCaseRecord(data);
             // Không tự gọi API — chờ user ấn Apply
         } else if (error) {
             this.communicationHistories = null;
@@ -111,7 +111,8 @@ export default class Fec_communicationHistory extends LightningElement {
         this.isLoading = true;
 
         try {
-            if (!this._contractNumber || !this._recordTypeName) {
+            const contractNumber = getCollectionApiContractNumber(this._caseInfo);
+            if (!contractNumber || !this._caseInfo?.recordTypeName) {
                 this.communicationHistories = null;
                 return;
             }
@@ -123,16 +124,14 @@ export default class Fec_communicationHistory extends LightningElement {
 
             const response = this._startDate && this._endDate
                 ? await fetchCollectionDataWithDates({
-                    contractNumber: this._contractNumber,
+                    contractNumber,
                     recordType: Fetch_Collection_Data_Record_Type_Communication_History,
                     startDate: this._startDate,
-                    endDate: this._endDate,
-                    caseId: this.recordId
+                    endDate: this._endDate
                 })
                 : await fetchCollectionData({
-                    contractNumber: this._contractNumber,
-                    recordType: Fetch_Collection_Data_Record_Type_Communication_History,
-                    caseId: this.recordId
+                    contractNumber,
+                    recordType: Fetch_Collection_Data_Record_Type_Communication_History
                 });
 
             if (!response || response.Success === false) {

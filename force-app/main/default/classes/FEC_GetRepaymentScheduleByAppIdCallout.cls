@@ -1,19 +1,13 @@
 /****************************************************************************************
  * File Name    : FEC_GetRepaymentScheduleByAppIdCallout
  * Description  : REST GetRepaymentScheduleByAppID — lịch trả nợ theo Application ID
- *                (internal-apps-api/sales/repayment-schedule)
+ *                (intapp/ext/sales/repayment-schedule?app-id={applicationId})
  ****************************************************************************************/
 public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
 
   public static final String API_CONFIG_NAME = 'FEC_Get_Repayment_Schedule_By_App_Id';
 
   private static ResponseLog responseLog;
-
-  public class RepaymentScheduleRequest {
-    public Map<String, String> headers;
-    public List<String> parameters;
-    public Map<String, Object> body;
-  }
 
   public class GetRepaymentScheduleResponse {
     @AuraEnabled public String pxObjClass;
@@ -101,16 +95,7 @@ public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
 
       String requestor = String.isNotBlank(fecRequestor)
         ? fecRequestor.trim()
-        : FEC_ConstantCommon.REQUESTOR_PEGA_CSM;
-
-      RepaymentScheduleRequest reqWrapper = new RepaymentScheduleRequest();
-      reqWrapper.headers = new Map<String, String>{
-        'FEC-Requestor' => requestor
-      };
-      reqWrapper.parameters = new List<String>{ applicationId.trim() };
-      reqWrapper.body = new Map<String, Object>();
-
-      String requestBodyJson = JSON.serialize(reqWrapper);
+        : FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
 
       FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
       FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
@@ -119,6 +104,8 @@ public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
         apiSetting?.FEC_Endpoint__c,
         apiConfig?.FEC_Endpoint__c
       );
+      endpoint +=
+        '?app-id=' + EncodingUtil.urlEncode(applicationId.trim(), 'UTF-8');
 
       Map<String, String> httpHeaders = new Map<String, String>{
         'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
@@ -127,16 +114,16 @@ public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
 
       HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
         endpoint,
-        FEC_ConstantCommon.API_METHOD_POST,
+        FEC_ConstantCommon.API_METHOD_GET,
         httpHeaders,
-        requestBodyJson
+        null
       );
 
       responseLog = new ResponseLog(
         'FEC_GetRepaymentScheduleByAppIdCallout',
         endpoint,
-        FEC_ConstantCommon.API_METHOD_POST,
-        requestBodyJson,
+        FEC_ConstantCommon.API_METHOD_GET,
+        null,
         res,
         null
       );

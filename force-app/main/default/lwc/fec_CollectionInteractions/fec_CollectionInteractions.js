@@ -5,9 +5,11 @@ import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Da
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import { formatCurrency0 } from 'c/fec_CommonUtils';
 import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
-
-import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
-import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
+import {
+    COLLECTION_CASE_FIELDS,
+    parseCollectionCaseRecord,
+    getCollectionApiContractNumber
+} from 'c/fec_CollectionDataUtils';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
 import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
@@ -24,7 +26,7 @@ import FEC_Contacted_Person from '@salesforce/label/c.FEC_Contacted_Person';
 import FEC_Due_Reason from '@salesforce/label/c.FEC_Due_Reason';
 import FEC_Note from '@salesforce/label/c.FEC_Note';
 
-const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
+const CASE_FIELDS = COLLECTION_CASE_FIELDS;
 
 const SECTION_LABEL = 'Collection Interactions';
 
@@ -59,8 +61,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
     /** Bật trên App Builder: bỏ qua API, hiển thị bảng với dữ liệu mẫu (chỉ để test FE). */
     @api previewSampleData = false;
 
-    _contractNumber;
-    _recordTypeName;
+    _caseInfo;
 
     /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
     @track interactions;
@@ -131,8 +132,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
             return;
         }
         if (data) {
-            this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
-            this._recordTypeName = data.fields.RecordType?.displayValue;
+            this._caseInfo = parseCollectionCaseRecord(data);
             // Không tự gọi API — chờ user ấn Apply
         } else if (error) {
             this.interactions = null;
@@ -152,22 +152,21 @@ export default class Fec_CollectionInteractions extends LightningElement {
         this.isLoading = true;
 
         try {
-            if (!this._contractNumber || !this._recordTypeName) {
+            const contractNumber = getCollectionApiContractNumber(this._caseInfo);
+            if (!contractNumber || !this._caseInfo?.recordTypeName) {
                 this.interactions = null;
                 return;
             }
             const response = this._startDate && this._endDate
                 ? await fetchCollectionDataWithDates({
-                    contractNumber: this._contractNumber,
+                    contractNumber,
                     recordType: Fetch_Collection_Data_Record_Type_Collection_Interaction,
                     startDate: this._startDate,
-                    endDate: this._endDate,
-                    caseId: this.recordId
+                    endDate: this._endDate
                 })
                 : await fetchCollectionData({
-                    contractNumber: this._contractNumber,
-                    recordType: Fetch_Collection_Data_Record_Type_Collection_Interaction,
-                    caseId: this.recordId
+                    contractNumber,
+                    recordType: Fetch_Collection_Data_Record_Type_Collection_Interaction
                 });
 
             if (!response || response.Success === false) {
