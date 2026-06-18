@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Handling_Case</fullName>
-    <booleanFilter>1 AND 2 AND (3 OR 4)</booleanFilter>
+    <booleanFilter>1 AND 2 AND (3 OR (4 AND 5))</booleanFilter>
     <columns>FEC_Link_ID__c</columns>
     <columns>FEC_Final_Status__c</columns>
     <columns>FEC_Channel__c</columns>
@@ -33,6 +33,11 @@
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
         <value>Handling</value>
+    </filters>
+    <filters>
+        <field>FEC_Assignment_Users__c</field>
+        <operation>notContain</operation>
+        <value>Colls Complaint Handling</value>
     </filters>
     <label>Handling</label>
     <queue>FEC_Handling</queue>
