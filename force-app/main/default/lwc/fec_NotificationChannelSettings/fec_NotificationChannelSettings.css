@@ -1,0 +1,55 @@
+.channel-settings-wrapper { background: #f8f8f8; min-height: 400px; }
+
+.settings-header { margin-bottom: 1.5rem; }
+.settings-title  { font-size: 1.125rem; font-weight: 700; color: #032d60; }
+.settings-subtitle { color: #706e6b; font-size: 0.875rem; margin-top: 4px; }
+
+.channels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.channel-card {
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+}
+.channel-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+
+.channel-card_disabled {
+    background: #fce9e9;
+    border-color: #c23934;
+    opacity: 0.8;
+}
+
+.channel-card-icon { margin-bottom: 0.75rem; }
+.icon-enabled  { --lwc-colorTextIconDefault: #0070d2; }
+.icon-disabled { --lwc-colorTextIconDefault: #c23934; }
+
+.channel-name        { font-weight: 700; font-size: 1rem; color: #032d60; margin: 0; }
+.channel-status-label{ font-size: 0.75rem; color: #706e6b; margin-top: 2px; }
+
+.channel-card-toggle { margin-top: 0.75rem; }
+
+.disabled-overlay {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+    background: #fce9e9;
+    color: #c23934;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+.settings-footer { padding-top: 0.5rem; border-top: 1px solid #dddbda; }

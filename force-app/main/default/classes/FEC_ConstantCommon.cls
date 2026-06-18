@@ -532,6 +532,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_UBANK_CASE = 'Ubank';
     public static final String TARGET_GROUP_CUSTOMER = 'Customer';
     public static final String NOTIFICATION_SUBJECT = 'Notification';
+    public static final String NOTIFICATION_MOBILE_APP_TITLE = 'THÔNG BÁO TỪ PHÒNG DỊCH VỤ KHÁCH HÀNG';
     
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
@@ -543,6 +544,11 @@ public with sharing class FEC_ConstantCommon {
     // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
     public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
     public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+    public static final String NOTIFICATION_CHANNEL_MOBILE_APP = 'Mobile App';
+    public static final String NOTIFICATION_CHANNEL_ZNS = 'ZNS';
+    // Format Function For ZNS Notification
+    public static final String NOTIFICATION_GET_DAY_OF_DATE = 'GET_DAY_OF_DATE';
+    public static final String NOTIFICATION_GET_LAST_4_DIGIT_CARD = 'GET_LAST_4_DIGIT_CARD';
     // Notification history channels and send-type aliases
     public static final String NOTIFICATION_HISTORY_CHANNEL_EMAIL = 'EMAIL';
     public static final String NOTIFICATION_HISTORY_CHANNEL_ZNS = 'ZNS';

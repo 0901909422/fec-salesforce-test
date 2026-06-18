@@ -1,0 +1,162 @@
+<template>
+    <div class="notification-tool-wrapper">
+        <!-- Header -->
+        <div class="tool-header">
+            <h1 class="tool-title">{labels.FEC_Notification_Management_Tool}</h1>
+        </div>
+
+        
+
+        <!-- Main Tabset -->
+        <lightning-tabset active-tab-value={activeTab} onactive={handleTabChange}>
+
+                <!-- ===== AUTO NOTIFICATIONS TAB ===== -->
+                <lightning-tab label={labels.FEC_Auto_Notifications} value="auto">
+                    <div class="tab-content slds-p-around_small">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                            <div></div>
+                            <div class="slds-grid slds-grid_align-end slds-col_bump-left">
+                                <lightning-button
+                                    label={labels.FEC_Export}
+                                    icon-name="utility:download"
+                                    class="slds-m-right_small"
+                                    onclick={handleExport}
+                                    data-tab="auto">
+                                </lightning-button>
+                                <lightning-button
+                                    variant="brand"
+                                    label={labels.FEC_Add_Auto_Notification}
+                                    icon-name="utility:add"
+                                    onclick={handleAddNew}
+                                    data-tab="auto">
+                                </lightning-button>
+                            </div>
+                        </div>
+                        <c-fec_-notification-data-table
+                            records={autoNotifications}
+                            channels={channels}
+                            is-loading={isLoading}
+                            tab-type="auto"
+                            onrowdelete={handleRowDelete}
+                            onrowedit={handleRowEdit}
+                            onrowhistory={handleRowHistory}
+                            onstatustoggle={handleStatusToggle}>
+                        </c-fec_-notification-data-table>
+                    </div>
+                </lightning-tab>
+
+                <!-- ===== MANUAL NOTIFICATIONS TAB ===== -->
+                <lightning-tab label={labels.FEC_Manual_Notifications} value="manual">
+                    <div class="tab-content slds-p-around_small">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                            <div></div>
+                            <div class="slds-grid slds-grid_align-end slds-col_bump-left">
+                                <lightning-button
+                                    label={labels.FEC_Export}
+                                    icon-name="utility:download"
+                                    class="slds-m-right_small"
+                                    onclick={handleExport}
+                                    data-tab="manual">
+                                </lightning-button>
+                                <lightning-button
+                                    variant="brand"
+                                    label={labels.FEC_Add_Manual_Notification}
+                                    icon-name="utility:add"
+                                    onclick={handleAddNew}
+                                    data-tab="manual">
+                                </lightning-button>
+                            </div>
+                        </div>
+                        <c-fec_-notification-data-table
+                            records={manualNotifications}
+                            channels={channels}
+                            is-loading={isLoading}
+                            tab-type="manual"
+                            onrowdelete={handleRowDelete}
+                            onrowedit={handleRowEdit}
+                            onrowhistory={handleRowHistory}
+                            onstatustoggle={handleStatusToggle}>
+                        </c-fec_-notification-data-table>
+                    </div>
+                </lightning-tab>
+
+                <!-- ===== CHANNEL SETTINGS TAB ===== -->
+                <lightning-tab label={labels.FEC_Notification_Channel_Settings} value="channels">
+                    <c-fec_-notification-channel-settings
+                        channels={channels}
+                        is-loading={isLoading}
+                        onchannelupdate={handleChannelUpdate}>
+                    </c-fec_-notification-channel-settings>
+                </lightning-tab>
+
+        </lightning-tabset>
+
+        <!-- ===== CREATION / EDIT MODAL ===== -->
+        <template if:true={isModalOpen}>
+            <c-fec_-notification-modal
+                mode={modalMode}
+                tab-type={activeTab}
+                record-id={selectedRecordId}
+                channels={channels}
+                onmodalclose={handleModalClose}
+                onmodalsave={handleModalSave}>
+            </c-fec_-notification-modal>
+        </template>
+
+        <!-- ===== HISTORY MODAL ===== -->
+        <template if:true={isHistoryOpen}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container history-modal">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title={labels.FEC_Btn_Close} onclick={closeHistory}>
+                            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        </button>
+                        <h2 class="slds-modal__title">{labels.FEC_Configuration_History}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_large">
+                        <template if:true={historyLoading}>
+                            <lightning-spinner alternative-text={labels.FEC_Termination_Loading_Alt}></lightning-spinner>
+                        </template>
+                        <template if:false={historyLoading}>
+                            <template if:true={historyRecords.length}>
+                                <lightning-datatable
+                                    key-field="id"
+                                    data={historyRecords}
+                                    columns={historyColumns}
+                                    hide-checkbox-column
+                                    column-widths-mode="auto"
+                                    onrowaction={handleRowHistoryAction}>
+                                </lightning-datatable>
+                            </template>
+                            <template if:false={historyRecords.length}>
+                                <p class="slds-text-align_center slds-m-top_medium">{labels.FEC_No_History_Records}</p>
+                            </template>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label={labels.FEC_Btn_Close} onclick={closeHistory}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- Toast Container -->
+        <template if:true={toastVisible}>
+            <div class={toastClass} role="alert">
+                <span class="slds-assistive-text">{toastVariant}</span>
+                <span class="slds-icon_container slds-m-right_small">
+                    <lightning-icon icon-name={toastIcon} size="small" variant="inverse"></lightning-icon>
+                </span>
+                <div class="slds-notify__content">
+                    <p class="slds-text-body_regular">{toastMessage}</p>
+                </div>
+                <button class="slds-button slds-button_icon slds-button_icon-inverse slds-notify__close"
+                    onclick={closeToast}>
+                    <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                </button>
+            </div>
+        </template>
+    </div>
+</template>

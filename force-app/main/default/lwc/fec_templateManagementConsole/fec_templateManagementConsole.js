@@ -16,10 +16,12 @@
  * @component    fec_templateManagementConsole
  */
 import { LightningElement, track } from 'lwc';
+import LightningConfirm from 'lightning/confirm';
 
 /* ── Apex ── */
 import getAllFolders from '@salesforce/apex/FEC_FolderController.getAllFolders';
 import getTemplate  from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import updateZNSTemplates from '@salesforce/apex/FEC_ZNSTemplateController.updateZNSTemplates';
 
 /* ── Custom Labels (i18n) ── */
 import FEC_Template_Management_Title from '@salesforce/label/c.FEC_Template_Management_Title';
@@ -30,6 +32,12 @@ import FEC_New_Folder                from '@salesforce/label/c.FEC_New_Folder';
 import FEC_Items_Count               from '@salesforce/label/c.FEC_Items_Count';
 import FEC_Item_Count                from '@salesforce/label/c.FEC_Item_Count';
 import FEC_Col_Folder                from '@salesforce/label/c.FEC_Col_Folder';
+import FEC_Update_ZNS_Template       from '@salesforce/label/c.FEC_Update_ZNS_Template';
+import FEC_ACTION_CONFIRM            from '@salesforce/label/c.FEC_ACTION_CONFIRM';
+import FEC_Update_ZNS_Template_Confirm from '@salesforce/label/c.FEC_Update_ZNS_Template_Confirm';
+
+/* ── Custom Permission ── */
+import isUpdateZnsVisible from '@salesforce/customPermission/Is_Update_ZNS_Button_Visible';
 
 /* ── Constants ── */
 import {
@@ -48,7 +56,10 @@ export default class Fec_templateManagementConsole extends LightningElement {
         FEC_Filter_Active,
         FEC_New_Template,
         FEC_New_Folder,
-        FEC_Col_Folder
+        FEC_Col_Folder,
+        FEC_Update_ZNS_Template,
+        FEC_ACTION_CONFIRM,
+        FEC_Update_ZNS_Template_Confirm
     };
 
     /* ── State ── */
@@ -85,6 +96,8 @@ export default class Fec_templateManagementConsole extends LightningElement {
     /* ═══════════════════════════════════════════ */
     /*  LIFECYCLE                                  */
     /* ═══════════════════════════════════════════ */
+
+    isLoading = false;
 
     connectedCallback() {
         this._loadFolderOptions();
@@ -150,6 +163,10 @@ export default class Fec_templateManagementConsole extends LightningElement {
     /** Current folder context – used to pre-fill Folder field in editor */
     get currentFolderId() {
         return this.selectedFolderId || this.filterFolderId || null;
+    }
+
+    get isUpdateZnsButtonVisible() {
+        return isUpdateZnsVisible;
     }
 
     /* ═══════════════════════════════════════════ */
@@ -360,6 +377,26 @@ export default class Fec_templateManagementConsole extends LightningElement {
         const suffix = count <= 1 ? FEC_Item_Count : FEC_Items_Count;
         this.itemCountLabel = `\u00B7 ${count} ${suffix}`;
         this.selectedFolderId = event.detail?.currentFolderId;
+    }
+
+    async handleUpdateZNSTemplate() {
+        const result = await LightningConfirm.open({
+            message: this.label.FEC_Update_ZNS_Template_Confirm,
+            label: this.label.FEC_ACTION_CONFIRM,
+            theme: 'info',
+        });
+
+        if (result) {
+            this.isLoading = true;
+            try {
+                await updateZNSTemplates();
+            } catch (error) {
+                console.error(error);
+            } finally {
+                this.isLoading = false;
+                this._refreshAllViews();
+            }
+        }
     }
 
     /* ═══════════════════════════════════════════ */

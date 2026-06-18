@@ -254,6 +254,12 @@ public without sharing class FEC_CaseTriggerHandler {
         // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
         // 15/06/2026 20:30 linhdev - rollup Eligibility Details từ FEC_Contract_List_for_Remove_Phone__c khi Case submit (không liên quan NOC.FEC_Remove_Phone__c)
         rollupRemovePhoneEligibilityOnCaseSubmit(newCases, oldMap);
+
+        // Auto Notification for ZNS, Mobile App
+        String newCasesJson = JSON.serialize(newCases);
+        String oldMapJson = JSON.serialize(oldMap);
+        FEC_AutoNotificationFuture.sendZNSAsync(newCasesJson, oldMapJson);
+        FEC_AutoNotificationFuture.sendMobileAppAsync(newCasesJson, oldMapJson);
         isExecuting = false;
     }
 
