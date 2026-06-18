@@ -11,6 +11,7 @@
         <members>FEC_ChatHubInitControllerTest</members>
         <members>FEC_ChatHistoryControllerTest</members>
         <members>FEC_ChatHubCaseControllerTest</members>
+        <members>FEC_ChatHubCaseController_Test</members>
         <members>CaseTriggerHandlerTest</members>
         <members>FEC_UtilsTest</members>
         <members>FEC_CreateCaseHandler</members>

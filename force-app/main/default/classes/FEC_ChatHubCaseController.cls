@@ -94,7 +94,10 @@ public with sharing class FEC_ChatHubCaseController {
                 return null;
             }
 
-            // 1. Deserialize payload directly into the ChatHub request wrapper
+            // 1. Normalize ChatHub JSON aliases before deserialize
+            strJsonData = normalizeChatHubCustomerInfoJson(strJsonData);
+
+            // 2. Deserialize payload directly into the ChatHub request wrapper
             FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest req =
                 (FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest) JSON.deserialize(
                     strJsonData,
@@ -102,7 +105,7 @@ public with sharing class FEC_ChatHubCaseController {
                 );
             System.debug('req: ');
             System.debug(req);
-            // 2. Create the Interaction Case through FEC_CreateInteractionGenesys
+            // 3. Create the Interaction Case through FEC_CreateInteractionGenesys
             FEC_CreateInteractionGenesys.InteractionResult result =
                 FEC_CreateInteractionGenesys.createInteractionFromChat(req);
 
@@ -112,6 +115,8 @@ public with sharing class FEC_ChatHubCaseController {
                     : System.Label.FEC_Error_CreateInteractionCase;
                 throw new AuraHandledException(strError);
             }
+
+            ensureInteractionCaseHandlingMode(result.recordId);
 
             // 3. InteractionResult only returns recordId, so query Link ID to build caseNo
             String strCaseNo = null;
@@ -364,6 +369,37 @@ public with sharing class FEC_ChatHubCaseController {
         }
     }
     
+    @TestVisible
+    private static void ensureInteractionCaseHandlingMode(Id caseId) {
+        if (caseId == null) {
+            return;
+        }
+
+        List<Case> cases = [
+            SELECT Id, FEC_Interaction_View_Mode__c, RecordType.DeveloperName
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty()) {
+            return;
+        }
+
+        Case existingCase = cases[0];
+        Boolean isInteractionCase = FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME.equals(
+            existingCase.RecordType != null ? existingCase.RecordType.DeveloperName : null
+        );
+        if (!isInteractionCase
+            || FEC_ConstantCommon.INTERACTION_HANDLING_MODE.equals(existingCase.FEC_Interaction_View_Mode__c)) {
+            return;
+        }
+
+        update new Case(
+            Id = caseId,
+            FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE
+        );
+    }
+
     /**
      * Builds a deterministic composite key for a chat history entry, used to detect duplicates
      * when the same payload is submitted concurrently from multiple ChatHub tabs/browsers.
@@ -502,5 +538,49 @@ public with sharing class FEC_ChatHubCaseController {
             System.debug('Error creating Interaction Case: ' + e.getMessage());
             throw new AuraHandledException(System.Label.FEC_Error_CreateInteractionCase + e.getMessage());
         }
+    }
+
+    @TestVisible
+    private static String normalizeChatHubCustomerInfoJson(String strJsonData) {
+        if (String.isBlank(strJsonData)) {
+            return strJsonData;
+        }
+
+        Object parsed = JSON.deserializeUntyped(strJsonData);
+        if (!(parsed instanceof Map<String, Object>)) {
+            return strJsonData;
+        }
+
+        Map<String, Object> root = (Map<String, Object>) parsed;
+        Object customerInfoObj = root.get('customerInfo');
+        if (!(customerInfoObj instanceof Map<String, Object>)) {
+            return strJsonData;
+        }
+
+        Map<String, Object> customerInfo = (Map<String, Object>) customerInfoObj;
+        copyAliasIfBlank(customerInfo, 'applicationID', 'applicationId');
+        copyAliasIfBlank(customerInfo, 'emailAddress', 'email');
+        copyAliasIfBlank(customerInfo, 'contractNumber', 'contractNum');
+        copyAliasIfBlank(customerInfo, 'contractNumber', 'contactNumber');
+        copyAliasIfBlank(customerInfo, 'accountNumber', 'cardAccountNum');
+
+        return JSON.serialize(root);
+    }
+
+    private static void copyAliasIfBlank(
+        Map<String, Object> customerInfo,
+        String targetKey,
+        String sourceKey
+    ) {
+        if (customerInfo == null || String.isBlank(sourceKey) || String.isBlank(targetKey)) {
+            return;
+        }
+        if (customerInfo.containsKey(targetKey) && customerInfo.get(targetKey) != null) {
+            return;
+        }
+        if (!customerInfo.containsKey(sourceKey) || customerInfo.get(sourceKey) == null) {
+            return;
+        }
+        customerInfo.put(targetKey, customerInfo.get(sourceKey));
     }
 }
