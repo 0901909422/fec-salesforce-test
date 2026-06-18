@@ -7,6 +7,8 @@ import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionController.getEligibleTransactions';
+import getSavedIppTransactionId from '@salesforce/apex/FEC_IPPConversionController.getSavedIppTransactionId';
+import saveSelectedTransaction from '@salesforce/apex/FEC_IPPConversionController.saveSelectedTransaction';
 import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.loadIppTenorOptions';
 import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
@@ -200,8 +202,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             return Promise.resolve();
         }
         this.isLoading = true;
-        return getEligibleTransactions({ caseId: this.recordId })
-            .then((data) => {
+        return Promise.all([
+            getEligibleTransactions({ caseId: this.recordId }),
+            getSavedIppTransactionId({ caseId: this.recordId })
+        ])
+            .then(([data, savedId]) => {
                 this.transactions = (data || []).map(t => ({
                     ...t,
                     amountDisplay: t.amount != null ? this.formatAmount(t.amount) : STR_EMPTY,
@@ -248,6 +253,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.tenorBlockReady = false;
             this.showTenorSection = false;
             this.tenorSyncError = null;
+            saveSelectedTransaction({
+                caseId: this.recordId,
+                transactionId: this.selectedTransactionId
+            }).catch(() => {
+            });
             return;
         }
         if (selectedRows.length === 0) {
@@ -263,6 +273,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.tenorBlockReady = false;
             this.showTenorSection = false;
             this.tenorSyncError = null;
+            saveSelectedTransaction({
+                caseId: this.recordId,
+                transactionId: null
+            }).catch(() => {
+            });
         }
     }
 

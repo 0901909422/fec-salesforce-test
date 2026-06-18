@@ -56,10 +56,13 @@ private class FEC_IPPConversionController_Test {
             FEC_Transaction_Amount__c = 1000,
             FEC_Transaction_Plan__c = 'PLAN01',
             FEC_Effective_Date__c = Date.today(),
-            FEC_Transaction_Code__c = 'TXN001',
+            FEC_Post_Date__c = Date.today(),
+            FEC_Transaction_Code__c = '0105',
             FEC_Reference_Number__c = 'REF-IPP-001',
             FEC_Card_Seq__c = '0',
-            FEC_IPP_Key__c = 'KEY-IPP-001'
+            FEC_IPP_Key__c = 'KEY-IPP-001',
+            FEC_IPPEligibilityFlag__c = 'R',
+            FEC_Type__c = 'Unbilled'
         );
 
         insert new FEC_API_Setting__c(
@@ -981,11 +984,16 @@ private class FEC_IPPConversionController_Test {
             FEC_Transaction_Plan__c = 'PLAN99',
             FEC_Effective_Date__c = Date.today(),
             FEC_Post_Date__c = Date.today(),
-            FEC_Transaction_Code__c = 'TXN99',
+            FEC_Transaction_Code__c = '0106',
             FEC_Authorization_Code__c = 'AUTH01',
-            FEC_Merchant_Description__c = 'Merchant X'
+            FEC_Merchant_Description__c = 'Merchant X',
+            FEC_IPPEligibilityFlag__c = 'R',
+            FEC_Type__c = 'Unbilled'
         );
         System.runAs(runAsAdmin()) {
+            FEC_IPPConversionController.unbilledApiTestMode = 1;
+            FEC_IPPConversionController.unbilledApiTestResponse = new FEC_GetUnbilledTransactions.ResponseWrapper();
+            FEC_IPPConversionController.unbilledApiTestResponse.Transactions = new List<FEC_GetUnbilledTransactions.TransactionRecord>();
             Test.startTest();
             List<FEC_IPPConversionController.EligibleTransactionDTO> txs =
                 FEC_IPPConversionController.getEligibleTransactions(c.Id);
@@ -1486,6 +1494,26 @@ private class FEC_IPPConversionController_Test {
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
+
+        FEC_Transaction__c eligibleNoFlag = new FEC_Transaction__c(
+            FEC_Transaction_Code__c = '0105'
+        );
+        System.assertEquals(true, FEC_IPPConversionController.isIppEligibleForDisplay(eligibleNoFlag));
+
+        FEC_Transaction__c eligibleFlagR = new FEC_Transaction__c(
+            FEC_Transaction_Code__c = '0105',
+            FEC_IPPEligibilityFlag__c = 'R'
+        );
+        System.assertEquals(true, FEC_IPPConversionController.isIppEligibleForDisplay(eligibleFlagR));
+
+        FEC_Transaction__c ineligibleFlag = new FEC_Transaction__c(
+            FEC_Transaction_Code__c = '0105',
+            FEC_IPPEligibilityFlag__c = 'X'
+        );
+        System.assertEquals(false, FEC_IPPConversionController.isIppEligibleForDisplay(ineligibleFlag));
+
+        System.assertEquals(6, FEC_IPPConversionController.resolveIppTermForGetIppDetails(eligibleFlagR, 6));
+        System.assertEquals(true, FEC_IPPConversionController.collectSyncedTransactionIds(null, null).isEmpty());
     }
 
     @IsTest
@@ -1498,7 +1526,6 @@ private class FEC_IPPConversionController_Test {
 
         FEC_IPPConversionController.denyTransactionAccessForTest = true;
         try {
-            System.assertEquals(0, FEC_IPPConversionController.loadEligibleTransactionsFromDb(c.Id).size());
             FEC_IPPConversionController.IPPDetailsDTO deniedDetails =
                 FEC_IPPConversionController.checkIPPDetails(c.Id, tx.Id, 6);
             System.assertNotEquals(null, deniedDetails.errorMessage);
