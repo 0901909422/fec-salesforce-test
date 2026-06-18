@@ -18,6 +18,7 @@
 
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
 import {
     formatDateFlexibleVN,
@@ -466,7 +467,7 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
     }
 
     /* ================= ROW SELECT ================= */
-    handleTransactionSelect(event) {
+    async handleTransactionSelect(event) {
         const recordId = event.detail?.recordId;
         const sectionType = event.currentTarget?.dataset?.section;
 
@@ -477,15 +478,51 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             return;
         }
 
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'FEC_Transactions'
-            },
-            state: {
-                c__transactionId: recordId,
-                c__sectionType: sectionType
-            }
-        });
+        const row = this.unbilledTransactions.find((r) => r.Id === recordId);
+        const transactionCode =
+            row?.transactionCode && row.transactionCode !== '-'
+                ? row.transactionCode
+                : null;
+
+        const state = {
+            c__transactionId: recordId,
+            c__sectionType: sectionType,
+            ...(transactionCode
+                ? {
+                      c__transactionCode: transactionCode,
+                      uid: `${recordId}_${transactionCode}`
+                  }
+                : { uid: `${recordId}_` })
+        };
+
+        try {
+            const tabInfo = await getFocusedTabInfo();
+            const parentTabId = tabInfo.isSubtab
+                ? tabInfo.parentTabId
+                : tabInfo.tabId;
+
+            await openSubtab(parentTabId, {
+                pageReference: {
+                    type: 'standard__navItemPage',
+                    attributes: {
+                        apiName: 'FEC_Transactions'
+                    },
+                    state
+                },
+                focus: true,
+                label: transactionCode
+                    ? `Transaction ${transactionCode}`
+                    : 'Transaction'
+            });
+        } catch (e) {
+            console.error('openSubtab Transaction failed', e);
+            this[NavigationMixin.Navigate]({
+                type: 'standard__navItemPage',
+                attributes: {
+                    apiName: 'FEC_Transactions'
+                },
+                state
+            });
+        }
     }
 }
