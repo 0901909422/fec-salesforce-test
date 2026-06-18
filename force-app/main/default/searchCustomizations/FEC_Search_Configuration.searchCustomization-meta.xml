@@ -263,6 +263,10 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
+        <objectApiName>FEC_Undelivered_Card__c</objectApiName>
+        <searchable>false</searchable>
+    </objectOverride>
+    <objectOverride>
         <objectApiName>DocumentChecklistItem</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -328,6 +332,10 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>ProductComponentGroup</objectApiName>
+        <searchable>false</searchable>
+    </objectOverride>
+    <objectOverride>
+        <objectApiName>ProductConfigurationFlow</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
