@@ -275,8 +275,6 @@ public with sharing class FEC_GetUnbilledTransactions {
                 tr.MerchantName = FEC_CommonUltils.getValueSafe(txn, 'MerchantName');
                 tr.MCC = FEC_CommonUltils.getValueSafe(txn, 'MCC');
                 tr.Location = FEC_CommonUltils.getValueSafe(txn, 'Location');
-                tr.CardSeq = FEC_CommonUltils.getValueSafe(txn, 'CardSeq');
-                tr.IPPKey = FEC_CommonUltils.getValueSafe(txn, 'IPPKey');
                 tr.TransactionCode = FEC_CommonUltils.getValueSafe(txn, 'TransactionCode');
                 tr.EffectiveDate = FEC_CommonUltils.getValueSafe(txn, 'EffectiveDate');
                 tr.TransactionPlan = FEC_CommonUltils.getValueSafe(txn, 'TransactionPlan');
@@ -315,8 +313,6 @@ public with sharing class FEC_GetUnbilledTransactions {
         public String MerchantName;        
         public String MCC;                 
         public String Location;
-        public String CardSeq;
-        public String IPPKey;
         public String TransactionCode;
         public String EffectiveDate;
         public String TransactionPlan;
