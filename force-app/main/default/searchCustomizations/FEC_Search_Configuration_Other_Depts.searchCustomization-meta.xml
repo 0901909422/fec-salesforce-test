@@ -220,15 +220,7 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Disbursement_Status__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Follow_Up_User__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Sales_Check_Supervisor__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -241,10 +233,6 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Coll_Agent__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Sales_Check_Discipline_Result__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -324,10 +312,6 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Application_Status__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Recipient_Phone_Number__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
@@ -348,19 +332,11 @@
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
-            <fieldApiName>FEC_Remarks_for_Collections__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
             <fieldApiName>FEC_Coll_Remarks__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Refund_Request_Draft__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_Sales_Check_Team_Leader__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
@@ -377,10 +353,6 @@
         </fieldOverride>
         <fieldOverride>
             <fieldApiName>FEC_Beneficiary_Account__c</fieldApiName>
-            <searchable>false</searchable>
-        </fieldOverride>
-        <fieldOverride>
-            <fieldApiName>FEC_CS_Decision__c</fieldApiName>
             <searchable>false</searchable>
         </fieldOverride>
         <fieldOverride>
