@@ -153,8 +153,7 @@
                             plan.beginDate = FEC_CommonUltils.getXmlValue(planNode, 'BeginDate');
                             plan.refNumber = FEC_CommonUltils.getXmlValue(planNode, 'REFNumber');
                             
-                            // Parse CloseFeelIndicator 
-                            plan.closeFeeIndicator = FEC_CommonUltils.getXmlValue(planNode, 'CloseFeelIndicator'); 
+                            plan.closeFeeIndicator = FEC_CommonUltils.getXmlValue(planNode, 'CloseFeeIndicator');
 
                             // Map Decimal Fields
                             plan.currentBalance = FEC_CommonUltils.xmlValToDecimal(planNode, 'PlanCurrentBalance');
@@ -164,8 +163,7 @@
                             plan.perDiem = FEC_CommonUltils.xmlValToDecimal(planNode, 'PerDiem');
                             plan.ippInterest = FEC_CommonUltils.xmlPackedBaseRateToPercent(planNode, 'IPPInterest');
                             
-                            // Parse CloseFeelIndicatorAmount 
-                            plan.closeFeeIndicatorAmt = FEC_CommonUltils.xmlValToDecimal(planNode, 'CloseFeelIndicatorAmount'); 
+                            plan.closeFeeIndicatorAmt = FEC_CommonUltils.xmlValToDecimal(planNode, 'CloseFeeIndicatorAmount');
                             
                             plan.closeFeeAmount = FEC_CommonUltils.xmlValToDecimal(planNode, 'CloseFeeAmount');
                             plan.totalPaymentAmount = FEC_CommonUltils.xmlValToDecimal(planNode, 'PlanPaymentAmount');
