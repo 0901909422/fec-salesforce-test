@@ -75,6 +75,16 @@ public without sharing class FEC_IPPConversionController {
         @AuraEnabled public String errorMessage;
     }
 
+    public class AccountTenorDTO {
+        @AuraEnabled public List<Integer> tenorOptions;
+        @AuraEnabled public String planNumber;
+        @AuraEnabled public Integer savedTenor;
+        @AuraEnabled public Decimal savedInterestRate;
+        @AuraEnabled public Decimal savedFee;
+        @AuraEnabled public Decimal savedEmi;
+        @AuraEnabled public String errorMessage;
+    }
+
     public class ConvertResultDTO {
         @AuraEnabled public Boolean success;
         @AuraEnabled public String message;
@@ -315,8 +325,7 @@ public without sharing class FEC_IPPConversionController {
         Map<String, FEC_Transaction__c> existingByKey = new Map<String, FEC_Transaction__c>();
         String unbilledType = FEC_ConstantCommon.TRANSACTION_TYPE_UNBILLED;
         Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
-        String query = 'SELECT Id, FEC_Post_Date__c, FEC_Transaction_Amount__c, FEC_Transaction_Code__c,' +
-            ' FEC_Reference_Number__c';
+        String query = 'SELECT Id, FEC_Post_Date__c, FEC_Transaction_Amount__c, FEC_Transaction_Code__c';
         if (txFieldMap.containsKey('FEC_Type__c')) {
             query += ', FEC_Type__c';
         }
@@ -359,9 +368,6 @@ public without sharing class FEC_IPPConversionController {
         rec.FEC_Transaction_Code__c = row.TransactionCode;
         rec.FEC_Effective_Date__c = resolveEffectiveDateFromApi(row);
         rec.FEC_Transaction_Plan__c = row.TransactionPlan;
-        rec.FEC_Card_Seq__c = row.CardSeq;
-        rec.FEC_IPP_Key__c = row.IPPKey;
-        rec.FEC_Reference_Number__c = row.ReferenceNumber;
         if (txFieldMap.containsKey('FEC_IPPEligibilityFlag__c')) {
             rec.put('FEC_IPPEligibilityFlag__c', row.IPPEligibilityFlag);
         }
@@ -384,9 +390,6 @@ public without sharing class FEC_IPPConversionController {
     private static String buildUnbilledSyncKey(FEC_Transaction__c tx) {
         if (tx == null) {
             return null;
-        }
-        if (String.isNotBlank(tx.FEC_Reference_Number__c)) {
-            return 'REF:' + tx.FEC_Reference_Number__c.trim();
         }
         String code = tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c.trim() : '';
         String post = tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : '';
@@ -518,11 +521,11 @@ public without sharing class FEC_IPPConversionController {
                 dto.merchant = tx.merchantDescription != null ? tx.merchantDescription : FEC_ConstantCommon.STR_EMPTY;
                 result.add(dto);
             }
-            return result;
         }
-        return loadEligibleTransactionsFromDb(caseId);
+        return result;
     }
 
+    @TestVisible
     private static List<EligibleTransactionDTO> loadEligibleTransactionsFromDb(Id caseId) {
         List<EligibleTransactionDTO> result = new List<EligibleTransactionDTO>();
         if (caseId == null) return result;
@@ -549,10 +552,75 @@ public without sharing class FEC_IPPConversionController {
     }
 
     /**
-     * Check IPP details for a transaction via FEC_GetIPPDetailsCallout (tenor options, interest, fee, EMI).
+     * RC34.01 – Service 38 GetAccountDetails: load Tenor picklist (MinTenure..MaxTenure, step 3).
+     * 2026-06-16 linhdev
      */
     @AuraEnabled(cacheable=false)
-    public static IPPDetailsDTO checkIPPDetails(Id caseId, Id transactionId) {
+    public static AccountTenorDTO loadIppTenorOptions(Id caseId) {
+        AccountTenorDTO dto = new AccountTenorDTO();
+        dto.tenorOptions = new List<Integer>();
+        if (caseId == null) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+            return dto;
+        }
+        Case c = loadCaseForIPPConversion(caseId);
+        String accountNumber = resolveAccountNumberForAddIPP(c);
+        if (String.isBlank(accountNumber)) {
+            dto.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
+            return dto;
+        }
+        applySavedIppFieldsToTenorDto(c, dto);
+        try {
+            FEC_GetAccountDetails.ResponseWrapper accountRes = FEC_GetAccountDetails.callGetAccountDetails(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                FEC_CommonUltils.formatTransferCallRequestDateTime(Datetime.now()),
+                accountNumber
+            );
+            if (accountRes == null || accountRes.Account == null) {
+                dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+                return dto;
+            }
+            if (accountRes.Account.CashIPPInfo != null) {
+                applyCashIppTenorOptions(dto, accountRes.Account.CashIPPInfo);
+            }
+            if (dto.tenorOptions.isEmpty()
+                && accountRes.Account.RetailIPPInfo != null
+                && String.isNotBlank(accountRes.Account.RetailIPPInfo.PlanNumber)) {
+                dto.planNumber = accountRes.Account.RetailIPPInfo.PlanNumber;
+            }
+            if (dto.tenorOptions.isEmpty()) {
+                dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+            }
+        } catch (Exception e) {
+            dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+            System.debug('### loadIppTenorOptions ERROR: ' + e.getMessage());
+        }
+        return dto;
+    }
+
+    @TestVisible
+    private static void applyCashIppTenorOptions(AccountTenorDTO dto, FEC_GetAccountDetails.CashIPPInfo cashIpp) {
+        if (dto == null || cashIpp == null) {
+            return;
+        }
+        dto.tenorOptions = cashIpp.TenureList != null
+            ? cashIpp.TenureList
+            : FEC_GetAccountDetails.buildTenureList(
+                cashIpp.MinTenure,
+                cashIpp.MaxTenure
+            );
+        if (String.isNotBlank(cashIpp.PlanNumber)) {
+            dto.planNumber = cashIpp.PlanNumber;
+        }
+    }
+
+    /**
+     * Check IPP details for a transaction via FEC_GetIPPDetailsCallout (interest, fee, EMI) after Tenor selected.
+     * 2026-06-16 linhdev – Service 40 GetIPPDetails; Tenor from GetAccountDetails (loadIppTenorOptions).
+     */
+    @AuraEnabled(cacheable=false)
+    public static IPPDetailsDTO checkIPPDetails(Id caseId, Id transactionId, Integer tenor) {
         IPPDetailsDTO dto = new IPPDetailsDTO();
         dto.tenorOptions = new List<Integer>();
         dto.interestRate = null;
@@ -563,14 +631,23 @@ public without sharing class FEC_IPPConversionController {
             dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Transaction Id' });
             return dto;
         }
-        if (!Schema.sObjectType.FEC_Transaction__c.isAccessible()) {
+        if (caseId == null) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+            return dto;
+        }
+        if (tenor == null || tenor <= 0) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Tenor' });
+            return dto;
+        }
+        if (!isTransactionReadable()) {
             dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return dto;
         }
         List<FEC_Transaction__c> txs = [
             SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Plan__c,
                    FEC_Transaction_Code__c, FEC_Authorization_Code__c, FEC_Customer_History__c,
-                   FEC_Customer_History__r.FEC_Account_Number__c
+                   FEC_Customer_History__r.FEC_Account_Number__c,
+                   FEC_Customer_History__r.FEC_Card_Number__c
             FROM FEC_Transaction__c
             WHERE Id = :transactionId
             LIMIT 1
@@ -582,6 +659,15 @@ public without sharing class FEC_IPPConversionController {
             return dto;
         }
         FEC_Transaction__c tx = txs[0];
+        Case c = loadCaseForIPPConversion(caseId);
+        if (c == null || c.FEC_Account_or_Contract__c == null) {
+            dto.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
+            return dto;
+        }
+        if (tx.FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
+            return dto;
+        }
         if (tx.FEC_Transaction_Amount__c == null || tx.FEC_Transaction_Amount__c <= 0) {
             dto.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Amount', '0' });
             return dto;
@@ -592,42 +678,54 @@ public without sharing class FEC_IPPConversionController {
             dto.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
             return dto;
         }
-        Date effDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
-        Date postDate = tx.FEC_Post_Date__c != null ? tx.FEC_Post_Date__c : effDate;
-        FEC_GetIPPDetailsCallout.IPPRequest req = new FEC_GetIPPDetailsCallout.IPPRequest();
-        req.accountNumber = accountNumber;
-        req.effectiveDate = FEC_CommonUltils.formatDateYYYYMMDD(effDate);
-        req.amount = tx.FEC_Transaction_Amount__c;
-        req.postingDate = FEC_CommonUltils.formatDateYYYYMMDD(postDate);
-        if (String.isNotBlank(tx.FEC_Transaction_Plan__c)) {
-            req.planNumber = tx.FEC_Transaction_Plan__c;
-            req.transactionPlan = tx.FEC_Transaction_Plan__c;
+        Integer ippTerm = resolveIppTermForAddIpp(c, tenor);
+        if (ippTerm == null || ippTerm <= 0) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Tenor' });
+            return dto;
         }
-        if (String.isNotBlank(tx.FEC_Transaction_Code__c)) {
-            req.referenceNumber = tx.FEC_Transaction_Code__c;
-        }
+        System.debug('### checkIPPDetails GetIPPDetails caseId=' + caseId + ', transactionId=' + transactionId + ', tenor=' + ippTerm);
+        FEC_GetIPPDetailsCallout.IPPRequest req = buildGetIppDetailsRequest(c, tx, tenor, accountNumber);
         try {
-            FEC_GetIPPDetailsCallout.IPPDetailsResponse detailResp = FEC_GetIPPDetailsCallout.getIPPDetails(req);
+            FEC_GetIPPDetailsCallout.IPPDetailsResponse detailResp = callGetIppDetails(req);
             if (detailResp == null) {
-                dto.errorMessage = System.Label.FEC_MSG_Response_Null;
+                dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+                clearCaseIppDetailFields(caseId);
                 return dto;
             }
             if (detailResp.status != null && detailResp.status.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_ERROR)) {
-                dto.errorMessage = String.isNotBlank(detailResp.sysMessage) ? detailResp.sysMessage : System.Label.FEC_MSG_Response_Null;
+                dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+                clearCaseIppDetailFields(caseId);
                 return dto;
             }
             if (!isGetIPPDetailsResponseSuccess(detailResp)) {
-                dto.errorMessage = String.isNotBlank(detailResp.sysMessage) ? detailResp.sysMessage : System.Label.FEC_MSG_Response_Null;
+                dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+                clearCaseIppDetailFields(caseId);
                 return dto;
             }
-            dto.tenorOptions = parseTenorOptionsFromIppTerm(detailResp.ippTerm);
             dto.interestRate = detailResp.interestRate;
             dto.fee = detailResp.conversionFee;
             dto.emi = detailResp.emi != null ? detailResp.emi : detailResp.installmentAmount;
+            updateCaseIppConversionFields(
+                caseId,
+                ippTerm,
+                dto.interestRate,
+                dto.fee,
+                dto.emi
+            );
         } catch (Exception e) {
-            dto.errorMessage = e.getMessage();
+            dto.errorMessage = System.Label.FEC_MSG_IPP_Sync_Failed;
+            clearCaseIppDetailFields(caseId);
         }
         return dto;
+    }
+
+    /**
+     * RC34.01 – lưu FEC_IPP_Term__c khi user chọn Tenor (tách DML khỏi callout GetIPPDetails).
+     * 2026-06-16 linhdev
+     */
+    @AuraEnabled
+    public static void saveCaseIppTerm(Id caseId, Integer tenor) {
+        updateCaseIppTermOnly(caseId, tenor);
     }
 
     @AuraEnabled(cacheable=false)
@@ -635,7 +733,7 @@ public without sharing class FEC_IPPConversionController {
         ActionStatusDTO dto = new ActionStatusDTO();
         dto.actionCount = null;
         dto.canConvert = true;
-        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+        if (caseId == null || !isCaseReadable()) {
             return dto;
         }
         List<Case> cases = [
@@ -654,7 +752,7 @@ public without sharing class FEC_IPPConversionController {
     }
 
     /**
-     * Convert IPP: build AddIPP request from Case + selected transaction + tenor, call FEC_AddIPP.addIPP, return result.
+     * Convert IPP (RC34.01 & RC34.02): build AddIPP request from Case + selected transaction + tenor, call FEC_AddIPP.addIPP, return result.
      */
     @AuraEnabled
     public static ConvertResultDTO convertIPP(Id caseId, Id transactionId, Integer tenor) {
@@ -676,19 +774,17 @@ public without sharing class FEC_IPPConversionController {
             return result;
         }
         Case c = loadCaseForIPPConversion(caseId);
-        String accountNumber = resolveAccountNumberForAddIPP(c);
-        if (String.isBlank(accountNumber)) {
+        if (c == null || c.FEC_Account_or_Contract__c == null) {
             result.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
             return result;
         }
-        if (!Schema.sObjectType.FEC_Transaction__c.isAccessible()) {
+        if (!isTransactionReadable()) {
             result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return result;
         }
         List<FEC_Transaction__c> txs = [
             SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c, FEC_Transaction_Plan__c,
-                   FEC_Transaction_Code__c, FEC_Authorization_Code__c, FEC_Customer_History__c,
-                   FEC_Customer_History__r.FEC_Card_Number__c
+                   FEC_Transaction_Code__c, FEC_Authorization_Code__c, FEC_Customer_History__c
             FROM FEC_Transaction__c
             WHERE Id = :transactionId
             LIMIT 1
@@ -700,6 +796,10 @@ public without sharing class FEC_IPPConversionController {
             return result;
         }
         FEC_Transaction__c tx = txs[0];
+        if (tx.FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+            result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
+            return result;
+        }
         if (tx.FEC_Transaction_Amount__c == null || tx.FEC_Transaction_Amount__c <= 0) {
             result.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Amount', '0' });
             return result;
@@ -708,204 +808,23 @@ public without sharing class FEC_IPPConversionController {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' });
             return result;
         }
-        String cardNo = resolveCardNumberForAddIpp(tx, c);
-        if (String.isBlank(cardNo)) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
-            return result;
-        }
-        Date effectiveDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
-        Date postingDate = tx.FEC_Post_Date__c != null ? tx.FEC_Post_Date__c : effectiveDate;
-        String refNo = String.isNotBlank(tx.FEC_Transaction_Code__c) ? tx.FEC_Transaction_Code__c : tx.FEC_Authorization_Code__c;
-        if (String.isBlank(refNo)) {
-            refNo = String.valueOf(transactionId);
-        }
-        FEC_AddIPP.IPPRequest req = new FEC_AddIPP.IPPRequest();
-        req.accountNumber = accountNumber;
-        req.effectiveDate = effectiveDate;
-        req.amount = tx.FEC_Transaction_Amount__c;
-        req.planNumber = tx.FEC_Transaction_Plan__c;
-        req.ippTerm = tenor;
-        req.referenceNumber = refNo;
-        req.transactionPlan = tx.FEC_Transaction_Plan__c;
-        req.postingDate = postingDate;
-        req.cardNumber = cardNo;
-        req.cardSeq = 0;
-        req.ippKey = refNo;
-        try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
-            applyAddIppResultToConvertResult(addResult, result);
-            updateCaseActionCountForConvertResult(c, result.success == true);
-        } catch (Exception e) {
-            result.errorMessage = e.getMessage();
-            updateCaseActionCountForConvertResult(c, false);
-        } finally {
-            logConvertIppProcessActionHistory(c, result.success == true);
-        }
-        result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
-        result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
-        return result;
-    }
-
-    /**
-     * Convert IPP from manual retail entry (RC34.01 - transaction not in list). Section Properties 12 fields.
-     * Dates in yyyy-MM-dd. conversionInterestRate as percentage (e.g. 12).
-     */
-    @AuraEnabled
-    public static ConvertResultDTO convertIPPManualRetail(Id caseId, String verificationInfo, String callback, String cardType2,
-            String statementDateStr, String dueDateStr, String transactionDateStr, Decimal transactionAmount,
-            String approvalCode, String transactionPlan, Decimal installmentAmount, Integer installmentTerm, Decimal conversionInterestRate) {
-        ConvertResultDTO result = new ConvertResultDTO();
-        result.success = false;
-        result.message = null;
-        result.errorMessage = null;
-        result.maxRetriesExceeded = false;
-        if (caseId == null) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
-            return result;
-        }
-        if (transactionAmount == null || transactionAmount <= 0) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Số tiền GD', '0' });
-            return result;
-        }
-        if (installmentTerm == null || installmentTerm <= 0) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Kỳ hạn góp' });
-            return result;
-        }
-        Case c = loadCaseForIPPConversion(caseId);
-        String accountNumber = resolveAccountNumberForAddIPP(c);
+        String accountNumber = getAccountNumberForGetIPPDetails(caseId, null);
         if (String.isBlank(accountNumber)) {
             result.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
             return result;
         }
-        if (String.isBlank(transactionPlan)) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' });
-            return result;
-        }
-        String cardNo = resolveCardNumberForAddIpp(null, c);
-        if (String.isBlank(cardNo)) {
+        if (String.isBlank(resolveCardNumberForGetIppDetails(c))) {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
-        Date effDate = Date.today();
-        if (String.isNotBlank(transactionDateStr)) {
-            try {
-                effDate = Date.valueOf(transactionDateStr);
-            } catch (Exception e) {
-                effDate = Date.today();
-            }
+        Integer ippTerm = resolveIppTermForAddIpp(c, tenor);
+        if (ippTerm == null || ippTerm <= 0) {
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Tenor' });
+            return result;
         }
-        Date postDate = effDate;
-        if (String.isNotBlank(statementDateStr)) {
-            try {
-                postDate = Date.valueOf(statementDateStr);
-            } catch (Exception e) {
-                postDate = effDate;
-            }
-        }
-        String refNo = String.isNotBlank(approvalCode) ? approvalCode : null;
-        if (String.isBlank(refNo)) {
-            refNo = String.isNotBlank(verificationInfo) ? verificationInfo : String.valueOf(caseId);
-        }
-        FEC_AddIPP.IPPRequest req = new FEC_AddIPP.IPPRequest();
-        req.accountNumber = accountNumber;
-        req.effectiveDate = effDate;
-        req.amount = transactionAmount;
-        req.planNumber = transactionPlan;
-        req.ippTerm = installmentTerm;
-        req.referenceNumber = refNo;
-        req.transactionPlan = transactionPlan;
-        req.postingDate = postDate;
-        req.cardNumber = cardNo;
-        req.cardSeq = 0;
-        req.ippKey = refNo;
+        FEC_AddIPP.IPPRequest req = buildAddIppRequest(c, tx, accountNumber, ippTerm);
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
-            applyAddIppResultToConvertResult(addResult, result);
-            updateCaseActionCountForConvertResult(c, result.success == true);
-        } catch (Exception e) {
-            result.errorMessage = e.getMessage();
-            updateCaseActionCountForConvertResult(c, false);
-        } finally {
-            logConvertIppProcessActionHistory(c, result.success == true);
-        }
-        result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
-        result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
-        return result;
-    }
-
-    /**
-     * Convert IPP from manual entry (RC34.02 balance conversion). Section Properties 9 fields.
-     * Dates in yyyy-MM-dd. statementDateStr, dueDateStr, planIPP, installmentAmount optional.
-     */
-    @AuraEnabled
-    public static ConvertResultDTO convertIPPManual(Id caseId, Decimal amount, Integer tenor, String planNumber, String effectiveDateStr,
-            String statementDateStr, String dueDateStr, String planIPP, Decimal installmentAmount) {
-        ConvertResultDTO result = new ConvertResultDTO();
-        result.success = false;
-        result.message = null;
-        result.errorMessage = null;
-        result.maxRetriesExceeded = false;
-        if (caseId == null) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
-            return result;
-        }
-        if (amount == null || amount <= 0) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Dư nợ gốc hiện tại', '0' });
-            return result;
-        }
-        if (tenor == null || tenor <= 0) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Kỳ hạn góp' });
-            return result;
-        }
-        Case c = loadCaseForIPPConversion(caseId);
-        String accountNumber = resolveAccountNumberForAddIPP(c);
-        if (String.isBlank(accountNumber)) {
-            result.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
-            return result;
-        }
-        String planForApi = String.isNotBlank(planNumber) ? planNumber : planIPP;
-        if (String.isBlank(planForApi)) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' });
-            return result;
-        }
-        String cardNo = resolveCardNumberForAddIpp(null, c);
-        if (String.isBlank(cardNo)) {
-            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
-            return result;
-        }
-        Date effDate = Date.today();
-        if (String.isNotBlank(effectiveDateStr)) {
-            try {
-                effDate = Date.valueOf(effectiveDateStr);
-            } catch (Exception e) {
-                effDate = Date.today();
-            }
-        } else if (String.isNotBlank(statementDateStr)) {
-            try {
-                effDate = Date.valueOf(statementDateStr);
-            } catch (Exception e) { }
-        }
-        Date postDate = effDate;
-        if (String.isNotBlank(statementDateStr)) {
-            try {
-                postDate = Date.valueOf(statementDateStr);
-            } catch (Exception e) { }
-        }
-        String refNo = String.isNotBlank(planIPP) ? planIPP : String.valueOf(caseId);
-        FEC_AddIPP.IPPRequest req = new FEC_AddIPP.IPPRequest();
-        req.accountNumber = accountNumber;
-        req.effectiveDate = effDate;
-        req.amount = amount;
-        req.planNumber = planForApi;
-        req.ippTerm = tenor;
-        req.referenceNumber = refNo;
-        req.transactionPlan = planForApi;
-        req.postingDate = postDate;
-        req.cardNumber = cardNo;
-        req.cardSeq = 0;
-        req.ippKey = planForApi;
-        try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
+            FEC_AddIPP.AddIPPResult addResult = callAddIpp(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
@@ -945,12 +864,11 @@ public without sharing class FEC_IPPConversionController {
             req.transactionPlan = transactionPlan;
         }
         req.ippTerm = resolveIppTermForGetIppDetails(tx, tenor);
-        if (String.isNotBlank(tx.FEC_Reference_Number__c)) {
-            req.referenceNumber = tx.FEC_Reference_Number__c;
+        String refNo = resolveReferenceNumberForIpp(tx, tx.Id);
+        if (String.isNotBlank(refNo)) {
+            req.referenceNumber = refNo;
         }
         req.cardNumber = resolveCardNumberForGetIppDetails(c);
-        req.cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
-        req.ippKey = tx.FEC_IPP_Key__c;
         return req;
     }
 
@@ -969,12 +887,13 @@ public without sharing class FEC_IPPConversionController {
         req.amount = tx.FEC_Transaction_Amount__c;
         req.planNumber = tx.FEC_Transaction_Plan__c;
         req.ippTerm = ippTerm;
-        req.referenceNumber = tx.FEC_Reference_Number__c;
+        String refNo = resolveReferenceNumberForIpp(tx, tx.Id);
+        req.referenceNumber = refNo;
         req.transactionPlan = tx.FEC_Transaction_Plan__c;
         req.postingDate = postDate;
         req.cardNumber = resolveCardNumberForGetIppDetails(c);
-        req.cardSeq = parseCardSeqForGetIppDetails(tx.FEC_Card_Seq__c);
-        req.ippKey = tx.FEC_IPP_Key__c;
+        req.cardSeq = 0;
+        req.ippKey = refNo;
         return req;
     }
 
@@ -1025,24 +944,172 @@ public without sharing class FEC_IPPConversionController {
         return null;
     }
 
+    @TestVisible
+    private static String resolveReferenceNumberForIpp(FEC_Transaction__c tx, Id transactionId) {
+        if (tx != null && String.isNotBlank(tx.FEC_Transaction_Code__c)) {
+            return tx.FEC_Transaction_Code__c;
+        }
+        if (tx != null && String.isNotBlank(tx.FEC_Authorization_Code__c)) {
+            return tx.FEC_Authorization_Code__c;
+        }
+        return transactionId != null ? String.valueOf(transactionId) : null;
+    }
+
     private static Case loadCaseForIPPConversion(Id caseId) {
-        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+        if (caseId == null || !isCaseReadable()) {
             return null;
         }
-        List<Case> cases = [
-            SELECT Id, FEC_Account_Number__c, FEC_Account_Contract_Number_Text__c, FEC_Account_or_Contract__c,
-                   FEC_Process_Action_Count__c, FEC_Is_Test_API__c,
-                   FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.Name,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Card_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
+        // 2026-06-16 linhdev – restore Tenor/Interest/Fee/EMI sau refresh Case nếu field đã có trên org
+        String caseQuery = 'SELECT Id, FEC_Account_Number__c, FEC_Account_Contract_Number_Text__c, FEC_Account_or_Contract__c,' +
+            ' FEC_Process_Action_Count__c, FEC_Is_Test_API__c,' +
+            ' FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.Name,' +
+            ' FEC_Account_or_Contract__r.Name, FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Card_Number__c';
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            caseQuery += ', FEC_IPP_Term__c';
+        }
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            caseQuery += ', FEC_IPP_Interest__c';
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+            caseQuery += ', FEC_Conversion_Fee__c';
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c')) {
+            caseQuery += ', FEC_EMI__c';
+        }
+        caseQuery += ' FROM Case WHERE Id = :caseId LIMIT 1';
+        List<Case> cases = Database.query(caseQuery);
         SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, cases);
         List<SObject> recs = decision.getRecords();
         return recs.isEmpty() ? null : (Case) recs[0];
     }
 
+    @TestVisible
+    private static void applySavedIppFieldsToTenorDto(Case c, AccountTenorDTO dto) {
+        if (c == null || dto == null) {
+            return;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        Map<String, Object> populated = c.getPopulatedFieldsAsMap();
+        if (caseFieldMap.containsKey('FEC_IPP_Term__c') && populated.containsKey('FEC_IPP_Term__c') && c.get('FEC_IPP_Term__c') != null) {
+            dto.savedTenor = Integer.valueOf(String.valueOf(c.get('FEC_IPP_Term__c')));
+        }
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c') && populated.containsKey('FEC_IPP_Interest__c')) {
+            dto.savedInterestRate = (Decimal) c.get('FEC_IPP_Interest__c');
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c') && populated.containsKey('FEC_Conversion_Fee__c')) {
+            dto.savedFee = (Decimal) c.get('FEC_Conversion_Fee__c');
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c') && populated.containsKey('FEC_EMI__c')) {
+            dto.savedEmi = (Decimal) c.get('FEC_EMI__c');
+        }
+    }
+
+    @TestVisible
+    private static Integer ippDetailsTestMode = 0;
+
+    @TestVisible
+    private static FEC_GetIPPDetailsCallout.IPPDetailsResponse callGetIppDetails(FEC_GetIPPDetailsCallout.IPPRequest req) {
+        if (ippDetailsTestMode == 1) {
+            return null;
+        }
+        return FEC_GetIPPDetailsCallout.getIPPDetails(req);
+    }
+
+    @TestVisible
+    private static void updateCaseIppTermOnly(Id caseId, Integer tenor) {
+        if (caseId == null || tenor == null || tenor <= 0 || !isCaseUpdatable()) {
+            return;
+        }
+        if (!isIppTermFieldUpdateable()) {
+            return;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = caseId, FEC_IPP_Term__c = Decimal.valueOf(tenor));
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+    }
+
+    @TestVisible
+    private static void clearCaseIppDetailFields(Id caseId) {
+        if (caseId == null || !isCaseUpdatable()) {
+            return;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        Case c = new Case(Id = caseId);
+        Boolean hasUpdate = false;
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')
+            && caseFieldMap.get('FEC_IPP_Interest__c').getDescribe().isUpdateable()) {
+            c.put('FEC_IPP_Interest__c', null);
+            hasUpdate = true;
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')
+            && caseFieldMap.get('FEC_Conversion_Fee__c').getDescribe().isUpdateable()) {
+            c.put('FEC_Conversion_Fee__c', null);
+            hasUpdate = true;
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c')
+            && caseFieldMap.get('FEC_EMI__c').getDescribe().isUpdateable()) {
+            c.put('FEC_EMI__c', null);
+            hasUpdate = true;
+        }
+        if (hasUpdate) {
+            FEC_CaseTriggerHandler.isExecuting = true;
+            try {
+                update c;
+            } finally {
+                FEC_CaseTriggerHandler.isExecuting = false;
+            }
+        }
+    }
+
+    @TestVisible
+    private static void updateCaseIppConversionFields(
+        Id caseId,
+        Integer tenor,
+        Decimal interestRate,
+        Decimal fee,
+        Decimal emi
+    ) {
+        if (caseId == null || !isCaseUpdatable()) {
+            return;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        Case c = new Case(Id = caseId);
+        Boolean hasUpdate = false;
+        if (tenor != null && caseFieldMap.containsKey('FEC_IPP_Term__c')
+            && caseFieldMap.get('FEC_IPP_Term__c').getDescribe().isUpdateable()) {
+            c.put('FEC_IPP_Term__c', Decimal.valueOf(tenor));
+            hasUpdate = true;
+        }
+        if (interestRate != null && caseFieldMap.containsKey('FEC_IPP_Interest__c')
+            && caseFieldMap.get('FEC_IPP_Interest__c').getDescribe().isUpdateable()) {
+            c.put('FEC_IPP_Interest__c', interestRate);
+            hasUpdate = true;
+        }
+        if (fee != null && caseFieldMap.containsKey('FEC_Conversion_Fee__c')
+            && caseFieldMap.get('FEC_Conversion_Fee__c').getDescribe().isUpdateable()) {
+            c.put('FEC_Conversion_Fee__c', fee);
+            hasUpdate = true;
+        }
+        if (emi != null && caseFieldMap.containsKey('FEC_EMI__c')
+            && caseFieldMap.get('FEC_EMI__c').getDescribe().isUpdateable()) {
+            c.put('FEC_EMI__c', emi);
+            hasUpdate = true;
+        }
+        if (hasUpdate) {
+            FEC_CaseTriggerHandler.isExecuting = true;
+            try {
+                update c;
+            } finally {
+                FEC_CaseTriggerHandler.isExecuting = false;
+            }
+        }
+    }
+
+    @TestVisible
     private static String resolveAccountNumberForAddIPP(Case c) {
         if (c == null) {
             return null;
@@ -1066,6 +1133,7 @@ public without sharing class FEC_IPPConversionController {
         return cPopulated.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null;
     }
 
+    @TestVisible
     private static String accountNumberIfValidFormat(String raw) {
         if (String.isBlank(raw)) {
             return null;
@@ -1074,56 +1142,47 @@ public without sharing class FEC_IPPConversionController {
         return Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, t) ? t : null;
     }
 
+    @TestVisible
     private static String getAccountNumberForGetIPPDetails(Id caseId, String customerHistoryAccountNumber) {
-        String acc = accountNumberIfValidFormat(customerHistoryAccountNumber);
-        if (acc != null) {
-            return acc;
+        if (caseId != null) {
+            Case c = loadCaseForIPPConversion(caseId);
+            if (c != null) {
+                Map<String, Object> cPop = c.getPopulatedFieldsAsMap();
+                String acc = accountNumberIfValidFormat(c.FEC_Account_or_Contract__r?.Name);
+                if (acc != null) {
+                    return acc;
+                }
+                acc = accountNumberIfValidFormat(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c);
+                if (acc != null) {
+                    return acc;
+                }
+                acc = accountNumberIfValidFormat(cPop.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null);
+                if (acc != null) {
+                    return acc;
+                }
+                String contractText = accountContractTextForTest != null
+                    ? accountContractTextForTest
+                    : (cPop.containsKey('FEC_Account_Contract_Number_Text__c') ? c.FEC_Account_Contract_Number_Text__c : null);
+                acc = accountNumberIfValidFormat(contractText);
+                if (acc != null) {
+                    return acc;
+                }
+            }
         }
-        if (caseId == null) {
-            return null;
-        }
-        Case c = loadCaseForIPPConversion(caseId);
-        if (c == null) {
-            return null;
-        }
-        Map<String, Object> cPop = c.getPopulatedFieldsAsMap();
-        acc = accountNumberIfValidFormat(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c);
-        if (acc != null) {
-            return acc;
-        }
-        acc = accountNumberIfValidFormat(cPop.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null);
-        if (acc != null) {
-            return acc;
-        }
-        return accountNumberIfValidFormat(cPop.containsKey('FEC_Account_Contract_Number_Text__c') ? c.FEC_Account_Contract_Number_Text__c : null);
+        return accountNumberIfValidFormat(customerHistoryAccountNumber);
     }
 
+    @TestVisible
     private static Boolean isGetIPPDetailsResponseSuccess(FEC_GetIPPDetailsCallout.IPPDetailsResponse r) {
+        // 2026-06-16 linhdev – chấp nhận Success/SUCCESS/0 từ GetIPPDetails
         return r != null && (
-            r.status == FEC_ConstantCommon.SUCCESS_MESSAGE ||
+            (r.status != null && r.status.equalsIgnoreCase(FEC_ConstantCommon.SUCCESS_MESSAGE)) ||
             r.status == FEC_ConstantCommon.SUCCESS_STATUS_CODE ||
             (r.sysMessage != null && r.sysMessage.equalsIgnoreCase(FEC_ConstantCommon.SUCCESS_MESSAGE))
         );
     }
 
-    private static List<Integer> parseTenorOptionsFromIppTerm(String ippTermStr) {
-        List<Integer> opts = new List<Integer>();
-        if (String.isBlank(ippTermStr)) {
-            return opts;
-        }
-        for (String part : ippTermStr.trim().split(',')) {
-            String p = part.trim();
-            if (String.isBlank(p)) {
-                continue;
-            }
-            try {
-                opts.add(Integer.valueOf(p));
-            } catch (Exception e) {
-            }
-        }
-        return opts;
-    }
-
+    @TestVisible
     private static void applyAddIppResultToConvertResult(FEC_AddIPP.AddIPPResult addResult, ConvertResultDTO result) {
         if (addResult == null) {
             result.success = false;
@@ -1150,12 +1209,13 @@ public without sharing class FEC_IPPConversionController {
         }
     }
 
+    @TestVisible
     private static void updateCaseActionCountForConvertResult(Case c, Boolean isSuccess) {
         if (c == null || c.Id == null) {
             return;
         }
-        if (!Schema.sObjectType.Case.isUpdateable()
-            || !Schema.sObjectType.Case.fields.FEC_Process_Action_Count__c.isUpdateable()) {
+        if (!isCaseUpdatable()
+            || !isActionCountFieldUpdateable()) {
             return;
         }
         if (isSuccess) {
