@@ -18,7 +18,7 @@ private class FEC_FetchCollectDataServiceCallout_Test {
 
         Test.startTest();
         FEC_FetchCollectionDataServiceCallout.CollectionDataResponse res = 
-            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('20161129', 'COLLECTION', null);
+            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('20161129', 'COLLECTION');
         Test.stopTest();
 
         System.assertNotEquals(null, res);
@@ -34,7 +34,7 @@ private class FEC_FetchCollectDataServiceCallout_Test {
 
         Test.startTest();
         FEC_FetchCollectionDataServiceCallout.CollectionDataResponse res = 
-            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('20161129', 'COLLECTION', null);
+            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('20161129', 'COLLECTION');
         Test.stopTest();
 
         System.assertEquals('false', res.Success);
