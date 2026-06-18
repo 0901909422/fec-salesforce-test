@@ -1,6 +1,6 @@
 /****************************************************************************************
  * File Name    : fec_IPPConversionRetailForm.js
- * Description  : RC34.01 – Chuyển đổi IPP Retail: eligible transactions, Check IPP Details, Convert IPP, retry 3, manual entry.
+ * Description  : RC34.01 / RC34.02 – Chuyển đổi IPP: eligible transactions, Check IPP Details, Convert IPP (convertIPP), retry 3.
  ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
@@ -9,14 +9,16 @@ import { NavigationMixin } from 'lightning/navigation';
 import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionController.getEligibleTransactions';
 import getSavedIppTransactionId from '@salesforce/apex/FEC_IPPConversionController.getSavedIppTransactionId';
 import saveSelectedTransaction from '@salesforce/apex/FEC_IPPConversionController.saveSelectedTransaction';
+import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.loadIppTenorOptions';
+import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
-import convertIPPManualRetail from '@salesforce/apex/FEC_IPPConversionController.convertIPPManualRetail';
 import getConvertActionStatus from '@salesforce/apex/FEC_IPPConversionController.getConvertActionStatus';
 import FEC_MSG_IPP_Conversion_Success from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Success';
 import FEC_MSG_IPP_Conversion_Fail_Retry from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Fail_Retry';
 import FEC_MSG_IPP_Noti_10 from '@salesforce/label/c.FEC_MSG_IPP_Noti_10';
 import FEC_MSG_IPP_No_Eligible_Transactions from '@salesforce/label/c.FEC_MSG_IPP_No_Eligible_Transactions';
+import FEC_MSG_IPP_Sync_Failed from '@salesforce/label/c.FEC_MSG_IPP_Sync_Failed';
 import FEC_MSG_IPP_AddIpp_Default_Failed from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Failed';
 import FEC_LBL_IPP_Retail_UI from '@salesforce/label/c.FEC_LBL_IPP_Retail_UI';
 import FEC_Button_Close from '@salesforce/label/c.FEC_Button_Close';
@@ -62,6 +64,7 @@ const CONST = {
     VARIANT_WARNING: 'warning',
     SPIN_CONVERTING: 'Converting',
     LBL_TENOR: 'Tenor',
+    LBL_TENOR_PLACEHOLDER: '-- Chọn Tenor --',
     LBL_INTEREST: 'Interest',
     LBL_CONVERSION_FEE: 'Conversion Fee',
     LBL_EMI: 'EMI',
@@ -101,6 +104,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track tenorOptions = [];
     @track selectedTenor = null;
     @track tenorBlockReady = false;
+    @track tenorSyncError = null;
+    @track showTenorSection = false;
+    @track ippDetailsLoading = false;
     @track isLoading = false;
     @track detailsLoading = false;
     @track convertLoading = false;
@@ -111,24 +117,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track showNoti10 = false;
     @track retryCount = 0;
     @track showConfirmModal = false;
-    @track showManualEntry = false;
-    @track manualAmount = null;
-    @track manualTenor = null;
-    @track manualInterestRate = null;
-    @track manualFee = null;
-    @track manualVerificationInfo = null;
-    @track manualCallback = null;
-    @track manualCardType2 = null;
-    @track manualStatementDate = null;
-    @track manualDueDate = null;
-    @track manualTransactionDate = null;
-    @track manualTransactionAmount = null;
-    @track manualApprovalCode = null;
-    @track manualTransactionPlan = null;
-    @track manualInstallmentAmount = null;
-    @track manualInstallmentTerm = null;
-    @track manualConversionInterest = null;
-    @track manualSubmitLoading = false;
 
     ippRetailUi = IPP_RETAIL_UI;
 
@@ -169,6 +157,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     ];
 
     lblTenor = CONST.LBL_TENOR;
+    lblTenorPlaceholder = CONST.LBL_TENOR_PLACEHOLDER;
     lblInterest = CONST.LBL_INTEREST;
     lblConversionFee = CONST.LBL_CONVERSION_FEE;
     lblEmi = CONST.LBL_EMI;
@@ -178,8 +167,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     lblClose = FEC_Button_Close;
 
     connectedCallback() {
-        this.loadEligibleTransactions();
         this.loadConvertActionStatus();
+        if (!this.recordId) {
+            return;
+        }
+        this.loadEligibleTransactions();
     }
 
     loadConvertActionStatus() {
@@ -207,7 +199,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     loadEligibleTransactions() {
         if (!this.recordId) {
             this.state = FORM_STATE_NONE;
-            return;
+            return Promise.resolve();
         }
         this.isLoading = true;
         return Promise.all([
@@ -228,6 +220,8 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 this.details = null;
                 this.selectedTenor = null;
                 this.tenorBlockReady = false;
+                this.showTenorSection = false;
+                this.tenorSyncError = null;
                 if (this.transactions.length === 0) {
                     this.state = FORM_STATE_NONE;
                 } else {
@@ -406,28 +400,97 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
         }
+        this.loadTenorOptionsFromApi();
+    }
+
+    // 2026-06-16 linhdev – Service 38 GetAccountDetails: load Tenor picklist (không auto gọi Service 40)
+    loadTenorOptionsFromApi() {
         this.tenorBlockReady = false;
         this.detailsLoading = true;
+        this.ippDetailsLoading = false;
         this.details = null;
-        checkIPPDetails({ caseId: this.recordId, transactionId: this.selectedTransactionId })
+        this.tenorSyncError = null;
+        this.showTenorSection = false;
+        this.selectedTenor = null;
+        loadIppTenorOptions({ caseId: this.recordId })
             .then((res) => {
-                if (res && res.errorMessage) {
-                    this.showToast(FEC_Toast_Error, res.errorMessage, CONST.VARIANT_ERROR);
-                    return;
-                }
-                this.tenorBlockReady = false;
-                this.details = res;
-                this.tenorOptions = (res.tenorOptions || []).map(t => ({ label: String(t), value: String(t) }));
-                this.selectedTenor = this.tenorOptions.length > 0 ? this.tenorOptions[0].value : null;
-                Promise.resolve().then(() => {
-                    this.tenorBlockReady = true;
-                });
+                this.applyTenorOptionsResponse(res);
             })
-            .catch((err) => {
-                this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, CONST.VARIANT_ERROR);
+            .catch(() => {
+                this.tenorSyncError = FEC_MSG_IPP_Sync_Failed;
+                this.showTenorSection = true;
             })
             .finally(() => {
                 this.detailsLoading = false;
+            });
+    }
+
+    // 2026-06-16 linhdev – map response API 38; chỉ pre-select Tenor nếu Case đã lưu FEC_IPP_Term__c
+    applyTenorOptionsResponse(res) {
+        if (res && res.errorMessage) {
+            this.tenorSyncError = res.errorMessage;
+            this.showTenorSection = true;
+            return;
+        }
+        this.tenorOptions = (res.tenorOptions || []).map(t => ({ label: String(t), value: String(t) }));
+        if (this.tenorOptions.length === 0) {
+            this.tenorSyncError = FEC_MSG_IPP_Sync_Failed;
+            this.showTenorSection = true;
+            return;
+        }
+        this.showTenorSection = true;
+        this.tenorSyncError = null;
+        const savedTenor = res.savedTenor != null ? String(res.savedTenor) : null;
+        this.selectedTenor = savedTenor && this.tenorOptions.some(o => o.value === savedTenor)
+            ? savedTenor
+            : null;
+        Promise.resolve().then(() => {
+            this.tenorBlockReady = true;
+        });
+        const hasSavedDetails = res.savedInterestRate != null
+            && res.savedFee != null
+            && res.savedEmi != null
+            && savedTenor
+            && this.selectedTenor === savedTenor;
+        if (hasSavedDetails) {
+            this.details = {
+                interestRate: res.savedInterestRate,
+                fee: res.savedFee,
+                emi: res.savedEmi
+            };
+        } else {
+            this.details = null;
+        }
+    }
+
+    loadIppDetailsForSelectedTenor() {
+        if (!this.selectedTransactionId || !this.selectedTenor) {
+            return;
+        }
+        this.ippDetailsLoading = true;
+        this.details = null;
+        this.tenorSyncError = null;
+        const tenorVal = parseInt(this.selectedTenor, 10);
+        console.log('[IPPConversionRetailForm] GetIPPDetails – transactionId:', this.selectedTransactionId, 'tenor:', tenorVal, 'caseId:', this.recordId);
+        // 2026-06-16 linhdev – lưu FEC_IPP_Term__c trước, sau đó Service 40 GetIPPDetails (tách DML/callout)
+        saveCaseIppTerm({ caseId: this.recordId, tenor: tenorVal })
+            .then(() => checkIPPDetails({
+                caseId: this.recordId,
+                transactionId: this.selectedTransactionId,
+                tenor: tenorVal
+            }))
+            .then((res) => {
+                if (res && res.errorMessage) {
+                    this.tenorSyncError = res.errorMessage;
+                    return;
+                }
+                this.details = res;
+            })
+            .catch(() => {
+                this.tenorSyncError = FEC_MSG_IPP_Sync_Failed;
+            })
+            .finally(() => {
+                this.ippDetailsLoading = false;
             });
     }
 
@@ -510,6 +573,12 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         }
         const v = event.detail.value;
         this.selectedTenor = v != null && v !== STR_EMPTY ? String(v) : null;
+        if (!this.selectedTenor) {
+            this.details = null;
+            return;
+        }
+        // 2026-06-16 linhdev – Service 40 GetIPPDetails chỉ khi user chọn Tenor
+        this.loadIppDetailsForSelectedTenor();
     }
 
     navigateToCase() {
@@ -522,144 +591,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 actionName: 'view'
             }
         });
-    }
-
-    resetManualEntryFields() {
-        this.manualVerificationInfo = null;
-        this.manualCallback = null;
-        this.manualCardType2 = null;
-        this.manualStatementDate = null;
-        this.manualDueDate = null;
-        this.manualTransactionDate = null;
-        this.manualTransactionAmount = null;
-        this.manualApprovalCode = null;
-        this.manualTransactionPlan = null;
-        this.manualInstallmentAmount = null;
-        this.manualInstallmentTerm = null;
-        this.manualConversionInterest = null;
-    }
-
-    handleShowManualEntry() {
-        if (this.isReadOnly) {
-            return;
-        }
-        this.resetManualEntryFields();
-        this.showManualEntry = true;
-    }
-
-    handleManualEntryCancel() {
-        this.showManualEntry = false;
-        this.resetManualEntryFields();
-    }
-
-    handleManualVerificationInfoChange(event) { this.manualVerificationInfo = event.detail.value; }
-    handleManualCallbackChange(event) { this.manualCallback = event.detail.value; }
-    handleManualCardType2Change(event) { this.manualCardType2 = event.detail.value; }
-    handleManualStatementDateChange(event) { this.manualStatementDate = event.detail.value; }
-    handleManualDueDateChange(event) { this.manualDueDate = event.detail.value; }
-    handleManualTransactionDateChange(event) { this.manualTransactionDate = event.detail.value; }
-    handleManualTransactionAmountChange(event) {
-        const v = event.detail.value;
-        this.manualTransactionAmount = v !== STR_EMPTY && v != null ? parseFloat(v, 10) : null;
-    }
-    handleManualApprovalCodeChange(event) { this.manualApprovalCode = event.detail.value; }
-    handleManualTransactionPlanChange(event) { this.manualTransactionPlan = event.detail.value; }
-    handleManualInstallmentAmountChange(event) {
-        const v = event.detail.value;
-        this.manualInstallmentAmount = v !== STR_EMPTY && v != null ? parseFloat(v, 10) : null;
-    }
-    handleManualInstallmentTermChange(event) {
-        const v = event.detail.value;
-        this.manualInstallmentTerm = v !== STR_EMPTY && v != null ? parseInt(v, 10) : null;
-    }
-    get displayConversionInterest() {
-        return this.manualConversionInterest != null && this.manualConversionInterest !== STR_EMPTY
-            ? String(this.manualConversionInterest) + '%'
-            : STR_EMPTY;
-    }
-    handleManualConversionInterestChange(event) {
-        const raw = event.detail.value;
-        if (raw === CONST.EMPTY || raw == null) {
-            this.manualConversionInterest = null;
-            return;
-        }
-        const s = String(raw).replace(/%/g, STR_EMPTY).trim();
-        const num = parseFloat(s, 10);
-        this.manualConversionInterest = isNaN(num) ? null : num;
-    }
-
-    handleManualEntrySubmit() {
-        if (this.isReadOnly) {
-            return;
-        }
-        const allFields = [
-            this.manualVerificationInfo,
-            this.manualCallback,
-            this.manualCardType2,
-            this.manualStatementDate,
-            this.manualDueDate,
-            this.manualTransactionDate,
-            this.manualTransactionAmount,
-            this.manualApprovalCode,
-            this.manualTransactionPlan,
-            this.manualInstallmentAmount,
-            this.manualInstallmentTerm,
-            this.manualConversionInterest
-        ];
-        if (allFields.some(f => f === undefined || f === null || f === STR_EMPTY)) {
-            this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
-            return;
-        }
-        if (!this.recordId) {
-            this.showToast(FEC_Toast_Error, FEC_MSG_Param_Required.replace('{0}', CONST.CASE_ID_PARAM), CONST.VARIANT_ERROR);
-            return;
-        }
-        this.manualSubmitLoading = true;
-        convertIPPManualRetail({
-            caseId: this.recordId,
-            verificationInfo: this.manualVerificationInfo,
-            callback: this.manualCallback,
-            cardType2: this.manualCardType2,
-            statementDateStr: this.manualStatementDate,
-            dueDateStr: this.manualDueDate,
-            transactionDateStr: this.manualTransactionDate,
-            transactionAmount: this.manualTransactionAmount,
-            approvalCode: this.manualApprovalCode,
-            transactionPlan: this.manualTransactionPlan,
-            installmentAmount: this.manualInstallmentAmount,
-            installmentTerm: this.manualInstallmentTerm,
-            conversionInterestRate: this.manualConversionInterest
-        })
-            .then((res) => {
-                if (res && res.success) {
-                    this.convertSucceeded = true;
-                    this.convertDisabled = true;
-                    this.showNoti08 = true;
-                    this.showManualEntry = false;
-                    this.navigateToCase();
-                } else {
-                    const actionCount = res?.actionCount != null ? Number(res.actionCount) : null;
-                    if (actionCount != null) {
-                        this.retryCount = actionCount;
-                    }
-                    if (res?.maxRetriesExceeded === true || (actionCount != null && actionCount >= CONST.MAX_RETRY)) {
-                        this.convertDisabled = true;
-                        this.showNoti10 = true;
-                        this.showManualEntry = false;
-                        window.setTimeout(() => {
-                            this.navigateToCase();
-                        }, 2000);
-                    } else {
-                        this.showNoti09 = true;
-                    }
-                }
-            })
-            .catch((err) => {
-                this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, CONST.VARIANT_ERROR);
-            })
-            .finally(() => {
-                this.manualSubmitLoading = false;
-            });
     }
 
     formatAmount(val) {
@@ -690,7 +621,15 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     get showDetailsSection() {
-        return this.details != null && !this.details.errorMessage;
+        return this.showTenorSection;
+    }
+
+    get showIppDetailsFields() {
+        return this.details != null && !this.details.errorMessage && !this.tenorSyncError;
+    }
+
+    get showConvertIppButton() {
+        return this.showIppDetailsFields && !this.ippDetailsLoading;
     }
 
     get showNoti09BelowButton() {
