@@ -23,7 +23,7 @@ public without sharing class FEC_CaseRemarkController {
         result.addAll(jsonToRemarks(caselst[0].FEC_Draft_Remarks__c));
       }
 
-      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, FEC_Remark_Type__c, CreatedDate ' +
+      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, FEC_Remark_Type__c, CreatedDate, ArchiveCreatedDate__c ' +
         'FROM FEC_Case_Remarks__c ' +
         'WHERE FEC_Case__c = :caseId ' +
         'ORDER BY CreatedDate DESC';
