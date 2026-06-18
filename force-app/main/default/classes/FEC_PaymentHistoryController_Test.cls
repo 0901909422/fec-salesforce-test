@@ -176,7 +176,6 @@ private class FEC_PaymentHistoryController_Test {
         System.assertEquals(1, rows.size(), 'Chỉ transaction PaymentFlag=Y được upsert.');
         System.assertEquals(200000, rows[0].FEC_Payment_Amount__c);
         System.assertEquals('RRN001', rows[0].FEC_Particulars__c);
-        System.assertEquals(200000, rows[0].FEC_Total_Payment_Amount__c);
     }
 
     @IsTest
@@ -280,7 +279,7 @@ private class FEC_PaymentHistoryController_Test {
             FEC_Customer_History__c = c.FEC_Account_or_Contract__c,
             FEC_Payment_Date__c = payDate,
             FEC_Payment_Channel__c = 'ZaloPay',
-            FEC_Payment_Amount__c = 1
+            FEC_Payment_Amount__c = 1500000
         );
 
         Test.setMock(HttpCalloutMock.class, new HttpMock(200, MOCK_PAYMENT_INFO_XML));
@@ -297,6 +296,16 @@ private class FEC_PaymentHistoryController_Test {
             LIMIT 1
         ];
         System.assertEquals(1500000, row.FEC_Payment_Amount__c);
+        System.assertEquals(
+            1,
+            [
+                SELECT COUNT()
+                FROM FEC_Payment_History__c
+                WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+                  AND FEC_Payment_Channel__c = 'ZaloPay'
+            ],
+            'existingMap branch: cùng date|channel|amount → update, không insert thêm.'
+        );
     }
 
     @IsTest

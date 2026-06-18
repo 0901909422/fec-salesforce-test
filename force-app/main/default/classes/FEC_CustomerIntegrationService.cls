@@ -72,21 +72,48 @@ public without sharing class FEC_CustomerIntegrationService {
             ? cifNumber
             : hist.FEC_CIF_Number__c;
 
-        if (String.isNotBlank(acctNum) || String.isNotBlank(contractNum)) {
-            String cifFromList = enrichFromCustomerList(hist, result, acctNum, contractNum);
-            if (String.isNotBlank(cifFromList)) {
-                effectiveCif = cifFromList;
+        FEC_CommonUltils.beginDeferredApiLogging();
+        try {
+            if (String.isNotBlank(acctNum) || String.isNotBlank(contractNum)) {
+                String cifFromList = enrichFromCustomerList(hist, result, acctNum, contractNum);
+                if (String.isNotBlank(cifFromList)) {
+                    effectiveCif = cifFromList;
+                }
             }
+
+            if (String.isBlank(effectiveCif)) {
+                return result;
+            }
+
+            String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
+            String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
+            String timestampZ = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
+
+            return syncCustomerCallouts(
+                hist,
+                result,
+                effectiveCif,
+                acctNum,
+                contractNum,
+                requestor,
+                timestamp,
+                timestampZ
+            );
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
+    }
 
-        if (String.isBlank(effectiveCif)) {
-            return result;
-        }
-
-        String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
-        String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
-        String timestampZ = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
-
+    private static ResultDTO syncCustomerCallouts(
+        FEC_Customer_History__c hist,
+        ResultDTO result,
+        String effectiveCif,
+        String acctNum,
+        String contractNum,
+        String requestor,
+        String timestamp,
+        String timestampZ
+    ) {
         FEC_GetCustomerInfoBasic.ResponseWrapper basicRes;
         FEC_GetAddressesList.ResponseWrapper addressesRes;
         FEC_GetDocumentsList.ResponseWrapper docRes;
@@ -739,7 +766,11 @@ public without sharing class FEC_CustomerIntegrationService {
             return null;
         }
 
-        return getCardAccountNumberFromCaseRecord(cases[0]);
+        String accountNumber = getCardAccountNumberFromCaseRecord(cases[0]);
+        if (String.isBlank(accountNumber) && String.isNotBlank(hist.FEC_Account_Number__c)) {
+            return hist.FEC_Account_Number__c;
+        }
+        return accountNumber;
     }
 
     private static String getCardAccountNumberFromCaseRecord(Case c) {
