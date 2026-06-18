@@ -18,13 +18,12 @@ private class FEC_CardPaymentController_Test {
                 '<RecordNumber>REC02</RecordNumber><PlanNumber>PLAN02</PlanNumber>' +
                 '<REFNumber>REF999</REFNumber><PlanOpenDate>2026-05-20</PlanOpenDate>' +
                 '<BeginDate>2026-05-20</BeginDate><PlanCurrentBalance>5000000</PlanCurrentBalance>' +
-                '<BaseRate>12.5</BaseRate><CloseFeelIndicator>Y</CloseFeelIndicator>' +
-                '<CloseFeelIndicatorAmount>100000</CloseFeelIndicatorAmount>' +
+                '<BaseRate>12.5</BaseRate><CloseFeeIndicator>Y</CloseFeeIndicator>' +
+                '<CloseFeeIndicatorAmount>100000</CloseFeeIndicatorAmount>' +
                 '<PlanPaymentAmount>500000</PlanPaymentAmount>' +
                 '<AccruedInterest>30000</AccruedInterest><PerDiem>2000</PerDiem>' +
                 '<DeferredInterest>10000</DeferredInterest><AccruedInt>4000</AccruedInt>' +
                 '</CardPlan>' +
-                '<CardPlan><RecordNumber>REC01</RecordNumber><PlanNumber>PLAN01</PlanNumber></CardPlan>' +
                 '</CardPlans></CardPlanInfo>' +
                 '</cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
             );
@@ -63,7 +62,7 @@ private class FEC_CardPaymentController_Test {
         }
     }
 
-    private class TotalsFourApisMock implements HttpCalloutMock {
+    private class TotalsThreeApisMock implements HttpCalloutMock {
         private Integer callSeq = 0;
 
         public HttpResponse respond(HttpRequest req) {
@@ -73,14 +72,6 @@ private class FEC_CardPaymentController_Test {
             if (callSeq == 1) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
-                    '<soapenv:Body><cif:GetCardPaymentInfoResponse xmlns:cif="' + CIF_NS + '">' +
-                    '<Sys><Code>1</Code></Sys>' +
-                    '<PaymentInfo><FullPaymentAmount>15000000</FullPaymentAmount></PaymentInfo>' +
-                    '</cif:GetCardPaymentInfoResponse></soapenv:Body></soapenv:Envelope>'
-                );
-            } else if (callSeq == 2) {
-                res.setBody(
-                    '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
                     '<soapenv:Body>' +
                     '<cif:GetCardBasicInfoResponse xmlns:cif="' + CIF_NS + '">' +
                     '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
@@ -88,7 +79,7 @@ private class FEC_CardPaymentController_Test {
                     '</cif:GetCardBasicInfoResponse>' +
                     '</soapenv:Body></soapenv:Envelope>'
                 );
-            } else if (callSeq == 3) {
+            } else if (callSeq == 2) {
                 res.setBody(
                     '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
                     '<soapenv:Body>' +
@@ -175,16 +166,24 @@ private class FEC_CardPaymentController_Test {
             Test.setMock(HttpCalloutMock.class, new CardPlanSuccessMock());
 
             Test.startTest();
+            FEC_GetCardPlanInfo.CardPlanResult planResult =
+                FEC_GetCardPlanInfo.getCardPlanInfo('ACC-PAY-1903');
             List<Map<String, Object>> result1 = FEC_CardPaymentController.loadCardPaymentInfo(c.Id);
             List<Map<String, Object>> result2 = FEC_CardPaymentController.getCardPaymentRecords(String.valueOf(c.Id));
             Test.stopTest();
 
+            System.assertEquals(1, planResult.plans.size(), 'Mock GetCardPlanInfo phải trả 1 plan mới.');
             System.assertNotEquals(null, result1);
-            System.assert(result1.size() >= 2);
+            System.assert(result1.size() >= 2, 'Phải có bản ghi setup REC01 và plan mới REC02.');
+            System.assertEquals(
+                1,
+                [SELECT COUNT() FROM FEC_Card_Payment__c WHERE FEC_Rec__c = 'REC02'],
+                'API phải upsert plan REC02 vào database.'
+            );
             FEC_Card_Payment__c checkInserted = [
                 SELECT FEC_Close_Fee__c FROM FEC_Card_Payment__c WHERE FEC_Rec__c = 'REC02' LIMIT 1
             ];
-            System.assertEquals(2.00, checkInserted.FEC_Close_Fee__c);
+            System.assertEquals(1.00, checkInserted.FEC_Close_Fee__c);
             System.assertNotEquals(null, result2);
         }
     }
@@ -209,10 +208,7 @@ private class FEC_CardPaymentController_Test {
     static void testLoadCardPaymentTotals_AggregateSevenFlow() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case LIMIT 1];
-            FEC_Card_Payment__c paymentRow = [SELECT Id FROM FEC_Card_Payment__c LIMIT 1];
-            paymentRow.FEC_Full_Payment_Amount__c = 12000000;
-            paymentRow.FEC_Loan_Balance__c = 2000000;
-            update paymentRow;
+            Test.setMock(HttpCalloutMock.class, new TotalsThreeApisMock());
 
             Test.startTest();
             FEC_CardPaymentController.CardPaymentTotalsDTO totals =
@@ -222,7 +218,8 @@ private class FEC_CardPaymentController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, totals);
-            System.assertEquals(12000000, totals.fullPaymentAmount);
+            System.assertEquals(10366000, totals.fullPaymentAmount);
+            System.assertEquals(3000000, totals.loanBalance);
             System.assertEquals(1000000, totals.totalCurrentBalance);
             System.assertEquals(50000, totals.totalCloseFeeAmount);
             System.assertNotEquals(null, totalsWrapper);
@@ -246,11 +243,11 @@ private class FEC_CardPaymentController_Test {
     }
 
     @IsTest
-    static void testLoadCardPaymentTotals_CallFourApisSequential() {
+    static void testLoadCardPaymentTotals_CallThreeApisSequential() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case LIMIT 1];
             delete [SELECT Id FROM FEC_Card_Payment__c];
-            Test.setMock(HttpCalloutMock.class, new TotalsFourApisMock());
+            Test.setMock(HttpCalloutMock.class, new TotalsThreeApisMock());
 
             Test.startTest();
             FEC_CardPaymentController.CardPaymentTotalsDTO totals =
@@ -258,10 +255,10 @@ private class FEC_CardPaymentController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, totals);
-            System.assertEquals(15000000, totals.fullPaymentAmount);
+            System.assertEquals(10300000, totals.fullPaymentAmount);
             System.assertEquals(3000000, totals.loanBalance);
             System.assertEquals(7400600, totals.fullPaymentWithoutIPP);
-            System.assertEquals(7599400, totals.fullIPPPaymentAmount);
+            System.assertEquals(2899400, totals.fullIPPPaymentAmount);
         }
     }
 

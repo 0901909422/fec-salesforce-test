@@ -1611,6 +1611,461 @@ private class FEC_IPPConversionController_Test {
         }
     }
 
+    private static FEC_GetUnbilledTransactions.TransactionRecord buildUnbilledApiRow(
+        String refNum,
+        String txCode,
+        Decimal amount,
+        String effDate
+    ) {
+        FEC_GetUnbilledTransactions.TransactionRecord row = new FEC_GetUnbilledTransactions.TransactionRecord();
+        row.ReferenceNumber = refNum;
+        row.TransactionCode = txCode;
+        row.Amount = amount;
+        row.PostingDate = effDate != null ? effDate : '2026-05-01';
+        row.EffectiveDate = effDate;
+        row.TransactionDate = effDate;
+        row.TransactionPlan = 'PLAN01';
+        row.Description = 'IPP API Merchant';
+        row.IPPEligibilityFlag = 'R';
+        row.CardSeq = '1';
+        row.IPPKey = 'KEY-' + refNum;
+        return row;
+    }
+
+    @IsTest
+    static void testLoadIppUnbilledTransactions_ApiSyncAndSelection() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        System.runAs(runAsAdmin()) {
+            FEC_IPPConversionController.unbilledApiTestMode = 1;
+            FEC_IPPConversionController.unbilledApiTestResponse = new FEC_GetUnbilledTransactions.ResponseWrapper();
+            FEC_IPPConversionController.unbilledApiTestResponse.Transactions = new List<FEC_GetUnbilledTransactions.TransactionRecord>{
+                buildUnbilledApiRow('REF-API-NEW', '0105', 1500, '2026-06-01'),
+                buildUnbilledApiRow('REF-API-OLD', '0106', 2500, '2026-05-01'),
+                buildUnbilledApiRow('REF-API-SKIP', '9999', 500, '2026-05-02'),
+                null
+            };
+            try {
+                Test.startTest();
+                List<FEC_IPPConversionController.EligibleTransactionDTO> fromApi =
+                    FEC_IPPConversionController.loadIppUnbilledTransactions(c.Id);
+                List<FEC_IPPConversionController.EligibleTransactionDTO> fromPublic =
+                    FEC_IPPConversionController.getEligibleTransactions(c.Id);
+                Test.stopTest();
+                System.assertEquals(2, fromApi.size(), 'Eligible API rows after filter.');
+                System.assertEquals(2, fromPublic.size(), 'Public API should return synced rows.');
+                System.assertEquals('2026-06-01', fromApi[0].effectiveDateStr,
+                    'Newer effective date should sort first.');
+
+                if (caseFieldMap.containsKey('FEC_IPP_Transaction__c')
+                    && caseFieldMap.get('FEC_IPP_Transaction__c').getDescribe().isUpdateable()) {
+                    Id syncedTxId = (Id) fromApi[0].transactionId;
+                    FEC_IPPConversionController.saveSelectedTransaction(c.Id, syncedTxId);
+                    Case savedCase = [
+                        SELECT FEC_IPP_Transaction__c
+                        FROM Case
+                        WHERE Id = :c.Id
+                    ];
+                    System.assertEquals(syncedTxId, savedCase.FEC_IPP_Transaction__c);
+                    if (caseFieldMap.get('FEC_IPP_Transaction__c').getDescribe().isAccessible()) {
+                        System.assertEquals(
+                            String.valueOf(syncedTxId),
+                            FEC_IPPConversionController.getSavedIppTransactionId(c.Id)
+                        );
+                    }
+                    FEC_IPPConversionController.saveSelectedTransaction(c.Id, null);
+                    savedCase = [
+                        SELECT FEC_IPP_Transaction__c
+                        FROM Case
+                        WHERE Id = :c.Id
+                    ];
+                    System.assertEquals(null, savedCase.FEC_IPP_Transaction__c);
+                }
+            } finally {
+                FEC_IPPConversionController.unbilledApiTestMode = 0;
+                FEC_IPPConversionController.unbilledApiTestResponse = null;
+            }
+        }
+    }
+
+    @IsTest
+    static void testLoadIppUnbilledTransactions_EmptyPaths() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        System.assertEquals(0, FEC_IPPConversionController.loadIppUnbilledTransactions(null).size());
+        Case orphan = new Case(
+            Subject = 'IPP no CH',
+            Status = 'New',
+            FEC_ID_Search__c = 'IPPCV-NOCH-' + String.valueOf(System.currentTimeMillis())
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert orphan;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        System.assertEquals(0, FEC_IPPConversionController.loadIppUnbilledTransactions(orphan.Id).size());
+    }
+
+    @IsTest
+    static void testGetSavedIppTransactionId_Success() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Transaction__c')
+            || !caseFieldMap.get('FEC_IPP_Transaction__c').getDescribe().isUpdateable()) {
+            return;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_IPP_Transaction__c = tx.Id);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        if (!caseFieldMap.get('FEC_IPP_Transaction__c').getDescribe().isAccessible()) {
+            return;
+        }
+        System.assertEquals(
+            String.valueOf(tx.Id),
+            FEC_IPPConversionController.getSavedIppTransactionId(c.Id)
+        );
+    }
+
+    @IsTest
+    static void testSaveSelectedTransaction_Guards() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        FEC_Customer_History__c otherCh = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            Name = '0001500060000099',
+            FEC_Account_Number__c = '0001500060000099'
+        );
+        insert otherCh;
+        FEC_Transaction__c wrongChTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = otherCh.Id,
+            FEC_Transaction_Amount__c = 500,
+            FEC_Transaction_Plan__c = 'PLAN99',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Post_Date__c = Date.today(),
+            FEC_Transaction_Code__c = '0105',
+            FEC_Reference_Number__c = 'REF-WRONG-CH',
+            FEC_Type__c = 'Unbilled'
+        );
+        insert wrongChTx;
+
+        Test.startTest();
+        FEC_IPPConversionController.saveSelectedTransaction(null, tx.Id);
+        FEC_IPPConversionController.saveSelectedTransaction(c.Id, wrongChTx.Id);
+        FEC_IPPConversionController.denyCaseUpdateForTest = true;
+        try {
+            FEC_IPPConversionController.saveSelectedTransaction(c.Id, tx.Id);
+        } finally {
+            FEC_IPPConversionController.denyCaseUpdateForTest = false;
+        }
+        FEC_IPPConversionController.denyCaseAccessForTest = true;
+        try {
+            System.assertEquals(null, FEC_IPPConversionController.getSavedIppTransactionId(c.Id));
+        } finally {
+            FEC_IPPConversionController.denyCaseAccessForTest = false;
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testUnbilledSyncPrivateHelpers() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        Id chId = c.FEC_Account_or_Contract__c;
+
+        System.assertEquals(null, FEC_IPPConversionController.buildUnbilledSyncKey(null));
+        FEC_Transaction__c codeKeyTx = new FEC_Transaction__c(
+            FEC_Transaction_Code__c = '0105',
+            FEC_Post_Date__c = Date.today(),
+            FEC_Transaction_Amount__c = 100
+        );
+        String syncKey = FEC_IPPConversionController.buildUnbilledSyncKey(codeKeyTx);
+        System.assert(syncKey.contains('0105'), 'Sync key should include transaction code.');
+
+        FEC_GetUnbilledTransactions.TransactionRecord badRow = new FEC_GetUnbilledTransactions.TransactionRecord();
+        badRow.Amount = 100;
+        System.assertEquals(null, FEC_IPPConversionController.resolveEffectiveDateFromApi(badRow));
+
+        FEC_GetUnbilledTransactions.TransactionRecord dateRow = buildUnbilledApiRow('REF-DATE', '0105', 100, null);
+        dateRow.EffectiveDate = null;
+        dateRow.TransactionDate = '2026-05-15';
+        System.assertEquals(Date.valueOf('2026-05-15'), FEC_IPPConversionController.resolveEffectiveDateFromApi(dateRow));
+
+        System.assertEquals(null, FEC_IPPConversionController.parseEligibleDate(''));
+        System.assertEquals(null, FEC_IPPConversionController.parseEligibleDate('not-a-date'));
+        System.assertEquals(Date.today(), FEC_IPPConversionController.parseEligibleDate(String.valueOf(Date.today())));
+
+        Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+        FEC_GetUnbilledTransactions.TransactionRecord row = buildUnbilledApiRow('REF-UPSERT', '0105', 3000, '2026-05-10');
+        FEC_Transaction__c mapped = FEC_IPPConversionController.mapApiRowToTransaction(c.Id, chId, row, txFieldMap);
+        System.assertNotEquals(null, mapped);
+
+        List<FEC_Transaction__c> emptySync = FEC_IPPConversionController.syncUnbilledTransactionsFromApi(null, null, null);
+        System.assertEquals(0, emptySync.size());
+
+        FEC_TransactionsController.TransactionsResponse emptyRes = new FEC_TransactionsController.TransactionsResponse();
+        emptyRes.unbilledTransactions = new List<FEC_TransactionsController.TransactionDTO>();
+        System.assert(FEC_IPPConversionController.resolveEligibleTransactions(c.Id, emptyRes).size() > 0);
+
+        FEC_Transaction__c noIdTx = mapped.clone(false, true, false, false);
+        noIdTx.Id = null;
+        Map<String, FEC_Transaction__c> existing = FEC_IPPConversionController.loadExistingUnbilledTransactionsByKey(chId);
+        Set<Id> collected = FEC_IPPConversionController.collectSyncedTransactionIds(
+            new List<FEC_Transaction__c>{ noIdTx },
+            existing
+        );
+        System.assertNotEquals(null, collected);
+
+        System.assertEquals(false, FEC_IPPConversionController.isIppEligibleForDisplay(null));
+        System.assertEquals(false, FEC_IPPConversionController.isIppEligibleForDisplay(new FEC_Transaction__c()));
+        FEC_Transaction__c ineligible = new FEC_Transaction__c(FEC_Transaction_Code__c = 'BAD');
+        System.assertEquals(false, FEC_IPPConversionController.isIppEligibleForDisplay(ineligible));
+    }
+
+    @IsTest
+    static void testCheckIPPDetails_MissingCaseIdAndMismatch() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        FEC_Customer_History__c otherCh = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            Name = '0001500060000088',
+            FEC_Account_Number__c = '0001500060000088'
+        );
+        insert otherCh;
+        FEC_Transaction__c wrongTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = otherCh.Id,
+            FEC_Transaction_Amount__c = 1000,
+            FEC_Transaction_Plan__c = 'PLAN01',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Post_Date__c = Date.today(),
+            FEC_Transaction_Code__c = '0105',
+            FEC_Reference_Number__c = 'REF-MISMATCH',
+            FEC_Card_Seq__c = '1',
+            FEC_IPP_Key__c = 'KEY-MISMATCH'
+        );
+        insert wrongTx;
+
+        Test.startTest();
+        FEC_IPPConversionController.IPPDetailsDTO missingCase =
+            FEC_IPPConversionController.checkIPPDetails(null, tx.Id, 6);
+        FEC_IPPConversionController.IPPDetailsDTO mismatch =
+            FEC_IPPConversionController.checkIPPDetails(c.Id, wrongTx.Id, 6);
+        Test.stopTest();
+        System.assertNotEquals(null, missingCase.errorMessage);
+        System.assertNotEquals(null, mismatch.errorMessage);
+    }
+
+    @IsTest
+    static void testCheckIPPDetails_NoValidAccountNumber() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c ch = [
+            SELECT Id FROM FEC_Customer_History__c WHERE Id = :c.FEC_Account_or_Contract__c LIMIT 1
+        ];
+        FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new FEC_Customer_History__c(
+                Id = ch.Id,
+                Name = 'BAD-ACC',
+                FEC_Account_Number__c = 'BAD-ACC'
+            );
+            update new Case(Id = c.Id, FEC_Account_Number__c = null);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsMock());
+        Test.startTest();
+        FEC_IPPConversionController.IPPDetailsDTO dto =
+            FEC_IPPConversionController.checkIPPDetails(c.Id, tx.Id, 6);
+        Test.stopTest();
+        System.assertEquals(System.Label.FEC_MSG_AccountNumber_Invalid, dto.errorMessage);
+    }
+
+    @IsTest
+    static void testConvertIPP_ExtendedValidationPaths() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c ch = [
+            SELECT Id FROM FEC_Customer_History__c WHERE Id = :c.FEC_Account_or_Contract__c LIMIT 1
+        ];
+        FEC_Customer_History__c otherCh = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            Name = '0001500060000077',
+            FEC_Account_Number__c = '0001500060000077',
+            FEC_Card_Number__c = CARD_NUMBER
+        );
+        insert otherCh;
+        FEC_Transaction__c mismatchTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = otherCh.Id,
+            FEC_Transaction_Amount__c = 1000,
+            FEC_Transaction_Plan__c = 'PLAN01',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Reference_Number__c = 'REF-1',
+            FEC_Card_Seq__c = '1',
+            FEC_IPP_Key__c = 'KEY-1'
+        );
+        insert mismatchTx;
+
+        FEC_Transaction__c noSeqTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = ch.Id,
+            FEC_Transaction_Amount__c = 1000,
+            FEC_Transaction_Plan__c = 'PLAN01',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Reference_Number__c = 'REF-2',
+            FEC_IPP_Key__c = 'KEY-2'
+        );
+        insert noSeqTx;
+
+        FEC_Transaction__c noKeyTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = ch.Id,
+            FEC_Transaction_Amount__c = 1000,
+            FEC_Transaction_Plan__c = 'PLAN01',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Reference_Number__c = 'REF-3',
+            FEC_Card_Seq__c = '1'
+        );
+        insert noKeyTx;
+
+        FEC_Transaction__c fullTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = ch.Id,
+            FEC_Transaction_Amount__c = 1000,
+            FEC_Transaction_Plan__c = 'PLAN01',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Reference_Number__c = 'REF-4',
+            FEC_Card_Seq__c = '1',
+            FEC_IPP_Key__c = 'KEY-4'
+        );
+        insert fullTx;
+
+        Test.startTest();
+        System.assertNotEquals(null,
+            FEC_IPPConversionController.convertIPP(c.Id, mismatchTx.Id, 6).errorMessage);
+        System.assertNotEquals(null,
+            FEC_IPPConversionController.convertIPP(c.Id, noSeqTx.Id, 6).errorMessage);
+        System.assertNotEquals(null,
+            FEC_IPPConversionController.convertIPP(c.Id, noKeyTx.Id, 6).errorMessage);
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new FEC_Customer_History__c(
+                Id = ch.Id,
+                Name = 'BAD-ACC',
+                FEC_Account_Number__c = 'BAD-ACC'
+            );
+            update new Case(Id = c.Id, FEC_Account_Number__c = null);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        System.assertEquals(System.Label.FEC_MSG_Not_Account_Linked,
+            FEC_IPPConversionController.convertIPP(c.Id, fullTx.Id, 6).errorMessage);
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testAccountNumberResolutionFromCustomerHistory() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c,
+                FEC_Account_or_Contract__r.Name,
+                FEC_Account_or_Contract__r.FEC_Account_Number__c
+            FROM Case
+            LIMIT 1
+        ];
+        FEC_Customer_History__c ch = [
+            SELECT Id FROM FEC_Customer_History__c WHERE Id = :c.FEC_Account_or_Contract__c LIMIT 1
+        ];
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new FEC_Customer_History__c(
+                Id = ch.Id,
+                Name = 'BAD-NAME',
+                FEC_Account_Number__c = ACCOUNT_NUMBER
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        c = [
+            SELECT Id, FEC_Account_or_Contract__c,
+                FEC_Account_or_Contract__r.Name,
+                FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                FEC_Account_Contract_Number_Text__c,
+                FEC_Account_Number__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+        System.assertEquals(ACCOUNT_NUMBER, FEC_IPPConversionController.resolveAccountNumberForAddIPP(c));
+        System.assertEquals(ACCOUNT_NUMBER, FEC_IPPConversionController.getAccountNumberForGetIPPDetails(c.Id, 'BAD'));
+
+        Map<String, Schema.SObjectField> txFieldMap = Schema.SObjectType.FEC_Transaction__c.fields.getMap();
+        if (txFieldMap.containsKey('FEC_IPP_Term__c')) {
+            FEC_Transaction__c tx = new FEC_Transaction__c(
+                FEC_Transaction_Code__c = '0105'
+            );
+            tx.put('FEC_IPP_Term__c', 9);
+            System.assertEquals(9, FEC_IPPConversionController.resolveIppTermForGetIppDetails(tx, 6));
+        }
+    }
+
+    @IsTest
+    static void testGetSavedIppTransactionId_MismatchCustomerHistory() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c otherCh = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            Name = '0001500060000066',
+            FEC_Account_Number__c = '0001500060000066'
+        );
+        insert otherCh;
+        FEC_Transaction__c otherTx = new FEC_Transaction__c(
+            FEC_Customer_History__c = otherCh.Id,
+            FEC_Transaction_Amount__c = 100,
+            FEC_Transaction_Plan__c = 'PLAN01',
+            FEC_Effective_Date__c = Date.today(),
+            FEC_Transaction_Code__c = '0105'
+        );
+        insert otherTx;
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Transaction__c')
+            || !caseFieldMap.get('FEC_IPP_Transaction__c').getDescribe().isUpdateable()) {
+            return;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_IPP_Transaction__c = otherTx.Id);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        System.assertEquals(null, FEC_IPPConversionController.getSavedIppTransactionId(c.Id));
+    }
+
     private class IppConversionApiMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
