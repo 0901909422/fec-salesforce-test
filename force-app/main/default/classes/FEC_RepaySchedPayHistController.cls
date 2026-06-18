@@ -237,20 +237,6 @@ public without sharing class FEC_RepaySchedPayHistController {
         }
     }
 
-    private static void savePaymentHistoryTotalToCustomerHistory(Id customerHistoryId, Decimal totalPaymentAmount) {
-        if (customerHistoryId == null) {
-            return;
-        }
-        try {
-            update new FEC_Customer_History__c(
-                Id = customerHistoryId,
-                FEC_Total_Payment_Amount__c = totalPaymentAmount != 0 ? totalPaymentAmount : null
-            );
-        } catch (Exception e) {
-            System.debug('Save payment history total to Customer History error: ' + e.getMessage());
-        }
-    }
-
     /** Key dedupe Payment History theo Particulars (API GetLoanSecInfo.ChkNo). */
     private static String paymentHistoryParticularsKey(String particulars) {
         return String.isNotBlank(particulars) ? particulars.trim() : HYPHEN;
@@ -386,13 +372,6 @@ public without sharing class FEC_RepaySchedPayHistController {
         Integer rowCount = Math.max(Math.max(basicPh.size(), secPh.size()), payments.size());
         if (rowCount == 0) return;
 
-        Decimal totalPaymentAmount = 0;
-        for (FEC_GetLoanSecInfo.PaymentHistory ph : secPh) {
-            if (ph.AmountOfMoney != null) {
-                totalPaymentAmount += ph.AmountOfMoney;
-            }
-        }
-
         List<FEC_Payment_History__c> toInsert = new List<FEC_Payment_History__c>();
         Set<String> seenParticulars = new Set<String>();
         Integer paymentNo = 0;
@@ -424,12 +403,12 @@ public without sharing class FEC_RepaySchedPayHistController {
             }
             rec.FEC_Booking_Date__c = i < secPh.size() ? secPh[i].BookingDate : null;
             rec.FEC_Particulars__c = (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : null;
+            rec.FEC_Total_Payment_Amount__c = rec.FEC_Payment_Amount__c;
             toInsert.add(rec);
         }
         if (!toInsert.isEmpty()) {
             insert toInsert;
         }
-        savePaymentHistoryTotalToCustomerHistory(customerHistoryId, totalPaymentAmount);
     }
 
     private static void fillRealTimePaymentFromApi(
