@@ -23,6 +23,8 @@ public without sharing class FEC_TransactionsController {
 
         @AuraEnabled public Id Id;
         @AuraEnabled public Date effectiveDate;
+        /** Full datetime from API (GetCardBasicInfo TRNXDateTime or M_FAS EFF_DATE+TRANS_TIME). */
+        @AuraEnabled public Datetime effectiveDateTime;
         @AuraEnabled public Date postingDate;
         @AuraEnabled public Decimal transactionAmount;
         @AuraEnabled public String merchantDescription;
@@ -171,6 +173,7 @@ public without sharing class FEC_TransactionsController {
 
         FEC_Transaction__c tx = [
             SELECT Id,
+                FEC_Customer_History__c,
                 FEC_Effective_Date__c,
                 FEC_Post_Date__c,
                 FEC_Transaction_Amount__c,
@@ -185,7 +188,12 @@ public without sharing class FEC_TransactionsController {
                 FEC_Approval_Code__c,
                 FEC_Authorization_Response__c,
                 FEC_Decline_Reason_Code__c,
-                FEC_Decline_Description__c
+                FEC_Decline_Description__c,
+                FEC_Customer_History__r.FEC_Account_Number__c,
+                FEC_Customer_History__r.FEC_Contract_Number__c,
+                FEC_Customer_History__r.FEC_Case__r.FEC_Account_Number__c,
+                FEC_Customer_History__r.FEC_Case__r.FEC_Account_Contract_Number_Text__c,
+                FEC_Customer_History__r.FEC_Case__r.FEC_Product_Type__r.Name
             FROM FEC_Transaction__c
             WHERE Id = :transactionId
             LIMIT 1
@@ -196,6 +204,11 @@ public without sharing class FEC_TransactionsController {
         dto.authorizationResponse = tx.FEC_Authorization_Response__c;
         dto.declineReasonCode = tx.FEC_Decline_Reason_Code__c;
         dto.declineDescription = tx.FEC_Decline_Description__c;
+
+        if (String.isBlank(tx.FEC_Approval_Code__c)) {
+            enrichUnbilledDetailFromCardBasic(dto, tx);
+        }
+
         return dto;
     }
 
@@ -502,7 +515,13 @@ public without sharing class FEC_TransactionsController {
         dto.transactionPlanDualDisplay = dualDisplay(biPlan, mfPlan);
 
         if (cardTx != null && cardTx.TRNXDateTime != null) {
+            dto.effectiveDateTime = cardTx.TRNXDateTime;
             dto.effectiveDate = cardTx.TRNXDateTime.date();
+        } else if (auth != null) {
+            dto.effectiveDateTime = resolveAuthEffectiveDateTime(auth);
+            if (dto.effectiveDateTime != null) {
+                dto.effectiveDate = dto.effectiveDateTime.date();
+            }
         }
         if (dto.effectiveDate == null && auth != null) {
             dto.effectiveDate = FEC_CommonUltils.parseDate(auth.EFF_DATE);
@@ -543,11 +562,44 @@ public without sharing class FEC_TransactionsController {
             dto.otpSent = cardTx.OTPSent == 1 ? 'Yes' : (cardTx.OTPSent == 0 ? 'No' : null);
         }
 
-        dto.effectiveSortEpoch = effectiveSortEpochFromRaw(
-            dto.effectiveDate,
-            String.isNotBlank(mfTransactionDate) ? mfTransactionDate : biTransactionDate
-        );
+        if (dto.effectiveDateTime != null) {
+            dto.effectiveSortEpoch = dto.effectiveDateTime.getTime();
+        } else {
+            dto.effectiveSortEpoch = effectiveSortEpochFromRaw(
+                dto.effectiveDate,
+                String.isNotBlank(mfTransactionDate) ? mfTransactionDate : biTransactionDate
+            );
+        }
         return dto;
+    }
+
+    private static Datetime resolveAuthEffectiveDateTime(
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth
+    ) {
+        if (auth == null) {
+            return null;
+        }
+        Date effDate = FEC_CommonUltils.parseDate(auth.EFF_DATE);
+        if (effDate == null) {
+            return null;
+        }
+        String timePart = formatHostTime(auth.TRANS_TIME);
+        if (String.isBlank(timePart)) {
+            return Datetime.newInstance(effDate, Time.newInstance(0, 0, 0, 0));
+        }
+        List<String> parts = timePart.split(':');
+        if (parts.size() < 3) {
+            return Datetime.newInstance(effDate, Time.newInstance(0, 0, 0, 0));
+        }
+        return Datetime.newInstance(
+            effDate,
+            Time.newInstance(
+                Integer.valueOf(parts[0]),
+                Integer.valueOf(parts[1]),
+                Integer.valueOf(parts[2]),
+                0
+            )
+        );
     }
 
     /**
@@ -710,6 +762,86 @@ public without sharing class FEC_TransactionsController {
             + pad2(dt.minute())
             + ':'
             + pad2(dt.second());
+    }
+
+    /**
+     * Detail tab reads FEC_Effective_Date__c (Date only) → UI shows 07:00:00 VN.
+     * Re-match API/mock row to restore full TRNXDateTime for effectiveDateDualDisplay.
+     */
+    private static void enrichUnbilledDetailFromCardBasic(
+        TransactionDTO dto,
+        FEC_Transaction__c tx
+    ) {
+        if (dto == null || tx == null || tx.FEC_Customer_History__c == null) {
+            return;
+        }
+
+        String acc = resolveAccountFromTransaction(tx);
+        if (String.isBlank(acc)) {
+            return;
+        }
+
+        FEC_GetCardBasicInfo.TransactionInfo cardTx = findCardBasicMatch(
+            callCardBasicInfoSafe(acc),
+            tx
+        );
+        if (cardTx == null || cardTx.TRNXDateTime == null) {
+            return;
+        }
+
+        dto.effectiveDateTime = cardTx.TRNXDateTime;
+        dto.effectiveDate = cardTx.TRNXDateTime.date();
+        dto.effectiveDateDualDisplay = formatCardBasicEffDateTime(cardTx);
+        dto.effectiveSortEpoch = cardTx.TRNXDateTime.getTime();
+    }
+
+    private static FEC_GetCardBasicInfo.TransactionInfo findCardBasicMatch(
+        List<FEC_GetCardBasicInfo.TransactionInfo> cardTxList,
+        FEC_Transaction__c tx
+    ) {
+        if (cardTxList == null || cardTxList.isEmpty() || tx == null) {
+            return null;
+        }
+
+        if (String.isNotBlank(tx.FEC_Authorization_Code__c)) {
+            for (FEC_GetCardBasicInfo.TransactionInfo cardTx : cardTxList) {
+                if (tx.FEC_Authorization_Code__c == cardTx.AuthCode) {
+                    return cardTx;
+                }
+            }
+        }
+
+        for (FEC_GetCardBasicInfo.TransactionInfo cardTx : cardTxList) {
+            if (matchesUnbilledStoredTx(cardTx, tx)) {
+                return cardTx;
+            }
+        }
+        return null;
+    }
+
+    private static Boolean matchesUnbilledStoredTx(
+        FEC_GetCardBasicInfo.TransactionInfo cardTx,
+        FEC_Transaction__c tx
+    ) {
+        if (cardTx == null || tx == null) {
+            return false;
+        }
+        if (cardTx.PostingDate != tx.FEC_Post_Date__c) {
+            return false;
+        }
+        if (cardTx.Amount != tx.FEC_Transaction_Amount__c) {
+            return false;
+        }
+        if (normDebitCredit(cardTx.CreditDebitFlag)
+            != normDebitCredit(tx.FEC_Credit_Debit_Flag__c)) {
+            return false;
+        }
+        if (String.isNotBlank(tx.FEC_Transaction_Code__c)
+            && String.isNotBlank(cardTx.TransactionCode)
+            && tx.FEC_Transaction_Code__c != cardTx.TransactionCode) {
+            return false;
+        }
+        return true;
     }
 
     private static String buildAuthMatchKey(Date postDate, Decimal amount) {
@@ -984,6 +1116,30 @@ public without sharing class FEC_TransactionsController {
     /* =====================================================
        COMMON
        ===================================================== */
+    private static String resolveAccountFromTransaction(FEC_Transaction__c tx) {
+        if (tx == null || tx.FEC_Customer_History__r == null) {
+            return null;
+        }
+
+        String fromHistory = FEC_CommonUltils.resolveAccountNumber(
+            tx.FEC_Customer_History__r.FEC_Case__r?.FEC_Product_Type__r?.Name,
+            tx.FEC_Customer_History__r.FEC_Account_Number__c,
+            tx.FEC_Customer_History__r.FEC_Contract_Number__c
+        );
+        if (String.isNotBlank(fromHistory)) {
+            return fromHistory.trim();
+        }
+        if (String.isNotBlank(tx.FEC_Customer_History__r.FEC_Case__r?.FEC_Account_Number__c)) {
+            return tx.FEC_Customer_History__r.FEC_Case__r.FEC_Account_Number__c.trim();
+        }
+        if (String.isNotBlank(
+            tx.FEC_Customer_History__r.FEC_Case__r?.FEC_Account_Contract_Number_Text__c
+        )) {
+            return tx.FEC_Customer_History__r.FEC_Case__r.FEC_Account_Contract_Number_Text__c.trim();
+        }
+        return null;
+    }
+
     private static String resolveAccountForTransactions(
         Case c,
         FEC_Customer_History__c ch
