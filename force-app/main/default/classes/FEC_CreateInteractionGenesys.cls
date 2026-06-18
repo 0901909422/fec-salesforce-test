@@ -26,6 +26,14 @@ public without sharing class FEC_CreateInteractionGenesys {
         public String kYCStatus;
         public String nationalID;
         public String phoneNumber;
+        public String applicationID;
+        public String emailAddress;
+        public String email;
+        public String contractNumber;
+        public String contractNum;
+        public String contactNumber;
+        public String accountNumber;
+        public String cardAccountNum;
     }
     
     public class ChatSession {
@@ -42,6 +50,7 @@ public without sharing class FEC_CreateInteractionGenesys {
         public String updatedAt;
         public String topic;
         public String note;
+        public Boolean isAutomationCaseChat;
     }
     
     public class GenesysResposnse
@@ -137,29 +146,72 @@ public without sharing class FEC_CreateInteractionGenesys {
         dto.agentId = req.chatSession.agentID;
         
         
-        dto.customerName = req.customerInfo != null ? req.customerInfo.customerName : null;
-        String phone = req.customerInfo != null ? req.customerInfo.phoneNumber : null;
+        if (req.customerInfo != null) {
+            CustomerInfo ci = req.customerInfo;
+            dto.customerName = ci.customerName;
+            dto.phoneNumber = String.isNotBlank(ci.phoneNumber) ? ci.phoneNumber : null;
+            dto.nationalId = String.isNotBlank(ci.decryptNationalID)
+                ? ci.decryptNationalID
+                : ci.nationalID;
+            dto.email = firstNonBlank(ci.emailAddress, ci.email);
+            dto.applicationId = ci.applicationID;
+            applyContractAndAccountToDto(dto, ci);
+        }
         
-        dto.phoneNumber = String.isNotBlank(phone)
-            ? phone
-            : null;
-        
-        dto.nationalId = req.customerInfo != null
-            ? req.customerInfo.nationalID
-            : null;
-        
-        dto.accountNumber = null;
-        dto.contractNumber = null;
-        
-        
-        dto.transcription = req.chatSession.lastMessage;
+        dto.chatHistory = req.chatSession.lastMessage;
         
         dto.kycMethod = mapKycMethod(req.customerInfo != null ? req.customerInfo.kYCStatus : null);
         dto.kycStatus =req.customerInfo.kYCStatus;
         dto.kycResult = deriveKycResult(req.customerInfo != null ? req.customerInfo.kYCStatus : null);
-        
+
+        dto.isAutomationCaseChat = req.chatSession.isAutomationCaseChat;
         return dto;
     }
+    private static String firstNonBlank(String first, String second) {
+        if (String.isNotBlank(first)) {
+            return first;
+        }
+        return String.isNotBlank(second) ? second : null;
+    }
+
+    private static void applyContractAndAccountToDto(
+        FEC_CreateCaseHandler.FEC_InteractionCaseDTO dto,
+        CustomerInfo ci
+    ) {
+        if (dto == null || ci == null) {
+            return;
+        }
+
+        String explicitAccount = firstNonBlank(ci.accountNumber, ci.cardAccountNum);
+        if (String.isNotBlank(explicitAccount)) {
+            applyContractOrAccountNumberToDto(dto, explicitAccount);
+        }
+
+        if (String.isBlank(dto.accountNumber) && String.isBlank(dto.contractNumber)) {
+            String contractOrContact = firstNonBlank(
+                ci.contractNumber,
+                firstNonBlank(ci.contractNum, ci.contactNumber)
+            );
+            applyContractOrAccountNumberToDto(dto, contractOrContact);
+        }
+    }
+
+    private static void applyContractOrAccountNumberToDto(
+        FEC_CreateCaseHandler.FEC_InteractionCaseDTO dto,
+        String contractOrAccountNumber
+    ) {
+        if (dto == null || String.isBlank(contractOrAccountNumber)) {
+            return;
+        }
+        if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, contractOrAccountNumber)) {
+            dto.accountNumber = contractOrAccountNumber;
+            dto.contractNumber = null;
+        } else if (Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, contractOrAccountNumber)) {
+            dto.contractNumber = contractOrAccountNumber;
+            dto.accountNumber = null;
+        }
+    }
+
     private static String normalizeChannel(String channel) {
         if (String.isBlank(channel)) return null;
         

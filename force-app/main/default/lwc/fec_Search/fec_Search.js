@@ -495,7 +495,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.interactionChannel = result?.FEC_Channel__c;
       this.interactionEmail = result?.FEC_Interaction_Email__c;
       this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
-      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_National_ID__c : null;
+      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c']
+        ? (result.FEC_National_ID_Passport_ID__c || result.FEC_Search_National_ID__c)
+        : null;
       this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
       this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Application_ID__c : null;
       this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;
@@ -608,6 +610,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             } else if (!/^\d+$/.test(val)) {
               input.setCustomValidity(
                 "Application ID must contain only digits",
+              );
+            } else if (
+              !(val.length === 6 || val.length === 8 || val.length === 9)
+            ) {
+              input.setCustomValidity(
+                "Application ID must be 6, 8, or 9 digits",
               );
             } else {
               input.setCustomValidity("");
@@ -1864,24 +1872,24 @@ hasAnySearchCriteria(params) {
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.dispatchEvent(new RefreshEvent());
             } else {
-                const devName = await getCaseRecordTypeDevName({ caseId: res });
-                if (devName === 'Internal_Case') {
-                    this.dispatchEvent(
-                        new CustomEvent('closerequest', {
-                            detail: { recordId: res }
-                        })
-                    );
-                  } else {
-                      this[NavigationMixin.Navigate]({
-                          type: "standard__recordPage",
-                          attributes: {
-                              recordId: res,
-                              objectApiName: "Case",
-                              actionName: "view"
-                          }
-                      });
-                  }
-              }
+               const devName = await getCaseRecordTypeDevName({ caseId: res });
+               if (devName === 'Internal_Case') {
+                  this.dispatchEvent(
+                      new CustomEvent('closerequest', {
+                          detail: { recordId: res }
+                      })
+                  );
+                } else {
+                    this[NavigationMixin.Navigate]({
+                        type: "standard__recordPage",
+                        attributes: {
+                            recordId: res,
+                            objectApiName: "Case",
+                            actionName: "view"
+                        }
+                    });
+                }
+            }
             //await this.refreshTab();
           })
           .catch((e) => {
@@ -1922,7 +1930,7 @@ hasAnySearchCriteria(params) {
           } catch (e) {
               console.error('Account integration polling error:', e);
           }
-      }
+    }
   }
 
   async _pollHistoryReady(caseId) {

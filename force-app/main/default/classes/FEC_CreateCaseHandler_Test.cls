@@ -429,6 +429,8 @@ private class FEC_CreateCaseHandler_Test {
         dto.otherSubChannel = 'Chat Other';
         dto.customerName = 'Chat User';
         dto.phoneNumber = '0909999888';
+        dto.chatHistory = 'Chat transcript line 1';
+        dto.isAutomationCaseChat = true;
 
         Test.startTest();
         FEC_CreateCaseHandler.FEC_InteractionCaseResponse res =
@@ -436,13 +438,24 @@ private class FEC_CreateCaseHandler_Test {
         Test.stopTest();
 
         System.assertNotEquals(null, res.caseId);
-        Case created = [
-            SELECT FEC_Channel__c, FEC_Customer_Username__c
-            FROM Case
-            WHERE Id = :res.caseId
-        ];
+        Id caseId = res.caseId;
+        String caseFields = 'FEC_Channel__c, FEC_Customer_Username__c, FEC_Chat_History__c, FEC_Interaction_View_Mode__c';
+        if (Schema.SObjectType.Case.fields.getMap().containsKey('FEC_Is_Chat_Automation__c')) {
+            caseFields += ', FEC_Is_Chat_Automation__c';
+        }
+        Case created = (Case) Database.query(
+            'SELECT ' + caseFields + ' FROM Case WHERE Id = :caseId'
+        );
         System.assertEquals(FEC_ConstantCommon.CHANNEL_CHAT, created.FEC_Channel__c);
         System.assertEquals('Chat User', created.FEC_Customer_Username__c);
+        System.assertEquals('Chat transcript line 1', created.FEC_Chat_History__c);
+        System.assertEquals(
+            FEC_ConstantCommon.INTERACTION_HANDLING_MODE,
+            created.FEC_Interaction_View_Mode__c
+        );
+        if (Schema.SObjectType.Case.fields.getMap().containsKey('FEC_Is_Chat_Automation__c')) {
+            System.assertEquals(true, created.get('FEC_Is_Chat_Automation__c'));
+        }
     }
 
     @IsTest
