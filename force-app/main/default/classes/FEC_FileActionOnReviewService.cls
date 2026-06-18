@@ -1,4 +1,28 @@
 public without sharing class FEC_FileActionOnReviewService {
+  /** MyCase CreateCSCase UploadDocument: cho phép gắn file khi Case đang Review (tránh toggle Case → SOQL 101). */
+  @TestVisible
+  public static Boolean bypassMyCaseApiFileUpload = false;
+  /** ChatHub saveChatHistoryAndAttachment: cho phép gắn file chat khi Case đang Review. */
+  @TestVisible
+  public static Boolean bypassChatHubFileUpload = false;
+  @TestVisible
+  private static Integer bypassChatHubFileUploadDepth = 0;
+
+  public static void enterChatHubFileUploadBypass() {
+    bypassChatHubFileUploadDepth++;
+  }
+
+  public static void exitChatHubFileUploadBypass() {
+    if (bypassChatHubFileUploadDepth > 0) {
+      bypassChatHubFileUploadDepth--;
+    }
+  }
+
+  @TestVisible
+  private static Boolean isChatHubFileUploadBypassActive() {
+    return bypassChatHubFileUpload || bypassChatHubFileUploadDepth > 0;
+  }
+
   /** Giới hạn dung lượng file đơn (2GB) khi upload, đơn vị byte. */
   public static final Long MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024 * 1024;
   public static final String ERROR_FILE_ACTION_IN_REVIEW = 'Cannot perform this action on the file while the Case is in Review mode.';
@@ -10,7 +34,7 @@ public without sharing class FEC_FileActionOnReviewService {
 
   // Trả về Set Case Id đang ở trạng thái chặn thao tác file (review hoặc Interaction không handling).
   public static Set<Id> getCaseIdsThatBlockFileActions(Set<Id> caseIds) {
-    if (caseIds == null || caseIds.isEmpty()) {
+    if (caseIds == null || caseIds.isEmpty() || bypassMyCaseApiFileUpload || isChatHubFileUploadBypassActive()) {
       return new Set<Id>();
     }
     List<Case> cases = [
@@ -33,6 +57,9 @@ public without sharing class FEC_FileActionOnReviewService {
   // Trả về Set ContentDocument Id bị chặn: file chỉ gắn Case review và không có Case handling.
   public static Set<Id> getContentDocumentIdsLinkedToReviewCases(Set<Id> contentDocumentIds) {
     if (contentDocumentIds == null || contentDocumentIds.isEmpty()) {
+      return new Set<Id>();
+    }
+    if (bypassMyCaseApiFileUpload || isChatHubFileUploadBypassActive()) {
       return new Set<Id>();
     }
 

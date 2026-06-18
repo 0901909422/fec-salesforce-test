@@ -1,37 +1,9 @@
 @IsTest
 private class FEC_CreateInteractionGenesys_Test {
 
-    private static void ensureRunUserMainQueue() {
-        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
-        if (!userFields.containsKey('FEC_Main_Queue__c')) {
-            return;
-        }
-        User runUser = new User(Id = UserInfo.getUserId());
-        List<Group> queues = [
-            SELECT DeveloperName
-            FROM Group
-            WHERE Type = 'Queue'
-              AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-            LIMIT 1
-        ];
-        if (queues.isEmpty()) {
-            Group q = new Group(
-                Name = 'Genesys Test CS Support Queue',
-                DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
-                Type = 'Queue'
-            );
-            insert q;
-            runUser.FEC_Main_Queue__c = q.DeveloperName;
-        } else {
-            runUser.FEC_Main_Queue__c = queues[0].DeveloperName;
-        }
-        update runUser;
-    }
-
     @TestSetup
     static void setupData() {
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            ensureRunUserMainQueue();
             update new User(
                 Id = UserInfo.getUserId(),
                 FEC_Agent_ID__c = 'AGENT001'
@@ -106,6 +78,7 @@ private class FEC_CreateInteractionGenesys_Test {
         req.chatSession = new FEC_CreateInteractionGenesys.ChatSession();
         req.chatSession.sessionID = ('CHAT' + String.valueOf(System.currentTimeMillis()).right(16)).left(20);
         req.chatSession.chatChannel = 'facebook';
+        req.chatSession.lastMessage = 'Xin chào, tôi cần hỗ trợ';
         req.customerInfo = new FEC_CreateInteractionGenesys.CustomerInfo();
         req.customerInfo.customerName = 'Test Chat';
 
@@ -117,5 +90,54 @@ private class FEC_CreateInteractionGenesys_Test {
         FEC_CaseTriggerHandler.isExecuting = false;
 
         System.assertEquals(true, result.isSuccess, result.message);
+
+        Case createdCase = [
+            SELECT FEC_Chat_History__c
+            FROM Case
+            WHERE Id = :result.recordId
+        ];
+        System.assertEquals('Xin chào, tôi cần hỗ trợ', createdCase.FEC_Chat_History__c);
+    }
+
+    @IsTest
+    static void testCreateInteractionFromChat_PrefillsCustomerSearchFields() {
+        FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest req =
+            new FEC_CreateInteractionGenesys.ChatHubCreateInteractionRequest();
+        req.chatSession = new FEC_CreateInteractionGenesys.ChatSession();
+        req.chatSession.sessionID = ('CHF' + String.valueOf(System.currentTimeMillis()).right(17)).left(20);
+        req.chatSession.chatChannel = 'webchat';
+        req.customerInfo = new FEC_CreateInteractionGenesys.CustomerInfo();
+        req.customerInfo.phoneNumber = '0909123456';
+        req.customerInfo.decryptNationalID = '123456789';
+        req.customerInfo.applicationID = 'APP123456';
+        req.customerInfo.emailAddress = 'customer@test.com';
+        req.customerInfo.contractNumber = '20140807-103046-0001';
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateInteractionGenesys.InteractionResult result =
+            FEC_CreateInteractionGenesys.createInteractionFromChat(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals(true, result.isSuccess, result.message);
+
+        Case createdCase = [
+            SELECT FEC_Phone_Number__c, FEC_Search_Phone_Number__c,
+                FEC_National_ID_Passport_ID__c, FEC_Search_National_ID__c,
+                FEC_Application_ID__c, FEC_Search_Application_ID__c,
+                FEC_Interaction_Email__c, FEC_Search_Email_Address__c,
+                FEC_Contract_Number__c, FEC_Search_Contract_Number__c,
+                FEC_Account_Number__c, FEC_Search_Account_Number__c
+            FROM Case
+            WHERE Id = :result.recordId
+        ];
+        System.assertEquals('0909123456', createdCase.FEC_Phone_Number__c);
+        System.assertEquals('0909123456', createdCase.FEC_Search_Phone_Number__c);
+        System.assertEquals('123456789', createdCase.FEC_National_ID_Passport_ID__c);
+        System.assertEquals('APP123456', createdCase.FEC_Application_ID__c);
+        System.assertEquals('customer@test.com', createdCase.FEC_Interaction_Email__c);
+        System.assertEquals('20140807-103046-0001', createdCase.FEC_Contract_Number__c);
+        System.assertEquals(null, createdCase.FEC_Account_Number__c);
     }
 }

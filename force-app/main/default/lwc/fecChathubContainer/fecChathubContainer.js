@@ -651,6 +651,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             const dataPhoneNumber = await decryptDataKYC(data.customerInfo.phoneNumber, this.#secretKey)
             data.customerInfo.phoneNumber = dataPhoneNumber;
         }
+        data.chatSession.isAutomationCaseChat = true;
         const oldAgentID = data.chatSession.oldAgentID;
         if (this.chatHubUsername && this.chatHubUsername === oldAgentID) {
             await this.updateOldCase(data.chatSession.sessionID, data.chatSession.agentID);

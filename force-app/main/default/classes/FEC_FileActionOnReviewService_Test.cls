@@ -128,4 +128,44 @@ private class FEC_FileActionOnReviewService_Test {
 
         System.assert(blockedDocs.contains(docId), 'File gắn với Review Case phải bị chặn.');
     }
+
+    @IsTest
+    static void testBypassMyCaseApiFileUpload_skipsReviewBlock() {
+        Case reviewCase = insertCase(
+            'Review Case Bypass',
+            FEC_ConstantCommon.INTERACTION_HANDLING_MODE
+        );
+        setCaseViewMode(reviewCase.Id, FEC_ConstantCommon.INTERACTION_REVIEW_MODE);
+
+        Boolean priorBypass = FEC_FileActionOnReviewService.bypassMyCaseApiFileUpload;
+        FEC_FileActionOnReviewService.bypassMyCaseApiFileUpload = true;
+        try {
+            Set<Id> blockedCases = FEC_FileActionOnReviewService.getCaseIdsThatBlockFileActions(
+                new Set<Id>{ reviewCase.Id }
+            );
+            System.assertEquals(0, blockedCases.size(), 'MyCase bypass không chặn Review Case.');
+        } finally {
+            FEC_FileActionOnReviewService.bypassMyCaseApiFileUpload = priorBypass;
+        }
+    }
+
+    @IsTest
+    static void testBypassChatHubFileUpload_skipsReviewBlock() {
+        Case reviewCase = insertCase(
+            'Review Case ChatHub Bypass',
+            FEC_ConstantCommon.INTERACTION_HANDLING_MODE
+        );
+        setCaseViewMode(reviewCase.Id, FEC_ConstantCommon.INTERACTION_REVIEW_MODE);
+
+        Boolean priorBypass = FEC_FileActionOnReviewService.bypassChatHubFileUpload;
+        FEC_FileActionOnReviewService.bypassChatHubFileUpload = true;
+        try {
+            Set<Id> blockedCases = FEC_FileActionOnReviewService.getCaseIdsThatBlockFileActions(
+                new Set<Id>{ reviewCase.Id }
+            );
+            System.assertEquals(0, blockedCases.size(), 'ChatHub bypass không chặn Review Case.');
+        } finally {
+            FEC_FileActionOnReviewService.bypassChatHubFileUpload = priorBypass;
+        }
+    }
 }
