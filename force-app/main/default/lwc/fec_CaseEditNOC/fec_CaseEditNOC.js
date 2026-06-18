@@ -48,6 +48,7 @@ import {
   ACTION_REOPEN, 
   ACTION_RECALL,
   RECORD_TYPE_INTERNAL_CASE,
+  RECORD_TYPE_CUSTOMER_CASE,
   VIEW_MODE_HANDLING, 
   VIEW_MODE_REVIEW, 
   // STR_UNDEFINED, 
@@ -55,6 +56,10 @@ import {
   INTERNAL_UBANK,
   NON_EXISTING_CUSTOMER_PRODUCT_NAME,
   UBANK_PRODUCT_NAME,
+  INSURANCE_PRODUCT_NAME,
+  B2_PRODUCT_NAME,
+  CASH24_PRODUCT_NAME,
+  PRODUCT_TYPE_LOAN_CASE,
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
   FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
@@ -1147,13 +1152,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     const accountType = message.accountType;
     const isInternalType = accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK;
+    const mappedProductTypeLabel = this._getMappedProductTypeLabelForAccountContract(accountType);
+    const shouldAutoSelectProductType = isInternalType || !!mappedProductTypeLabel;
     const hasExistingNOCSelection =
       !!this.productTypeSelectedId ||
       !!this.categorySelectedId ||
       !!this.subCategorySelectedId ||
       !!this.subCodeSelectedId;
 
-    if (this._incomingAccountType == null && hasExistingNOCSelection && !isInternalType) {
+    if (this._incomingAccountType == null && hasExistingNOCSelection && !shouldAutoSelectProductType) {
       this._incomingAccountType = accountType;
       this._accountContractPl = accountType;
       this._refreshProductTypeOptionsForAccountContract(accountType);
@@ -1193,6 +1200,26 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
       const option = (this._productTypeOptionlstFull ?? this.productTypeOptionlst)?.find(
         (opt) => opt.label === accountType
+      );
+
+      if (option) {
+        setTimeout(() => {
+          this.productTypeSelectedId = option.value;
+          this.disableProdType = true;
+          this._internalProductTypeId = option.value;
+          this._internalApplied = false;
+
+          const categoryEl = this.template.querySelector(`c-fec_-combo-box[data-id="category"]`);
+          if (categoryEl) categoryEl.disabled = false;
+
+          this.getCategory();
+        }, 50);
+      }
+    } else if (mappedProductTypeLabel) {
+      this._refreshProductTypeOptionsForAccountContract(accountType);
+
+      const option = (this._productTypeOptionlstFull ?? this.productTypeOptionlst)?.find(
+        (opt) => opt.label === mappedProductTypeLabel
       );
 
       if (option) {
@@ -1520,6 +1547,22 @@ export default class Fec_CaseEditNOC extends LightningElement {
   //   picker.clearSelection();
   // }
 
+  _getMappedProductTypeLabelForAccountContract(accountType) {
+    if (
+      this.recordTypeDevName !== RECORD_TYPE_INTERNAL_CASE &&
+      this.recordTypeDevName !== RECORD_TYPE_CUSTOMER_CASE
+    ) {
+      return null;
+    }
+    if (accountType === INSURANCE_PRODUCT_NAME) {
+      return INSURANCE_PRODUCT_NAME;
+    }
+    if (accountType === B2_PRODUCT_NAME || accountType === CASH24_PRODUCT_NAME) {
+      return PRODUCT_TYPE_LOAN_CASE;
+    }
+    return null;
+  }
+
   // Internal Case + Account/Contract = Non-Existing Customer → ẩn Ubank / Internal Request ở Product Type
   _isInternalCaseWithNonExistingAccount(accountType) {
     const pl = accountType ?? this._incomingAccountType ?? this._accountContractPl;
@@ -1579,6 +1622,23 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.disableProdType = true;
           this._internalProductTypeId = internalOption.value;
           this._internalApplied = false; 
+          this.getCategory();
+          this.getSubCategory();
+          this.getSubCode();
+        }
+      }
+      const mappedProductTypeLabel = this._getMappedProductTypeLabelForAccountContract(
+        this._accountContractPl ?? this._incomingAccountType
+      );
+      if (mappedProductTypeLabel && !this.productTypeSelectedId) {
+        const mappedOption = this._productTypeOptionlstFull?.find(
+          (opt) => opt.label === mappedProductTypeLabel
+        );
+        if (mappedOption) {
+          this.productTypeSelectedId = mappedOption.value;
+          this.disableProdType = true;
+          this._internalProductTypeId = mappedOption.value;
+          this._internalApplied = false;
           this.getCategory();
           this.getSubCategory();
           this.getSubCode();

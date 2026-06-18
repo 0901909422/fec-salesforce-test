@@ -19,6 +19,16 @@
             <fullName>Ubank</fullName>
             <default>false</default>
         </values>
+        <value>
+            <fullName>B2</fullName>
+            <default>false</default>
+            <label>B2</label>
+        </value>
+        <value>
+            <fullName>Cash24</fullName>
+            <default>false</default>
+            <label>Cash24</label>
+        </value>
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Card_Block_Reason__c</picklist>
