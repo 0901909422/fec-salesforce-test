@@ -41,50 +41,18 @@ private class FEC_FetchCollectDataServiceCallout_Test {
     }
 
     @IsTest
-    static void testFetchCollectionData_CardUsesAccountNumberForAnyRecordType() {
-        FEC_Product_Type__c cardProduct = new FEC_Product_Type__c(
-            Name = FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE,
-            FEC_Code__c = 'CARD',
-            FEC_Active__c = true
-        );
-        insert cardProduct;
-
-        Case c = new Case(
-            Subject = 'Card Collection',
-            FEC_Contract_Number__c = 'CONTRACT-999',
-            FEC_Account_Number__c = 'ACC-123456789',
-            FEC_Product_Type__c = cardProduct.Id
-        );
-        FEC_CaseTriggerHandler.isExecuting = true;
-        try {
-            insert c;
-        } finally {
-            FEC_CaseTriggerHandler.isExecuting = false;
-        }
-
+    static void testFetchCollectionData_usesContractNumberFromCaller() {
         Test.setMock(HttpCalloutMock.class, new EndpointAssertMock('ACC-123456789'));
 
         Test.startTest();
         FEC_FetchCollectionDataServiceCallout.CollectionDataResponse res =
             FEC_FetchCollectionDataServiceCallout.fetchCollectionData(
-                'CONTRACT-999',
-                System.Label.Fetch_Collection_Data_Record_Type_Allocation_History,
-                c.Id
+                'ACC-123456789',
+                System.Label.Fetch_Collection_Data_Record_Type_Allocation_History
             );
         Test.stopTest();
 
         System.assertEquals('true', res.Success);
-    }
-
-    @IsTest
-    static void testResolveContractNumberForApi_withoutCaseIdKeepsContractNumber() {
-        System.assertEquals(
-            'CONTRACT-001',
-            FEC_FetchCollectionDataServiceCallout.resolveContractNumberForApi(
-                'CONTRACT-001',
-                null
-            )
-        );
     }
 
     // Helper class để Mock HTTP Response

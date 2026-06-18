@@ -4,8 +4,11 @@ import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'light
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import { formatDateField } from 'c/fec_DateFormatter';
-import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
-import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
+import {
+    COLLECTION_CASE_FIELDS,
+    parseCollectionCaseRecord,
+    getCollectionApiContractNumber
+} from 'c/fec_CollectionDataUtils';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
 import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
@@ -17,7 +20,7 @@ import FEC_NFU_Reason from '@salesforce/label/c.FEC_NFU_Reason';
 import FEC_NFU_Code from '@salesforce/label/c.FEC_NFU_Code';
 import FEC_NFUExpiryDate from '@salesforce/label/c.FEC_NFUExpiryDate';
 
-const FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
+const FIELDS = COLLECTION_CASE_FIELDS;
 
 const SECTION_LABEL = 'NFU';
 const EMPTY = '-';
@@ -37,8 +40,7 @@ export default class Fec_NFU extends LightningElement {
     /** Bật trên App Builder: bỏ qua API, hiển thị lưới với dữ liệu mẫu (chỉ để test FE). */
     @api previewSampleData = false;
 
-    _contractNumber;
-    _recordTypeName;
+    _caseInfo;
 
     @track nfuData;
     @track isLoading = true;
@@ -85,8 +87,7 @@ export default class Fec_NFU extends LightningElement {
             return;
         }
         if (data) {
-            this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
-            this._recordTypeName = data.fields.RecordType?.displayValue;
+            this._caseInfo = parseCollectionCaseRecord(data);
             this.loadNfu();
         } else if (error) {
             this.nfuData = null;
@@ -104,23 +105,22 @@ export default class Fec_NFU extends LightningElement {
         this.isLoading = true;
 
         try {
-            if (!this._contractNumber || !this._recordTypeName) {
+            const contractNumber = getCollectionApiContractNumber(this._caseInfo);
+            if (!contractNumber || !this._caseInfo?.recordTypeName) {
                 this.nfuData = null;
                 return;
             }
 
             const response = this._startDate && this._endDate
                 ? await fetchCollectionDataWithDates({
-                    contractNumber: this._contractNumber,
+                    contractNumber,
                     recordType: Fetch_Collection_Data_Record_Type_NFU,
                     startDate: this._startDate,
-                    endDate: this._endDate,
-                    caseId: this.recordId
+                    endDate: this._endDate
                 })
                 : await fetchCollectionData({
-                    contractNumber: this._contractNumber,
-                    recordType: Fetch_Collection_Data_Record_Type_NFU,
-                    caseId: this.recordId
+                    contractNumber,
+                    recordType: Fetch_Collection_Data_Record_Type_NFU
                 });
 
             const apiFailed =
