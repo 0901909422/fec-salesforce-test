@@ -29,6 +29,7 @@ public without sharing class FEC_PaymentHistoryController {
         @AuraEnabled public Date    paymentDate;
         @AuraEnabled public Decimal paymentAmount;
         @AuraEnabled public String  paymentChannel;
+        @AuraEnabled public Datetime createdDate;
     }
 
     /* =====================================================
@@ -352,16 +353,18 @@ public without sharing class FEC_PaymentHistoryController {
             SELECT
                 FEC_Payment_Date__c,
                 FEC_Payment_Amount__c,
-                FEC_Payment_Channel__c
+                FEC_Payment_Channel__c,
+                CreatedDate
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
             AND FEC_Payment_Channel__c != NULL
-            ORDER BY FEC_Payment_Date__c DESC
+            ORDER BY FEC_Payment_Date__c DESC, CreatedDate DESC
         ]) {
             RealtimePaymentDTO dto = new RealtimePaymentDTO();
             dto.paymentDate    = r.FEC_Payment_Date__c;
             dto.paymentAmount  = r.FEC_Payment_Amount__c;
             dto.paymentChannel = r.FEC_Payment_Channel__c;
+            dto.createdDate    = r.CreatedDate;
             result.add(dto);
         }
 

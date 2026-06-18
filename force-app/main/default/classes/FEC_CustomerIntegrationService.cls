@@ -72,21 +72,48 @@ public without sharing class FEC_CustomerIntegrationService {
             ? cifNumber
             : hist.FEC_CIF_Number__c;
 
-        if (String.isNotBlank(acctNum) || String.isNotBlank(contractNum)) {
-            String cifFromList = enrichFromCustomerList(hist, result, acctNum, contractNum);
-            if (String.isNotBlank(cifFromList)) {
-                effectiveCif = cifFromList;
+        FEC_CommonUltils.beginDeferredApiLogging();
+        try {
+            if (String.isNotBlank(acctNum) || String.isNotBlank(contractNum)) {
+                String cifFromList = enrichFromCustomerList(hist, result, acctNum, contractNum);
+                if (String.isNotBlank(cifFromList)) {
+                    effectiveCif = cifFromList;
+                }
             }
+
+            if (String.isBlank(effectiveCif)) {
+                return result;
+            }
+
+            String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
+            String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
+            String timestampZ = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
+
+            return syncCustomerCallouts(
+                hist,
+                result,
+                effectiveCif,
+                acctNum,
+                contractNum,
+                requestor,
+                timestamp,
+                timestampZ
+            );
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
+    }
 
-        if (String.isBlank(effectiveCif)) {
-            return result;
-        }
-
-        String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
-        String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
-        String timestampZ = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
-
+    private static ResultDTO syncCustomerCallouts(
+        FEC_Customer_History__c hist,
+        ResultDTO result,
+        String effectiveCif,
+        String acctNum,
+        String contractNum,
+        String requestor,
+        String timestamp,
+        String timestampZ
+    ) {
         FEC_GetCustomerInfoBasic.ResponseWrapper basicRes;
         FEC_GetAddressesList.ResponseWrapper addressesRes;
         FEC_GetDocumentsList.ResponseWrapper docRes;
@@ -239,7 +266,11 @@ public without sharing class FEC_CustomerIntegrationService {
 
         try {
             if (addressesRes != null && addressesRes.Addresses != null) {
-                applyAddressesListFromApi(hist, addressesRes.Addresses);
+                String mailingInd = null;
+                if (cardRes?.CardBasicInfo?.MainCard != null) {
+                    mailingInd = cardRes.CardBasicInfo.MainCard.MailingInd;
+                }
+                applyAddressesListFromApi(hist, addressesRes.Addresses, mailingInd);
             }
         } catch (Exception e) {
             System.debug(
@@ -735,7 +766,11 @@ public without sharing class FEC_CustomerIntegrationService {
             return null;
         }
 
-        return getCardAccountNumberFromCaseRecord(cases[0]);
+        String accountNumber = getCardAccountNumberFromCaseRecord(cases[0]);
+        if (String.isBlank(accountNumber) && String.isNotBlank(hist.FEC_Account_Number__c)) {
+            return hist.FEC_Account_Number__c;
+        }
+        return accountNumber;
     }
 
     private static String getCardAccountNumberFromCaseRecord(Case c) {
@@ -921,7 +956,8 @@ public without sharing class FEC_CustomerIntegrationService {
         Boolean showIppAccruedInterest = FEC_CardPaymentController.resolveShowIppAccruedInterest(hist.Id);
 
         for (FEC_GetCardPlanInfo.CardPlan plan : cardPlanRes.plans) {
-            if (plan == null) {
+            if (plan == null
+                || (String.isBlank(plan.recordNumber) && String.isBlank(plan.planNumber))) {
                 continue;
             }
 
@@ -1184,15 +1220,16 @@ public without sharing class FEC_CustomerIntegrationService {
 
     private static void applyAddressesListFromApi(
         FEC_Customer_History__c hist,
-        List<FEC_GetAddressesList.AddressInfo> rawAddresses
+        List<FEC_GetAddressesList.AddressInfo> rawAddresses,
+        String mailingInd
     ) {
         if (hist == null || hist.Id == null || rawAddresses == null || rawAddresses.isEmpty()) {
             return;
         }
 
         List<FEC_GetAddressesList.AddressInfo> addressesToSync =
-            filterDuplicatePermanentAddressTypes(rawAddresses);
-        if (addressesToSync == null || addressesToSync.isEmpty()) {
+            collapseApiAddressesBySfType(rawAddresses);
+        if (addressesToSync.isEmpty()) {
             return;
         }
 
@@ -1208,22 +1245,12 @@ public without sharing class FEC_CustomerIntegrationService {
         ];
         Map<Id, FEC_Country__c> countryById = buildCountryByIdMap(allCountries);
 
-        Map<String, FEC_Address_Info__c> existingMap = new Map<String, FEC_Address_Info__c>();
-        for (FEC_Address_Info__c a : [
-            SELECT Id, FEC_Address_Type__c,
-                FEC_Building__c, FEC_Number__c, FEC_Street__c,
-                FEC_District__c, FEC_Province__c,
-                FEC_Country__c, FEC_ZipCode__c,
-                FEC_Full_Address__c
-            FROM FEC_Address_Info__c
-            WHERE FEC_Customer_History__c = :hist.Id
-              AND FEC_Case__c = null
-        ]) {
-            existingMap.put(a.FEC_Address_Type__c, a);
-        }
+        List<FEC_Address_Info__c> duplicateMasterRows = new List<FEC_Address_Info__c>();
+        Map<String, FEC_Address_Info__c> existingMap =
+            buildExistingMasterAddressMap(hist.Id, duplicateMasterRows);
 
         List<FEC_Address_Info__c> toInsert = new List<FEC_Address_Info__c>();
-        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
+        Map<Id, FEC_Address_Info__c> toUpdateById = new Map<Id, FEC_Address_Info__c>();
 
         for (FEC_GetAddressesList.AddressInfo ai : addressesToSync) {
             if (ai == null) {
@@ -1244,6 +1271,7 @@ public without sharing class FEC_CustomerIntegrationService {
                 addr.FEC_Customer_History__c = hist.Id;
                 addr.FEC_Address_Type__c = type;
                 toInsert.add(addr);
+                existingMap.put(type, addr);
             }
 
             addr.FEC_Building__c = ai.Building;
@@ -1287,16 +1315,90 @@ public without sharing class FEC_CustomerIntegrationService {
             }
 
             if (addr.Id != null) {
-                toUpdate.add(addr);
+                toUpdateById.put(addr.Id, addr);
             }
         }
 
         if (!toInsert.isEmpty()) {
             insert toInsert;
         }
-        if (!toUpdate.isEmpty()) {
-            update toUpdate;
+        if (!toUpdateById.isEmpty()) {
+            update toUpdateById.values();
         }
+        if (!duplicateMasterRows.isEmpty()) {
+            delete duplicateMasterRows;
+        }
+
+        if (String.isNotBlank(mailingInd)) {
+            FEC_MainInfoController.syncMailingAddressFlagsFromCardMailingInd(hist.Id, mailingInd);
+        }
+    }
+
+    /**
+     * API có thể trả nhiều dòng cùng AddressType (vd. 3 CURRES) — SF chỉ giữ 1 bản ghi / FEC_Address_Type__c.
+     * Bỏ qua loại không map (NIDADDRESS, PERMANENT, …); cùng type thì dòng sau ghi đè (last wins).
+     */
+    private static List<FEC_GetAddressesList.AddressInfo> collapseApiAddressesBySfType(
+        List<FEC_GetAddressesList.AddressInfo> raw
+    ) {
+        List<FEC_GetAddressesList.AddressInfo> out = new List<FEC_GetAddressesList.AddressInfo>();
+        if (raw == null || raw.isEmpty()) {
+            return out;
+        }
+        Map<String, FEC_GetAddressesList.AddressInfo> lastBySfType =
+            new Map<String, FEC_GetAddressesList.AddressInfo>();
+        List<String> sfTypeOrder = new List<String>();
+        for (FEC_GetAddressesList.AddressInfo ai : raw) {
+            if (ai == null) {
+                continue;
+            }
+            String sfType = mapApiAddressTypeToSF(ai.AddressType);
+            if (String.isBlank(sfType)) {
+                continue;
+            }
+            if (!lastBySfType.containsKey(sfType)) {
+                sfTypeOrder.add(sfType);
+            }
+            lastBySfType.put(sfType, ai);
+        }
+        for (String sfType : sfTypeOrder) {
+            out.add(lastBySfType.get(sfType));
+        }
+        return out;
+    }
+
+    /** Một master row / FEC_Address_Type__c; các bản ghi trùng type (sync lỗi trước đó) đưa vào duplicateMasterRows để xóa. */
+    private static Map<String, FEC_Address_Info__c> buildExistingMasterAddressMap(
+        Id customerHistoryId,
+        List<FEC_Address_Info__c> duplicateMasterRows
+    ) {
+        Map<String, FEC_Address_Info__c> existingMap = new Map<String, FEC_Address_Info__c>();
+        if (customerHistoryId == null) {
+            return existingMap;
+        }
+        for (FEC_Address_Info__c a : [
+            SELECT Id, FEC_Address_Type__c,
+                FEC_Building__c, FEC_Number__c, FEC_Street__c,
+                FEC_District__c, FEC_Province__c,
+                FEC_Country__c, FEC_ZipCode__c,
+                FEC_Full_Address__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_Case__c = null
+            ORDER BY CreatedDate ASC
+        ]) {
+            if (String.isBlank(a.FEC_Address_Type__c)) {
+                continue;
+            }
+            if (existingMap.containsKey(a.FEC_Address_Type__c)) {
+                if (duplicateMasterRows != null) {
+                    duplicateMasterRows.add(a);
+                }
+            } else {
+                existingMap.put(a.FEC_Address_Type__c, a);
+            }
+        }
+        return existingMap;
     }
 
     private static Map<Id, FEC_Country__c> buildCountryByIdMap(List<FEC_Country__c> rows) {
@@ -1442,36 +1544,9 @@ public without sharing class FEC_CustomerIntegrationService {
         if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE;
         }
-        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
-            || apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT;
         }
         return null;
-    }
-
-    private static List<FEC_GetAddressesList.AddressInfo> filterDuplicatePermanentAddressTypes(
-        List<FEC_GetAddressesList.AddressInfo> raw
-    ) {
-        if (raw == null || raw.isEmpty()) {
-            return raw;
-        }
-        Boolean hasPermnent = false;
-        for (FEC_GetAddressesList.AddressInfo ai : raw) {
-            if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
-                hasPermnent = true;
-                break;
-            }
-        }
-        if (!hasPermnent) {
-            return raw;
-        }
-        List<FEC_GetAddressesList.AddressInfo> out = new List<FEC_GetAddressesList.AddressInfo>();
-        for (FEC_GetAddressesList.AddressInfo ai : raw) {
-            if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
-                continue;
-            }
-            out.add(ai);
-        }
-        return out;
     }
 }

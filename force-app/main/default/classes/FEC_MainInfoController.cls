@@ -71,15 +71,15 @@ public without sharing class FEC_MainInfoController {
         @AuraEnabled public String number_x;
         @AuraEnabled public String street;
         @AuraEnabled public String district;
+        /** Tên quận/huyện (Ward trên UI) — resolve từ master / CIF Ward / SF record. */
+        @AuraEnabled public String districtLabel;
         @AuraEnabled public String city;
         @AuraEnabled public Boolean found;
         @AuraEnabled public String message;
     }
 
     private class AddressUpdateResult {
-        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
         List<AddressDTO> dtoList = new List<AddressDTO>();
-        /** null = đủ điều kiện đồng bộ; non-null = đã format cho UI địa chỉ. */
         FEC_CaseBusinessService.Error addressEligibilityError;
     }
 
@@ -149,27 +149,42 @@ public without sharing class FEC_MainInfoController {
             );
             /* Luôn lấy địa chỉ từ FEC_Address_Info__c — không tin mảng addresses trong JSON cache (dễ lệch sau khi đồng bộ API / map PERMNENT). */
             cached.addresses = buildAddressDTOListFromHistory(hist.Id);
-            Boolean phoneUpdated = syncPrimaryPhoneForCacheHit(
-                cached, hist, productTypeName, accountNumber, contractNumber
-            );
-            if (phoneUpdated) {
-                hist.FEC_API_Cache__c = JSON.serialize(cached);
-                update hist;
-            }
+
             if (cached.addresses != null && !cached.addresses.isEmpty()) {
+                Boolean phoneUpdated = syncPrimaryPhoneForCacheHit(
+                    cached, hist, productTypeName, accountNumber, contractNumber
+                );
+                Boolean mailingFlagsUpdated = refreshMailingAddressFlagsForCardProduct(
+                    hist.Id, productTypeName, accountNumber
+                );
+                if (mailingFlagsUpdated) {
+                    cached.addresses = buildAddressDTOListFromHistory(hist.Id);
+                }
+                if (phoneUpdated) {
+                    hist.FEC_API_Cache__c = JSON.serialize(cached);
+                    update hist;
+                }
                 applyAddressEligibilityToDto(cached, hist.Id, null);
                 applyPendingAddressFields(cached, c.Id);
                 return cached;
             }
-            /* Còn cache thông tin KH nhưng đã xóa hết địa chỉ trên SF — phải gọi lại GetAddressesList, không return sớm với mảng rỗng. */
-            if (String.isNotBlank(cifNumber)) {
+
+            // Cache có KH nhưng chưa có địa chỉ: GetAddressesList trước (tránh @future log chặn callout).
+            String effectiveCif = String.isNotBlank(cifNumber)
+                ? cifNumber
+                : cached.cifNumber;
+            if (String.isNotBlank(effectiveCif)) {
                 try {
-                    AddressUpdateResult addrResult = updateAddressesFromApi(hist, cifNumber);
+                    AddressUpdateResult addrResult = updateAddressesFromApi(
+                        hist, effectiveCif, accountNumber, productTypeName, true
+                    );
                     cached.addresses = addrResult.dtoList;
                     cached.addressUpdateNotEligibleTitle = null;
                     cached.addressUpdateNotEligibleReasons = null;
-                    hist.FEC_API_Cache__c = JSON.serialize(cached);
-                    update hist;
+                    if (cached.addresses != null && !cached.addresses.isEmpty()) {
+                        hist.FEC_API_Cache__c = JSON.serialize(cached);
+                        update hist;
+                    }
                     applyAddressEligibilityToDto(cached, hist.Id, addrResult);
                 } catch (Exception e) {
                     System.debug('### GetAddressesList (cache + empty addresses resync) FAILED: ' + e.getMessage());
@@ -178,73 +193,86 @@ public without sharing class FEC_MainInfoController {
             } else {
                 applyAddressEligibilityToDto(cached, hist.Id, null);
             }
+
+            Boolean phoneUpdatedAfterAddrSync = syncPrimaryPhoneForCacheHit(
+                cached, hist, productTypeName, accountNumber, contractNumber
+            );
+            if (phoneUpdatedAfterAddrSync) {
+                hist.FEC_API_Cache__c = JSON.serialize(cached);
+                update hist;
+            }
             applyPendingAddressFields(cached, c.Id);
             return cached;
         }
 
         /* =====================================================
-         * CALL API
+         * CALL API — hoãn ghi FEC_API_Log__c; GetAddressesList trước GetCustomerList (log GetCustomerList = DML chặn callout tiếp).
          * ===================================================== */
-
-        /* ===== 1. GetCustomerInfoBasic ===== */
-        try {
-            FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
-                FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
-                    cifNumber
-                );
-
-            if (basicRes != null && basicRes.CustomerBasicInfo != null) {
-                hist.FEC_First_Name__c     = basicRes.CustomerBasicInfo.FirstName;
-                hist.FEC_Middle_Name__c    = basicRes.CustomerBasicInfo.MiddleName;
-                hist.FEC_Last_Name__c      = basicRes.CustomerBasicInfo.LastName;
-                hist.FEC_Customer_Name__c  = basicRes.CustomerBasicInfo.FullName;
-                hist.FEC_Date_of_Birth__c  = basicRes.CustomerBasicInfo.Birthday;
-                hist.FEC_Gender__c         = basicRes.CustomerBasicInfo.Gender;
-                hist.FEC_Marital_Status__c = basicRes.CustomerBasicInfo.MaritalStatus;
-                hist.FEC_CIF_Number__c     = basicRes.CustomerBasicInfo.CIFNumber;
-            }
-        } catch (Exception e) {
-            System.debug('### GetCustomerInfoBasic FAILED: ' + e.getMessage());
-        }
-
-        /* ===== 2. GetDocumentsList ===== */
-        try {
-            FEC_GetDocumentsList.ResponseWrapper docRes =
-                FEC_GetDocumentsList.callGetDocumentsList(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    cifNumber
-                );
-
-            if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
-                hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].IDDocumentNumber;
-                hist.FEC_Date_of_Issue__c           = docRes.Documents[0].IssueDate;
-                hist.FEC_Place_of_Issue__c          = docRes.Documents[0].IssuePlace;
-            }
-        } catch (Exception e) {
-            System.debug('### GetDocumentsList FAILED: ' + e.getMessage());
-        }
-
-        /* ===== 3. GetCustomerList ===== */
-        try {
-            String apiPhone = getPrimaryPhoneOnly(productTypeName, accountNumber, contractNumber);
-            if (String.isNotBlank(apiPhone)) {
-                hist.FEC_Primary_Phone__c = apiPhone;
-            }
-        } catch (Exception e) {
-            System.debug('### GetCustomerList FAILED: ' + e.getMessage());
-        }
-
-        /* ===== 4. GetAddressesList ===== */
+        FEC_CommonUltils.beginDeferredApiLogging();
         AddressUpdateResult addrResult = new AddressUpdateResult();
         try {
-            addrResult = updateAddressesFromApi(hist,cifNumber);
-        } catch (Exception e) {
-            System.debug('### GetAddressesList FAILED: ' + e.getMessage());
+            /* ===== 1. GetCustomerInfoBasic ===== */
+            try {
+                FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
+                    FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
+                        FEC_CommonUltils.generateTransactionId(),
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
+                        cifNumber
+                    );
+
+                if (basicRes != null && basicRes.CustomerBasicInfo != null) {
+                    hist.FEC_First_Name__c     = basicRes.CustomerBasicInfo.FirstName;
+                    hist.FEC_Middle_Name__c    = basicRes.CustomerBasicInfo.MiddleName;
+                    hist.FEC_Last_Name__c      = basicRes.CustomerBasicInfo.LastName;
+                    hist.FEC_Customer_Name__c  = basicRes.CustomerBasicInfo.FullName;
+                    hist.FEC_Date_of_Birth__c  = basicRes.CustomerBasicInfo.Birthday;
+                    hist.FEC_Gender__c         = basicRes.CustomerBasicInfo.Gender;
+                    hist.FEC_Marital_Status__c = basicRes.CustomerBasicInfo.MaritalStatus;
+                    hist.FEC_CIF_Number__c     = basicRes.CustomerBasicInfo.CIFNumber;
+                }
+            } catch (Exception e) {
+                System.debug('### GetCustomerInfoBasic FAILED: ' + e.getMessage());
+            }
+
+            try {
+                FEC_GetDocumentsList.ResponseWrapper docRes =
+                    FEC_GetDocumentsList.callGetDocumentsList(
+                        FEC_CommonUltils.generateTransactionId(),
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                        cifNumber
+                    );
+
+                if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
+                    hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].IDDocumentNumber;
+                    hist.FEC_Date_of_Issue__c           = docRes.Documents[0].IssueDate;
+                    hist.FEC_Place_of_Issue__c          = docRes.Documents[0].IssuePlace;
+                }
+            } catch (Exception e) {
+                System.debug('### GetDocumentsList FAILED: ' + e.getMessage());
+            }
+
+            /* ===== 3. GetAddressesList (trước GetCustomerList — log API của GetCustomerList insert DML) ===== */
+            try {
+                addrResult = updateAddressesFromApi(
+                    hist, cifNumber, accountNumber, productTypeName, true
+                );
+            } catch (Exception e) {
+                System.debug('### GetAddressesList FAILED: ' + e.getMessage());
+            }
+
+            /* ===== 4. GetCustomerList ===== */
+            try {
+                String apiPhone = getPrimaryPhoneOnly(productTypeName, accountNumber, contractNumber);
+                if (String.isNotBlank(apiPhone)) {
+                    hist.FEC_Primary_Phone__c = apiPhone;
+                }
+            } catch (Exception e) {
+                System.debug('### GetCustomerList FAILED: ' + e.getMessage());
+            }
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
         /* =====================================================
@@ -252,22 +280,17 @@ public without sharing class FEC_MainInfoController {
          * ===================================================== */
         update hist;
 
-        if (!addrResult.toUpdate.isEmpty()) {
-            update addrResult.toUpdate;
-        }
-
-        /* =====================================================
-         * BUILD DTO
-         * ===================================================== */
         MainInfoDTO dto = mapToDTO(hist);
         dto.addresses = addrResult.dtoList;
         dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
-        /* ===== SAVE CACHE ===== */
+        /* ===== SAVE CACHE (chỉ khi đã có địa chỉ) ===== */
         dto.addressUpdateNotEligibleTitle = null;
         dto.addressUpdateNotEligibleReasons = null;
-        hist.FEC_API_Cache__c = JSON.serialize(dto);
-        update hist;
+        if (dto.addresses != null && !dto.addresses.isEmpty()) {
+            hist.FEC_API_Cache__c = JSON.serialize(dto);
+            update hist;
+        }
 
         applyAddressEligibilityToDto(dto, hist.Id, addrResult);
         applyPendingAddressFields(dto, c.Id);
@@ -280,7 +303,7 @@ public without sharing class FEC_MainInfoController {
     @AuraEnabled(cacheable=true)
     public static List<PicklistOptionDTO> getProvinceOptionsForAddress() {
         List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
-        /* Khớp bộ tỉnh API CIF (FEC_Country__c.FEC_Code__c = 2) như form Add New Address — tránh trùng nhãn từ nhiều quốc gia / bộ legacy. */
+        // Bộ tỉnh country FEC_Code__c = 2 (API CIF).
         for (FEC_Province__c p : [
             SELECT Name, FEC_Code__c, FEC_Name_VN__c
             FROM FEC_Province__c
@@ -301,11 +324,7 @@ public without sharing class FEC_MainInfoController {
         return opts;
     }
 
-    /**
-     * Tỉnh/Thành phố lookup options cho trường FEC_Province_City__c (FEC_Additional_Info__c).
-     * Trả về { label: tên hiển thị, value: Id record FEC_Province__c } — bộ quốc gia 2 (Việt Nam).
-     * Dùng cho c-fec_searchable-combobox thay thế standard lookup để tìm kiếm chuỗi con / không dấu.
-     */
+    /** Lookup tỉnh/TP (value = FEC_Province__c Id, country 2) cho searchable combobox. */
     @AuraEnabled(cacheable=true)
     public static List<PicklistOptionDTO> getProvinceCityLookupOptions() {
         List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
@@ -325,9 +344,7 @@ public without sharing class FEC_MainInfoController {
         return opts;
     }
 
-    /**
-     * Danh sách tỉnh/thành theo mã quốc gia master (FEC_Country__c.FEC_Code__c), ví dụ "2" cho form thêm địa chỉ mới.
-     */
+    /** Tỉnh/thành theo FEC_Country__c.FEC_Code__c. */
     @AuraEnabled(cacheable=true)
     public static List<PicklistOptionDTO> getProvinceOptionsForCountryFecCode(String fecCountryCode) {
         List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
@@ -394,92 +411,6 @@ public without sharing class FEC_MainInfoController {
             opts.add(o);
         }
         return opts;
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static List<PicklistOptionDTO> getWardOptionsForProvinceCode(String provinceCode) {
-        List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
-        if (String.isBlank(provinceCode)) {
-            return opts;
-        }
-        String code = provinceCode.trim();
-        List<FEC_Province__c> provs = [
-            SELECT Id
-            FROM FEC_Province__c
-            WHERE FEC_Code__c = :code
-            ORDER BY FEC_Country__r.FEC_Code__c NULLS LAST
-            LIMIT 1
-        ];
-        if (provs.isEmpty()) {
-            return opts;
-        }
-        Id provinceId = provs[0].Id;
-        for (FEC_Ward__c w : [
-            SELECT Name, FEC_Code__c, FEC_Name_VN__c
-            FROM FEC_Ward__c
-            WHERE FEC_Province__c = :provinceId
-            ORDER BY FEC_Name_VN__c NULLS LAST, Name
-        ]) {
-            if (String.isBlank(w.FEC_Code__c)) {
-                continue;
-            }
-            PicklistOptionDTO o = new PicklistOptionDTO();
-            o.value = w.FEC_Code__c;
-            o.label = FEC_CommonUltils.picklistLabelFromFecNameVn(w.FEC_Name_VN__c);
-            if (String.isBlank(o.label)) {
-                continue;
-            }
-            opts.add(o);
-        }
-        return opts;
-    }
-
-    /**
-     * Gọi Update Customer Address (SOAP); ghi API log sau khi callout xong (không log trong class API).
-     */
-    @AuraEnabled
-    public static FEC_UpdateCustomerAddress.UpdateResult updateCustomerAddressParams(
-        String caseId,
-        String sfAddressType,
-        String cifNumber,
-        String addressId,
-        String addressType,
-        String number_x,
-        String building,
-        String street,
-        String district,
-        String city,
-        String propertyStatus,
-        String years,
-        String months,
-        String isMailingAddress,
-        String isPrimary,
-        String receiveStatement,
-        String cardDelivery
-    ) {
-        try {
-            return FEC_UpdateCustomerAddress.updateCustomerAddressParams(
-                caseId,
-                sfAddressType,
-                cifNumber,
-                addressId,
-                addressType,
-                number_x,
-                building,
-                street,
-                district,
-                city,
-                propertyStatus,
-                years,
-                months,
-                isMailingAddress,
-                isPrimary,
-                receiveStatement,
-                cardDelivery
-            );
-        } finally {
-            FEC_UpdateCustomerAddress.logApiResponse();
-        }
     }
 
     @AuraEnabled
@@ -580,27 +511,10 @@ public without sharing class FEC_MainInfoController {
         }
 
         FEC_GetAddressesList.AddressInfo found;
-        if (sfAddressType == FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT) {
-            for (FEC_GetAddressesList.AddressInfo ai : res.Addresses) {
-                if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
-                    found = ai;
-                    break;
-                }
-            }
-            if (found == null) {
-                for (FEC_GetAddressesList.AddressInfo ai : res.Addresses) {
-                    if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
-                        found = ai;
-                        break;
-                    }
-                }
-            }
-        } else {
-            for (FEC_GetAddressesList.AddressInfo ai : res.Addresses) {
-                if (ai != null && ai.AddressType == apiType) {
-                    found = ai;
-                    break;
-                }
+        for (FEC_GetAddressesList.AddressInfo ai : res.Addresses) {
+            if (ai != null && ai.AddressType == apiType) {
+                found = ai;
+                break;
             }
         }
 
@@ -622,12 +536,17 @@ public without sharing class FEC_MainInfoController {
         dto.district = found.District;
         /* CIF có thể trả mã tỉnh thuộc bộ master legacy (1); combobox chỉ load bộ 2 — chuẩn hóa mã cho UI. */
         dto.city = FEC_UpdateCustomerAddress.remapProvinceCityCodeForCountryTwo(found.City);
+        dto.districtLabel = resolveDistrictLabelForMailingContext(
+            found.District,
+            dto.city,
+            found,
+            c.FEC_Account_or_Contract__c,
+            sfAddressType
+        );
         return dto;
     }
 
-    /**
-     * Đưa mã tỉnh/TP từ API hoặc JSON pending về cùng bộ FEC_Code__c với getProvinceOptionsForAddress (bộ quốc gia 2).
-     */
+    /** Chuẩn hóa mã tỉnh về bộ country 2 (combobox UI). */
     @AuraEnabled(cacheable=true)
     public static String normalizeProvinceCodeForAddressUi(String cityCode) {
         if (String.isBlank(cityCode)) {
@@ -649,18 +568,98 @@ public without sharing class FEC_MainInfoController {
         return null;
     }
 
-    private static String resolveMailingAddressDisplay(String mailingCode) {
-        if (String.isBlank(mailingCode)) {
-            return FEC_ConstantCommon.TEXT_NO;
+    /** MailingInd + AddressType → FEC_Mailing_Address__c (E/OFFICE, C/CURRES, R/PERMNENT). */
+    @TestVisible
+    private static Boolean isMailingAddressFromCardMailingInd(
+        String mailingInd,
+        String apiAddressType
+    ) {
+        if (String.isBlank(mailingInd) || String.isBlank(apiAddressType)) {
+            return false;
         }
-        String normalized = mailingCode.trim().toUpperCase();
-        if (normalized == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE
-            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_CURRES
-            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
-            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
-            return FEC_ConstantCommon.TEXT_YES;
+        String ind = mailingInd.trim().toUpperCase();
+        String type = apiAddressType.trim().toUpperCase();
+        if (ind == 'E' && type == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
+            return true;
         }
-        return FEC_ConstantCommon.TEXT_NO;
+        if (ind == 'C' && type == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
+            return true;
+        }
+        if (ind == 'R' && type == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
+            return true;
+        }
+        return false;
+    }
+
+    private static String fetchCardMailingInd(String accountNumber) {
+        if (String.isBlank(accountNumber)) {
+            return null;
+        }
+        FEC_GetCardBasicInfo.ResponseWrapper res =
+            FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                accountNumber
+            );
+        if (res?.CardBasicInfo?.MainCard != null) {
+            return res.CardBasicInfo.MainCard.MailingInd;
+        }
+        return null;
+    }
+
+    /** Gọi GetCardBasicInfo rồi cập nhật FEC_Mailing_Address__c trên master address list. */
+    public static Boolean syncMailingAddressFlagsFromCardMailingInd(
+        Id customerHistoryId,
+        String mailingInd
+    ) {
+        if (customerHistoryId == null) {
+            return false;
+        }
+        List<FEC_Address_Info__c> rows = [
+            SELECT Id, FEC_Address_Type__c, FEC_Mailing_Address__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_Case__c = null
+        ];
+        if (rows.isEmpty()) {
+            return false;
+        }
+        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
+        for (FEC_Address_Info__c addr : rows) {
+            String apiType = mapSfAddressTypeToApiCode(addr.FEC_Address_Type__c);
+            Boolean isMailing = isMailingAddressFromCardMailingInd(mailingInd, apiType);
+            if (addr.FEC_Mailing_Address__c != isMailing) {
+                addr.FEC_Mailing_Address__c = isMailing;
+                toUpdate.add(addr);
+            }
+        }
+        if (!toUpdate.isEmpty()) {
+            update toUpdate;
+        }
+        return true;
+    }
+
+    private static Boolean refreshMailingAddressFlagsForCardProduct(
+        Id customerHistoryId,
+        String productTypeName,
+        String accountNumber
+    ) {
+        if (customerHistoryId == null
+            || !FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.equalsIgnoreCase(productTypeName)
+            || String.isBlank(accountNumber)) {
+            return false;
+        }
+        try {
+            syncMailingAddressFlagsFromCardMailingInd(
+                customerHistoryId,
+                fetchCardMailingInd(accountNumber)
+            );
+            return true;
+        } catch (Exception e) {
+            System.debug('### MailingInd sync FAILED: ' + e.getMessage());
+            return false;
+        }
     }
 
     /** Xóa cache Main Info để loadMainInfo gọi lại API (sau cập nhật địa chỉ). */
@@ -684,11 +683,7 @@ public without sharing class FEC_MainInfoController {
         );
     }
 
-    /**
-     * Đồng bộ cờ mailing trong local SF theo lựa chọn UI:
-     * - selectedSfAddressType có giá trị: chỉ đúng 1 dòng type đó = true, các dòng còn lại = false.
-     * - selectedSfAddressType rỗng: set tất cả địa chỉ = false.
-     */
+    /** Đồng bộ FEC_Mailing_Address__c theo lựa chọn UI (1 type = true, còn lại false). */
     @AuraEnabled
     public static void syncLocalMailingAddressSelection(
         Id caseId,
@@ -746,6 +741,144 @@ public without sharing class FEC_MainInfoController {
         }
     }
 
+    /** Ghi pending (Case) lên master FEC_Address_Info__c sau Process Action. */
+    public static void syncMasterAddressesFromPendingRows(
+        Id customerHistoryId,
+        List<FEC_Address_Info__c> pendingRows
+    ) {
+        if (customerHistoryId == null || pendingRows == null || pendingRows.isEmpty()) {
+            return;
+        }
+
+        Map<String, FEC_Address_Info__c> masterByType = new Map<String, FEC_Address_Info__c>();
+        for (FEC_Address_Info__c m : [
+            SELECT Id, FEC_Address_Type__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_Case__c = null
+        ]) {
+            if (m != null && String.isNotBlank(m.FEC_Address_Type__c)) {
+                masterByType.put(m.FEC_Address_Type__c, m);
+            }
+        }
+
+        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
+        for (FEC_Address_Info__c pending : pendingRows) {
+            if (pending == null || String.isBlank(pending.FEC_Address_Type__c)) {
+                continue;
+            }
+
+            FEC_Address_Info__c master = resolveMasterAddressForPendingRow(
+                pending,
+                customerHistoryId,
+                masterByType
+            );
+            if (master == null) {
+                continue;
+            }
+
+            PendingAddressFieldValues vals = extractPendingAddressFieldValues(pending);
+            if (vals == null) {
+                continue;
+            }
+
+            Id provId = resolveProvinceIdFromFecCode(vals.provinceCode);
+            Id distId = resolveDistrictIdFromFecCode(vals.districtCode, provId);
+            Id countryId = resolveCountryIdFromProvinceId(provId);
+
+            FEC_Address_Info__c upd = new FEC_Address_Info__c(Id = master.Id);
+            upd.FEC_Building__c = vals.building;
+            upd.FEC_Number__c = vals.number_x;
+            upd.FEC_Street__c = vals.street;
+            if (provId != null) {
+                upd.FEC_Province__c = provId;
+                upd.FEC_Province_Text__c = null;
+            } else if (String.isNotBlank(vals.provinceCode)) {
+                upd.FEC_Province__c = null;
+                upd.FEC_Province_Text__c = vals.provinceCode.trim();
+            }
+            if (distId != null) {
+                upd.FEC_District__c = distId;
+                upd.FEC_District_Text__c = null;
+            } else if (String.isNotBlank(vals.districtCode)) {
+                upd.FEC_District__c = null;
+                upd.FEC_District_Text__c = vals.districtCode.trim();
+            }
+            if (countryId != null) {
+                upd.FEC_Country__c = countryId;
+            }
+            toUpdate.add(upd);
+        }
+
+        if (!toUpdate.isEmpty()) {
+            update toUpdate;
+        }
+    }
+
+    private class PendingAddressFieldValues {
+        String building;
+        String number_x;
+        String street;
+        String districtCode;
+        String provinceCode;
+    }
+
+    private static PendingAddressFieldValues extractPendingAddressFieldValues(
+        FEC_Address_Info__c pending
+    ) {
+        if (pending == null) {
+            return null;
+        }
+        PendingAddressFieldValues vals = new PendingAddressFieldValues();
+        String stored = pending.FEC_Address__c;
+        if (String.isNotBlank(stored) && stored.trim().startsWith('{')) {
+            try {
+                Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(stored);
+                vals.building = (String) data.get('building');
+                vals.number_x = (String) data.get('number_x');
+                vals.street = (String) data.get('street');
+                vals.districtCode = (String) data.get('district');
+                vals.provinceCode = (String) data.get('city');
+            } catch (Exception e) {
+                return null;
+            }
+        } else {
+            vals.building = pending.FEC_Building__c;
+            vals.number_x = pending.FEC_Number__c;
+            vals.street = pending.FEC_Street__c;
+            vals.districtCode = (pending.FEC_District__r != null)
+                ? pending.FEC_District__r.FEC_Code__c
+                : null;
+            vals.provinceCode = (pending.FEC_Province__r != null)
+                ? pending.FEC_Province__r.FEC_Code__c
+                : null;
+        }
+        return vals;
+    }
+
+    private static FEC_Address_Info__c resolveMasterAddressForPendingRow(
+        FEC_Address_Info__c pending,
+        Id customerHistoryId,
+        Map<String, FEC_Address_Info__c> masterByType
+    ) {
+        if (pending.FEC_Parent_Address__c != null) {
+            List<FEC_Address_Info__c> parents = [
+                SELECT Id, FEC_Customer_History__c, FEC_Case__c, FEC_Address_Type__c
+                FROM FEC_Address_Info__c
+                WHERE Id = :pending.FEC_Parent_Address__c
+                LIMIT 1
+            ];
+            if (
+                !parents.isEmpty() &&
+                parents[0].FEC_Case__c == null &&
+                parents[0].FEC_Customer_History__c == customerHistoryId
+            ) {
+                return parents[0];
+            }
+        }
+        return masterByType.get(pending.FEC_Address_Type__c);
+    }
+
     @AuraEnabled
     public static void logSensitiveFromMainInfo(
         String section,
@@ -768,12 +901,6 @@ public without sharing class FEC_MainInfoController {
         );
     }
 
-    /* ================= HELPER METHODS ================= */
-
-    /**
-     * Đủ điều kiện đồng bộ địa chỉ hay không (rule giống phoneUpdateValidate).
-     * Trả về null nếu được phép; khi chặn: Error với tiêu đề + các dòng Lí do cho UI.
-     */
     private static FEC_CaseBusinessService.Error getAddressUpdateEligibilityForUi(
         Id cHistoryId
     ) {
@@ -845,11 +972,7 @@ public without sharing class FEC_MainInfoController {
         return out;
     }
 
-    /**
-     * Gắn thông báo chặn cập nhật địa chỉ lên DTO trả về LWC (không lưu vào FEC_API_Cache__c).
-     * addrResult != null: dùng kết quả đồng bộ địa chỉ (tránh gọi validate trùng).
-     * addrResult == null: chỉ đọc cache / chưa gọi GetAddressesList — validate một lần.
-     */
+    /** Gắn thông báo chặn cập nhật địa chỉ lên DTO (không lưu cache). */
     private static void applyAddressEligibilityToDto(
         MainInfoDTO dto,
         Id customerHistoryId,
@@ -998,8 +1121,7 @@ public without sharing class FEC_MainInfoController {
         return false;
     }
 
-    /** Bộ master quốc gia legacy (tỉnh/địa chỉ cũ) vs bộ API CIF. */
-    private static final String FEC_COUNTRY_MASTER_LEGACY = '1';
+    private static final String FEC_COUNTRY_MASTER_LEGACY = '1'; // bộ master cũ
     private static final String FEC_COUNTRY_MASTER_API = '2';
 
     private static Map<Id, FEC_Country__c> buildCountryByIdMap(List<FEC_Country__c> rows) {
@@ -1015,11 +1137,7 @@ public without sharing class FEC_MainInfoController {
         return m;
     }
 
-    /**
-     * Gán FEC_Country__c từ GetAddressesList:
-     * TH1: country có FEC_Code__c = 1 → tìm bản ghi cùng Name / FEC_Name_VN__c với FEC_Code__c = 2.
-     * TH2: đã là 2 → giữ Id. Mã khác 1 (và không map được sang 2) → giữ Id.
-     */
+    /** Remap country master 1 → 2 (cùng tên). */
     private static Id remapCountryIdToApiMaster(Id countryId, Map<Id, FEC_Country__c> countryById) {
         if (countryId == null || countryById == null || !countryById.containsKey(countryId)) {
             return null;
@@ -1058,10 +1176,7 @@ public without sharing class FEC_MainInfoController {
         return countryId;
     }
 
-    /**
-     * Tìm Id FEC_Country__c từ CountryCode / CountryName API (không phân biệt hoa thường).
-     * Ưu tiên khớp CountryCode; sau đó khớp tên — nếu nhiều bản ghi ưu tiên FEC_Code__c = 2.
-     */
+    /** Resolve FEC_Country__c từ CountryCode/Name API; ưu tiên FEC_Code__c = 2. */
     private static Id resolveCountryIdFromApiAddressInfo(
         FEC_GetAddressesList.AddressInfo ai,
         List<FEC_Country__c> countries
@@ -1101,22 +1216,10 @@ public without sharing class FEC_MainInfoController {
         return preferApi != null ? preferApi : anyId;
     }
 
-    /** Kết quả resolve tỉnh từ mã City API (kèm mã country của tỉnh đã gán để xử lý Ward). */
-    private class ProvinceAddressResolve {
-        Id provinceId;
-        String countryFecCode;
-    }
-
-    /**
-     * Mã City (FEC_Province__c.FEC_Code__c) từ API → tỉnh gán FEC_Address_Info__c:
-     * TH1: tỉnh theo mã thuộc FEC_Country__r.FEC_Code__c = 1 → Id tỉnh cùng Name / FEC_Name_VN__c thuộc country 2 (chỉ khi đúng 1 bản ghi).
-     * TH2: không thuộc bộ 1 → giữ Id tỉnh nguồn. Không có tỉnh theo mã → provinceId null.
-     * countryFecCode: FEC_Code__c của quốc gia gắn **bản ghi tỉnh đã chọn** (sau remap).
-     */
-    private static ProvinceAddressResolve resolveProvinceForAddressSync(String cityCode) {
-        ProvinceAddressResolve out = new ProvinceAddressResolve();
+    /** Remap mã City API: tỉnh bộ 1 → tỉnh cùng tên bộ 2 (nếu đúng 1 bản ghi). */
+    private static Id resolveProvinceForAddressSync(String cityCode) {
         if (String.isBlank(cityCode)) {
-            return out;
+            return null;
         }
         String codeTrim = cityCode.trim();
         List<FEC_Province__c> srcRows = [
@@ -1126,25 +1229,21 @@ public without sharing class FEC_MainInfoController {
             LIMIT 1
         ];
         if (srcRows.isEmpty()) {
-            return out;
+            return null;
         }
         FEC_Province__c src = srcRows[0];
         String countryCode = (src.FEC_Country__r != null && src.FEC_Country__r.FEC_Code__c != null)
             ? src.FEC_Country__r.FEC_Code__c.trim()
             : '';
         if (!FEC_COUNTRY_MASTER_LEGACY.equals(countryCode)) {
-            out.provinceId = src.Id;
-            out.countryFecCode = countryCode;
-            return out;
+            return src.Id;
         }
         String matchName = String.isNotBlank(src.FEC_Name_VN__c) ? src.FEC_Name_VN__c.trim() : null;
         if (String.isBlank(matchName)) {
             matchName = (src.Name != null) ? src.Name.trim() : null;
         }
         if (String.isBlank(matchName)) {
-            out.provinceId = src.Id;
-            out.countryFecCode = countryCode;
-            return out;
+            return src.Id;
         }
         List<FEC_Province__c> targetRows = [
             SELECT Id
@@ -1153,25 +1252,24 @@ public without sharing class FEC_MainInfoController {
               AND (FEC_Name_VN__c = :matchName OR Name = :matchName)
         ];
         if (targetRows.size() == 1) {
-            out.provinceId = targetRows[0].Id;
-            out.countryFecCode = FEC_COUNTRY_MASTER_API;
-            return out;
+            return targetRows[0].Id;
         }
-        out.provinceId = src.Id;
-        out.countryFecCode = countryCode;
-        return out;
+        return src.Id;
     }
 
     private static AddressUpdateResult updateAddressesFromApi(
         FEC_Customer_History__c hist,
-        String cifNumber
+        String cifNumber,
+        String accountNumber,
+        String productTypeName,
+        Boolean syncForDisplayOnly
     ) {
         AddressUpdateResult result = new AddressUpdateResult();
 
+        FEC_CaseBusinessService.Error addrValErr = null;
         if (hist != null && hist.Id != null) {
-            FEC_CaseBusinessService.Error addrValErr =
-                getAddressUpdateEligibilityForUi(hist.Id);
-            if (addrValErr != null) {
+            addrValErr = getAddressUpdateEligibilityForUi(hist.Id);
+            if (addrValErr != null && syncForDisplayOnly != true) {
                 result.dtoList = buildAddressDTOListFromHistory(hist.Id);
                 result.addressEligibilityError = addrValErr;
                 return result;
@@ -1188,8 +1286,17 @@ public without sharing class FEC_MainInfoController {
 
         if (res == null || res.Addresses == null) return result;
 
-        List<FEC_GetAddressesList.AddressInfo> addressesToSync =
-            filterDuplicatePermanentAddressTypes(res.Addresses);
+        List<FEC_GetAddressesList.AddressInfo> addressesToSync = res.Addresses;
+
+        String mailingInd = null;
+        if (FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.equalsIgnoreCase(productTypeName)
+            && String.isNotBlank(accountNumber)) {
+            try {
+                mailingInd = fetchCardMailingInd(accountNumber);
+            } catch (Exception e) {
+                System.debug('### GetCardBasicInfo (MailingInd) FAILED: ' + e.getMessage());
+            }
+        }
 
         /* ===== MAP CODE  ===== */
         Map<String, Id> districtMap = new Map<String, Id>();
@@ -1222,8 +1329,8 @@ public without sharing class FEC_MainInfoController {
         }
 
         List<FEC_Address_Info__c> toInsert = new List<FEC_Address_Info__c>();
+        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
 
-        /* ===== PROCESS ===== */
         for (FEC_GetAddressesList.AddressInfo ai : addressesToSync) {
 
             String type = mapApiAddressTypeToSF(ai.AddressType);
@@ -1245,16 +1352,15 @@ public without sharing class FEC_MainInfoController {
             addr.FEC_Number__c   = ai.NumberStr;
             addr.FEC_Street__c   = ai.Street;
             addr.FEC_ZipCode__c  = ai.ZipCode;
-            /* Không override cờ Mailing từ local state: API GetAddressesList không trả cờ này. */
 
             /* ===== WARD (Xã): không đồng bộ từ API GetAddressesList ===== */
             addr.FEC_Ward__c = null;
             addr.FEC_Ward_Text__c = null;
 
             /* ===== PROVINCE / CITY (resolve trước để quyết định District/Ward) ===== */
-            ProvinceAddressResolve pr = resolveProvinceForAddressSync(ai.City);
-            if (pr.provinceId != null) {
-                addr.FEC_Province__c = pr.provinceId;
+            Id provinceId = resolveProvinceForAddressSync(ai.City);
+            if (provinceId != null) {
+                addr.FEC_Province__c = provinceId;
                 addr.FEC_Province_Text__c = null;
             } else if (String.isNotBlank(ai.City)) {
                 addr.FEC_Province__c = null;
@@ -1264,11 +1370,7 @@ public without sharing class FEC_MainInfoController {
                 addr.FEC_Province_Text__c = null;
             }
 
-            /*
-             * DISTRICT (Ward trên UI — FEC_District__c):
-             * Luôn map mã District từ API → FEC_District__c để hiển thị tên Ward trong review mode.
-             * Nếu không tìm thấy trong master → lưu vào FEC_District_Text__c (text fallback).
-             */
+            // District API → FEC_District__c (Ward UI); fallback FEC_District_Text__c.
             if (String.isNotBlank(ai.District) && districtMap.containsKey(ai.District)) {
                 addr.FEC_District__c = districtMap.get(ai.District);
                 addr.FEC_District_Text__c = null;
@@ -1291,18 +1393,30 @@ public without sharing class FEC_MainInfoController {
                 addr.FEC_Country_Text__c = ai.CountryName;
             }
 
-            result.toUpdate.add(addr);
+            toUpdate.add(addr);
         }
 
         if (!toInsert.isEmpty()) {
             insert toInsert;
         }
 
-        if (!result.toUpdate.isEmpty()) {
-            update result.toUpdate;
+        if (!toUpdate.isEmpty()) {
+            update toUpdate;
+        }
+
+        if (FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.equalsIgnoreCase(productTypeName)
+            && String.isNotBlank(accountNumber)) {
+            try {
+                syncMailingAddressFlagsFromCardMailingInd(hist.Id, mailingInd);
+            } catch (Exception e) {
+                System.debug('### MailingInd sync FAILED: ' + e.getMessage());
+            }
         }
 
         result.dtoList = buildAddressDTOListFromHistory(hist.Id);
+        if (addrValErr != null) {
+            result.addressEligibilityError = addrValErr;
+        }
         return result;
     }
 
@@ -1320,8 +1434,9 @@ public without sharing class FEC_MainInfoController {
             dto.addressInfoId = addr.Id != null ? String.valueOf(addr.Id) : null;
             dto.addressType = addr.FEC_Address_Type__c;
             String fullAddress = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
-            String mailingCode = mapSfAddressTypeToApiCode(addr.FEC_Address_Type__c);
-            dto.mailingAddress = resolveMailingAddressDisplay(mailingCode);
+            dto.mailingAddress = addr.FEC_Mailing_Address__c == true
+                ? FEC_ConstantCommon.TEXT_YES
+                : FEC_ConstantCommon.TEXT_NO;
             // Ward = tên quận/huyện từ lookup, fallback sang text nếu không có trong master
             if (addr.FEC_District__c != null) {
                 String vn = addr.FEC_District__r?.FEC_Name_VN__c;
@@ -1346,9 +1461,7 @@ public without sharing class FEC_MainInfoController {
         return outList;
     }
 
-    /**
-     * API có thể trả PERMANENT (chuẩn) hoặc PERMNENT (mã nguồn CIF) — cùng một loại địa chỉ thường trú.
-     */
+    /** Map mã API GetAddressesList → FEC_Address_Info__c.FEC_Address_Type__c. */
     private static String mapApiAddressTypeToSF(String apiType) {
         if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT;
@@ -1356,43 +1469,13 @@ public without sharing class FEC_MainInfoController {
         if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE;
         }
-        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
-            || apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT;
         }
         return null;
     }
 
-    /**
-     * Khi đồng thời có PERMANENT và PERMNENT, chỉ đồng bộ PERMNENT (nguồn dữ liệu ưu tiên).
-     */
-    private static List<FEC_GetAddressesList.AddressInfo> filterDuplicatePermanentAddressTypes(
-        List<FEC_GetAddressesList.AddressInfo> raw
-    ) {
-        if (raw == null || raw.isEmpty()) {
-            return raw;
-        }
-        Boolean hasPermnent = false;
-        for (FEC_GetAddressesList.AddressInfo ai : raw) {
-            if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
-                hasPermnent = true;
-                break;
-            }
-        }
-        if (!hasPermnent) {
-            return raw;
-        }
-        List<FEC_GetAddressesList.AddressInfo> out = new List<FEC_GetAddressesList.AddressInfo>();
-        for (FEC_GetAddressesList.AddressInfo ai : raw) {
-            if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
-                continue;
-            }
-            out.add(ai);
-        }
-        return out;
-    }
-
-    /** Trả về [cif, addressId, addressType] từ chuỗi meta cũ trong FEC_Address__c (read-only). */
+    /** Legacy FEC_Address__c meta → [cif, addressId, addressType]. */
     public static List<String> unpackPendingAddressApiMeta(String raw) {
         List<String> z = new List<String>{ '', '', '' };
         if (String.isBlank(raw)) {
@@ -1422,6 +1505,144 @@ public without sharing class FEC_MainInfoController {
             LIMIT 1
         ];
         return lst.isEmpty() ? null : lst[0].Id;
+    }
+
+    private static Boolean isDisplayableDistrictLabel(String label, String districtCode) {
+        if (String.isBlank(label)) {
+            return false;
+        }
+        if (String.isBlank(districtCode)) {
+            return true;
+        }
+        return !label.trim().equalsIgnoreCase(districtCode.trim());
+    }
+
+    private static String districtLabelFromFecDistrictRecord(FEC_District__c d) {
+        if (d == null) {
+            return null;
+        }
+        String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(d.FEC_Name_VN__c);
+        if (String.isBlank(lbl)) {
+            lbl = d.Name;
+        }
+        return String.isNotBlank(lbl) ? lbl : null;
+    }
+
+    private static String resolveDistrictLabelFromMaster(
+        String districtCode,
+        String provinceCode
+    ) {
+        if (String.isBlank(districtCode)) {
+            return null;
+        }
+        String dc = districtCode.trim();
+        Id provinceId = null;
+        if (String.isNotBlank(provinceCode)) {
+            List<FEC_Province__c> provs = [
+                SELECT Id
+                FROM FEC_Province__c
+                WHERE FEC_Code__c = :provinceCode.trim()
+                  AND FEC_Country__r.FEC_Code__c = :FEC_COUNTRY_MASTER_API
+                LIMIT 1
+            ];
+            if (!provs.isEmpty()) {
+                provinceId = provs[0].Id;
+            }
+        }
+        if (provinceId != null) {
+            List<FEC_District__c> scoped = [
+                SELECT FEC_Name_VN__c, Name, FEC_Code__c
+                FROM FEC_District__c
+                WHERE FEC_Code__c = :dc AND FEC_Province__c = :provinceId
+                LIMIT 1
+            ];
+            if (!scoped.isEmpty()) {
+                return districtLabelFromFecDistrictRecord(scoped[0]);
+            }
+        }
+        List<FEC_District__c> anyProv = [
+            SELECT FEC_Name_VN__c, Name, FEC_Code__c
+            FROM FEC_District__c
+            WHERE FEC_Code__c = :dc
+            LIMIT 1
+        ];
+        return anyProv.isEmpty() ? null : districtLabelFromFecDistrictRecord(anyProv[0]);
+    }
+
+    private static String resolveDistrictLabelFromHistoryAddress(
+        Id customerHistoryId,
+        String sfAddressType,
+        String districtCode
+    ) {
+        if (customerHistoryId == null || String.isBlank(sfAddressType)) {
+            return null;
+        }
+        List<FEC_Address_Info__c> rows = [
+            SELECT
+                FEC_District__r.FEC_Name_VN__c,
+                FEC_District__r.Name,
+                FEC_District_Text__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_Case__c = null
+              AND FEC_Address_Type__c = :sfAddressType
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return null;
+        }
+        FEC_Address_Info__c row = rows[0];
+        if (row.FEC_District__r != null) {
+            String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(
+                row.FEC_District__r.FEC_Name_VN__c
+            );
+            if (String.isBlank(lbl)) {
+                lbl = row.FEC_District__r.Name;
+            }
+            if (isDisplayableDistrictLabel(lbl, districtCode)) {
+                return lbl;
+            }
+        }
+        if (
+            String.isNotBlank(row.FEC_District_Text__c) &&
+            isDisplayableDistrictLabel(row.FEC_District_Text__c, districtCode)
+        ) {
+            return row.FEC_District_Text__c.trim();
+        }
+        return null;
+    }
+
+    /** Nhãn Ward: master → CIF Ward → SF history. */
+    private static String resolveDistrictLabelForMailingContext(
+        String districtCode,
+        String provinceCode,
+        FEC_GetAddressesList.AddressInfo apiAddress,
+        Id customerHistoryId,
+        String sfAddressType
+    ) {
+        if (String.isBlank(districtCode)) {
+            return null;
+        }
+        String dc = districtCode.trim();
+        String fromMaster = resolveDistrictLabelFromMaster(dc, provinceCode);
+        if (isDisplayableDistrictLabel(fromMaster, dc)) {
+            return fromMaster;
+        }
+        if (apiAddress != null && String.isNotBlank(apiAddress.Ward)) {
+            String wardLbl = apiAddress.Ward.trim();
+            if (isDisplayableDistrictLabel(wardLbl, dc)) {
+                return wardLbl;
+            }
+        }
+        String fromHistory = resolveDistrictLabelFromHistoryAddress(
+            customerHistoryId,
+            sfAddressType,
+            dc
+        );
+        if (isDisplayableDistrictLabel(fromHistory, dc)) {
+            return fromHistory;
+        }
+        return null;
     }
 
     private static Id resolveDistrictIdFromFecCode(String districtCode, Id provinceId) {
@@ -1462,10 +1683,74 @@ public without sharing class FEC_MainInfoController {
         return lst.isEmpty() ? null : lst[0].FEC_Country__c;
     }
 
+    private static String pendingProvinceLabelFromRow(FEC_Address_Info__c row) {
+        if (row == null || row.FEC_Province__r == null) {
+            return null;
+        }
+        String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(
+            row.FEC_Province__r.FEC_Name_VN__c
+        );
+        return String.isNotBlank(lbl) ? lbl : null;
+    }
+
+    private static String pendingDistrictLabelFromRow(FEC_Address_Info__c row) {
+        if (row == null || row.FEC_District__r == null) {
+            return null;
+        }
+        String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(
+            row.FEC_District__r.FEC_Name_VN__c
+        );
+        if (String.isBlank(lbl)) {
+            lbl = row.FEC_District__r.Name;
+        }
+        if (String.isBlank(lbl)) {
+            lbl = row.FEC_District__r.FEC_Code__c;
+        }
+        return String.isNotBlank(lbl) ? lbl : null;
+    }
+
+    private static String enrichStoredPendingJsonWithLabels(
+        FEC_Address_Info__c row,
+        String rawJson
+    ) {
+        if (String.isBlank(rawJson)) {
+            return rawJson;
+        }
+        try {
+            Map<String, Object> m = (Map<String, Object>) JSON.deserializeUntyped(
+                rawJson.trim()
+            );
+            if (m == null) {
+                return rawJson;
+            }
+            Object distLblObj = m.get('districtLabel');
+            String distLblExisting =
+                distLblObj != null ? String.valueOf(distLblObj).trim() : '';
+            if (String.isBlank(distLblExisting)) {
+                String distLbl = pendingDistrictLabelFromRow(row);
+                if (String.isNotBlank(distLbl)) {
+                    m.put('districtLabel', distLbl);
+                }
+            }
+            Object cityLblObj = m.get('cityLabel');
+            String cityLblExisting =
+                cityLblObj != null ? String.valueOf(cityLblObj).trim() : '';
+            if (String.isBlank(cityLblExisting)) {
+                String cityLbl = pendingProvinceLabelFromRow(row);
+                if (String.isNotBlank(cityLbl)) {
+                    m.put('cityLabel', cityLbl);
+                }
+            }
+            return JSON.serialize(m);
+        } catch (Exception e) {
+            return rawJson;
+        }
+    }
+
     private static String buildPendingJsonForLwc(FEC_Address_Info__c row, Id caseId) {
         String rawMeta = row.FEC_Address__c;
         if (String.isNotBlank(rawMeta) && rawMeta.trim().startsWith('{')) {
-            return rawMeta;
+            return enrichStoredPendingJsonWithLabels(row, rawMeta);
         }
         List<String> meta = unpackPendingAddressApiMeta(rawMeta);
         String cif = meta[0];
@@ -1507,6 +1792,8 @@ public without sharing class FEC_MainInfoController {
             'city',
             (row.FEC_Province__r != null) ? row.FEC_Province__r.FEC_Code__c : null
         );
+        m.put('districtLabel', pendingDistrictLabelFromRow(row));
+        m.put('cityLabel', pendingProvinceLabelFromRow(row));
         m.put('isMailingAddress', row.FEC_Mailing_Address__c == true ? 'Y' : 'N');
         return JSON.serialize(m);
     }
@@ -1528,7 +1815,10 @@ public without sharing class FEC_MainInfoController {
                 FEC_Street__c,
                 FEC_Mailing_Address__c,
                 FEC_District__r.FEC_Code__c,
-                FEC_Province__r.FEC_Code__c
+                FEC_District__r.FEC_Name_VN__c,
+                FEC_District__r.Name,
+                FEC_Province__r.FEC_Code__c,
+                FEC_Province__r.FEC_Name_VN__c
             FROM FEC_Address_Info__c
             WHERE FEC_Case__c = :caseId
         ]) {
@@ -1540,9 +1830,7 @@ public without sharing class FEC_MainInfoController {
         return outMap;
     }
 
-    /**
-     * Xóa toàn bộ bản ghi pending địa chỉ gắn Case (sau Process Action thành công).
-     */
+    /** Xóa FEC_Address_Info__c pending theo Case. */
     public static void clearCasePendingAddressRows(Id caseId) {
         if (caseId == null) {
             return;
@@ -1554,11 +1842,19 @@ public without sharing class FEC_MainInfoController {
         ];
     }
 
-    /**
-     * Lưu địa chỉ pending trên FEC_Address_Info__c (FEC_Case__c = Case): các trường địa chỉ + FEC_Parent_Address__c.
-     * Không ghi FEC_Address__c (để null / xóa nội dung cũ).
-     * sfAddressType: "Permanent Address" | "Office Address" | "Current Address".
-     */
+    private static String resolvePendingAddressJsonForStorage(String pendingAddressJson) {
+        if (String.isBlank(pendingAddressJson) || !pendingAddressJson.trim().startsWith('{')) {
+            return null;
+        }
+        try {
+            JSON.deserializeUntyped(pendingAddressJson.trim());
+            return pendingAddressJson.trim();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Lưu địa chỉ pending (FEC_Case__c = Case); pendingAddressJson → FEC_Address__c. */
     @AuraEnabled
     public static void savePendingAddress(
         Id caseId,
@@ -1570,7 +1866,8 @@ public without sharing class FEC_MainInfoController {
         String street,
         String districtCode,
         String provinceCode,
-        Boolean isMailingAddress
+        Boolean isMailingAddress,
+        String pendingAddressJson
     ) {
         if (caseId == null || String.isBlank(sfAddressType)) {
             throw new AuraHandledException('caseId and sfAddressType are required');
@@ -1631,6 +1928,7 @@ public without sharing class FEC_MainInfoController {
         Id countryId = resolveCountryIdFromProvinceId(provId);
 
         String nameVal = sfAddressType.left(80);
+        String addressJson = resolvePendingAddressJsonForStorage(pendingAddressJson);
 
         if (!existing.isEmpty()) {
             FEC_Address_Info__c upd = new FEC_Address_Info__c(
@@ -1645,7 +1943,7 @@ public without sharing class FEC_MainInfoController {
                 FEC_Country__c = countryId,
                 FEC_Mailing_Address__c = (isMailingAddress == true),
                 FEC_Parent_Address__c = parentAddressInfoId,
-                FEC_Address__c = null
+                FEC_Address__c = addressJson
             );
             FEC_CaseTriggerHandler.isExecuting = true;
             update upd;
@@ -1665,7 +1963,7 @@ public without sharing class FEC_MainInfoController {
             FEC_Country__c = countryId,
             FEC_Mailing_Address__c = (isMailingAddress == true),
             FEC_Parent_Address__c = parentAddressInfoId,
-            FEC_Address__c = null
+            FEC_Address__c = addressJson
         );
         FEC_CaseTriggerHandler.isExecuting = true;
         insert ins;

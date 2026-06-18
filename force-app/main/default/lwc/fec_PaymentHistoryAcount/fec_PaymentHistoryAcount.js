@@ -149,13 +149,26 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
                 caseId: this._recordId
             });
 
-            this.realtimePayments = (data || []).map(row => 
-                this.transformRow(row)
-            );
+            this.realtimePayments = this.sortRealtimeRows(data || [])
+                .map(row => this.transformRow(row));
 
         } catch (e) {
             this.realtimePayments = [];
         }
+    }
+
+    sortRealtimeRows(rows) {
+        return [...rows].sort((a, b) => {
+            const dateA = a.paymentDate || '';
+            const dateB = b.paymentDate || '';
+            if (dateA !== dateB) {
+                return dateB.localeCompare(dateA);
+            }
+
+            const createdA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+            const createdB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+            return createdB - createdA;
+        });
     }
 
     /* =====================================================

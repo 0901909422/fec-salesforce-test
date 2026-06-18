@@ -11,7 +11,10 @@
   OR(
     AND(
       OR(ISPICKVAL(Status, "Open"), ISPICKVAL(Status, "Pending")),
-      OwnerId &lt;&gt; $User.Id
+      OR(
+        OwnerId &lt;&gt; $User.Id,
+        FEC_Assignment_Count__c &gt; 0
+      )
     ),
     NOT(OR(ISPICKVAL(Status, "Open"), ISPICKVAL(Status, "Pending")))
   )
