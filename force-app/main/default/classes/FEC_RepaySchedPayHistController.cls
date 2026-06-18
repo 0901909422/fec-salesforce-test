@@ -77,15 +77,22 @@ public without sharing class FEC_RepaySchedPayHistController {
         }
     }
 
-    /** Transaction_Date (yyyy-MM-dd) → Date. */
-    private static Date parseTransactionDateToDate(String transactionDate) {
-        if (String.isBlank(transactionDate)) return null;
-        try {
-            String d = transactionDate.length() >= 10 ? transactionDate.substring(0, 10) : transactionDate;
-            return Date.valueOf(d);
-        } catch (Exception e) {
-            return null;
+    private static List<FEC_GetLoanSecInfo.PaymentHistory> getSecPaymentHistories(
+        FEC_GetLoanSecInfo.ResponseWrapper secRes
+    ) {
+        List<FEC_GetLoanSecInfo.PaymentHistory> secPh =
+            (secRes != null && secRes.LoanSecInfo != null && secRes.LoanSecInfo.PaymentHistories != null)
+            ? secRes.LoanSecInfo.PaymentHistories
+            : new List<FEC_GetLoanSecInfo.PaymentHistory>();
+        return dedupeSecPaymentHistoriesByParticulars(secPh);
+    }
+
+    private static String formatPaymentHistoryDateForDisplay(Date valueDate) {
+        if (valueDate == null) {
+            return HYPHEN;
         }
+        String formatted = FEC_CommonUltils.formatDateDDMMYYYY(valueDate);
+        return String.isNotBlank(formatted) ? formatted : HYPHEN;
     }
 
     private static Case getCaseInfo(Id caseId) {
@@ -298,46 +305,30 @@ public without sharing class FEC_RepaySchedPayHistController {
         return sum;
     }
 
-    private static void fillPaymentHistoryFromApis(
+    /** Payment History UI + total — chỉ từ GetLoanSecInfo.PaymentHistories. */
+    private static void fillPaymentHistoryFromSecInfo(
         SectionDataResult result,
-        FEC_GetLoanBasicInfo.ResponseWrapper basicRes,
-        FEC_GetLoanSecInfo.ResponseWrapper secRes,
-        FEC_GetPaymentInfo.ResponseWrapper paymentRes
+        FEC_GetLoanSecInfo.ResponseWrapper secRes
     ) {
         result.paymentHistoryTotals = new PaymentHistoryTotalsDTO();
         result.paymentHistoryTotals.totalPaymentAmount = HYPHEN;
         result.paymentHistoryTable = new List<PaymentHistoryRowDTO>();
 
-        List<FEC_GetLoanBasicInfo.PaymentHistory> basicPh = (basicRes != null && basicRes.LoanBasicInfo != null && basicRes.LoanBasicInfo.PaymentHistories != null)
-            ? basicRes.LoanBasicInfo.PaymentHistories
-            : new List<FEC_GetLoanBasicInfo.PaymentHistory>();
-        List<FEC_GetLoanSecInfo.PaymentHistory> secPh = (secRes != null && secRes.LoanSecInfo != null && secRes.LoanSecInfo.PaymentHistories != null)
-            ? secRes.LoanSecInfo.PaymentHistories
-            : new List<FEC_GetLoanSecInfo.PaymentHistory>();
-        secPh = dedupeSecPaymentHistoriesByParticulars(secPh);
-        List<FEC_GetPaymentInfo.PaymentInfo> payments = (paymentRes != null && paymentRes.Payments != null)
-            ? paymentRes.Payments
-            : new List<FEC_GetPaymentInfo.PaymentInfo>();
-
-        Integer rowCount = Math.max(Math.max(basicPh.size(), secPh.size()), payments.size());
-        for (Integer i = 0; i < rowCount; i++) {
+        List<FEC_GetLoanSecInfo.PaymentHistory> secPh = getSecPaymentHistories(secRes);
+        Integer paymentNo = 0;
+        for (FEC_GetLoanSecInfo.PaymentHistory ph : secPh) {
             PaymentHistoryRowDTO row = new PaymentHistoryRowDTO();
-            row.paymentNo = i + 1;
-            if (i < secPh.size() && secPh[i].ValueDate != null) {
-                String pd = FEC_CommonUltils.formatDateDDMMYYYY(secPh[i].ValueDate);
-                row.paymentDate = String.isNotBlank(pd) ? pd : HYPHEN;
-            } else {
-                row.paymentDate = HYPHEN;
-            }
-            if (i < secPh.size() && secPh[i].BookingDate != null) {
-                String bd = FEC_CommonUltils.formatDateDDMMYYYY(secPh[i].BookingDate);
+            row.paymentNo = ++paymentNo;
+            row.paymentDate = formatPaymentHistoryDateForDisplay(ph.ValueDate);
+            if (ph.BookingDate != null) {
+                String bd = FEC_CommonUltils.formatDateDDMMYYYY(ph.BookingDate);
                 row.bookingDate = String.isNotBlank(bd) ? bd : HYPHEN;
             } else {
                 row.bookingDate = HYPHEN;
             }
-            row.paymentAmount = i < secPh.size() ? FEC_CommonUltils.decimalToString(secPh[i].AmountOfMoney) : HYPHEN;
-            row.particulars = (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : HYPHEN;
-            row.paymentChannel = (i < payments.size() && payments[i].Username != null) ? payments[i].Username : HYPHEN;
+            row.paymentAmount = ph.AmountOfMoney != null ? FEC_CommonUltils.decimalToString(ph.AmountOfMoney) : HYPHEN;
+            row.particulars = ph.ChkNo != null ? ph.ChkNo : HYPHEN;
+            row.paymentChannel = HYPHEN;
             result.paymentHistoryTable.add(row);
         }
 
@@ -348,12 +339,10 @@ public without sharing class FEC_RepaySchedPayHistController {
         }
     }
 
-    /** PH → FEC_Payment_History__c */
+    /** PH → FEC_Payment_History__c — chỉ từ GetLoanSecInfo.PaymentHistories. */
     private static void savePaymentHistoryToObject(
         Id customerHistoryId,
-        FEC_GetLoanBasicInfo.ResponseWrapper basicRes,
-        FEC_GetLoanSecInfo.ResponseWrapper secRes,
-        FEC_GetPaymentInfo.ResponseWrapper paymentRes
+        FEC_GetLoanSecInfo.ResponseWrapper secRes
     ) {
         if (customerHistoryId == null) return;
         List<FEC_Payment_History__c> existing = [
@@ -361,48 +350,20 @@ public without sharing class FEC_RepaySchedPayHistController {
         ];
         if (!existing.isEmpty()) delete existing;
 
-        List<FEC_GetLoanBasicInfo.PaymentHistory> basicPh = (basicRes != null && basicRes.LoanBasicInfo != null && basicRes.LoanBasicInfo.PaymentHistories != null)
-            ? basicRes.LoanBasicInfo.PaymentHistories : new List<FEC_GetLoanBasicInfo.PaymentHistory>();
-        List<FEC_GetLoanSecInfo.PaymentHistory> secPh = (secRes != null && secRes.LoanSecInfo != null && secRes.LoanSecInfo.PaymentHistories != null)
-            ? secRes.LoanSecInfo.PaymentHistories : new List<FEC_GetLoanSecInfo.PaymentHistory>();
-        secPh = dedupeSecPaymentHistoriesByParticulars(secPh);
-        List<FEC_GetPaymentInfo.PaymentInfo> payments = (paymentRes != null && paymentRes.Payments != null)
-            ? paymentRes.Payments : new List<FEC_GetPaymentInfo.PaymentInfo>();
-
-        Integer rowCount = Math.max(Math.max(basicPh.size(), secPh.size()), payments.size());
-        if (rowCount == 0) return;
+        List<FEC_GetLoanSecInfo.PaymentHistory> secPh = getSecPaymentHistories(secRes);
+        if (secPh.isEmpty()) return;
 
         List<FEC_Payment_History__c> toInsert = new List<FEC_Payment_History__c>();
-        Set<String> seenParticulars = new Set<String>();
         Integer paymentNo = 0;
-        for (Integer i = 0; i < rowCount; i++) {
-            String particularsKey = paymentHistoryParticularsKey(
-                (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : null
-            );
-            if (seenParticulars.contains(particularsKey)) {
-                continue;
-            }
-            seenParticulars.add(particularsKey);
-            paymentNo++;
-
+        for (FEC_GetLoanSecInfo.PaymentHistory ph : secPh) {
             FEC_Payment_History__c rec = new FEC_Payment_History__c();
             rec.FEC_Customer_History__c = customerHistoryId;
-            rec.FEC_Payment_No__c = paymentNo;
-            // GetPaymentInfo: TransactionDate→FEC_Payment_Date__c, AmountPaid→FEC_Payment_Amount__c, Username→FEC_Payment_Channel__c
-            // GetLoanSecInfo: BookingDate→FEC_Booking_Date__c, AmountOfMoney→FEC_Payment_Amount__c, ChkNo→FEC_Particulars__c, ValueDate→FEC_Payment_Date__c
-            // GetLoanBasicInfo: ValueDate→FEC_Payment_Date__c, AmountOfMoney→FEC_Payment_Amount__c
-            if (i < payments.size()) {
-                rec.FEC_Payment_Date__c = parseTransactionDateToDate(payments[i].TransactionDate);
-                if (rec.FEC_Payment_Date__c == null) rec.FEC_Payment_Date__c = (i < secPh.size() && secPh[i].ValueDate != null) ? secPh[i].ValueDate : (i < basicPh.size() ? basicPh[i].ValueDate : null);
-                rec.FEC_Payment_Amount__c = payments[i].AmountPaid != null ? payments[i].AmountPaid : (i < secPh.size() ? secPh[i].AmountOfMoney : (i < basicPh.size() ? basicPh[i].AmountOfMoney : null));
-                rec.FEC_Payment_Channel__c = payments[i].Username != null ? payments[i].Username : null;
-            } else {
-                rec.FEC_Payment_Date__c = (i < secPh.size() && secPh[i].ValueDate != null) ? secPh[i].ValueDate : (i < basicPh.size() ? basicPh[i].ValueDate : null);
-                rec.FEC_Payment_Amount__c = i < secPh.size() ? secPh[i].AmountOfMoney : (i < basicPh.size() ? basicPh[i].AmountOfMoney : null);
-                rec.FEC_Payment_Channel__c = null;
-            }
-            rec.FEC_Booking_Date__c = i < secPh.size() ? secPh[i].BookingDate : null;
-            rec.FEC_Particulars__c = (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : null;
+            rec.FEC_Payment_No__c = ++paymentNo;
+            rec.FEC_Payment_Date__c = ph.ValueDate;
+            rec.FEC_Payment_Amount__c = ph.AmountOfMoney;
+            rec.FEC_Payment_Channel__c = null;
+            rec.FEC_Booking_Date__c = ph.BookingDate;
+            rec.FEC_Particulars__c = ph.ChkNo;
             toInsert.add(rec);
         }
         if (!toInsert.isEmpty()) {
@@ -529,9 +490,9 @@ public without sharing class FEC_RepaySchedPayHistController {
         } catch (Exception e) {
             System.debug('### saveRepaymentScheduleToObject failed, case=' + caseId + ': ' + e.getMessage());
         }
-        fillPaymentHistoryFromApis(result, basicRes, secRes, paymentRes);
+        fillPaymentHistoryFromSecInfo(result, secRes);
         try {
-            savePaymentHistoryToObject(getCustomerHistoryId(caseId), basicRes, secRes, paymentRes);
+            savePaymentHistoryToObject(getCustomerHistoryId(caseId), secRes);
         } catch (Exception e) {
             System.debug('### savePaymentHistoryToObject failed, case=' + caseId + ': ' + e.getMessage());
         }
@@ -543,7 +504,7 @@ public without sharing class FEC_RepaySchedPayHistController {
 
     //PhongBT 26/05/26: gọi api để document request check được điều kiện cho rl04.03
     /**
-     * RL04.03 — gọi 3 API (giống tab Repayment Schedule & Payment History) và ghi FEC_Payment_History__c.
+     * RL04.03 — gọi GetLoanSecInfo và ghi FEC_Payment_History__c.
      * Trả số dòng sau sync; 0 nếu bỏ qua hoặc lỗi.
      */
     public static Integer syncPaymentHistoryFromApis(Id caseId, Id customerHistoryId) {
@@ -555,33 +516,12 @@ public without sharing class FEC_RepaySchedPayHistController {
             return 0;
         }
 
-        Case caseInfo = getCaseInfo(caseId);
-        Boolean isTestApi = caseInfo?.FEC_Is_Test_API__c == true;
         String transId = FEC_CommonUltils.generateTransactionUUID();
         String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
 
-        FEC_GetLoanBasicInfo.ResponseWrapper basicRes = null;
         FEC_GetLoanSecInfo.ResponseWrapper secRes = null;
-        FEC_GetPaymentInfo.ResponseWrapper paymentRes = null;
 
-        try {
-            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(
-                transId,
-                requestorId,
-                dateTimeStr,
-                contractNumber,
-                isTestApi
-            );
-        } catch (Exception e) {
-            System.debug(
-                LoggingLevel.WARN,
-                'syncPaymentHistoryFromApis GetLoanBasicInfo failed, case=' +
-                    caseId +
-                    ': ' +
-                    e.getMessage()
-            );
-        }
         try {
             secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(
                 transId,
@@ -598,25 +538,9 @@ public without sharing class FEC_RepaySchedPayHistController {
                     e.getMessage()
             );
         }
-        try {
-            paymentRes = FEC_GetPaymentInfo.callGetPaymentInfo(
-                transId,
-                requestorId,
-                dateTimeStr,
-                contractNumber
-            );
-        } catch (Exception e) {
-            System.debug(
-                LoggingLevel.WARN,
-                'syncPaymentHistoryFromApis GetPaymentInfo failed, case=' +
-                    caseId +
-                    ': ' +
-                    e.getMessage()
-            );
-        }
 
         try {
-            savePaymentHistoryToObject(customerHistoryId, basicRes, secRes, paymentRes);
+            savePaymentHistoryToObject(customerHistoryId, secRes);
         } catch (Exception e) {
             System.debug(
                 LoggingLevel.WARN,
