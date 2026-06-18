@@ -5,9 +5,11 @@ import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Da
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import { formatCurrency0 } from 'c/fec_CommonUtils';
 import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
-
-import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
-import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
+import {
+    COLLECTION_CASE_FIELDS,
+    parseCollectionCaseRecord,
+    getCollectionApiContractNumber
+} from 'c/fec_CollectionDataUtils';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
 import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
@@ -23,7 +25,7 @@ import FEC_Job from '@salesforce/label/c.FEC_Job';
 import FEC_DPD from '@salesforce/label/c.FEC_DPD';
 import FEC_POS from '@salesforce/label/c.FEC_POS';
 
-const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
+const CASE_FIELDS = COLLECTION_CASE_FIELDS;
 
 const SECTION_LABEL = 'Allocation History';
 
@@ -57,8 +59,7 @@ export default class Fec_allocationHistory extends LightningElement {
     /** Bật trên App Builder: bỏ qua API, hiển thị bảng với dữ liệu mẫu (chỉ để test FE). */
     @api previewSampleData = false;
 
-    _contractNumber;
-    _recordTypeName;
+    _caseInfo;
 
     /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
     @track allocationHistories;
@@ -124,8 +125,7 @@ export default class Fec_allocationHistory extends LightningElement {
             return;
         }
         if (data) {
-            this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
-            this._recordTypeName = data.fields.RecordType?.displayValue;
+            this._caseInfo = parseCollectionCaseRecord(data);
             // Không tự gọi API — chờ user ấn Apply
         } else if (error) {
             this.allocationHistories = null;
@@ -145,7 +145,8 @@ export default class Fec_allocationHistory extends LightningElement {
         this.isLoading = true;
 
         try {
-            if (!this._contractNumber || !this._recordTypeName) {
+            const contractNumber = getCollectionApiContractNumber(this._caseInfo);
+            if (!contractNumber || !this._caseInfo?.recordTypeName) {
                 this.allocationHistories = null;
                 return;
             }
@@ -153,16 +154,14 @@ export default class Fec_allocationHistory extends LightningElement {
             // Nếu có date filter thì dùng fetchCollectionDataWithDates, ngược lại dùng method cũ
             const response = this._startDate && this._endDate
                 ? await fetchCollectionDataWithDates({
-                    contractNumber: this._contractNumber,
+                    contractNumber,
                     recordType: Fetch_Collection_Data_Record_Type_Allocation_History,
                     startDate: this._startDate,
-                    endDate: this._endDate,
-                    caseId: this.recordId
+                    endDate: this._endDate
                 })
                 : await fetchCollectionData({
-                    contractNumber: this._contractNumber,
-                    recordType: Fetch_Collection_Data_Record_Type_Allocation_History,
-                    caseId: this.recordId
+                    contractNumber,
+                    recordType: Fetch_Collection_Data_Record_Type_Allocation_History
                 });
 
             if (!response || response.Success === false) {
