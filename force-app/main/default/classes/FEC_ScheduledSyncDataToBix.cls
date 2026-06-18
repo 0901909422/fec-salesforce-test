@@ -34,11 +34,12 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
                                         FEC_Total_Record_Sync__c,
                                         FEC_Target_Object__c,
                                         FEC_Request_Body_Mapping__c,
-                                        FEC_Mapping_Data_Type__c,
+                                        FEC_Mapping_Data_Type__c, 
                                         FEC_Static_Map_Value__c, 
                                         FEC_Modified_Date_Field__c,
                                         FEC_Created_Date_Field__c ,
-                                        FEC_Additional_Conditions__c
+                                        FEC_Additional_Conditions__c,
+                                        FEC_Map_Select_Field__c
                                         from FEC_Custom_Sync__c
                                         where FEC_Sync_To__c = 'Bix' and FEC_Active__c = true]; 
             if(!lst.isEmpty()){  

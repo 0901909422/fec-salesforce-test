@@ -34,6 +34,8 @@ public without sharing class FEC_CreateCaseHandler {
 
         /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
         public Id ownerUserId;
+
+        public Boolean isAutomationCaseChat;
     }
     
     

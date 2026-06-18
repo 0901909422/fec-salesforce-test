@@ -116,6 +116,7 @@ public without sharing class FEC_Chathub {
         interactionCase.FEC_Customer_Username__c       = ci.customerName;
         interactionCase.FEC_Phone_Number__c            = ci.phoneNumber;
         interactionCase.FEC_National_ID_Passport_ID__c = ci.nationalID;
+        interactionCase.FEC_Chat_History__c            = cs.lastMessage;
 
         insert interactionCase;
 
@@ -204,7 +205,7 @@ public without sharing class FEC_Chathub {
         }
 
         Case c   = cases[0];
-        c.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
+        c.Status = FEC_ConstantCommon.CASE_STATUS_CLOSED;
         update c;
 
         // ---------------------------

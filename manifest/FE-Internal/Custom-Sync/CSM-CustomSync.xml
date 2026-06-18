@@ -23,6 +23,7 @@
         <members>FEC_Custom_Sync__c.FEC_Modified_Date_Field__c</members>
         <members>FEC_Custom_Sync__c.FEC_Created_Date_Field__c</members>
         <members>FEC_Custom_Sync__c.FEC_Additional_Conditions__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Map_Select_Field__c</members>
 
         <members>FEC_integration_service_log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_integration_service_log__c.FEC_Custom_Sync__c</members>
