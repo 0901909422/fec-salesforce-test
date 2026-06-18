@@ -9,14 +9,21 @@ History
 ------------------------------------------------------------*/
 public with sharing class FEC_CustomSyncCallout { 
     
+    // Overload 3-arg: gọi 4-arg với mapDynamicData = null
     public static List<FEC_integration_service_log__c> sendRequest(FEC_Custom_Sync__c cus, FEC_integration_service_log__c log, List<SObject> scope) {
+        return sendRequest(cus, log, scope, null);
+    }
+
+    // Đã thêm tham số mapDynamicData để nhận kết quả query động từ Batch
+    public static List<FEC_integration_service_log__c> sendRequest(FEC_Custom_Sync__c cus, FEC_integration_service_log__c log, List<SObject> scope, Map<Id, Map<String, Object>> mapDynamicData) {
         List<FEC_integration_service_log__c> resultLogs = new List<FEC_integration_service_log__c>();
         log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
         try {   
             CustomSyncSetting__c apiSetting = CustomSyncSetting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Custom_Sync_Bix'); 
 
-            String jsonBody = toJson(cus,scope);
+            // Truyền mapDynamicData vào hàm toJson
+            String jsonBody = toJson(cus, scope, mapDynamicData);
             
             log.FEC_Endpoint__c = apiSetting?.Endpoint__c + apiConfig?.FEC_Endpoint__c;
             log.FEC_Method__c = 'POST'; 
@@ -36,6 +43,7 @@ public with sharing class FEC_CustomSyncCallout {
             String resBody = response.getBody();
             String truncatedRes = resBody != null && resBody.length() > 32768 ? resBody.substring(0, 32768) : resBody;
             log.FEC_Response_Data__c = truncatedRes;
+            
             // Parse response to split success/failed records
             if (response.getStatusCode() == 200 && String.isNotBlank(resBody)) {
                 Map<String, Object> resMap = (Map<String, Object>) JSON.deserializeUntyped(resBody);
@@ -46,16 +54,24 @@ public with sharing class FEC_CustomSyncCallout {
                     Integer totalFailed = data.get('totalFailed') != null ? Integer.valueOf(String.valueOf(data.get('totalFailed'))) : 0;
                     
                     if (totalFailed > 0) {
-                        // Build map: FEC_ID_Search__c -> SFID
                          Map<String, String> extIdToSfId = new Map<String, String>();
                         for (SObject record : scope) {
-                            String extId = (String) record.get('FEC_ID_Search__c');
+                            // Ưu tiên FEC_ID_Search__c làm external ID, fallback sang Salesforce Id
+                            String extId = null;
+                            try {
+                                extId = (String) record.get('FEC_ID_Search__c');
+                            } catch (Exception e) {
+                                // Field không tồn tại trên object này → dùng Id
+                            }
+                            String sfId = String.valueOf(record.get('Id'));
                             if (extId != null) {
-                                extIdToSfId.put(extId, String.valueOf(record.get('Id')));
+                                extIdToSfId.put(extId, sfId);
+                            } else {
+                                // Fallback: dùng Salesforce Id làm key mapping
+                                extIdToSfId.put(sfId, sfId);
                             }
                         }
 
-                        // Failed record IDs
                         List<Object> failedRecords = (List<Object>) data.get('failedRecords');
                         Set<String> failedExtIds = new Set<String>();
                         if (failedRecords != null) {
@@ -66,7 +82,6 @@ public with sharing class FEC_CustomSyncCallout {
                             }
                         }
 
-                        // Success record IDs
                         List<Object> successRecords = (List<Object>) data.get('successRecords');
                         List<String> successSfIds = new List<String>();
                         if (successRecords != null) {
@@ -88,14 +103,11 @@ public with sharing class FEC_CustomSyncCallout {
                         Boolean isReCall = log.Id != null;
 
                         if (isReCall) {
-                            // Case 2: Recall - có cả Fail và Success
-                            // Giữ log gốc là fail, remove success records, FEC_Quantity_Call__c đã +1 ở trên
                             log.Records__c = JSON.serialize(failedSfIds);
                             log.FEC_Bix_Is_Success__c = false;
                             log.FEC_Response_Data__c = truncatedRes;
                             resultLogs.add(log);
 
-                            // Tạo log MỚI cho success records
                             if(!successSfIds.isEmpty()){ 
                                 FEC_integration_service_log__c successLog = new FEC_integration_service_log__c();
                                 successLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
@@ -110,14 +122,11 @@ public with sharing class FEC_CustomSyncCallout {
                                 resultLogs.add(successLog);
                             }
                         } else {
-                            // First call
                             if (!successSfIds.isEmpty()) {
-                                // Log 1: Success records
                                 log.Records__c = JSON.serialize(successSfIds);
                                 log.FEC_Bix_Is_Success__c = true;
                                 resultLogs.add(log);
 
-                                // Log 2: Failed records
                                 FEC_integration_service_log__c failLog = new FEC_integration_service_log__c();
                                 failLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
                                 failLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
@@ -130,13 +139,11 @@ public with sharing class FEC_CustomSyncCallout {
                                 failLog.FEC_Bix_Is_Success__c = false;
                                 resultLogs.add(failLog);
                             } else {
-                                // Tất cả đều fail, không có success record nào
                                 log.Records__c = JSON.serialize(failedSfIds);
                                 log.FEC_Bix_Is_Success__c = false;
                                 resultLogs.add(log);
                             }
                         }
-
                         return resultLogs;
                     }
                 }
@@ -151,26 +158,38 @@ public with sharing class FEC_CustomSyncCallout {
         resultLogs.add(log);
         return resultLogs;
     } 
-    private static String toJson(FEC_Custom_Sync__c cus, List<SObject> scope) {
-        Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Request_Body_Mapping__c);
-        Map<String, Object> dataTypeMap = String.isNotBlank(cus.FEC_Mapping_Data_Type__c)
-            ? (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Mapping_Data_Type__c)
-            : new Map<String, Object>();
-        // Parse static map value
-        Map<String, Object> staticMap = String.isNotBlank(cus.FEC_Static_Map_Value__c)
-            ? (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Static_Map_Value__c)
-            : new Map<String, Object>();
+
+    private static String toJson(FEC_Custom_Sync__c cus, List<SObject> scope, Map<Id, Map<String, Object>> mapDynamicData) {
+        
+        // TỰ ĐỘNG FIX LỖI "V" CODE 86 & DỌN DẸP DẤU NGOẶC KÉP LỖI TỪ CSV IMPORT
+        String cleanMappingStr = String.isNotBlank(cus.FEC_Request_Body_Mapping__c) ? cus.FEC_Request_Body_Mapping__c.replace('""', '"') : '{}';
+        String cleanDataTypeStr = String.isNotBlank(cus.FEC_Mapping_Data_Type__c) ? cus.FEC_Mapping_Data_Type__c.replace('""', '"') : '{}';
+        String cleanStaticMapStr = String.isNotBlank(cus.FEC_Static_Map_Value__c) ? cus.FEC_Static_Map_Value__c.replace('""', '"') : '{}';
+
+        Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(cleanMappingStr);
+        Map<String, Object> dataTypeMap = (Map<String, Object>) JSON.deserializeUntyped(cleanDataTypeStr);
+        Map<String, Object> staticMap = (Map<String, Object>) JSON.deserializeUntyped(cleanStaticMapStr);
+        
         List<Map<String, Object>> mappedRecords = new List<Map<String, Object>>();
 
         for (SObject record : scope) {
             Map<String, Object> row = new Map<String, Object>();
+            Id recordId = (Id) record.get('Id');
+
             for (String jsonKey : mapping.keySet()) {
                 Object mappingVal = mapping.get(jsonKey);
                 Object rawValue;
+
                 if (mappingVal == null) {
                     rawValue = null;
+                } else if (mappingVal instanceof Map<String, Object>) {
+                    // XỬ LÝ NHỮNG FIELD MAPPING LÀ OBJECT TỪ DYNAMIC SOQL
+                    if (mapDynamicData != null && mapDynamicData.containsKey(recordId) && mapDynamicData.get(recordId).containsKey(jsonKey)) {
+                        rawValue = mapDynamicData.get(recordId).get(jsonKey);
+                    } else {
+                        rawValue = null;
+                    }
                 } else if (mappingVal instanceof String && ((String) mappingVal).endsWith('__g')) {
-                    // Static map lookup: get value from FEC_Static_Map_Value__c
                     String staticKey = (String) mappingVal;
                     rawValue = staticMap.containsKey(staticKey) ? staticMap.get(staticKey) : null;
                 } else if (mappingVal instanceof String && (String) mappingVal == 'DateTimeNow') {
@@ -178,14 +197,14 @@ public with sharing class FEC_CustomSyncCallout {
                 } else if (mappingVal instanceof String) {
                     rawValue = getFieldValue(record, (String) mappingVal);
                 } else {
-                    // Integer, Boolean, Decimal, etc. — dùng trực tiếp
                     rawValue = mappingVal;
                 }
+
                 String targetType = dataTypeMap.containsKey(jsonKey) 
-                    ? ((String) dataTypeMap.get(jsonKey)).toUpperCase() 
+                    ? String.valueOf(dataTypeMap.get(jsonKey)).toUpperCase() 
                     : null;
-                // Nếu mappingVal không phải String (hardcode value) thì không cần cast
-                if (mappingVal instanceof String) {
+                
+                if (mappingVal instanceof String || mappingVal instanceof Map<String, Object>) {
                     row.put(jsonKey, castValue(rawValue, targetType));
                 } else {
                     row.put(jsonKey, rawValue);
@@ -200,7 +219,7 @@ public with sharing class FEC_CustomSyncCallout {
         return JSON.serialize(finalWrapper);
     }
 
-    private static Object castValue(Object rawValue, String targetType) {
+   private static Object castValue(Object rawValue, String targetType) {
         if (rawValue == null || String.isBlank(targetType)) {
             return rawValue;
         }
@@ -208,12 +227,34 @@ public with sharing class FEC_CustomSyncCallout {
             if (targetType == 'NUMBER') {
                 if (rawValue instanceof Decimal) return rawValue;
                 return Decimal.valueOf(String.valueOf(rawValue));
+                
+            } else if (targetType == 'DATE') {
+                // [TÍNH NĂNG MỚI]: Chuyển format thành YYYYMMDD
+                if (rawValue instanceof Datetime) {
+                    return ((Datetime) rawValue).formatGmt('yyyyMMdd');
+                } else if (rawValue instanceof Date) {
+                    Date d = (Date) rawValue;
+                    // Tạo Datetime theo giờ GMT để khi format không bị lùi ngày do Timezone
+                    Datetime dt = Datetime.newInstanceGmt(d.year(), d.month(), d.day());
+                    return dt.formatGmt('yyyyMMdd');
+                } else {
+                    // Nếu dữ liệu đang là String (vd: "2026-06-15"), cố gắng parse nó
+                    try {
+                        Date d = Date.valueOf(String.valueOf(rawValue));
+                        Datetime dt = Datetime.newInstanceGmt(d.year(), d.month(), d.day());
+                        return dt.formatGmt('yyyyMMdd');
+                    } catch (Exception e) {
+                        return String.valueOf(rawValue); // Trả về nguyên gốc nếu parse thất bại
+                    }
+                }
+                
             } else if (targetType.startsWith('TIMESTAMP')) {
                 if (rawValue instanceof Datetime) return ((Datetime) rawValue).formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
                 if (rawValue instanceof Date) return Datetime.newInstance((Date) rawValue, Time.newInstance(0,0,0,0)).formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
                 return String.valueOf(rawValue);
+                
             } else {
-                // VARCHAR2 and other string types
+                // Các kiểu khác như VARCHAR2 (String)
                 return String.valueOf(rawValue);
             }
         } catch (Exception e) {
@@ -222,6 +263,7 @@ public with sharing class FEC_CustomSyncCallout {
     }
 
     private static Object getFieldValue(SObject record, String fieldPath) {
+        if (record == null || String.isBlank(fieldPath)) return null;
         List<String> parts = fieldPath.split('\\.');
         SObject current = record;
         for (Integer i = 0; i < parts.size() - 1; i++) {

@@ -6,6 +6,7 @@ History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/05/04     DuanNguyen           Init
 2026/06/11     DuanNguyen           Add coverage: empty recordIds set, multiple records in scope
+2026/06/17     DuanNguyen           Sync with refactor: 3-arg/4-arg sendRequest, dynamic mapping, assertions
 ------------------------------------------------------------*/
 @isTest
 private class FEC_BatchCustomSyncByIdsTest {
@@ -93,12 +94,13 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        // Verify logs created
-        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c, FEC_Custom_Sync__c FROM FEC_integration_service_log__c];
+        // Verify logs created and linked to the CustomSync
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c, FEC_Custom_Sync__c, Records__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created');
-        System.assertEquals(cus.Id, logs[0].FEC_Custom_Sync__c);
+        System.assertEquals(cus.Id, logs[0].FEC_Custom_Sync__c, 'Log should be linked to CustomSync');
+        System.assertEquals(true, logs[0].FEC_Bix_Is_Success__c, 'Success response should mark log success');
 
-        // Verify FEC_Custom_Sync__c NOT updated
+        // Verify FEC_Custom_Sync__c NOT updated (ByIds does not write back stats)
         FEC_Custom_Sync__c cusAfter = [SELECT FEC_Start_At__c, FEC_End_At__c, FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c FROM FEC_Custom_Sync__c WHERE Id = :cus.Id];
         System.assertEquals(null, cusAfter.FEC_Start_At__c, 'FEC_Custom_Sync__c should NOT be updated');
         System.assertEquals(null, cusAfter.FEC_End_At__c, 'FEC_Custom_Sync__c should NOT be updated');
@@ -118,7 +120,7 @@ private class FEC_BatchCustomSyncByIdsTest {
 
         List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created even on failure');
-        System.assertEquals(false, logs[0].FEC_Bix_Is_Success__c);
+        System.assertEquals(false, logs[0].FEC_Bix_Is_Success__c, 'Failure response should mark log not success');
     }
 
     @isTest
@@ -133,6 +135,7 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
+        // Partial fail (log has no Id yet) splits into success + fail logs
         List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created for partial fail');
     }
@@ -150,7 +153,6 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        // No records matched so execute() never fires, no logs created
         List<FEC_integration_service_log__c> logs = [SELECT Id FROM FEC_integration_service_log__c];
         System.assertEquals(0, logs.size(), 'No logs should be created when no records found');
     }
@@ -167,8 +169,9 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        // Verify failed logs exist but no recall incremented beyond 1
+        // Verify failed logs exist but quantity call stays at 1 (ByIds never recalls)
         List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Quantity_Call__c FROM FEC_integration_service_log__c WHERE FEC_Bix_Is_Success__c = false];
+        System.assert(!logs.isEmpty(), 'Failed logs should exist');
         for (FEC_integration_service_log__c log : logs) {
             System.assertEquals(1, log.FEC_Quantity_Call__c, 'No recall should have been triggered');
         }
@@ -185,7 +188,6 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        // Empty set means query returns nothing, execute() never fires
         List<FEC_integration_service_log__c> logs = [SELECT Id FROM FEC_integration_service_log__c];
         System.assertEquals(0, logs.size(), 'No logs should be created when recordIds is empty');
     }
@@ -195,9 +197,6 @@ private class FEC_BatchCustomSyncByIdsTest {
         Test.setMock(HttpCalloutMock.class, new MockSuccess());
 
         FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
-
-        // Create additional case records
-        FEC_Business_Process__c bp = [SELECT Id FROM FEC_Business_Process__c LIMIT 1];
         FEC_Actual_Nature_of_Case__c anoc = [SELECT Id FROM FEC_Actual_Nature_of_Case__c LIMIT 1];
 
         List<Case> cases = new List<Case>();
@@ -221,7 +220,31 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c FROM FEC_integration_service_log__c];
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c, Records__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created for multiple records');
+    }
+
+    @isTest
+    static void testBatchWithDynamicMapping() {
+        Test.setMock(HttpCalloutMock.class, new MockSuccess());
+
+        // Mapping containing a nested object (dynamic sub-query) + Map Select Field.
+        // ByIds calls the 3-arg sendRequest (mapDynamicData = null), exercising the
+        // Map-mapping branch in toJson with no dynamic data resolved.
+        FEC_Custom_Sync__c cus = [SELECT Id, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c FROM FEC_Custom_Sync__c LIMIT 1];
+        cus.FEC_Request_Body_Mapping__c = '{"CaseID":"Id","NatureId":{"Select":"Id","From":"Case","Where":"Id = :ObjectID"}}';
+        cus.FEC_Mapping_Data_Type__c = '{"CaseID":"VARCHAR2","NatureId":"VARCHAR2"}';
+        cus.FEC_Map_Select_Field__c = '{"ObjectID":"Id"}';
+        update cus;
+
+        Case cse = [SELECT Id FROM Case LIMIT 1];
+
+        Test.startTest();
+        FEC_BatchCustomSyncByIds batch = new FEC_BatchCustomSyncByIds(cus.Id, new Set<Id>{ cse.Id });
+        Database.executeBatch(batch, 10);
+        Test.stopTest();
+
+        List<FEC_integration_service_log__c> logs = [SELECT Id FROM FEC_integration_service_log__c];
+        System.assert(!logs.isEmpty(), 'Logs should be created with dynamic mapping config');
     }
 }
