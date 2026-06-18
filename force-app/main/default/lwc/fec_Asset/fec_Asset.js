@@ -1,7 +1,7 @@
 import { LightningElement, api, track } from 'lwc';
 import updateCaseAssets from '@salesforce/apex/FEC_GetAssetsList.updateCaseAssets';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { formatDate } from 'c/fec_CommonUtils';
+import { formatDate, formatCurrency0 } from 'c/fec_CommonUtils';
 
 import FEC_Asset_Label from '@salesforce/label/c.FEC_Asset_Label';
 import FEC_Category_Code_Label from '@salesforce/label/c.FEC_Category_Code_Label';
@@ -107,11 +107,11 @@ export default class Fec_Asset extends LightningElement {
         return [
             this.buildField(this.customLabel.assetDescriptionLabel, this.accountData?.[AssetFields.ASSET_DESCRIPTION], AssetFields.ASSET_DESCRIPTION),
             this.buildField(this.customLabel.engineNoLabel, this.accountData?.[AssetFields.ENGINE_NO], AssetFields.ENGINE_NO),
-            this.buildField(this.customLabel.assetCostLabel, this.accountData?.[AssetFields.ASSET_COST], AssetFields.ASSET_COST),
+            this.buildField(this.customLabel.assetCostLabel, formatCurrency0(this.accountData?.[AssetFields.ASSET_COST]), AssetFields.ASSET_COST),
 
             this.buildField(this.customLabel.additionalInfoLabel, this.accountData?.[AssetFields.ADDITIONAL_INFO], AssetFields.ADDITIONAL_INFO),
             this.buildField(this.customLabel.chasisNoLabel, this.accountData?.[AssetFields.CHASIS_NO], AssetFields.CHASIS_NO),
-            this.buildField(this.customLabel.amountPledgedLabel, formatDate(this.accountData?.[AssetFields.AMOUNT_PLEDGED]), AssetFields.AMOUNT_PLEDGED),
+            this.buildField(this.customLabel.amountPledgedLabel, formatCurrency0(this.accountData?.[AssetFields.AMOUNT_PLEDGED]), AssetFields.AMOUNT_PLEDGED),
 
             this.buildField(this.customLabel.assetModelLabel, this.accountData?.[AssetFields.ASSET_MODEL], AssetFields.ASSET_MODEL),
             this.buildField(this.customLabel.regNoLabel, this.accountData?.[AssetFields.REG_NO], AssetFields.REG_NO),
