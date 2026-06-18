@@ -417,6 +417,417 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled
+    public static void sendManualZnsNotification(Id caseId, Id templateId, String toPhoneNumber, Id fecNotificationConfigId, String selectedChannel) {
+        System.debug('--- [sendManualNotification] selectedChannel: ' + selectedChannel);
+        User sendingUser = [
+            SELECT Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        String manualUserLocal = FEC_NotificationHistoryService.emailLocalPart(sendingUser.Email);
+        String manualUserRole = sendingUser.UserRole != null ? sendingUser.UserRole.Name : null;
+
+        Case c = [
+            SELECT
+                Id,
+                FEC_Customer_Type__c,
+                FEC_Stage_Name__c,
+                FEC_Account_or_Contract__r.FEC_Email__c,
+                FEC_Interaction__r.FEC_Interaction_Email__c,
+                FEC_Case_Email__c,
+                ContactId
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        FEC_Notification__c notifRule;
+        if (fecNotificationConfigId != null) {
+            List<FEC_Notification__c> rules = [
+                SELECT Id, Name, FEC_Target_Group__c //FEC_Notification_Channel__r.Name
+                FROM FEC_Notification__c
+                WHERE Id = :fecNotificationConfigId
+                LIMIT 1
+            ];
+            notifRule = rules.isEmpty() ? null : rules[0];
+        } else {
+            notifRule = null;
+        }
+
+        String channelLabel = String.isNotBlank(selectedChannel) ? selectedChannel : FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS;
+        String targetGrp = (notifRule != null && String.isNotBlank(notifRule.FEC_Target_Group__c))
+            ? notifRule.FEC_Target_Group__c
+            : '';
+        String notifRuleName = notifRule != null ? notifRule.Name : '';
+
+        if (String.isBlank(toPhoneNumber)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Phone_Number_No_Valid,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(System.Label.FEC_Phone_Number_No_Valid);
+        }
+        if (String.isBlank(templateId)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Template_Not_Found,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(System.Label.FEC_Template_Not_Found);
+        }
+
+        FEC_Template__c template;
+        try {
+            template = FEC_TemplateController.getTemplate(templateId);
+        } catch (Exception exLoadTpl) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    exLoadTpl.getMessage(),
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(exLoadTpl.getMessage());
+        }
+
+        if (String.isBlank(template.FEC_Subject_Line__c)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Template_Not_Found,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(System.Label.FEC_Template_Not_Found);
+        }
+
+        String templateIdZns = template.FEC_Subject_Line__c;
+        System.debug('--- [sendManualNotification] channelLabel: ' + channelLabel);
+        System.debug('--- [sendManualNotification]channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS: ' + (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS));
+        
+        if (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS) {
+            try {
+                FEC_ZNSNotificationCallout.SendZnsMessageResponseDto res = FEC_ZNSNotificationCallout.callSendZNSMessageByCase(caseId, toPhoneNumber, templateIdZns);
+                
+                if (res.Sys.Code == 1) {
+                    FEC_NotificationHistoryService.insertRow(
+                        FEC_NotificationHistoryService.buildRow(
+                            caseId,
+                            notifRule != null ? notifRule.Id : null,
+                            c.FEC_Stage_Name__c,
+                            template.Name,
+                            notifRuleName,
+                            channelLabel,
+                            targetGrp,
+                            FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                            FEC_NotificationHistoryService.SEND_STATUS_SUCCESS,
+                            null,
+                            manualUserLocal,
+                            manualUserRole,
+                            System.now()
+                        )
+                    );
+                } else {
+                    FEC_NotificationHistoryService.insertRow(
+                        FEC_NotificationHistoryService.buildRow(
+                            caseId,
+                            notifRule != null ? notifRule.Id : null,
+                            c.FEC_Stage_Name__c,
+                            template.Name,
+                            notifRuleName,
+                            channelLabel,
+                            targetGrp,
+                            FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                            FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                            res.Sys.Description,
+                            manualUserLocal,
+                            manualUserRole,
+                            System.now()
+                        )
+                    );
+                }
+            } catch (Exception e) {
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                        notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template.Name,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        e.getMessage(),
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+                throw new AuraHandledException(FEC_ConstantCommon.NOTIFICATION_SEND_FAILED + e.getMessage());
+            }
+        }
+    }
+
+    @AuraEnabled
+    public static void sendManualMobileAppNotification(Id caseId, Id templateId, String toPhoneNumber, String toNationalId, Id fecNotificationConfigId, String selectedChannel) {
+        System.debug('--- [sendManualNotification] selectedChannel: ' + selectedChannel);
+        User sendingUser = [
+            SELECT Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        String manualUserLocal = FEC_NotificationHistoryService.emailLocalPart(sendingUser.Email);
+        String manualUserRole = sendingUser.UserRole != null ? sendingUser.UserRole.Name : null;
+
+        Case c = [
+            SELECT
+                Id,
+                FEC_Customer_Type__c,
+                FEC_Stage_Name__c,
+                FEC_Account_or_Contract__r.FEC_Email__c,
+                FEC_Interaction__r.FEC_Interaction_Email__c,
+                FEC_Case_Email__c,
+                ContactId
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        FEC_Notification__c notifRule;
+        if (fecNotificationConfigId != null) {
+            List<FEC_Notification__c> rules = [
+                SELECT Id, Name, FEC_Target_Group__c //FEC_Notification_Channel__r.Name
+                FROM FEC_Notification__c
+                WHERE Id = :fecNotificationConfigId
+                LIMIT 1
+            ];
+            notifRule = rules.isEmpty() ? null : rules[0];
+        } else {
+            notifRule = null;
+        }
+
+        String channelLabel = String.isNotBlank(selectedChannel) ? selectedChannel : FEC_ConstantCommon.NOTIFICATION_CHANNEL_MOBILE_APP;
+        String targetGrp = (notifRule != null && String.isNotBlank(notifRule.FEC_Target_Group__c))
+            ? notifRule.FEC_Target_Group__c
+            : '';
+        String notifRuleName = notifRule != null ? notifRule.Name : '';
+
+        if (String.isBlank(toPhoneNumber)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Phone_Number_No_Valid,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(System.Label.FEC_Phone_Number_No_Valid);
+        }
+        if (String.isBlank(toNationalId)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_National_Id_No_Valid,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(System.Label.FEC_National_Id_No_Valid);
+        }
+        if (String.isBlank(templateId)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Template_Not_Found,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(System.Label.FEC_Template_Not_Found);
+        }
+
+        FEC_Template__c template;
+        try {
+            template = FEC_TemplateController.getTemplate(templateId);
+        } catch (Exception exLoadTpl) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    exLoadTpl.getMessage(),
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(exLoadTpl.getMessage());
+        }
+
+        String subject = String.isNotBlank(template.FEC_Subject_Line__c)
+            ? template.FEC_Subject_Line__c
+            : FEC_ConstantCommon.NOTIFICATION_MOBILE_APP_TITLE;
+        System.debug('--- [sendManualNotification] channelLabel: ' + channelLabel);
+        System.debug('--- [sendManualNotification]channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_MOBILE_APP: ' + (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_MOBILE_APP));
+        
+        if (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_MOBILE_APP) {
+            try {
+
+                String body = template.FEC_Body__c;
+                String senderEmail = '';
+                FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+                if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
+                    senderEmail = systemConfig.FEC_Sender_Email__c;
+                }
+                EmailInfo previewEmail = new EmailInfo(caseId, '', subject, '', body, '');
+                bulkResolveMergeFields(new List<EmailInfo>{ previewEmail }, senderEmail);
+                String resolvedSubject = previewEmail.subject;
+                String resolvedBody = previewEmail.body;
+
+                FEC_MobileAppNotificationCallout.SendNotificationResponse res = FEC_MobileAppNotificationCallout.sendNotification(resolvedBody, toNationalId, toPhoneNumber, resolvedSubject);
+
+                if (res.code == '1') {
+                    FEC_NotificationHistoryService.insertRow(
+                        FEC_NotificationHistoryService.buildRow(
+                            caseId,
+                            notifRule != null ? notifRule.Id : null,
+                            c.FEC_Stage_Name__c,
+                            template.Name,
+                            notifRuleName,
+                            channelLabel,
+                            targetGrp,
+                            FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                            FEC_NotificationHistoryService.SEND_STATUS_SUCCESS,
+                            null,
+                            manualUserLocal,
+                            manualUserRole,
+                            System.now()
+                        )
+                    );
+                } else {
+                    FEC_NotificationHistoryService.insertRow(
+                        FEC_NotificationHistoryService.buildRow(
+                            caseId,
+                            notifRule != null ? notifRule.Id : null,
+                            c.FEC_Stage_Name__c,
+                            template.Name,
+                            notifRuleName,
+                            channelLabel,
+                            targetGrp,
+                            FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                            FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                            res.description,
+                            manualUserLocal,
+                            manualUserRole,
+                            System.now()
+                        )
+                    );
+                }
+            } catch (Exception e) {
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                        notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template.Name,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        e.getMessage(),
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+                throw new AuraHandledException(FEC_ConstantCommon.NOTIFICATION_SEND_FAILED + e.getMessage());
+            }
+        }
+    }
+
+    @AuraEnabled
     public static void sendManualNotification(Id caseId, Id templateId, String toEmail, Id fecNotificationConfigId, String selectedChannel) {
         System.debug('--- [sendManualNotification] selectedChannel: ' + selectedChannel);
         User sendingUser = [

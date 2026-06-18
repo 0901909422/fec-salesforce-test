@@ -1,0 +1,221 @@
+<template>
+    <div class="datatable-wrapper">
+
+        <!-- Loading spinner -->
+        <template if:true={isLoading}>
+            <div class="spinner-container">
+                <lightning-spinner alternative-text={labels.FEC_Termination_Loading_Alt} size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- No data -->
+        <template if:false={isLoading}>
+            <template if:false={hasRecords}>
+                <div class="slds-illustration slds-illustration_small slds-m-around_medium">
+                    <div class="slds-illustration__figure">
+                        <lightning-icon icon-name="utility:table" size="large" class="slds-icon-text-light"></lightning-icon>
+                    </div>
+                    <div class="slds-illustration__body">
+                        <p class="slds-text-body_regular slds-text-color_weak">{labels.FEC_No_Notifications_Msg}</p>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={hasRecords}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout noti-table">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th class="col-expand"></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Notification_History_Col_Notification_Type}>{labels.FEC_Notification_History_Col_Notification_Type}</div></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Col_Channel}>{labels.FEC_Col_Channel}</div></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Label_Product_Type}>{labels.FEC_Label_Product_Type}</div></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Label_Category}>{labels.FEC_Label_Category}</div></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Label_Sub_Category}>{labels.FEC_Label_Sub_Category}</div></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Label_Sub_Code}>{labels.FEC_Label_Sub_Code}</div></th>
+                            <th scope="col"><div class="slds-truncate" title={labels.FEC_Notification_Channel}>{labels.FEC_Notification_Channel}</div></th>
+                            <th scope="col" class="col-center"><div class="slds-truncate" title={labels.FEC_Col_Status}>{labels.FEC_Col_Status}</div></th>
+                            <th scope="col" class="col-actions"><div class="slds-truncate" title={labels.FEC_Child_Actions}>{labels.FEC_Child_Actions}</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={enrichedRecords} for:item="row">
+                            <tr key={row.Id} class={row.rowClass}>
+                                <!-- Expand toggle -->
+                                <td>
+                                    <button class="slds-button slds-button_icon expand-btn"
+                                        data-id={row.Id}
+                                        onclick={toggleExpand}>
+                                        <lightning-icon
+                                            icon-name={row.expandIcon}
+                                            size="x-small">
+                                        </lightning-icon>
+                                    </button>
+                                </td>
+
+                                <!-- Name (Notification Type) -->
+                                <td>
+                                    <div class="slds-truncate" title={row.Name}>
+                                        {row.Name}
+                                    </div>
+                                </td>
+
+                                <!-- Channel -->
+                                <td>
+                                    <div class="slds-truncate" title={row.FEC_Channel__c}>
+                                        {row.FEC_Channel__c}
+                                    </div>
+                                </td>
+
+                                <!-- Product Type -->
+                                <td>
+                                    <div class="slds-truncate" title={row.FEC_Product_Type_Name__c}>
+                                        {row.FEC_Product_Type_Name__c}
+                                    </div>
+                                </td>
+
+                                <!-- Category -->
+                                <td>
+                                    <div class="slds-truncate" title={row.FEC_Category_Name__c}>
+                                        {row.FEC_Category_Name__c}
+                                    </div>
+                                </td>
+
+                                <!-- Sub Category (comma list) -->
+                                <td>
+                                    <div class="slds-truncate" title={row.FEC_SubCategory__c}>
+                                        {row.FEC_SubCategory__c}
+                                    </div>
+                                </td>
+
+                                <!-- Sub Code (comma list) -->
+                                <td>
+                                    <div class="slds-truncate" title={row.FEC_SubCode__c}>
+                                        {row.FEC_SubCode__c}
+                                    </div>
+                                </td>
+
+                                <!-- Notification Channels (badges) -->
+                                <td>
+                                    <div class="channel-badges">
+                                        <template for:each={row.channelBadges} for:item="badge">
+                                            <span key={badge.id} class={badge.badgeClass} title={badge.disabledTitle}>
+                                                <template if:true={badge.isDisabled}>
+                                                    <lightning-icon icon-name="utility:warning"
+                                                        size="xx-small"
+                                                        variant="warning"
+                                                        class="slds-m-right_xx-small">
+                                                    </lightning-icon>
+                                                </template>
+                                                {badge.name}
+                                            </span>
+                                        </template>
+                                    </div>
+                                </td>
+
+                                <!-- Status Toggle -->
+                                <td class="col-center">
+                                    <lightning-input
+                                        type="checkbox"
+                                        checked={row.FEC_Notification_Status__c}
+                                        data-id={row.Id}
+                                        onchange={handleStatusChange}
+                                        label=""
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </td>
+
+                                <!-- Quick Actions -->
+                                <td class="col-actions">
+                                    <div class="slds-grid slds-grid_align-center slds-gutters_xx-small">
+                                        <button class="slds-button slds-button_icon action-btn" title={labels.FEC_Btn_History}
+                                            data-id={row.Id} onclick={handleHistory}>
+                                            <lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon>
+                                        </button>
+                                        <button class="slds-button slds-button_icon action-btn" title={labels.FEC_Edit}
+                                            data-id={row.Id} onclick={handleEdit}>
+                                            <lightning-icon icon-name="utility:edit" size="x-small"></lightning-icon>
+                                        </button>
+                                        <button class="slds-button slds-button_icon action-btn action-btn_delete" title={labels.FEC_Delete_Button}
+                                            data-id={row.Id} onclick={handleDelete}>
+                                            <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Expanded Row — Template Details -->
+                            <template if:true={row.isExpanded}>
+                                <tr key={row.expandKey} class="expanded-row">
+                                    <td colspan="9">
+                                        <div class="template-detail-panel">
+                                            <h4 class="detail-title">Template Details</h4>
+                                            <table class="slds-table slds-table_cell-buffer slds-table_bordered inner-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{labels.FEC_Notification_Channel}</th>
+                                                        <th></th>
+                                                        <th>{labels.FEC_Col_Template_Name}</th>
+                                                        <th>{labels.FEC_Template_Active}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={row.templateChannels} for:item="tc">
+                                                        <tr key={tc.Id}>
+                                                            <td>{tc.channelName}</td>
+                                                            <td><template if:true={tc.warningChannel}>
+                                                                <lightning-icon
+                                                                    icon-name="utility:warning" 
+                                                                    size="small" 
+                                                                    variant="warning"></lightning-icon>
+                                                            </template>
+                                                            </td>
+                                                            <td>{tc.templateName}</td>
+                                                            <td>
+                                                                <lightning-icon
+                                                                    icon-name={tc.activeIcon}
+                                                                    size="x-small"
+                                                                    variant={tc.activeVariant}>
+                                                                </lightning-icon>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <template if:false={row.hasTemplates}>
+                                                        <tr>
+                                                            <td colspan="6" class="slds-text-align_center slds-text-color_weak">
+                                                                {labels.FEC_No_Templates_Linked}
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+        </template>
+
+        <!-- Delete Confirm Dialog -->
+        <template if:true={showDeleteConfirm}>
+            <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_small">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 class="slds-modal__title">{labels.FEC_Confirm_Delete_Title}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>{labels.FEC_Delete_Notification_Confirm}</p>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label={labels.FEC_Btn_Cancel} onclick={cancelDelete}></lightning-button>
+                        <lightning-button variant="destructive" label={labels.FEC_Button_Delete} onclick={confirmDelete}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </div>
+</template>

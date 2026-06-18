@@ -27,12 +27,12 @@
                                 icon-name="utility:preview"
                                 class="slds-m-right_x-small"
                             ></lightning-button>
-                            <lightning-button
+                            <template if:false={isZNSTemplate}><lightning-button
                                 label={label.editLabel}
                                 variant="brand"
                                 onclick={handleEdit}
                                 icon-name="utility:edit"
-                            ></lightning-button>
+                            ></lightning-button></template>
                         </div>
                     </div>
                 </div>
@@ -46,7 +46,11 @@
 
                 <!-- TABS -->
                 <template if:false={isLoading}>
-                <lightning-tabset active-tab-value={activeTab} onactive={handleTabActive}>
+                <template if:true={isZNSTemplate}>
+                    <c-fec_-z-n-s-template-param-mapping record={record}>
+                    </c-fec_-z-n-s-template-param-mapping>
+                </template>
+                <template if:false={isZNSTemplate}><lightning-tabset active-tab-value={activeTab} onactive={handleTabActive}>
 
                     <!-- ─── TAB 1: Details ─── -->
                     <lightning-tab label="Details" value="details">
@@ -251,7 +255,7 @@
                             </template>
                         </div>
                     </lightning-tab>
-                </lightning-tabset>
+                </lightning-tabset></template>
                 </template>
             </div>
         </div>

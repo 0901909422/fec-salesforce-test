@@ -241,7 +241,12 @@ public without sharing class FEC_CaseEditNOCController {
           FEC_Actual_Nature_of_Case__c,
           //PhongBT: update bộ noc chọn ở updated khi revert về
           FEC_Current_Case_Stage__r.Name,
-          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
+          // get phone numbers option for ZNS
+          FEC_Phone_Number__c, 
+          FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+          // get NID for Mobile App notification
+          FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
         FROM Case
         WHERE Id = :recordId
       ];

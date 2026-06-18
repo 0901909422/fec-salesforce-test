@@ -159,6 +159,8 @@ function isPointsRedemptionRedeemOkInStorage(caseId) {
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
 const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
 const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+const NOTIFICATION_CHANNEL_ZNS = 'ZNS';
+const NOTIFICATION_CHANNEL_MOBILE_APP = 'Mobile App';
 const FEC_SENT_SUCCESS = 'Notification sent successfully';
 const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -399,6 +401,8 @@ export {
     RESPONE_MESSARE_SUCCESS,
     MSG_ENTER_EMAIL_CORRECTLY,
     NOTIFICATION_CHANNEL_SF_APP,
+    NOTIFICATION_CHANNEL_ZNS,
+    NOTIFICATION_CHANNEL_MOBILE_APP,
     FEC_SENT_SUCCESS,
     PROFILE_RELEVANT_DEPTS,
     PAGE_SIZE_OPTIONS,
