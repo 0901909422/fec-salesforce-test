@@ -249,7 +249,7 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
 
                     return {
                         id: fieldName,
-                        displayName: fieldName,
+                        displayName: info.displayName || fieldName,
                         value,
                         fieldType: fileType,
                         isFile: this.fieldTypes?.FILE ? fileType === this.fieldTypes.FILE : false,
