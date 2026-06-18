@@ -1,6 +1,8 @@
 import { LightningElement, track } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import searchFraudCases from '@salesforce/apex/FEC_IntegrationSearchFraudCaseController.searchFraudCases';
 import getFraudSubCases from '@salesforce/apex/FEC_IntegrationSearchFraudCaseController.getFraudSubCases';
+import openArchiveServiceCase from '@salesforce/apex/FEC_IntegrationSearchFraudCaseController.openArchiveServiceCase';
 
 
 // Screen / Input Labels
@@ -59,6 +61,7 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
 
     @track records = [];
     @track noResult = false;
+    @track isLoading = false;
 
     pageNumber = 1;
     pageSize = 10;
@@ -113,7 +116,12 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
     
     handleRowAction(event) {
         const { action, row } = event.detail;
-    
+
+        if (action.name === 'openServiceCase') {
+            this.openServiceCase(row);
+            return;
+        }
+
         if (action.name !== 'toggle') return;
     
         const index = this.records.findIndex(r => r.Id === row.Id);
@@ -163,6 +171,59 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
     loadSubCases(parentRow) {
         //console.log('loadSubCases: ', JSON.stringify(parentRow));
         return getFraudSubCases({ fraudCaseId: parentRow.FEC_CaseID__c });
+    }
+
+    openServiceCase(row) {
+        const link = row.ServiceCaseLink;
+
+        // If we already have a real Salesforce URL, open it in a new tab.
+        if (link && link.startsWith('/')) {
+            const opened = window.open(link, '_blank');
+            if (!opened) {
+                this.showError('Unable to open the page. Please allow pop-ups for this site.');
+            }
+            return;
+        }
+
+        // Otherwise, resolve through the archive controller, then open the
+        // returned URL in a new tab.
+        const serviceCaseId = row.FEC_Service_Case_ID__c;
+        if (!serviceCaseId) {
+            this.showError('Service case id is missing for this row.');
+            return;
+        }
+
+        this.isLoading = true;
+
+        openArchiveServiceCase({ caseId: serviceCaseId })
+            .then(result => {
+                if (result && result.url) {
+                    const opened = window.open(result.url, '_blank');
+                    if (!opened) {
+                        this.showError('Unable to open the page. Please allow pop-ups for this site.');
+                    }
+                } else {
+                    const msg = (result && result.error) || 'Unable to open the service case.';
+                    this.showError(msg);
+                }
+            })
+            .catch(err => {
+                console.error('openArchiveServiceCase error: ', err);
+                const msg = (err && err.body && err.body.message) || err.message || 'Unable to open the service case.';
+                this.showError(msg);
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+    }
+
+    showError(message) {
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Error',
+            message,
+            variant: 'error',
+            mode: 'sticky'
+        }));
     }
     rowClass(row) {
         return row.isChild ? 'child-row' : '';
@@ -217,12 +278,13 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
 
         {
             label: LBL_ServiceCaseID_Col,
-            fieldName: 'ServiceCaseLink',
-            type: 'url',
+            type: 'button',
             sortable: true,
+            fieldName: 'ServiceCaseLink',
             typeAttributes: {
                 label: { fieldName: 'FEC_Service_Case_ID__c' },
-                target: '_blank'
+                name: 'openServiceCase',
+                variant: 'base'
             }
         },
 
