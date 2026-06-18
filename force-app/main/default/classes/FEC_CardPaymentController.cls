@@ -174,37 +174,34 @@ public with sharing class FEC_CardPaymentController {
 
         Boolean needOnlyAggregateAndSaveSeven = false;
         try {
-            List<FEC_Card_Payment__c> cardPayments = [
+            List<FEC_Customer_History__c> histories = [
                 SELECT FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c,
                        FEC_Total_Current_Balance__c, FEC_Total_Close_Fee_Amount__c, FEC_Total_Plan_Payment_Amount__c,
                        FEC_Total_Accrued_Interest__c, FEC_Total_IPP_Accrued_Interest__c, FEC_Total_Per_Diem__c, FEC_Total_Deferred_Interest__c
-                FROM FEC_Card_Payment__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-                  AND (FEC_Full_Payment_Amount__c != null OR FEC_Loan_Balance__c != null OR FEC_Full_Payment_Without_IPP__c != null OR FEC_Full_IPP_Payment_Amount__c != null
-                       OR FEC_Total_Current_Balance__c != null OR FEC_Total_Close_Fee_Amount__c != null OR FEC_Total_Plan_Payment_Amount__c != null
-                       OR FEC_Total_Accrued_Interest__c != null OR FEC_Total_IPP_Accrued_Interest__c != null OR FEC_Total_Per_Diem__c != null OR FEC_Total_Deferred_Interest__c != null)
-                ORDER BY CreatedDate ASC
+                FROM FEC_Customer_History__c
+                WHERE Id = :customerHistoryId
                 LIMIT 1
             ];
-
-            if (!cardPayments.isEmpty()) {
-                FEC_Card_Payment__c payment = cardPayments[0];
-                dto.fullPaymentAmount = payment.FEC_Full_Payment_Amount__c != null ? payment.FEC_Full_Payment_Amount__c : 0;
-                dto.loanBalance = payment.FEC_Loan_Balance__c != null ? payment.FEC_Loan_Balance__c : 0;
-                dto.fullPaymentWithoutIPP = payment.FEC_Full_Payment_Without_IPP__c != null ? payment.FEC_Full_Payment_Without_IPP__c : 0;
-                dto.fullIPPPaymentAmount = payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0;
-                dto.totalCurrentBalance = payment.FEC_Total_Current_Balance__c != null ? payment.FEC_Total_Current_Balance__c : 0;
-                dto.totalCloseFeeAmount = payment.FEC_Total_Close_Fee_Amount__c != null ? payment.FEC_Total_Close_Fee_Amount__c : 0;
-                dto.totalPlanPaymentAmount = payment.FEC_Total_Plan_Payment_Amount__c != null ? payment.FEC_Total_Plan_Payment_Amount__c : 0;
-                dto.totalAccruedInterest = payment.FEC_Total_Accrued_Interest__c != null ? payment.FEC_Total_Accrued_Interest__c : 0;
-                dto.totalIPPAccruedInterest = payment.FEC_Total_IPP_Accrued_Interest__c != null ? payment.FEC_Total_IPP_Accrued_Interest__c : 0;
-                dto.totalPerDiem = payment.FEC_Total_Per_Diem__c != null ? payment.FEC_Total_Per_Diem__c : 0;
-                dto.totalDeferredInterest = payment.FEC_Total_Deferred_Interest__c != null ? payment.FEC_Total_Deferred_Interest__c : 0;
-                Boolean hasAllSeven = payment.FEC_Total_Current_Balance__c != null && payment.FEC_Total_Close_Fee_Amount__c != null && payment.FEC_Total_Plan_Payment_Amount__c != null
-                    && payment.FEC_Total_Accrued_Interest__c != null && payment.FEC_Total_IPP_Accrued_Interest__c != null && payment.FEC_Total_Per_Diem__c != null && payment.FEC_Total_Deferred_Interest__c != null;
+            if (!histories.isEmpty()) {
+                FEC_Customer_History__c hist = histories[0];
+                dto.fullPaymentAmount = hist.FEC_Full_Payment_Amount__c != null ? hist.FEC_Full_Payment_Amount__c : 0;
+                dto.loanBalance = hist.FEC_Loan_Balance__c != null ? hist.FEC_Loan_Balance__c : 0;
+                dto.fullPaymentWithoutIPP = hist.FEC_Full_Payment_Without_IPP__c != null ? hist.FEC_Full_Payment_Without_IPP__c : 0;
+                dto.fullIPPPaymentAmount = hist.FEC_Full_IPP_Payment_Amount__c != null ? hist.FEC_Full_IPP_Payment_Amount__c : 0;
+                dto.totalCurrentBalance = hist.FEC_Total_Current_Balance__c != null ? hist.FEC_Total_Current_Balance__c : 0;
+                dto.totalCloseFeeAmount = hist.FEC_Total_Close_Fee_Amount__c != null ? hist.FEC_Total_Close_Fee_Amount__c : 0;
+                dto.totalPlanPaymentAmount = hist.FEC_Total_Plan_Payment_Amount__c != null ? hist.FEC_Total_Plan_Payment_Amount__c : 0;
+                dto.totalAccruedInterest = hist.FEC_Total_Accrued_Interest__c != null ? hist.FEC_Total_Accrued_Interest__c : 0;
+                dto.totalIPPAccruedInterest = hist.FEC_Total_IPP_Accrued_Interest__c != null ? hist.FEC_Total_IPP_Accrued_Interest__c : 0;
+                dto.totalPerDiem = hist.FEC_Total_Per_Diem__c != null ? hist.FEC_Total_Per_Diem__c : 0;
+                dto.totalDeferredInterest = hist.FEC_Total_Deferred_Interest__c != null ? hist.FEC_Total_Deferred_Interest__c : 0;
+                Boolean hasAllSeven = hist.FEC_Total_Current_Balance__c != null && hist.FEC_Total_Close_Fee_Amount__c != null && hist.FEC_Total_Plan_Payment_Amount__c != null
+                    && hist.FEC_Total_Accrued_Interest__c != null && hist.FEC_Total_IPP_Accrued_Interest__c != null && hist.FEC_Total_Per_Diem__c != null && hist.FEC_Total_Deferred_Interest__c != null;
                 if (!hasAllSeven) {
                     needOnlyAggregateAndSaveSeven = true;
                 }
+            } else {
+                needOnlyAggregateAndSaveSeven = true;
             }
         } catch (Exception e) { }
         if (needOnlyAggregateAndSaveSeven) {
@@ -235,30 +232,16 @@ public with sharing class FEC_CardPaymentController {
                 System.debug('Aggregate 7 totals error: ' + e.getMessage());
             }
             totalIPPAccruedInterest = applyIppAccruedInterestTotalRule(totalIPPAccruedInterest, customerHistoryId);
-            saveCardPaymentTotalsToDatabase(customerHistoryId, dto.fullPaymentAmount, dto.loanBalance, dto.fullPaymentWithoutIPP, dto.fullIPPPaymentAmount,
-                    totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
-            try {
-                List<FEC_Card_Payment__c> cardPayments = [
-                    SELECT FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c,
-                           FEC_Total_Current_Balance__c, FEC_Total_Close_Fee_Amount__c, FEC_Total_Plan_Payment_Amount__c,
-                           FEC_Total_Accrued_Interest__c, FEC_Total_IPP_Accrued_Interest__c, FEC_Total_Per_Diem__c, FEC_Total_Deferred_Interest__c
-                    FROM FEC_Card_Payment__c
-                    WHERE FEC_Customer_History__c = :customerHistoryId
-                    ORDER BY CreatedDate ASC
-                    LIMIT 1
-                ];
-                if (!cardPayments.isEmpty()) {
-                    FEC_Card_Payment__c payment = cardPayments[0];
-                    dto.totalCurrentBalance = payment.FEC_Total_Current_Balance__c != null ? payment.FEC_Total_Current_Balance__c : 0;
-                    dto.totalCloseFeeAmount = payment.FEC_Total_Close_Fee_Amount__c != null ? payment.FEC_Total_Close_Fee_Amount__c : 0;
-                    dto.totalPlanPaymentAmount = payment.FEC_Total_Plan_Payment_Amount__c != null ? payment.FEC_Total_Plan_Payment_Amount__c : 0;
-                    dto.totalAccruedInterest = payment.FEC_Total_Accrued_Interest__c != null ? payment.FEC_Total_Accrued_Interest__c : 0;
-                    dto.totalIPPAccruedInterest = payment.FEC_Total_IPP_Accrued_Interest__c != null ? payment.FEC_Total_IPP_Accrued_Interest__c : 0;
-                    dto.totalPerDiem = payment.FEC_Total_Per_Diem__c != null ? payment.FEC_Total_Per_Diem__c : 0;
-                    dto.totalDeferredInterest = payment.FEC_Total_Deferred_Interest__c != null ? payment.FEC_Total_Deferred_Interest__c : 0;
-                }
-            } catch (Exception e) { }
-            return dto;
+            setAggregateTotalsOnDto(dto, totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
+            Boolean hasAggregateData = totalCurrentBalance != 0 || totalCloseFeeAmount != 0 || totalPlanPaymentAmount != 0
+                || totalAccruedInterest != 0 || totalIPPAccruedInterest != 0 || totalPerDiem != 0 || totalDeferredInterest != 0;
+            // Có dữ liệu Card Payment nhưng chưa tính Full Payment Amount — tiếp tục gọi API
+            if (dto.fullPaymentAmount == 0 && hasAggregateData && String.isNotBlank(accountNumber)) {
+                // fall through to API path below
+            } else {
+                saveCardPaymentTotalsToDatabase(customerHistoryId, dto.fullPaymentAmount, dto.loanBalance, dto.fullPaymentWithoutIPP, dto.fullIPPPaymentAmount);
+                return dto;
+            }
         }
 
         // Gọi 3 API mỗi lần load: GetCardBasicInfo, EmeaAccountInq, GetCardPlanInfo
@@ -382,38 +365,15 @@ public with sharing class FEC_CardPaymentController {
         if (fullPaymentAmount != 0 || loanBalance != 0 || fullPaymentWithoutIPP != 0 || fullIPPPaymentAmount != 0
                 || totalCurrentBalance != 0 || totalCloseFeeAmount != 0 || totalPlanPaymentAmount != 0 || totalAccruedInterest != 0
                 || totalIPPAccruedInterest != 0 || totalPerDiem != 0 || totalDeferredInterest != 0) {
-            saveCardPaymentTotalsToDatabase(customerHistoryId, fullPaymentAmount, loanBalance, fullPaymentWithoutIPP, fullIPPPaymentAmount,
-                    totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
+            saveCardPaymentTotalsToDatabase(customerHistoryId, fullPaymentAmount, loanBalance, fullPaymentWithoutIPP, fullIPPPaymentAmount);
         }
 
         try {
-            List<FEC_Card_Payment__c> cardPayments = [
-                SELECT FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c,
-                       FEC_Total_Current_Balance__c, FEC_Total_Close_Fee_Amount__c, FEC_Total_Plan_Payment_Amount__c,
-                       FEC_Total_Accrued_Interest__c, FEC_Total_IPP_Accrued_Interest__c, FEC_Total_Per_Diem__c, FEC_Total_Deferred_Interest__c
-                FROM FEC_Card_Payment__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-                  AND (FEC_Full_Payment_Amount__c != null OR FEC_Loan_Balance__c != null OR FEC_Full_Payment_Without_IPP__c != null OR FEC_Full_IPP_Payment_Amount__c != null
-                       OR FEC_Total_Current_Balance__c != null OR FEC_Total_Close_Fee_Amount__c != null OR FEC_Total_Plan_Payment_Amount__c != null
-                       OR FEC_Total_Accrued_Interest__c != null OR FEC_Total_IPP_Accrued_Interest__c != null OR FEC_Total_Per_Diem__c != null OR FEC_Total_Deferred_Interest__c != null)
-                ORDER BY CreatedDate ASC
-                LIMIT 1
-            ];
-
-            if (!cardPayments.isEmpty()) {
-                FEC_Card_Payment__c payment = cardPayments[0];
-                dto.fullPaymentAmount = payment.FEC_Full_Payment_Amount__c != null ? payment.FEC_Full_Payment_Amount__c : 0;
-                dto.loanBalance = payment.FEC_Loan_Balance__c != null ? payment.FEC_Loan_Balance__c : 0;
-                dto.fullPaymentWithoutIPP = payment.FEC_Full_Payment_Without_IPP__c != null ? payment.FEC_Full_Payment_Without_IPP__c : 0;
-                dto.fullIPPPaymentAmount = payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0;
-                dto.totalCurrentBalance = payment.FEC_Total_Current_Balance__c != null ? payment.FEC_Total_Current_Balance__c : 0;
-                dto.totalCloseFeeAmount = payment.FEC_Total_Close_Fee_Amount__c != null ? payment.FEC_Total_Close_Fee_Amount__c : 0;
-                dto.totalPlanPaymentAmount = payment.FEC_Total_Plan_Payment_Amount__c != null ? payment.FEC_Total_Plan_Payment_Amount__c : 0;
-                dto.totalAccruedInterest = payment.FEC_Total_Accrued_Interest__c != null ? payment.FEC_Total_Accrued_Interest__c : 0;
-                dto.totalIPPAccruedInterest = payment.FEC_Total_IPP_Accrued_Interest__c != null ? payment.FEC_Total_IPP_Accrued_Interest__c : 0;
-                dto.totalPerDiem = payment.FEC_Total_Per_Diem__c != null ? payment.FEC_Total_Per_Diem__c : 0;
-                dto.totalDeferredInterest = payment.FEC_Total_Deferred_Interest__c != null ? payment.FEC_Total_Deferred_Interest__c : 0;
-            } else {
+            populateSummaryTotalsOnDto(dto, customerHistoryId);
+            setAggregateTotalsOnDto(dto, totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
+            if (dto.fullPaymentAmount == 0 && dto.loanBalance == 0 && dto.fullPaymentWithoutIPP == 0 && dto.fullIPPPaymentAmount == 0
+                    && dto.totalCurrentBalance == 0 && dto.totalCloseFeeAmount == 0 && dto.totalPlanPaymentAmount == 0
+                    && dto.totalAccruedInterest == 0 && dto.totalIPPAccruedInterest == 0 && dto.totalPerDiem == 0 && dto.totalDeferredInterest == 0) {
                 throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
             }
         } catch (AuraHandledException e) {
@@ -478,57 +438,85 @@ public with sharing class FEC_CardPaymentController {
         return loadCardPaymentTotals(caseId);
     }
 
-    /** Lưu totals vào DB (upsert record đầu tiên theo Customer History). */
-    private static void saveCardPaymentTotalsToDatabase(Id customerHistoryId, Decimal fullPaymentAmount, Decimal loanBalance, Decimal fullPaymentWithoutIPP, Decimal fullIPPPaymentAmount,
-            Decimal totalCurrentBalance, Decimal totalCloseFeeAmount, Decimal totalPlanPaymentAmount, Decimal totalAccruedInterest, Decimal totalIPPAccruedInterest, Decimal totalPerDiem, Decimal totalDeferredInterest) {
+    /** Lưu summary totals vào FEC_Customer_History__c. Các FEC_Total_* là roll-up summary (read-only). */
+    private static void saveCardPaymentTotalsToDatabase(
+            Id customerHistoryId, Decimal fullPaymentAmount, Decimal loanBalance,
+            Decimal fullPaymentWithoutIPP, Decimal fullIPPPaymentAmount) {
         if (customerHistoryId == null) {
             return;
         }
+        saveCardPaymentTotalsToCustomerHistory(customerHistoryId, fullPaymentAmount, loanBalance, fullPaymentWithoutIPP, fullIPPPaymentAmount);
+    }
 
+    private static void saveCardPaymentTotalsToCustomerHistory(
+            Id customerHistoryId, Decimal fullPaymentAmount, Decimal loanBalance,
+            Decimal fullPaymentWithoutIPP, Decimal fullIPPPaymentAmount) {
         try {
-            List<FEC_Card_Payment__c> existingPayments = [
-                SELECT Id, FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c,
-                       FEC_Total_Current_Balance__c, FEC_Total_Close_Fee_Amount__c, FEC_Total_Plan_Payment_Amount__c,
-                       FEC_Total_Accrued_Interest__c, FEC_Total_IPP_Accrued_Interest__c, FEC_Total_Per_Diem__c, FEC_Total_Deferred_Interest__c
-                FROM FEC_Card_Payment__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-                ORDER BY CreatedDate ASC
-                LIMIT 1
-            ];
-
-            FEC_Card_Payment__c paymentToUpdate;
-
-            if (!existingPayments.isEmpty()) {
-                paymentToUpdate = existingPayments[0];
-            } else {
-                paymentToUpdate = new FEC_Card_Payment__c();
-                paymentToUpdate.FEC_Customer_History__c = customerHistoryId;
-            }
-
-            paymentToUpdate.FEC_Full_Payment_Amount__c = fullPaymentAmount;
-            paymentToUpdate.FEC_Loan_Balance__c = loanBalance;
-            paymentToUpdate.FEC_Full_Payment_Without_IPP__c = fullPaymentWithoutIPP;
-            paymentToUpdate.FEC_Full_IPP_Payment_Amount__c = fullIPPPaymentAmount;
-            paymentToUpdate.FEC_Total_Current_Balance__c = totalCurrentBalance;
-            paymentToUpdate.FEC_Total_Close_Fee_Amount__c = totalCloseFeeAmount;
-            paymentToUpdate.FEC_Total_Plan_Payment_Amount__c = totalPlanPaymentAmount;
-            paymentToUpdate.FEC_Total_Accrued_Interest__c = totalAccruedInterest;
-            paymentToUpdate.FEC_Total_IPP_Accrued_Interest__c = totalIPPAccruedInterest;
-            paymentToUpdate.FEC_Total_Per_Diem__c = totalPerDiem;
-            paymentToUpdate.FEC_Total_Deferred_Interest__c = totalDeferredInterest;
-
-            if (paymentToUpdate.Id != null) {
-                update paymentToUpdate;
-            } else {
-                insert paymentToUpdate;
-            }
+            update new FEC_Customer_History__c(
+                Id = customerHistoryId,
+                FEC_Full_Payment_Amount__c = fullPaymentAmount,
+                FEC_Loan_Balance__c = loanBalance,
+                FEC_Full_Payment_Without_IPP__c = fullPaymentWithoutIPP,
+                FEC_Full_IPP_Payment_Amount__c = fullIPPPaymentAmount
+            );
         } catch (Exception e) {
-            System.debug('Save Card Payment Totals error: ' + e.getMessage());
+            System.debug('Save Card Payment Totals to Customer History error: ' + e.getMessage());
         }
+    }
+
+    private static void populateSummaryTotalsOnDto(CardPaymentTotalsDTO dto, Id customerHistoryId) {
+        List<FEC_Customer_History__c> histories = [
+            SELECT FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
+            LIMIT 1
+        ];
+        if (!histories.isEmpty()) {
+            FEC_Customer_History__c hist = histories[0];
+            dto.fullPaymentAmount = hist.FEC_Full_Payment_Amount__c != null ? hist.FEC_Full_Payment_Amount__c : 0;
+            dto.loanBalance = hist.FEC_Loan_Balance__c != null ? hist.FEC_Loan_Balance__c : 0;
+            dto.fullPaymentWithoutIPP = hist.FEC_Full_Payment_Without_IPP__c != null ? hist.FEC_Full_Payment_Without_IPP__c : 0;
+            dto.fullIPPPaymentAmount = hist.FEC_Full_IPP_Payment_Amount__c != null ? hist.FEC_Full_IPP_Payment_Amount__c : 0;
+        }
+    }
+
+    private static void setAggregateTotalsOnDto(CardPaymentTotalsDTO dto, Decimal totalCurrentBalance, Decimal totalCloseFeeAmount,
+            Decimal totalPlanPaymentAmount, Decimal totalAccruedInterest, Decimal totalIPPAccruedInterest, Decimal totalPerDiem, Decimal totalDeferredInterest) {
+        dto.totalCurrentBalance = totalCurrentBalance != null ? totalCurrentBalance : 0;
+        dto.totalCloseFeeAmount = totalCloseFeeAmount != null ? totalCloseFeeAmount : 0;
+        dto.totalPlanPaymentAmount = totalPlanPaymentAmount != null ? totalPlanPaymentAmount : 0;
+        dto.totalAccruedInterest = totalAccruedInterest != null ? totalAccruedInterest : 0;
+        dto.totalIPPAccruedInterest = totalIPPAccruedInterest != null ? totalIPPAccruedInterest : 0;
+        dto.totalPerDiem = totalPerDiem != null ? totalPerDiem : 0;
+        dto.totalDeferredInterest = totalDeferredInterest != null ? totalDeferredInterest : 0;
     }
 
     private static String buildCardPlanSyncKey(String rec, String plan) {
         return (rec != null ? rec.trim() : '') + '_' + (plan != null ? plan.trim() : '');
+    }
+
+    /** Bỏ qua CardPlan không có Rec và Plan — tránh insert bản ghi rỗng từ API. */
+    public static Boolean isSaveableCardPlan(FEC_GetCardPlanInfo.CardPlan plan) {
+        if (plan == null) {
+            return false;
+        }
+        return String.isNotBlank(plan.recordNumber) || String.isNotBlank(plan.planNumber);
+    }
+
+    public static void deleteEmptyCardPaymentRecords(Id customerHistoryId) {
+        if (customerHistoryId == null) {
+            return;
+        }
+        List<FEC_Card_Payment__c> emptyRows = [
+            SELECT Id
+            FROM FEC_Card_Payment__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+            AND (FEC_Rec__c = NULL OR FEC_Rec__c = '')
+            AND (FEC_Plan__c = NULL OR FEC_Plan__c = '')
+        ];
+        if (!emptyRows.isEmpty()) {
+            delete emptyRows;
+        }
     }
 
     /** true khi (NextStatementDate - today) ≤ 4 ngày. */
@@ -647,6 +635,9 @@ public with sharing class FEC_CardPaymentController {
         Boolean showIppAccruedInterest = resolveShowIppAccruedInterest(customerHistoryId);
 
         for (FEC_GetCardPlanInfo.CardPlan p : planList) {
+            if (!isSaveableCardPlan(p)) {
+                continue;
+            }
             String key = buildCardPlanSyncKey(p.recordNumber, p.planNumber);
             FEC_Card_Payment__c record;
             if (existingByKey.containsKey(key)) {
@@ -666,6 +657,7 @@ public with sharing class FEC_CardPaymentController {
             if (!recordsToUpdate.isEmpty()) {
                 update recordsToUpdate;
             }
+            deleteEmptyCardPaymentRecords(customerHistoryId);
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

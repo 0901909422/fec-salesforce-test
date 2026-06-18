@@ -161,7 +161,7 @@
                             plan.deferredInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'DeferredInterest');
                             plan.accruedInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'AccruedInterest');
                             plan.perDiem = FEC_CommonUltils.xmlValToDecimal(planNode, 'PerDiem');
-                            plan.ippInterest = FEC_CommonUltils.xmlPackedBaseRateToPercent(planNode, 'IPPInterest');
+                            plan.ippInterest = FEC_CommonUltils.xmlIppInterestToPercent(planNode, 'IPPInterest');
                             
                             plan.closeFeeIndicatorAmt = FEC_CommonUltils.xmlValToDecimal(planNode, 'CloseFeeIndicatorAmount');
                             
