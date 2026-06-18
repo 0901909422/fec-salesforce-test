@@ -11,7 +11,7 @@
                         </lightning-icon>
                         <span>
                             {customLabel.cardPaymentLabel}
-                            <template if:true={hasAnyError}>
+                            <template if:true={showSectionLoadError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
                         </span>

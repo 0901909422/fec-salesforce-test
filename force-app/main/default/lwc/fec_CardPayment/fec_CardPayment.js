@@ -56,9 +56,8 @@ export default class Fec_CardPayment extends LightningElement {
     }
     set recordId(value) {
         this._recordId = value;
-        // Gọi loadTotals và loadCardPaymentData khi recordId thay đổi
+        // Load card payment trước (có thể gọi API + lưu DB), sau đó mới load totals
         if (value) {
-            this.loadTotals();
             this.loadCardPaymentData();
         }
     }
@@ -81,9 +80,12 @@ export default class Fec_CardPayment extends LightningElement {
                 formattedRecord.FEC_Base_Rate_Formatted__c = value.toFixed(2) + ' %';
             }
 
-            // IPP Interest - format với 2 chữ số thập phân + %
+            // IPP Interest: Percent field có thể trả fraction (0.55 = 55%) hoặc display value (55)
             if (formattedRecord.FEC_IPP_Interest__c != null && formattedRecord.FEC_IPP_Interest__c !== undefined) {
-                const value = Number(formattedRecord.FEC_IPP_Interest__c);
+                let value = Number(formattedRecord.FEC_IPP_Interest__c);
+                if (value > 0 && value < 1) {
+                    value = value * 100;
+                }
                 formattedRecord.FEC_IPP_Interest_Formatted__c = value.toFixed(2) + ' %';
             }
 
@@ -182,11 +184,14 @@ export default class Fec_CardPayment extends LightningElement {
                 
                 this.hasError = false;
                 this.isLoading = false;
+                // Totals (Full Payment Amount, ...) phụ thuộc dữ liệu Card Payment đã lưu DB
+                this.loadTotals();
             })
             .catch(error => {
                 this.hasError = true;
                 this.cardPaymentData = [];
                 this.isLoading = false;
+                this.loadTotals();
             });
     }
     
@@ -265,6 +270,11 @@ export default class Fec_CardPayment extends LightningElement {
     // Unified error state to match IPP/Card Info behavior
     get hasAnyError() {
         return this.hasError || this.hasTotalsError;
+    }
+
+    /** Chỉ hiện lỗi section khi không có dòng bảng — bảng có data từ API thì không báo "Tải dữ liệu không thành công". */
+    get showSectionLoadError() {
+        return this.hasAnyError && !this.isLoading && !this.hasCardPaymentTableData;
     }
     
     columns = [
@@ -411,9 +421,7 @@ export default class Fec_CardPayment extends LightningElement {
     
     @api
     refreshData() {
-        // Refresh cả totals và card payment data
-        this.loadTotals();
-        this.loadCardPaymentData(); // This will also recalculate totals from data
+        this.loadCardPaymentData();
     }
     
     // Formatted currency values for summary (với 0 decimal places)

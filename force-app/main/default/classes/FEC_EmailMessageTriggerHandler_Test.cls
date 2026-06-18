@@ -74,4 +74,87 @@ private class FEC_EmailMessageTriggerHandler_Test {
         List<EmailMessage> parentEmails = [SELECT Id FROM EmailMessage WHERE ParentId = :childCase.ParentId];
         System.assertEquals(0, parentEmails.size(), 'EmailMessage không được copy nếu ThreadIdentifier trùng MessageIdentifier.');
     }
+
+    @IsTest
+    static void testCreateNewInteractionForInteractionReply() {
+        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)
+            .getRecordTypeId();
+
+        Case rootInteraction = new Case(
+            Subject = 'Root Interaction',
+            RecordTypeId = interactionRtId,
+            Status = 'Open',
+            Origin = 'Email',
+            FEC_Channel__c = 'Email',
+            FEC_Interaction_Subchannel__c = 'Incoming Email'
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert rootInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        EmailMessage em = new EmailMessage(
+            ParentId = rootInteraction.Id,
+            Incoming = true,
+            ThreadIdentifier = 'THREAD-ROOT-1',
+            MessageIdentifier = 'MSG-ROOT-2',
+            FromAddress = 'customer@test.com',
+            ToAddress = 'support@fecredit.com.vn',
+            Subject = 'Re: Root [fec-parent:abc123]',
+            TextBody = 'Reply on root interaction'
+        );
+
+        Test.startTest();
+        insert em;
+        Test.stopTest();
+
+        List<Case> childInteractions = [
+            SELECT Id, ParentId, Subject, SuppliedEmail
+            FROM Case
+            WHERE ParentId = :rootInteraction.Id
+        ];
+        System.assertEquals(1, childInteractions.size(), 'Phải tạo Interaction con từ email reply.');
+        System.assertEquals('customer@test.com', childInteractions[0].SuppliedEmail);
+
+        List<EmailMessage> childEmails = [
+            SELECT Id, ParentId, Subject
+            FROM EmailMessage
+            WHERE ParentId = :childInteractions[0].Id
+        ];
+        System.assertEquals(1, childEmails.size(), 'Email reply phải được copy sang Interaction mới.');
+        System.assert(!childEmails[0].Subject.contains('[fec-parent:'), 'Token fec-parent phải được loại bỏ.');
+    }
+
+    @IsTest
+    static void testRunSkipsWhenAlreadyExecuting() {
+        Case childCase = [SELECT Id, ParentId FROM Case WHERE Subject = 'Interaction Case' LIMIT 1];
+
+        EmailMessage em = new EmailMessage(
+            ParentId = childCase.Id,
+            Incoming = true,
+            ThreadIdentifier = 'THREAD-GUARD',
+            MessageIdentifier = 'MSG-GUARD',
+            FromAddress = 'guard@test.com',
+            Subject = 'Guard test'
+        );
+
+        FEC_EmailMessageTriggerHandler.isExecuting = true;
+        Test.startTest();
+        try {
+            insert em;
+        } finally {
+            FEC_EmailMessageTriggerHandler.isExecuting = false;
+        }
+        Test.stopTest();
+
+        List<EmailMessage> parentEmails = [
+            SELECT Id
+            FROM EmailMessage
+            WHERE ParentId = :childCase.ParentId
+        ];
+        System.assertEquals(0, parentEmails.size(), 'Handler không chạy khi isExecuting=true.');
+    }
 }

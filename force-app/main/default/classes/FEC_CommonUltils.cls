@@ -757,6 +757,35 @@ public with sharing class FEC_CommonUltils {
   }
 
   /**
+   * IPPInterest từ API:
+   * - Decimal trực tiếp (vd "55.00" → 55%)
+   * - Packed dài (vd "5500000" → 55%)
+   * - Số ngắn không dấu chấm (vd "55" → 55%, không chia 100)
+   */
+  public static Decimal xmlIppInterestToPercent(Dom.XmlNode n, String name) {
+    String v = getXmlValue(n, name);
+    if (String.isBlank(v)) {
+      return null;
+    }
+    v = v.trim();
+    if (v.length() == 0) {
+      return null;
+    }
+    try {
+      if (v.contains('.')) {
+        return Decimal.valueOf(v);
+      }
+      if (v.length() >= 4) {
+        return Decimal.valueOf(v.substring(0, 4)) / 100;
+      }
+      return Decimal.valueOf(v);
+    } catch (Exception e) {
+      System.debug('Invalid IPPInterest value for tag ' + name + ': [' + v + ']');
+      return null;
+    }
+  }
+
+  /**
    * BaseRate từ API:
    * - Dạng decimal trực tiếp (vd "55.00" → 55%): parse thẳng, không chia 100.
    * - Dạng packed integer (vd "1000000" → 4 ký tự đầu "1000" / 100 = 10%): chia 100.
