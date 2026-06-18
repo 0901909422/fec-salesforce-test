@@ -80,7 +80,7 @@ public without sharing class FEC_SecondaryController {
         ];
 
         /* =====================================================
-         * CACHE HIT 
+         * CACHE HIT
          * ===================================================== */
         if (String.isNotBlank(hist.FEC_API_Cache_Secondary_Demo__c)) {
             SecondaryInfoDTO dto =
@@ -89,8 +89,16 @@ public without sharing class FEC_SecondaryController {
                     SecondaryInfoDTO.class
                 );
 
-            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
+            Boolean selfServiceUpdated = syncSelfServiceChannels(hist);
+            if (selfServiceUpdated) {
+                dto.zaloFollower     = hist.FEC_Zalo_Follower__c;
+                dto.websiteAccount   = hist.FEC_Website_Account__c;
+                dto.mobileAppAccount = hist.FEC_Mobile_App_Account__c;
+                hist.FEC_API_Cache_Secondary_Demo__c = JSON.serialize(dto);
+                update hist;
+            }
 
+            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
             return dto;
         }
 
@@ -98,52 +106,7 @@ public without sharing class FEC_SecondaryController {
          * CALL APIs
          * ===================================================== */
 
-        /* ---------- 1. DIGITAL ACCOUNT STATUS ---------- */
-        try {
-            FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
-                FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_Work_Phone__c,
-                    hist.FEC_CIF_Number__c
-                );
-
-            if (digitalRes != null && digitalRes.DigitalAccounts != null) {
-                hist.FEC_Zalo_Follower__c =
-                    FEC_CommonUltils.normalizeInsuranceFlag(getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_ZALO));
-
-                hist.FEC_Website_Account__c =
-                    FEC_CommonUltils.normalizeInsuranceFlag(getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_WEBSITE));
-
-                hist.FEC_Mobile_App_Account__c =
-                    FEC_CommonUltils.normalizeInsuranceFlag(getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP));
-            }
-        } catch (Exception e) {
-            System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
-        }
-
-        /* ---------- 1b. CHECK EXIST USER (Mobile App) ---------- */
-        try {
-            String phoneForCheck = String.isNotBlank(hist.FEC_Primary_Phone__c)
-                ? hist.FEC_Primary_Phone__c
-                : hist.FEC_Work_Phone__c;
-            String nationalId = hist.FEC_National_ID_Passport_ID__c;
-
-            if (String.isNotBlank(phoneForCheck) && String.isNotBlank(nationalId)) {
-                FEC_GetCheckExistUser.ResponseWrapper checkExistRes =
-                    FEC_GetCheckExistUser.getCheckExistUser(phoneForCheck, nationalId);
-
-                if (checkExistRes != null && checkExistRes.Sys != null && checkExistRes.Sys.Code2 != null) {
-                    String socialStatus = FEC_CommonUltils.mapCheckExistUserCode2ToSocialStatus(checkExistRes.Sys.Code2);
-                    hist.FEC_Mobile_App_Account__c = FEC_CommonUltils.normalizeInsuranceFlag(socialStatus);
-                }
-
-                FEC_GetCheckExistUser.logApiResponse();
-            }
-        } catch (Exception e) {
-            System.debug('### GetCheckExistUser FAILED: ' + e.getMessage());
-        }
+        syncSelfServiceChannels(hist);
 
         /* ---------- 2. CONTACT LIST ---------- */
          List<FEC_Contact_List__c> contactsToInsert = new List<FEC_Contact_List__c>();
@@ -246,6 +209,94 @@ public without sharing class FEC_SecondaryController {
      * HELPER METHODS 
      * ===================================================== */
 
+    private static Boolean syncSelfServiceChannels(FEC_Customer_History__c hist) {
+        Boolean updated = false;
+
+        /* ---------- 1. DIGITAL ACCOUNT STATUS ---------- */
+        try {
+            String phoneForDigital = String.isNotBlank(hist.FEC_Primary_Phone__c)
+                ? hist.FEC_Primary_Phone__c
+                : hist.FEC_Work_Phone__c;
+
+            FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
+                FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    phoneForDigital,
+                    hist.FEC_CIF_Number__c
+                );
+
+            if (digitalRes != null && digitalRes.DigitalAccounts != null) {
+                updated |= applyDigitalAccountStatus(
+                    hist,
+                    digitalRes.DigitalAccounts,
+                    FEC_ConstantCommon.CHANNEL_ZALO,
+                    'FEC_Zalo_Follower__c'
+                );
+                updated |= applyDigitalAccountStatus(
+                    hist,
+                    digitalRes.DigitalAccounts,
+                    FEC_ConstantCommon.CHANNEL_WEBSITE,
+                    'FEC_Website_Account__c'
+                );
+                updated |= applyDigitalAccountStatus(
+                    hist,
+                    digitalRes.DigitalAccounts,
+                    FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP,
+                    'FEC_Mobile_App_Account__c'
+                );
+            }
+        } catch (Exception e) {
+            System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
+        }
+
+        /* ---------- 1b. CHECK EXIST USER (Mobile App) ---------- */
+        try {
+            String phoneForCheck = String.isNotBlank(hist.FEC_Primary_Phone__c)
+                ? hist.FEC_Primary_Phone__c
+                : hist.FEC_Work_Phone__c;
+            String nationalId = hist.FEC_National_ID_Passport_ID__c;
+
+            if (String.isNotBlank(phoneForCheck) && String.isNotBlank(nationalId)) {
+                FEC_GetCheckExistUser.ResponseWrapper checkExistRes =
+                    FEC_GetCheckExistUser.getCheckExistUser(phoneForCheck, nationalId);
+
+                if (checkExistRes != null && checkExistRes.Sys != null && checkExistRes.Sys.Code != null) {
+                    String socialStatus = FEC_CommonUltils.mapCheckExistUserCode2ToSocialStatus(checkExistRes.Sys.Code);
+                    String mobileAppStatus = FEC_CommonUltils.normalizeInsuranceFlag(socialStatus);
+                    if (hist.FEC_Mobile_App_Account__c != mobileAppStatus) {
+                        hist.FEC_Mobile_App_Account__c = mobileAppStatus;
+                        updated = true;
+                    }
+                }
+
+                FEC_GetCheckExistUser.logApiResponse();
+            }
+        } catch (Exception e) {
+            System.debug('### GetCheckExistUser FAILED: ' + e.getMessage());
+        }
+
+        return updated;
+    }
+
+    private static Boolean applyDigitalAccountStatus(
+        FEC_Customer_History__c hist,
+        List<FEC_GetDigitalAccountStatus.DigitalAccountInfo> accounts,
+        String channelType,
+        String fieldApiName
+    ) {
+        String status = FEC_CommonUltils.normalizeInsuranceFlag(
+            getStatusByType(accounts, channelType)
+        );
+        Object currentValue = hist.get(fieldApiName);
+        if (currentValue == status || (currentValue == null && status == null)) {
+            return false;
+        }
+        hist.put(fieldApiName, status);
+        return true;
+    }
+
     private static String getStatusByType(
         List<FEC_GetDigitalAccountStatus.DigitalAccountInfo> accounts,
         String type
@@ -253,7 +304,9 @@ public without sharing class FEC_SecondaryController {
         if (accounts == null || String.isBlank(type)) return null;
 
         for (FEC_GetDigitalAccountStatus.DigitalAccountInfo da : accounts) {
-            if (da != null && type.equals(da.Type)) {
+            if (da != null
+                && String.isNotBlank(da.Type)
+                && type.equalsIgnoreCase(da.Type.trim())) {
                 return da.Status;
             }
         }

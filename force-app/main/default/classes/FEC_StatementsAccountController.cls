@@ -122,41 +122,24 @@ public without sharing class FEC_StatementsAccountController {
         List<FEC_GetCardSecInfo.CardStatement> cardStatements = cardSecRes?.CardSecInfo?.CardStatements;
 
         /* =====================================================
-           HEADER STATEMENT
+           GENERAL STATEMENT INFO → FEC_Customer_History__c
            ===================================================== */
-
-        List<FEC_Statement__c> headers = [
-            SELECT Id
-            FROM FEC_Statement__c
-            WHERE FEC_Customer_History__c = :ch.Id
-            AND FEC_Statement_Date__c = NULL
-            LIMIT 1
-        ];
-
-        FEC_Statement__c header;
-
-        if (!headers.isEmpty()) {
-            header = headers[0];
-        } else {
-            header = new FEC_Statement__c(
-                FEC_Customer_History__c = ch.Id
-            );
+        if (info != null) {
+            if (info.MainCard != null) {
+                ch.FEC_Billing_Cycle__c = info.MainCard.BillingCycle;
+                ch.FEC_Total_Payment_Due__c = info.MainCard.LastPaymentAmount;
+            }
+            if (info.Statement != null) {
+                ch.FEC_Last_Statement_Date__c = info.Statement.LastStatementDate;
+                ch.FEC_Next_Statement_Date__c = info.Statement.NextStatementDate;
+                ch.FEC_Minimum_Payment_Due__c = info.Statement.LastStatementMPA;
+                ch.FEC_Payment_Due_Date__c = info.Statement.LastStatementDueDate;
+            }
+            update ch;
         }
 
-        /* ===== GENERAL INFO ===== */
-        header.FEC_Billing_Cycle__c       = info.MainCard.BillingCycle;
-        header.FEC_Last_Statement_Date__c = info.Statement.LastStatementDate;
-        header.FEC_Next_Statement_Date__c = info.Statement.NextStatementDate;
-
-        /* ===== PAYMENT ===== */
-        header.FEC_Total_Payment_Due__c   = info?.MainCard?.LastPaymentAmount;
-        header.FEC_Minimum_Payment_Due__c = info?.Statement?.LastStatementMPA;
-        header.FEC_Payment_Due_Date__c    = info?.Statement?.LastStatementDueDate;
-
-        upsert header;
-
         /* =====================================================
-           STATEMENT PERIODS
+           STATEMENT PERIODS → FEC_Statement__c
            ===================================================== */
 
         Map<Date, FEC_Statement__c> existingByDate = new Map<Date, FEC_Statement__c>();
@@ -250,7 +233,12 @@ public without sharing class FEC_StatementsAccountController {
 
         if (statementId == null) return null;
 
-        FEC_Statement__c s = [
+        Id customerHistoryId = resolveCustomerHistoryId(statementId);
+        if (customerHistoryId == null) {
+            return null;
+        }
+
+        FEC_Customer_History__c ch = [
             SELECT Id,
                 FEC_Billing_Cycle__c,
                 FEC_Last_Statement_Date__c,
@@ -258,22 +246,33 @@ public without sharing class FEC_StatementsAccountController {
                 FEC_Minimum_Payment_Due__c,
                 FEC_Payment_Due_Date__c,
                 FEC_Next_Statement_Date__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
+            LIMIT 1
+        ];
+
+        GeneralStatementInfoDTO dto = new GeneralStatementInfoDTO();
+        dto.helpTexts         = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
+        dto.statementId       = statementId;
+        dto.billingCycle      = ch.FEC_Billing_Cycle__c;
+        dto.lastStatementDate = ch.FEC_Last_Statement_Date__c;
+        dto.totalPaymentDue   = ch.FEC_Total_Payment_Due__c;
+        dto.minimumPaymentDue = ch.FEC_Minimum_Payment_Due__c;
+        dto.paymentDueDate    = ch.FEC_Payment_Due_Date__c;
+        dto.nextStatementDate = ch.FEC_Next_Statement_Date__c;
+
+        return dto;
+    }
+
+    private static Id resolveCustomerHistoryId(Id statementId) {
+        List<FEC_Statement__c> stmts = [
+            SELECT FEC_Customer_History__c
             FROM FEC_Statement__c
             WHERE Id = :statementId
             LIMIT 1
         ];
 
-        GeneralStatementInfoDTO dto = new GeneralStatementInfoDTO();
-        dto.helpTexts         = FEC_CommonUltils.buildHelpTextMap(FEC_Statement__c.SObjectType);
-        dto.statementId       = s.Id;
-        dto.billingCycle      = s.FEC_Billing_Cycle__c;
-        dto.lastStatementDate = s.FEC_Last_Statement_Date__c;
-        dto.totalPaymentDue   = s.FEC_Total_Payment_Due__c;
-        dto.minimumPaymentDue = s.FEC_Minimum_Payment_Due__c;
-        dto.paymentDueDate    = s.FEC_Payment_Due_Date__c;
-        dto.nextStatementDate = s.FEC_Next_Statement_Date__c;
-
-        return dto;
+        return stmts.isEmpty() ? null : stmts[0].FEC_Customer_History__c;
     }
 
     /* =====================================================
@@ -431,16 +430,15 @@ public without sharing class FEC_StatementsAccountController {
         if (!prevRows.isEmpty()) {
             prevStmtDate = prevRows[0].FEC_Statement_Date__c;
         } else {
-            List<FEC_Statement__c> headerRows = [
+            List<FEC_Customer_History__c> historyRows = [
                 SELECT FEC_Last_Statement_Date__c
-                FROM FEC_Statement__c
-                WHERE FEC_Customer_History__c = :stmt.FEC_Customer_History__c
-                  AND FEC_Statement_Date__c = NULL
+                FROM FEC_Customer_History__c
+                WHERE Id = :stmt.FEC_Customer_History__c
                 LIMIT 1
             ];
-            prevStmtDate = headerRows.isEmpty()
+            prevStmtDate = historyRows.isEmpty()
                 ? null
-                : headerRows[0].FEC_Last_Statement_Date__c;
+                : historyRows[0].FEC_Last_Statement_Date__c;
         }
 
         String accountNumber = FEC_CommonUltils.resolveAccountNumber(

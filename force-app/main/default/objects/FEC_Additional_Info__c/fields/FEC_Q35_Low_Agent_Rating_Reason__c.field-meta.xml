@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q35_Low_Agent_Rating_Reason__c</fullName>
+    <description>Q35: Lý do KH đánh giá NV từ 1-3 điểm</description>
+    <externalId>false</externalId>
+    <label>Q35 Low Agent Rating Reason</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

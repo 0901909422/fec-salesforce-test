@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q34 Payment Status Verification --></label>
+    <name>FEC_Q34_Payment_Status_Verification__c</name>
+    <picklistValues>
+        <masterLabel>Not Received Yet</masterLabel>
+        <translation>Chưa vào</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Received in Real-Time Payment Only</masterLabel>
+        <translation>Chỉ mới vào Real-time Payment</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Posted to System</masterLabel>
+        <translation>Tiền đã vào hệ thống</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Opportunity to Survey / Customer Did Not Ask About Payment Update</masterLabel>
+        <translation>Chưa có cơ hội khảo sát/ KH không hỏi về việc cập nhật tiền</translation>
+    </picklistValues>
+</CustomFieldTranslation>

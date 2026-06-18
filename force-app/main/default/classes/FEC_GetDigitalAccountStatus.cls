@@ -253,13 +253,13 @@ public with sharing class FEC_GetDigitalAccountStatus {
  
         // ================= DIGITAL ACCOUNTS =================
         result.DigitalAccounts = new List<DigitalAccountInfo>();
- 
+
         Dom.XmlNode accountStatusNode =
-            responseNode.getChildElement('AccountStatus', null);
- 
+            FEC_CommonUltils.findChildByName(responseNode, 'AccountStatus');
+
         if (accountStatusNode != null) {
             for (Dom.XmlNode dNode : accountStatusNode.getChildElements()) {
-                if (dNode.getName() == 'DigitalAccount') {
+                if (dNode.getName() != null && dNode.getName().endsWith('DigitalAccount')) {
                     DigitalAccountInfo d = new DigitalAccountInfo();
                     d.Type = FEC_CommonUltils.getXmlValue(dNode, 'Type');
                     d.Status = FEC_CommonUltils.getXmlValue(dNode, 'Status');

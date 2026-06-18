@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q31 Payment Duration --></label>
+    <name>FEC_Q31_Payment_Duration__c</name>
+    <picklistValues>
+        <masterLabel>Paid Today</masterLabel>
+        <translation>Mới thanh toán trong ngày</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Paid 1 Day Ago</masterLabel>
+        <translation>Thanh toán được 1 ngày</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Paid 2 or More Days Ago</masterLabel>
+        <translation>Thanh toán từ 2 ngày trở lên</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Opportunity to Survey / Customer Did Not Ask About Payment Update</masterLabel>
+        <translation>Chưa có cơ hội khảo sát/ KH không hỏi về việc cập nhật tiền</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q34_Payment_Status_Verification__c</fullName>
+    <description>Q34: CS kiểm tra tiền KH đóng đã vào Real-time Payment hay vô hệ thống chưa?</description>
+    <label>Q34 Payment Status Verification</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Not Received Yet</fullName>
+                <default>false</default>
+                <label>Not Received Yet</label>
+            </value>
+            <value>
+                <fullName>Received in Real-Time Payment Only</fullName>
+                <default>false</default>
+                <label>Received in Real-Time Payment Only</label>
+            </value>
+            <value>
+                <fullName>Payment Posted to System</fullName>
+                <default>false</default>
+                <label>Payment Posted to System</label>
+            </value>
+            <value>
+                <fullName>No Opportunity to Survey / Customer Did Not Ask About Payment Update</fullName>
+                <default>false</default>
+                <label>No Opportunity to Survey / Customer Did Not Ask About Payment Update</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

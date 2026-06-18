@@ -161,11 +161,13 @@ export default class Fec_CollectionInteractions extends LightningElement {
                     contractNumber: this._contractNumber,
                     recordType: Fetch_Collection_Data_Record_Type_Collection_Interaction,
                     startDate: this._startDate,
-                    endDate: this._endDate
+                    endDate: this._endDate,
+                    caseId: this.recordId
                 })
                 : await fetchCollectionData({
                     contractNumber: this._contractNumber,
-                    recordType: Fetch_Collection_Data_Record_Type_Collection_Interaction
+                    recordType: Fetch_Collection_Data_Record_Type_Collection_Interaction,
+                    caseId: this.recordId
                 });
 
             if (!response || response.Success === false) {
