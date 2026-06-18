@@ -1171,6 +1171,108 @@ private class FEC_IPPConversionController_Test {
     }
 
     @IsTest
+    static void testConvertIPPManualRetail_SuccessWithMock() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, 'VER001', 'CB001', 'MAIN',
+                    String.valueOf(Date.today()), String.valueOf(Date.today()),
+                    String.valueOf(Date.today()), 1500, 'AUTH01', 'PLAN01',
+                    500, 6, 12
+                );
+            Test.stopTest();
+            System.assertEquals(true, result.success);
+            System.assertNotEquals(null, result.message);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManualRetail_ValidationErrors() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        System.runAs(runAsAdmin()) {
+            FEC_IPPConversionController.ConvertResultDTO missingCase =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    null, null, null, null, null, null, null, 100, null, 'PLAN01', null, 6, null
+                );
+            System.assertNotEquals(null, missingCase.errorMessage);
+
+            FEC_IPPConversionController.ConvertResultDTO invalidAmount =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, null, null, null, null, null, null, 0, null, 'PLAN01', null, 6, null
+                );
+            System.assertNotEquals(null, invalidAmount.errorMessage);
+
+            FEC_IPPConversionController.ConvertResultDTO missingTerm =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, null, null, null, null, null, null, 100, null, 'PLAN01', null, null, null
+                );
+            System.assertNotEquals(null, missingTerm.errorMessage);
+
+            FEC_IPPConversionController.ConvertResultDTO missingPlan =
+                FEC_IPPConversionController.convertIPPManualRetail(
+                    c.Id, null, null, null, null, null, null, 100, null, null, null, 6, null
+                );
+            System.assertNotEquals(null, missingPlan.errorMessage);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManual_SuccessWithMock() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new IppConversionAddIppSuccessMock());
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.ConvertResultDTO result =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 2000, 9, 'PLAN02', String.valueOf(Date.today()),
+                    String.valueOf(Date.today()), null, 'PLAN02', 300
+                );
+            Test.stopTest();
+            System.assertEquals(true, result.success);
+            System.assertNotEquals(null, result.message);
+        }
+    }
+
+    @IsTest
+    static void testConvertIPPManual_ValidationErrors() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        System.runAs(runAsAdmin()) {
+            FEC_IPPConversionController.ConvertResultDTO missingCase =
+                FEC_IPPConversionController.convertIPPManual(
+                    null, 100, 6, 'PLAN01', null, null, null, null, null
+                );
+            System.assertNotEquals(null, missingCase.errorMessage);
+
+            FEC_IPPConversionController.ConvertResultDTO invalidAmount =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 0, 6, 'PLAN01', null, null, null, null, null
+                );
+            System.assertNotEquals(null, invalidAmount.errorMessage);
+
+            FEC_IPPConversionController.ConvertResultDTO missingPlan =
+                FEC_IPPConversionController.convertIPPManual(
+                    c.Id, 100, 6, null, null, null, null, null, null
+                );
+            System.assertNotEquals(null, missingPlan.errorMessage);
+        }
+    }
+
+    @IsTest
     static void testGetConvertActionStatus_FakeCaseId() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
