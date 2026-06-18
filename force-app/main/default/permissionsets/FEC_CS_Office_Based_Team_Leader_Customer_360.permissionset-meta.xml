@@ -2196,6 +2196,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Transaction__c.FEC_Card_Seq__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Transaction__c.FEC_Credit_Debit_Flag__c</field>
         <readable>true</readable>
@@ -2238,6 +2243,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Transaction__c.FEC_Post_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Transaction__c.FEC_Reference_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2548,6 +2558,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Transaction__c.FEC_IPPEligibilityFlag__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Transaction__c.FEC_IPP_Key__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
