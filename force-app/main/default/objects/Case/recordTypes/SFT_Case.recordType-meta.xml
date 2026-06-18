@@ -393,17 +393,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>FEC_Correct_Contract_Number__c</picklist>
-        <values>
-            <fullName>1</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>2</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>FEC_Customer_Confirmation__c</picklist>
         <values>
             <fullName>Customer has not received MRC</fullName>
