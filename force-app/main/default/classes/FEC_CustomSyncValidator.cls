@@ -34,7 +34,8 @@ public class FEC_CustomSyncValidator {
         Map<String, Set<String>> fieldsByTargetObject = new Map<String, Set<String>>();
 
         for (FEC_Custom_Sync__c rec : recordsToValidate) {
-            if (String.isNotBlank(rec.FEC_Case_Business_Code__c)) {
+            // SỬA TẠI ĐÂY (VỊ TRÍ 1): Chỉ gom code để query nếu khác '<null>'
+            if (String.isNotBlank(rec.FEC_Case_Business_Code__c) && rec.FEC_Case_Business_Code__c != '<null>') {
                 caseBusinessCodes.add(rec.FEC_Case_Business_Code__c);
             }
             // Collect target objects and their RequestBodyMapping values for field validation
@@ -46,8 +47,14 @@ public class FEC_CustomSyncValidator {
                         fieldsByTargetObject.put(rec.FEC_Target_Object__c, new Set<String>());
                     }
                     for (Object val : bodyMap.values()) {
-                        if (val != null && val instanceof String && (String) val != 'DateTimeNow') {
-                            String strVal = (String) val;
+                        if (val != null && val instanceof String) {
+                            String strVal = ((String) val).trim();
+                            
+                            // Bỏ qua nếu là chuỗi JSON hoặc DateTimeNow
+                            if (strVal.startsWith('{') || strVal == 'DateTimeNow') {
+                                continue;
+                            }
+                            
                             // Skip static map keys (suffix __g) — they are not SF fields
                             if (!strVal.endsWith('__g')) {
                                 fieldsByTargetObject.get(rec.FEC_Target_Object__c).add(strVal);
@@ -225,8 +232,8 @@ public class FEC_CustomSyncValidator {
                 rec.addError('Invalid fields in RequestBodyMapping for object "' + rec.FEC_Target_Object__c + '": ' + queryErrorByObject.get(rec.FEC_Target_Object__c));
             }
 
-            // Rule 5: CaseBusinessCode must exist in FEC_Business_Process__c
-            if (String.isNotBlank(rec.FEC_Case_Business_Code__c) && !validCodes.contains(rec.FEC_Case_Business_Code__c)) {
+            // SỬA TẠI ĐÂY (VỊ TRÍ 2) - Rule 5: Thêm điều kiện loại trừ chuỗi '<null>' ra khỏi check log lỗi tồn tại
+            if (String.isNotBlank(rec.FEC_Case_Business_Code__c) && rec.FEC_Case_Business_Code__c != '<null>' && !validCodes.contains(rec.FEC_Case_Business_Code__c)) {
                 rec.addError('Case Business Code "' + rec.FEC_Case_Business_Code__c + '" does not exist in FEC_Business_Process__c.');
             }
 

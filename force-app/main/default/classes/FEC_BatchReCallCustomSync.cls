@@ -36,7 +36,8 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
             if (Test.isRunningTest()){
                 fieldList = 'Id';
             }else{ 
-                fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
+                Set<String> fieldSet = FEC_BatchCustomSync.extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
+                fieldList = String.join(new List<String>(fieldSet), ', ');
                 String cleanRecords = log.Records__c.stripHtmlTags().unescapeHtml4();
                 recordIdObject = (List<String>) JSON.deserialize(cleanRecords, List<String>.class);
             }
@@ -45,7 +46,9 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
                 ' From ' + targetObject +  
                 ' where id in :recordIdObject';  
             List<sObject> records = Database.query(queryString);  
-            List<FEC_integration_service_log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,records); 
+            // Gọi getDynamicQueryData để lấy dữ liệu dynamic cho ReCall (fix lỗi thiếu dynamic data)
+            Map<Id, Map<String, Object>> dynamicQueryData = FEC_BatchCustomSync.getDynamicQueryData(records, cus.FEC_Request_Body_Mapping__c, cus.FEC_Map_Select_Field__c);
+            List<FEC_integration_service_log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus, log, records, dynamicQueryData); 
             for (FEC_integration_service_log__c rLog : resultLogs) {
                 if (rLog.FEC_Bix_Is_Success__c ?? false) rLog.FEC_Error_Message__c = null;
                 uLog.add(rLog);
@@ -71,8 +74,8 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
             'FEC_Case_Business_Code__c, FEC_Table_Name__c, ' +
             'FEC_Total_Record_Sync__c, FEC_Target_Object__c, ' +
             'FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c, ' + 
-            'FEC_Static_Map_Value__c, FEC_Modified_Date_Field__c,FEC_Additional_Conditions__c, ' +
-            'FEC_Created_Date_Field__c ' + 
+            'FEC_Static_Map_Value__c, FEC_Modified_Date_Field__c, FEC_Additional_Conditions__c, ' +
+            'FEC_Created_Date_Field__c, FEC_Map_Select_Field__c ' + 
             'FROM FEC_Custom_Sync__c ' +
             'WHERE FEC_Sync_To__c = \'Bix\' AND FEC_Active__c = true';
          

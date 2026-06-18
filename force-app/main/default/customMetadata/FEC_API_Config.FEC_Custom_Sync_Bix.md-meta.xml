@@ -3,6 +3,10 @@
     <label>FEC Custom Sync Bix</label>
     <protected>false</protected>
     <values>
+        <field>EndpointV2__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
         <field>FEC_Account_Number_Hard_Code__c</field>
         <value xsi:nil="true"/>
     </values>
@@ -33,5 +37,9 @@
     <values>
         <field>FEC_ToDate_Hard_Code__c</field>
         <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>UseV2__c</field>
+        <value xsi:type="xsd:boolean">false</value>
     </values>
 </CustomMetadata>
