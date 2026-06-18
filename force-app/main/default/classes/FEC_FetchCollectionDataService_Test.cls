@@ -41,7 +41,7 @@ public with sharing class FEC_FetchCollectionDataService_Test {
 
         Test.startTest();
         FEC_FetchCollectionDataServiceCallout.CollectionDataResponse result = 
-            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('CONT-001', 'Individual', null);
+            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('CONT-001', 'Individual');
         Test.stopTest();
 
         System.assertNotEquals(null, result, 'Result should not be null');
@@ -57,7 +57,7 @@ public with sharing class FEC_FetchCollectionDataService_Test {
 
         Test.startTest();
         FEC_FetchCollectionDataServiceCallout.CollectionDataResponse result = 
-            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('CONT-001', 'Individual', null);
+            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('CONT-001', 'Individual');
         Test.stopTest();
 
         System.assertEquals('false', result.Success, 'Success flag should be false on HTTP error');
@@ -69,7 +69,7 @@ public with sharing class FEC_FetchCollectionDataService_Test {
         
         Test.startTest();
         try {
-            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('', '', null);
+            FEC_FetchCollectionDataServiceCallout.fetchCollectionData('', '');
         } catch (CalloutException e) {
             exceptionThrown = true;
         }

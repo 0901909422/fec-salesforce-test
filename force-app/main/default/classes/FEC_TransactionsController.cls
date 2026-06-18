@@ -408,6 +408,7 @@ public without sharing class FEC_TransactionsController {
      * - BasicInfo: GetCardBasicInfo.CardBasicInfo.Transactions
      * - M_FAS: M_FAS_OUTSTANDING_AUTH_INQ.AUTHS_TABLE
      */
+    @TestVisible
     private static List<TransactionDTO> buildUnbilledTransactionsForUi(
         List<FEC_GetCardBasicInfo.TransactionInfo> cardTxList,
         List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authList,
@@ -426,11 +427,6 @@ public without sharing class FEC_TransactionsController {
                 if (cardTx == null || cardTx.PostingDate == null || cardTx.Amount == null) {
                     continue;
                 }
-                String key = buildKey(
-                    cardTx.PostingDate,
-                    cardTx.Amount,
-                    cardTx.CreditDebitFlag
-                );
                 FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth = findOutstandingAuth(
                     authMap,
                     cardTx.PostingDate,
@@ -443,6 +439,12 @@ public without sharing class FEC_TransactionsController {
                         processedAuthKeys.add(authKey);
                     }
                 }
+                String key = buildUnbilledKey(
+                    cardTx.PostingDate,
+                    cardTx.Amount,
+                    cardTx.CreditDebitFlag,
+                    resolveUnbilledTransactionCode(cardTx, auth)
+                );
                 result.add(
                     buildUnbilledDto(
                         cardTx,
@@ -465,8 +467,14 @@ public without sharing class FEC_TransactionsController {
                 if (authKey == null || processedAuthKeys.contains(authKey)) {
                     continue;
                 }
+                String key = buildUnbilledKey(
+                    postDate,
+                    amt,
+                    auth.CreditDebitFlag,
+                    resolveUnbilledTransactionCode(null, auth)
+                );
                 result.add(
-                    buildUnbilledDto(null, auth, null, helpTexts)
+                    buildUnbilledDto(null, auth, idsByCompositeKey.get(key), helpTexts)
                 );
             }
         }
@@ -645,21 +653,24 @@ public without sharing class FEC_TransactionsController {
         );
     }
 
+    @TestVisible
     private static Map<String, Id> loadTransactionIdsByCompositeKey(Id customerHistoryId) {
         Map<String, Id> result = new Map<String, Id>();
         for (FEC_Transaction__c tx : [
             SELECT Id,
                    FEC_Post_Date__c,
                    FEC_Transaction_Amount__c,
-                   FEC_Credit_Debit_Flag__c
+                   FEC_Credit_Debit_Flag__c,
+                   FEC_Transaction_Code__c
             FROM FEC_Transaction__c
             WHERE FEC_Customer_History__c = :customerHistoryId
               AND FEC_Approval_Code__c = NULL
         ]) {
-            String key = buildKey(
+            String key = buildUnbilledKey(
                 tx.FEC_Post_Date__c,
                 tx.FEC_Transaction_Amount__c,
-                tx.FEC_Credit_Debit_Flag__c
+                tx.FEC_Credit_Debit_Flag__c,
+                tx.FEC_Transaction_Code__c
             );
             if (key != null) {
                 result.put(key, tx.Id);
@@ -937,15 +948,17 @@ public without sharing class FEC_TransactionsController {
             SELECT Id,
                    FEC_Post_Date__c,
                    FEC_Transaction_Amount__c,
-                   FEC_Credit_Debit_Flag__c
+                   FEC_Credit_Debit_Flag__c,
+                   FEC_Transaction_Code__c
             FROM FEC_Transaction__c
             WHERE FEC_Customer_History__c = :historyId
               AND FEC_Approval_Code__c = NULL
         ]) {
-            String key = buildKey(
+            String key = buildUnbilledKey(
                 tx.FEC_Post_Date__c,
                 tx.FEC_Transaction_Amount__c,
-                tx.FEC_Credit_Debit_Flag__c
+                tx.FEC_Credit_Debit_Flag__c,
+                tx.FEC_Transaction_Code__c
             );
             existed.put(key, tx);
         }
@@ -959,11 +972,6 @@ public without sharing class FEC_TransactionsController {
                     continue;
                 }
 
-                String key = buildKey(
-                    cardTx.PostingDate,
-                    cardTx.Amount,
-                    cardTx.CreditDebitFlag
-                );
                 FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth = findOutstandingAuth(
                     authMap,
                     cardTx.PostingDate,
@@ -976,6 +984,13 @@ public without sharing class FEC_TransactionsController {
                         processedAuthKeys.add(authKey);
                     }
                 }
+
+                String key = buildUnbilledKey(
+                    cardTx.PostingDate,
+                    cardTx.Amount,
+                    cardTx.CreditDebitFlag,
+                    resolveUnbilledTransactionCode(cardTx, auth)
+                );
 
                 FEC_Transaction__c rec = working.containsKey(key)
                     ? working.get(key)
@@ -1028,7 +1043,12 @@ public without sharing class FEC_TransactionsController {
                     continue;
                 }
 
-                String key = buildKey(postDate, amt, auth.CreditDebitFlag);
+                String key = buildUnbilledKey(
+                    postDate,
+                    amt,
+                    auth.CreditDebitFlag,
+                    resolveUnbilledTransactionCode(null, auth)
+                );
                 FEC_Transaction__c rec = working.containsKey(key)
                     ? working.get(key)
                     : existed.containsKey(key)
@@ -1173,16 +1193,37 @@ public without sharing class FEC_TransactionsController {
         ];
     }
 
-    private static String buildKey(
+    private static String resolveUnbilledTransactionCode(
+        FEC_GetCardBasicInfo.TransactionInfo cardTx,
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth
+    ) {
+        if (cardTx != null && String.isNotBlank(cardTx.TransactionCode)) {
+            return cardTx.TransactionCode;
+        }
+        if (auth != null && String.isNotBlank(auth.AUTHORIZATION_CODE)) {
+            return auth.AUTHORIZATION_CODE;
+        }
+        return 'UNBILLED';
+    }
+
+    private static String buildUnbilledKey(
         Date postDate,
         Decimal amount,
-        String creditDebit
+        String creditDebit,
+        String transactionCode
     ) {
-        if (postDate == null || amount == null) return null;
+        if (postDate == null || amount == null) {
+            return null;
+        }
+
+        String code = String.isBlank(transactionCode)
+            ? 'UNBILLED'
+            : transactionCode.trim().toUpperCase();
 
         return postDate.format() + '_' +
             amount.setScale(2) + '_' +
-            normDebitCredit(creditDebit);
+            normDebitCredit(creditDebit) + '_' +
+            code;
     }
 
     private static String normDebitCredit(String s) {

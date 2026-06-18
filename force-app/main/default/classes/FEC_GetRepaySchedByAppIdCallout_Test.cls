@@ -34,6 +34,15 @@ private class FEC_GetRepaySchedByAppIdCallout_Test {
 
     private class SuccessMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
+            System.assertEquals(FEC_ConstantCommon.API_METHOD_GET, req.getMethod());
+            System.assert(
+                req.getEndpoint().contains('/intapp/ext/sales/repayment-schedule?app-id=APP-123456'),
+                'Unexpected endpoint: ' + req.getEndpoint()
+            );
+            System.assertEquals(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                req.getHeader('FEC-Requestor')
+            );
             HttpResponse res = new HttpResponse();
             res.setHeader('Content-Type', 'application/json');
             res.setStatusCode(200);
@@ -62,7 +71,7 @@ private class FEC_GetRepaySchedByAppIdCallout_Test {
         FEC_GetRepaymentScheduleByAppIdCallout.GetRepaymentScheduleResponse result =
             FEC_GetRepaymentScheduleByAppIdCallout.getRepaymentScheduleByAppId(
                 'APP-123456',
-                'PEGA-CSM'
+                null
             );
         Test.stopTest();
 

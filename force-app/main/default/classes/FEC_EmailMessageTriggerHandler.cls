@@ -31,16 +31,119 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         FEC_EmailMessageTriggerHandler handler = new FEC_EmailMessageTriggerHandler();
 
         if (Trigger.isAfter && Trigger.isInsert) {
-            handler.onAfterInsert(Trigger.new);
+            Set<Id> handledInteractionReplyEmailIds = handler.createNewInteractionForInteractionReply(Trigger.new);
+            handler.redirectIncomingReplyToServiceCase(Trigger.new, handledInteractionReplyEmailIds);
         }
 
         isExecuting = false;
     }
 
-    private void onAfterInsert(List<EmailMessage> newEmailMsgs) {
-        redirectIncomingReplyToServiceCase(newEmailMsgs);
+    /**
+     * Khi Email-to-Case đưa email reply vào cùng Interaction cũ theo ThreadIdentifier,
+     * tạo Interaction mới có ParentId = Interaction cũ, copy đúng 1 EmailMessage sang Interaction mới,
+     * rồi xóa EmailMessage reply khỏi Interaction cũ.
+     */
+    private Set<Id> createNewInteractionForInteractionReply(List<EmailMessage> newMsgs) {
+        Set<Id> handledEmailIds = new Set<Id>();
+        List<EmailMessage> replyMsgs = new List<EmailMessage>();
+        Set<Id> parentCaseIds = new Set<Id>();
+
+        for (EmailMessage em : newMsgs) {
+            if (em.Id == null) continue;
+            if (em.Incoming != true) continue;
+            if (em.ParentId == null) continue;
+            if (String.isBlank(em.ThreadIdentifier)) continue;
+            if (em.ThreadIdentifier == em.MessageIdentifier) continue;
+            replyMsgs.add(em);
+            parentCaseIds.add(em.ParentId);
+        }
+        if (replyMsgs.isEmpty()) return handledEmailIds;
+
+        Map<Id, Case> parentCaseMap = new Map<Id, Case>([
+            SELECT Id, RecordTypeId, RecordType.DeveloperName, ParentId, OwnerId,
+                   Origin, Status, Subject, SuppliedEmail, Description,
+                   FEC_Channel__c, FEC_Interaction_Subchannel__c,
+                   FEC_Interaction_View_Mode__c, FEC_Send_To__c, FEC_Interaction_Email__c
+            FROM Case
+            WHERE Id IN :parentCaseIds
+        ]);
+
+        Map<Id, Case> emailIdToNewCase = new Map<Id, Case>();
+        List<Case> casesToInsert = new List<Case>();
+        for (EmailMessage em : replyMsgs) {
+            Case oldInteraction = parentCaseMap.get(em.ParentId);
+            if (oldInteraction == null) continue;
+            if (oldInteraction.RecordType == null || oldInteraction.RecordType.DeveloperName != 'Interaction') continue;
+            // Email-to-Case already created a child Interaction and Case trigger set ParentId.
+            // Keep the EmailMessage on that Interaction; do not create another child.
+            if (oldInteraction.ParentId != null) continue;
+
+            Case newInteraction = new Case();
+            newInteraction.RecordTypeId = oldInteraction.RecordTypeId;
+            newInteraction.ParentId = oldInteraction.Id;
+            newInteraction.OwnerId = oldInteraction.OwnerId;
+            newInteraction.Origin = oldInteraction.Origin;
+            newInteraction.Status = String.isNotBlank(oldInteraction.Status) ? oldInteraction.Status : 'Open';
+            newInteraction.Subject = String.isNotBlank(em.Subject) ? stripThreadToken(em.Subject) : oldInteraction.Subject;
+            newInteraction.Description = 'Created from inbound email reply on Interaction ' + String.valueOf(oldInteraction.Id);
+            newInteraction.SuppliedEmail = em.FromAddress;
+            newInteraction.FEC_Channel__c = String.isNotBlank(oldInteraction.FEC_Channel__c) ? oldInteraction.FEC_Channel__c : 'Email';
+            newInteraction.FEC_Interaction_Subchannel__c = String.isNotBlank(oldInteraction.FEC_Interaction_Subchannel__c) ? oldInteraction.FEC_Interaction_Subchannel__c : 'Incoming Email';
+            newInteraction.FEC_Send_To__c = String.isNotBlank(oldInteraction.FEC_Send_To__c) ? oldInteraction.FEC_Send_To__c : em.ToAddress;
+            newInteraction.FEC_Interaction_Email__c = String.isNotBlank(oldInteraction.FEC_Interaction_Email__c) ? oldInteraction.FEC_Interaction_Email__c : em.FromAddress;
+            casesToInsert.add(newInteraction);
+            emailIdToNewCase.put(em.Id, newInteraction);
+        }
+        if (casesToInsert.isEmpty()) return handledEmailIds;
+
+        insert casesToInsert;
+
+        List<EmailMessage> emailsToInsert = new List<EmailMessage>();
+        List<EmailMessage> originalEmailsToDelete = new List<EmailMessage>();
+        for (EmailMessage em : replyMsgs) {
+            Case newInteraction = emailIdToNewCase.get(em.Id);
+            if (newInteraction == null || newInteraction.Id == null) continue;
+
+            EmailMessage newEm = new EmailMessage();
+            newEm.ParentId = newInteraction.Id;
+            newEm.FromAddress = em.FromAddress;
+            newEm.FromName = em.FromName;
+            newEm.ToAddress = em.ToAddress;
+            newEm.CcAddress = em.CcAddress;
+            newEm.Subject = stripThreadToken(em.Subject);
+            newEm.TextBody = em.TextBody;
+            newEm.HtmlBody = em.HtmlBody;
+            newEm.Incoming = true;
+            newEm.Status = '0';
+            newEm.MessageDate = em.MessageDate != null ? em.MessageDate : Datetime.now();
+            newEm.ThreadIdentifier = em.ThreadIdentifier;
+            newEm.MessageIdentifier = em.MessageIdentifier;
+            emailsToInsert.add(newEm);
+
+            handledEmailIds.add(em.Id);
+            originalEmailsToDelete.add(new EmailMessage(Id = em.Id));
+        }
+
+        if (!emailsToInsert.isEmpty()) {
+            insert emailsToInsert;
+        }
+        if (!originalEmailsToDelete.isEmpty()) {
+            try {
+                delete originalEmailsToDelete;
+            } catch (Exception e) {
+                System.debug('delete original Interaction reply EmailMessage failed: ' + e.getMessage());
+            }
+        }
+
+        return handledEmailIds;
     }
 
+    private static String stripThreadToken(String subject) {
+        if (String.isBlank(subject)) return '';
+        String result = subject.replaceAll('(?i)\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]', '');
+        result = result.replaceAll('(?i)\\s*\\[\\s*fec-parent:[^\\]]+\\s*\\]', '');
+        return result.trim();
+    }
 
     /**
      * Method Description: Khi khách hàng reply email từ Customer/Internal Case,
@@ -54,10 +157,12 @@ public without sharing class FEC_EmailMessageTriggerHandler {
      * @return void
      * @created: 2026/04/03
      */
-    private void redirectIncomingReplyToServiceCase(List<EmailMessage> newMsgs) {
+    private void redirectIncomingReplyToServiceCase(List<EmailMessage> newMsgs, Set<Id> skipEmailIds) {
+        if (skipEmailIds == null) skipEmailIds = new Set<Id>();
         // Lọc email phản hồi theo spec
         List<EmailMessage> replyMsgs = new List<EmailMessage>();
         for (EmailMessage em : newMsgs) {
+            if (skipEmailIds.contains(em.Id)) continue;
             if (em.Incoming != true) continue;
             if (String.isBlank(em.ThreadIdentifier)) continue;
             if (em.ThreadIdentifier == em.MessageIdentifier) continue;
@@ -125,8 +230,7 @@ public without sharing class FEC_EmailMessageTriggerHandler {
             newEm.FromName    = em.FromName;
             newEm.ToAddress   = em.ToAddress;
             newEm.CcAddress   = em.CcAddress;
-            newEm.Subject     = String.isNotBlank(em.Subject)
-                ? em.Subject.replaceAll('(?i)\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]', '').trim() : '';
+            newEm.Subject     = stripThreadToken(em.Subject);
             newEm.TextBody    = em.TextBody;
             newEm.HtmlBody    = em.HtmlBody;
             newEm.Incoming    = true;
