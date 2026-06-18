@@ -271,6 +271,11 @@ export default class Fec_CardPayment extends LightningElement {
     get hasAnyError() {
         return this.hasError || this.hasTotalsError;
     }
+
+    /** Chỉ hiện lỗi section khi không có dòng bảng — bảng có data từ API thì không báo "Tải dữ liệu không thành công". */
+    get showSectionLoadError() {
+        return this.hasAnyError && !this.isLoading && !this.hasCardPaymentTableData;
+    }
     
     columns = [
         { label: 'Rec', fieldName: 'FEC_Rec__c', type: 'text', width: '44px', minWidth: '44px', cellAlign: 'center' },
