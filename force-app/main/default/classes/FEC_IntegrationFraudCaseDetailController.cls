@@ -270,6 +270,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Sys_Channel__c,
                    FEC_Creator_Email__c,
                    CreatedDate,
+                   FEC_Created_Time__c,
+                   FEC_Updated_Time__c,
                    FEC_Integrate_Case_ID__c ,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
@@ -320,6 +322,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Creator_Email__c,
                    CreatedDate,
                    FEC_Integrate_Case_ID__c ,
+                   FEC_Created_Time__c,
+                   FEC_Updated_Time__c,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
             WHERE FEC_Integrate_Case_ID__c =:serviceCaseId
@@ -354,6 +358,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Creator_Email__c,
                    FEC_Investigation_Conclusion__c,
                    CreatedDate,
+                   FEC_Created_Time__c,
+                   FEC_Updated_Time__c,
                    FEC_Integrate_Case_ID__c,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
@@ -490,10 +496,14 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                     ),
             
                 FEC_FraudConstantCommon.KEY_CREATED_DATE =>
-                    FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
+                    FEC_IntegrationFraudCaseUtil.formatDateTime(
+                        c.FEC_Created_Time__c != null ? c.FEC_Created_Time__c : c.CreatedDate
+                    ),
             
                 FEC_FraudConstantCommon.KEY_LAST_MODIFIED_DATE =>
-                    FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate)
+                    FEC_IntegrationFraudCaseUtil.formatDateTime(
+                        c.FEC_Updated_Time__c != null ? c.FEC_Updated_Time__c : c.LastModifiedDate
+                    )
                     
             });
         }
@@ -525,8 +535,12 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                 'FEC_CS_Remark__c'            => c.FEC_CS_Remark__c,
                 'FEC_Investigation_Conclusion__c'
                                              => c.FEC_Investigation_Conclusion__c,
-                'CreatedDate'                 => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
-                'LastModifiedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate),
+                'CreatedDate'                 => FEC_IntegrationFraudCaseUtil.formatDateTime(
+                    c.FEC_Created_Time__c != null ? c.FEC_Created_Time__c : c.CreatedDate
+                ),
+                'LastModifiedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(
+                    c.FEC_Updated_Time__c != null ? c.FEC_Updated_Time__c : c.LastModifiedDate
+                ),
                 'Infos'        => buildInfoList(
                     c,
                     infoByCaseId,
