@@ -137,6 +137,8 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
             FEC_API_Config__mdt apiConfig  =
                 FEC_API_Config__mdt.getInstance('FEC_VMX_AUTH_DETAIL_INQ');
 
+            requestorId = FEC_CommonUltils.resolveRequestorId(apiConfig);
+
             String acctForCall = resolveAccountForCall(acctNbr, apiSetting, apiConfig);
 
             String ctx     = String.isNotBlank(context)
@@ -643,6 +645,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
             FEC_ConstantCommon.REQUESTOR_CRM,
             FEC_ConstantCommon.REQUESTOR_PORTAL,
             FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
             FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
         };
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
