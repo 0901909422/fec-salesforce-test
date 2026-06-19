@@ -19,5 +19,6 @@
     <permissionSets>FEC_Case_Assignment_Management</permissionSets>
     <permissionSets>FEC_Search_Fraud_Case</permissionSets>
     <permissionSets>Upload_Outbound_Campaign</permissionSets>
+    <permissionSets>FEC_Integration_Case_Info_Full_Access</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

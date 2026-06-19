@@ -530,7 +530,8 @@ public with sharing class FEC_IntegrationMappingController{
         String subCode,
         String channelCode,
         String serviceType,
-        String userTypeId
+        String userTypeId,
+        String productLine
     ) {
 
         // Result list returned to LWC
@@ -605,6 +606,7 @@ public with sharing class FEC_IntegrationMappingController{
                 OR FEC_Source_Parent_Id__c = :category
                 OR FEC_Source_Parent_Id__c = :subCategory
                 OR FEC_Source_Parent_Id__c = :serviceType
+                OR FEC_Source_Parent_Id__c = :productLine
               )
             ORDER BY FEC_Source_Id__c
         ]) {
