@@ -93,12 +93,11 @@ public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
     try {
       validateApplicationId(applicationId);
 
-      String requestor = String.isNotBlank(fecRequestor)
-        ? fecRequestor.trim()
-        : FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
-
       FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
       FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String requestor = String.isNotBlank(fecRequestor)
+        ? fecRequestor.trim()
+        : FEC_CommonUltils.resolveRequestorId(apiConfig);
 
       String endpoint = FEC_CommonUltils.buildCalloutEndpoint(
         apiSetting?.FEC_Endpoint__c,
