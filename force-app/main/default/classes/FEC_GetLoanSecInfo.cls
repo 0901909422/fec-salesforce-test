@@ -394,6 +394,7 @@ public with sharing class FEC_GetLoanSecInfo {
                 responseLog.response,
                 responseLog.errorMessage
             );
+            responseLog = null;
             return;
         }
 

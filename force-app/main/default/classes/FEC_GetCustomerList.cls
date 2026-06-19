@@ -486,8 +486,10 @@ public with sharing class FEC_GetCustomerList {
         }
 
         /* ================= AccountNumber ================= */
+        // 19/06/2026 linhdev - Incorrect Payment: FEC_Account_Contract_Number_Text__c (contract format) vẫn truyền vào AccountNumber theo payload API 20
         if (String.isNotBlank(accountNumber) &&
-            !Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber)) {
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber) &&
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, accountNumber)) {
             throw new CalloutException(
                 System.Label.FEC_MSG_AccountNumber_Invalid
             );
