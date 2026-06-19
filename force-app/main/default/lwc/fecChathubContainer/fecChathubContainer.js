@@ -53,7 +53,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
     @wire(IsConsoleNavigation) isConsoleNavigation;
 
     // --- Configuration & Constants ---
-    #secretKey = '4mX2SmAeoLy9n8c1zsEpH+L37XrwsCGxvc1tAyOdaTpxgcOQuXitLA==';
+    #secretKey = 'vDJ7UEVdG/gHrBDCxCurMtPfI/iv6JAYOrQn3WqBoJgsAypeF/QWkw==';
     localStorageUsername = "chathub_username";
 
     // --- Drag & Drop Variables ---
