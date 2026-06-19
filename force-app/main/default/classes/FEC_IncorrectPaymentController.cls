@@ -37,7 +37,7 @@ public without sharing class FEC_IncorrectPaymentController {
         @AuraEnabled public String selectedPaymentHistoryId;
     }
 
-    // 18/06/2026 10:00 linhdev - API 24 GetLoanSecInfo: hiển thị Payment History, lưu FEC_Payment_History__c, sort mới nhất trước
+    // 18/06/2026 17:30 linhdev - API 24 GetLoanSecInfo: ContractNumber = giá trị user chọn từ API 20 (Applications.ContractNumber)
     @AuraEnabled
     public static List<PaymentDTO> getPaymentHistoryFromSOAP(Id caseId, String contractNumber) {
         if (String.isBlank(contractNumber)) {
@@ -47,45 +47,41 @@ public without sharing class FEC_IncorrectPaymentController {
         FEC_GetLoanSecInfo.ResponseWrapper loanRes;
         try {
             loanRes = FEC_GetLoanSecInfo.getLoanSecInfo(trimmed);
-            if (loanRes == null || loanRes.Sys == null || loanRes.Sys.Code != 1) {
-                String msg = (loanRes != null && loanRes.Sys != null && String.isNotBlank(loanRes.Sys.Description))
-                    ? loanRes.Sys.Description
-                    : Label.FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved;
-                throw new AuraHandledException(msg);
-            }
-        } catch (AuraHandledException e) {
-            throw e;
         } catch (Exception e) {
-            throw new AuraHandledException(String.isNotBlank(e.getMessage()) ? e.getMessage() : Label.FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved);
+            // 19/06/2026 linhdev - không throw sau callout: Aura rollback sẽ hủy @future ghi FEC_API_Log__c
+            return new List<PaymentDTO>();
         }
-        List<FEC_GetLoanSecInfo.PaymentHistory> histories = (loanRes != null && loanRes.LoanSecInfo != null && loanRes.LoanSecInfo.PaymentHistories != null)
-            ? loanRes.LoanSecInfo.PaymentHistories
-            : new List<FEC_GetLoanSecInfo.PaymentHistory>();
-        List<FEC_GetLoanSecInfo.PaymentHistory> sortedHistories = sortPaymentHistoriesNewestFirst(histories);
-        if (sortedHistories.isEmpty()) {
-            throw new AuraHandledException(Label.FEC_LBL_No_Payment_History_Found);
+        if (loanRes == null || loanRes.Sys == null || loanRes.Sys.Code != 1) {
+            return new List<PaymentDTO>();
         }
-        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
-        List<FEC_Payment_History__c> savedRows = saveIncorrectPaymentHistoryToObject(customerHistoryId, sortedHistories);
-        List<PaymentDTO> result = new List<PaymentDTO>();
-        Integer idx = 0;
-        for (Integer i = 0; i < sortedHistories.size(); i++) {
-            FEC_GetLoanSecInfo.PaymentHistory ph = sortedHistories[i];
-            if (ph == null) {
-                continue;
+        List<FEC_GetLoanSecInfo.PaymentHistory> histories = (loanRes.LoanSecInfo != null && loanRes.LoanSecInfo.PaymentHistories != null)
+                ? loanRes.LoanSecInfo.PaymentHistories
+                : new List<FEC_GetLoanSecInfo.PaymentHistory>();
+            List<FEC_GetLoanSecInfo.PaymentHistory> sortedHistories = sortPaymentHistoriesNewestFirst(histories);
+            if (sortedHistories.isEmpty()) {
+                return new List<PaymentDTO>();
             }
-            FEC_Payment_History__c rec = (savedRows != null && i < savedRows.size()) ? savedRows[i] : null;
-            PaymentDTO dto = new PaymentDTO();
-            dto.id = (rec != null && rec.Id != null)
-                ? String.valueOf(rec.Id)
-                : FEC_ConstantCommon.PAYMENT_PREFIX + String.valueOf(idx);
-            dto.paymentNo = (rec != null && rec.FEC_Payment_No__c != null)
-                ? String.valueOf(rec.FEC_Payment_No__c)
-                : String.valueOf(idx + 1);
-            dto.paymentDate = FEC_CommonUltils.formatDateDDMMYYYY(ph.ValueDate);
-            dto.bookingDate = FEC_CommonUltils.formatDateDDMMYYYY(ph.BookingDate);
-            dto.paymentAmount = ph.AmountOfMoney;
-            dto.particulars = ph.ChkNo != null ? ph.ChkNo : FEC_ConstantCommon.STR_EMPTY;
+            Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
+            List<FEC_Payment_History__c> savedRows = saveIncorrectPaymentHistoryToObject(customerHistoryId, sortedHistories);
+            List<PaymentDTO> result = new List<PaymentDTO>();
+            Integer idx = 0;
+            for (Integer i = 0; i < sortedHistories.size(); i++) {
+                FEC_GetLoanSecInfo.PaymentHistory ph = sortedHistories[i];
+                if (ph == null) {
+                    continue;
+                }
+                FEC_Payment_History__c rec = (savedRows != null && i < savedRows.size()) ? savedRows[i] : null;
+                PaymentDTO dto = new PaymentDTO();
+                dto.id = (rec != null && rec.Id != null)
+                    ? String.valueOf(rec.Id)
+                    : FEC_ConstantCommon.PAYMENT_PREFIX + String.valueOf(idx);
+                dto.paymentNo = (rec != null && rec.FEC_Payment_No__c != null)
+                    ? String.valueOf(rec.FEC_Payment_No__c)
+                    : String.valueOf(idx + 1);
+                dto.paymentDate = FEC_CommonUltils.formatDateDDMMYYYY(ph.ValueDate);
+                dto.bookingDate = FEC_CommonUltils.formatDateDDMMYYYY(ph.BookingDate);
+                dto.paymentAmount = ph.AmountOfMoney;
+                dto.particulars = ph.ChkNo != null ? ph.ChkNo : FEC_ConstantCommon.STR_EMPTY;
             result.add(dto);
             idx++;
         }
@@ -162,9 +158,6 @@ public without sharing class FEC_IncorrectPaymentController {
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'})
             );
         }
-        if (!Schema.sObjectType.Case.isUpdateable()) {
-            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
-        }
         List<Case> cases = [SELECT Id FROM Case WHERE Id = :caseId LIMIT 1];
         if (cases.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_Case_Not_Found);
@@ -206,32 +199,16 @@ public without sharing class FEC_IncorrectPaymentController {
         return getLoanContractOptionsFromApi(caseId);
     }
 
-    // 18/06/2026 10:00 linhdev - Gọi API 20, lấy ContractNumber từ Applications
+    // 18/06/2026 17:30 linhdev - Gọi API 20, chỉ trả ContractNumber từ Applications (không merge Account/Contract trên Salesforce)
     @AuraEnabled
     public static List<FEC_CommonUltils.PicklistOption> getLoanContractOptionsFromApi(Id caseId) {
         List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
-        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+        if (caseId == null) {
             return result;
-        }
-        List<Case> cases = [
-            SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
-                FEC_Account_or_Contract__r.FEC_Contract_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (cases.isEmpty()) {
-            return result;
-        }
-        Case c = cases[0];
-        Set<String> existingValues = new Set<String>();
-        addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
-        addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
-        if (c.FEC_Account_or_Contract__r != null) {
-            addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
         }
         try {
             FEC_GetCustomerList.ResponseWrapper cusRes = callGetCustomerListForCase(caseId);
+            Set<String> existingValues = new Set<String>();
             for (String contractNum : extractLoanContractNumbers(cusRes)) {
                 addContractIfNotExists(result, existingValues, contractNum);
             }
@@ -246,7 +223,7 @@ public without sharing class FEC_IncorrectPaymentController {
             return null;
         }
         List<Case> cases = [
-            SELECT FEC_National_ID_Passport_ID__c, FEC_Contract_Number__c,
+            SELECT FEC_National_ID_Passport_ID__c, FEC_Account_Contract_Number_Text__c,
                 FEC_Account_or_Contract__c,
                 FEC_Account_or_Contract__r.FEC_Account_Number__c,
                 FEC_Account_or_Contract__r.FEC_Contract_Number__c,
@@ -259,12 +236,18 @@ public without sharing class FEC_IncorrectPaymentController {
             return null;
         }
         Case c = cases[0];
+        String nationalId = c.FEC_National_ID_Passport_ID__c;
+        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+        // 18/06/2026 18:30 linhdev - luồng Incorrect Payment: truyền Case.FEC_Account_Contract_Number_Text__c vào API 20 (AccountNumber param)
+        if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+            return FEC_GetCustomerList.getCustomerList(
+                requestorId, null, false, null, nationalId, null, null, c.FEC_Account_Contract_Number_Text__c.trim(), null, null, null
+            );
+        }
         String rawAccountNumber = c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null;
         String rawContractNumber = c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null;
         String productTypeName = c.FEC_Product_Type__r != null ? c.FEC_Product_Type__r.Name : null;
         String accountNumber = FEC_CommonUltils.resolveAccountNumber(productTypeName, rawAccountNumber, rawContractNumber);
-        String nationalId = c.FEC_National_ID_Passport_ID__c;
-        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
         if (String.isNotBlank(accountNumber)) {
             return FEC_GetCustomerList.getCustomerList(
                 requestorId, null, false, null, nationalId, null, null, accountNumber, null, null, null
@@ -273,11 +256,6 @@ public without sharing class FEC_IncorrectPaymentController {
         if (String.isNotBlank(rawContractNumber)) {
             return FEC_GetCustomerList.getCustomerList(
                 requestorId, null, false, null, nationalId, null, null, null, rawContractNumber, null, null
-            );
-        }
-        if (String.isNotBlank(c.FEC_Contract_Number__c)) {
-            return FEC_GetCustomerList.getCustomerList(
-                requestorId, null, false, null, nationalId, null, null, null, c.FEC_Contract_Number__c, null, null
             );
         }
         if (String.isNotBlank(nationalId)) {
@@ -473,9 +451,6 @@ public without sharing class FEC_IncorrectPaymentController {
         if (cases.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_Case_Not_Found);
         }
-        if (!Schema.sObjectType.Case.isUpdateable()) {
-            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
-        }
         
         // Update Case fields
         Case c = cases[0];
@@ -570,9 +545,6 @@ public without sharing class FEC_IncorrectPaymentController {
         ];
         if (cases.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_Case_Not_Found);
-        }
-        if (!Schema.sObjectType.Case.isUpdateable()) {
-            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
         }
 
         Case c = cases[0];

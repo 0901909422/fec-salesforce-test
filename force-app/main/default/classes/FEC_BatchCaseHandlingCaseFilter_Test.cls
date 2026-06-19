@@ -95,13 +95,13 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
 
         System.assert(baseWhere.size() > 0, 'Hàm phải trả về danh sách các mệnh đề điều kiện WHERE cơ sở.');
         String combined = String.join(baseWhere, ' AND ');
-        System.assert(combined.contains('IsClosed = false'), 'Mệnh đề WHERE cơ sở bắt buộc phải chứa lọc trạng thái chưa đóng.');
         System.assert(combined.contains('RecordType.DeveloperName'), 'Mệnh đề WHERE cơ sở bắt buộc phải lọc Record Type Customer_Case.');
-        System.assert(combined.contains('FEC_Final_Status__c'), 'Mệnh đề WHERE cơ sở bắt buộc phải lọc Status Open/Pending.');
-        // 05/06/2026 10:00 linhdev - default filter: Owner OR assigned OR queue member (không chỉ OwnerId)
+        System.assert(combined.contains('Status = \'Open\''), 'Mệnh đề WHERE cơ sở bắt buộc phải lọc Status Open.');
+        System.assert(combined.contains('Status = \'Pending\''), 'Mệnh đề WHERE cơ sở bắt buộc phải lọc Status Pending.');
+        // 18/06/2026 linhdev - spec điều kiện 2: OwnerId=$User.Id OR FEC_Assignment_Users__c chứa UserId
         System.assert(
-            combined.contains('FEC_Is_Owner_Or_Assigned__c = true'),
-            'Mệnh đề WHERE cơ sở phải lọc Owner hoặc user trong FEC_Assignment_Users__c.'
+            combined.contains('OwnerId = \'') && combined.contains('FEC_Assignment_Users__c LIKE'),
+            'Mệnh đề WHERE cơ sở phải lọc Owner hoặc user trong FEC_Assignment_Users__c theo spec.'
         );
     }
 
@@ -223,6 +223,53 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         Test.stopTest();
 
         System.assertEquals(1, count, 'User trong FEC_Assignment_Users__c phải match default filter.');
+    }
+
+    /**
+     * Kịch bản 2d2: User là Owner dù FEC_Assignment_Users__c chứa tên Queue vẫn phải match spec điều kiện 2.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_IncludesOwnerCaseWithQueueAssignmentName() {
+        List<Group> queues = [
+            SELECT Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id loginUserId = UserInfo.getUserId();
+        Case ownerWithQueueAssign = new Case(
+            Subject = 'Owner With Queue Assignment Filter Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            OwnerId = loginUserId,
+            FEC_ID_Search__c = 'FILTER-OWNER-QUEUE-ASSIGN',
+            FEC_Customer_Type__c = 'Existing'
+        );
+        if (bulkCaseRtId != null) {
+            ownerWithQueueAssign.RecordTypeId = bulkCaseRtId;
+        }
+        insert ownerWithQueueAssign;
+        update new Case(
+            Id = ownerWithQueueAssign.Id,
+            FEC_ID_Search__c = 'FILTER-OWNER-QUEUE-ASSIGN',
+            FEC_Assignment_Users__c = queues[0].Name
+        );
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(ownerWithQueueAssign.Id) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(
+            1,
+            count,
+            'User là Owner phải match default filter kể cả khi FEC_Assignment_Users__c chứa tên Queue.'
+        );
     }
 
     /**
@@ -811,6 +858,86 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         Test.stopTest();
 
         System.assert(whereParts.size() >= 1);
+    }
+
+    /**
+     * Kịch bản: filter Queue equals phải match cả OwnerId lẫn FEC_Assignment_Users__c chứa tên Queue.
+     */
+    @IsTest
+    static void testBuildCompleteWhere_QueueFilterMatchesAssignmentUsersField() {
+        List<Group> queues = [
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id queueId = queues[0].Id;
+        String queueName = queues[0].Name;
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(queueId, UserInfo.getUserId());
+        }
+
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE Id != :UserInfo.getUserId()
+            AND IsActive = true
+            LIMIT 1
+        ];
+        if (otherUsers.isEmpty()) {
+            System.assert(true, 'Skipped: no other active user.');
+            return;
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id caseId;
+        System.runAs(runUser) {
+            Case assignedQueueCase = new Case(
+                Subject = 'Queue Filter Assignment Field Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = otherUsers[0].Id,
+                FEC_ID_Search__c = 'FILTER-QUEUE-ASSIGN-FIELD',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                assignedQueueCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert assignedQueueCase;
+            update new Case(
+                Id = assignedQueueCase.Id,
+                FEC_ID_Search__c = 'FILTER-QUEUE-ASSIGN-FIELD',
+                FEC_Assignment_Users__c = queueName
+            );
+            caseId = assignedQueueCase.Id;
+        }
+
+        String filtersJson = '[{"propertyKey":"QUEUE","operatorKey":"equals","valueList":["' +
+            String.escapeSingleQuotes(queueName) +
+            '"]}]';
+
+        Test.startTest();
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(
+            FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson)
+        );
+        String combined = String.join(whereParts, ' AND ');
+        String whereClause = combined + ' AND Id = \'' + String.valueOf(caseId) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assert(
+            combined.contains('FEC_Assignment_Users__c LIKE'),
+            'Filter Queue equals phải chứa điều kiện FEC_Assignment_Users__c LIKE tên Queue.'
+        );
+        System.assertEquals(
+            1,
+            count,
+            'Case có FEC_Assignment_Users__c chứa tên Queue phải match filter Queue equals.'
+        );
     }
 
     @IsTest

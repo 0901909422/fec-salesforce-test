@@ -5,7 +5,7 @@
     >
     <div class="slds-form-element__control">
       <div class="slds-combobox_container">
-        <div class={comboboxClassName}>
+        <div class={comboboxClassName} onfocusout={handleComboboxFocusOut}>
           <div
             class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
             if:false={hasValue}
@@ -23,7 +23,6 @@
               placeholder={placeholder}
               onchange={handleSearch}
               oninput={handleSearchInput}
-              onblur={handleSearchBlur}
               onclick={handleFocus}
               disabled={disabled}
             ></lightning-input>
@@ -54,8 +53,11 @@
             </span>
             <div
               role="combobox"
+              data-id="chip-value"
+              tabindex="0"
               class="slds-input_faux slds-combobox__input slds-combobox__input-value"
               aria-disabled={disabled}
+              onmousedown={handleChipMouseDown}
             >
               <span class="slds-truncate">{optionLabel}</span>
             </div>
