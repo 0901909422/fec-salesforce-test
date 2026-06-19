@@ -96,8 +96,9 @@
             validateInput(input);
 
             // 2. Prepare Sys Data
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Emea_Account_Inq');
             String transId = UUID.randomUUID().toString();
-            String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+            String requestorId = FEC_CommonUltils.resolveRequestorId(apiConfig);
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
             // 3. Construct XML Request
@@ -136,7 +137,6 @@
 
             // Lấy cấu hình API từ Custom Setting
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Emea_Account_Inq');
 
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.EMEA_ACCOUNT_INQ_ENDPOINT_MOCKUP

@@ -1015,6 +1015,13 @@ public with sharing class FEC_CommonUltils {
       String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
   }
 
+  public static String resolveRequestorId(FEC_API_Config__mdt apiConfig) {
+    if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Requestor_Id__c)) {
+      return apiConfig.FEC_Requestor_Id__c.trim();
+    }
+    return FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY;
+  }
+
   public static String generateTransactionUUID() {
     return UUID.randomUUID().toString();
   }

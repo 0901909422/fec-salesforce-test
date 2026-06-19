@@ -96,6 +96,9 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String acct
     ) {
         try {
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MFASOUTSTANDINGAUTHINQ');
+            requestorId = FEC_CommonUltils.resolveRequestorId(apiConfig);
+            vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION;
             validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
 
             String soapBody = buildSoapRequest(
@@ -110,7 +113,6 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
                     );
 
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MFASOUTSTANDINGAUTHINQ');
 
             String endpoint = apiSetting?.FEC_Call_Mock__c
                     ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
@@ -524,7 +526,13 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         }
 
         // ===================== REQUESTORID =====================
-        Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP,FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN};
+        Set<String> validRequestorIds = new Set<String>{
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
+        };
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
