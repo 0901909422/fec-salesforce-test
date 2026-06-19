@@ -96,11 +96,12 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
         String cardNbr,
         String name
     ) {
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MCMSCARDTOCARDINQEMEA');
+        requestorId = FEC_CommonUltils.resolveRequestorId(apiConfig);
         validateRequest(transID, requestorId, dateTimeStr, vmxVersion, context, signOnName, org, cardNbr, name);
 
         // ================= CONFIG =================
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MCMSCARDTOCARDINQEMEA');
 
         // =====================================================
         // ENV OVERRIDE 
@@ -456,6 +457,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
             FEC_ConstantCommon.REQUESTOR_CRM,
             FEC_ConstantCommon.REQUESTOR_PORTAL,
             FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
             FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
         };
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {

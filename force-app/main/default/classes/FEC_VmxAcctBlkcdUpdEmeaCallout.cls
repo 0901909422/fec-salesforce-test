@@ -104,7 +104,7 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
         String cardNbrParam = resolveCardNbr(apiSetting, apiConfig, input.cardNbr);
 
         String transId = UUID.randomUUID().toString();
-        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+        String requestorId = FEC_CommonUltils.resolveRequestorId(apiConfig);
         String reqTime = Datetime.now().formatGmt(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
 
         Dom.Document doc = new Dom.Document();
