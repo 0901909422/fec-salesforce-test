@@ -9,12 +9,9 @@
           value={incorrectContract}
           option={formattedIncorrectContractOption}
           disabled={isReadOnly}
-          enable-search-change
           onremove={handleRemoveIncorrectContract}
           onchange={handleChangeIncorrectContract}
           onblurcommit={handleIncorrectContractBlurCommit}
-          onsearchchange={handleIncorrectContractSearchChange}
-          ondropdownopen={handleIncorrectContractDropdownOpen}
         ></c-fec_-combo-box>
         <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
           {customLabel.incorrectContractHint}
@@ -185,12 +182,9 @@
                     option={formattedCorrectContractOption}
                     disabled={isReadOnly}
                     required
-                    enable-search-change
                     onremove={handleAdjustmentCorrectContractRemove}
                     onchange={handleAdjustmentCorrectContractChange}
                     onblurcommit={handleAdjustmentCorrectContractBlurCommit}
-                    onsearchchange={handleCorrectContractSearchChange}
-                    ondropdownopen={handleCorrectContractDropdownOpen}
                   ></c-fec_-combo-box>
                 </lightning-layout-item>
                 <lightning-layout-item size="4" padding="around-small">

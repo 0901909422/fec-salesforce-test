@@ -187,6 +187,30 @@ private class FEC_GetLoanSecInfo_Test {
         Test.stopTest();
     }
 
+    @IsTest
+    static void testGetLoanSecInfo_AsyncApiLogOnHttpError() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(503, 'Service Unavailable'));
+
+        Test.startTest();
+        try {
+            FEC_GetLoanSecInfo.getLoanSecInfo('1224555');
+            System.assert(false, 'Phải ném CalloutException khi HTTP Status = 503.');
+        } catch (CalloutException e) {
+            System.assert(e.getMessage().contains('503'), 'Lỗi phải chứa HTTP status 503.');
+        }
+        Test.stopTest();
+
+        List<FEC_API_Log__c> logs = [
+            SELECT FEC_Request_String__c, FEC_Status_Code__c
+            FROM FEC_API_Log__c
+            WHERE Name = 'FEC_GetLoanSecInfo'
+            LIMIT 1
+        ];
+        System.assertEquals(1, logs.size(), 'Incorrect Payment path phải ghi FEC_API_Log__c qua @future.');
+        System.assert(logs[0].FEC_Request_String__c.contains('1224555'), 'Request phải chứa ContractNumber nhập tay.');
+        System.assertEquals('503', logs[0].FEC_Status_Code__c);
+    }
+
     // =========================================================================
     // HELPER CLASS MOCK HTTP RESPONSE
     // =========================================================================

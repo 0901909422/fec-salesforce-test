@@ -21,6 +21,11 @@ export default class Fec_ComboBox extends LightningElement {
   }
   set value(val) {
     this._value = (val === null || val === undefined || val === STR_EMPTY) ? undefined : val;
+    if (this._value) {
+      this._inputDraft = STR_EMPTY;
+    } else {
+      this._lastBlurCommittedValue = STR_EMPTY;
+    }
   }
 
   get optionLabel() {
@@ -68,7 +73,11 @@ export default class Fec_ComboBox extends LightningElement {
 
   firstTimeLoaded = true;
   _justPicked = false;
+  _skipNextWindowBlurCommit = false;
+  _inputDraft = STR_EMPTY;
+  _lastBlurCommittedValue = STR_EMPTY;
   _customValidityMsg = STR_EMPTY;
+  _boundWindowClick = null;
 
   get showClose() {
     return !this.disabled
@@ -77,9 +86,15 @@ export default class Fec_ComboBox extends LightningElement {
   @api clear() {
     this.value = undefined;
     this.searchKey = undefined;
+    this._inputDraft = STR_EMPTY;
+    this._lastBlurCommittedValue = STR_EMPTY;
     this.openSearch = false;
     this.hasError = false;
     this._customValidityMsg = STR_EMPTY;
+  }
+
+  @api resetBlurCommitState() {
+    this._lastBlurCommittedValue = STR_EMPTY;
   }
 
   @api setCustomValidity(message) {
@@ -125,15 +140,16 @@ export default class Fec_ComboBox extends LightningElement {
   renderedCallback() {
     if (this.firstTimeLoaded) {
       this.firstTimeLoaded = false;
-
-      window.addEventListener("click", (e) => {
-        this.openSearch = false;
-      });
+      this._boundWindowClick = this.handleWindowClick.bind(this);
+      window.addEventListener("click", this._boundWindowClick);
     }
   }
 
   disconnectedCallback() {
-    window.removeEventListener("click", () => {});
+    if (this._boundWindowClick) {
+      window.removeEventListener("click", this._boundWindowClick);
+      this._boundWindowClick = null;
+    }
   }
 
   handleSearch(e) {
@@ -141,12 +157,14 @@ export default class Fec_ComboBox extends LightningElement {
     e.stopPropagation();
 
     const inputValue = e?.detail?.value !== undefined ? e.detail.value : e.target.value;
+    this._inputDraft = inputValue != null ? String(inputValue).trim() : STR_EMPTY;
     this.searchKey = inputValue?.toLowerCase()?.trim();
     this.dispatchSearchChange(inputValue);
   }
 
   handleSearchInput(e) {
     const inputValue = e?.detail?.value !== undefined ? e.detail.value : e.target.value;
+    this._inputDraft = inputValue != null ? String(inputValue).trim() : STR_EMPTY;
     this.searchKey = inputValue?.toLowerCase()?.trim();
     this.dispatchSearchChange(inputValue);
   }
@@ -175,7 +193,7 @@ export default class Fec_ComboBox extends LightningElement {
     e.preventDefault();
   }
 
-  handleSearchBlur() {
+  handleComboboxFocusOut(event) {
     if (this.disabled) {
       return;
     }
@@ -183,14 +201,62 @@ export default class Fec_ComboBox extends LightningElement {
       this._justPicked = false;
       return;
     }
-    const inp = this.template.querySelector('[data-id="search-input"]');
-    if (!inp) {
+    const next = event.relatedTarget;
+    if (next && this.template.contains(next)) {
       return;
     }
-    const raw =
-      inp.value !== undefined && inp.value !== null
-        ? String(inp.value).trim()
-        : STR_EMPTY;
+    this._dispatchBlurCommit();
+    this._skipNextWindowBlurCommit = true;
+    setTimeout(() => {
+      this._skipNextWindowBlurCommit = false;
+    }, 0);
+  }
+
+  handleChipMouseDown(e) {
+    if (this.disabled) {
+      return;
+    }
+    const chip = e.currentTarget;
+    if (chip && typeof chip.focus === "function") {
+      chip.focus();
+    }
+  }
+
+  handleWindowClick(e) {
+    this.openSearch = false;
+    if (this._skipNextWindowBlurCommit || this.disabled || this._justPicked) {
+      return;
+    }
+    if (this.template.contains(e.target)) {
+      return;
+    }
+    if (!this.hasValue && this._inputDraft && String(this._inputDraft).trim()) {
+      this._dispatchBlurCommit();
+    }
+  }
+
+  _dispatchBlurCommit() {
+    let raw = STR_EMPTY;
+    if (this.hasValue) {
+      raw =
+        this.value !== undefined && this.value !== null
+          ? String(this.value).trim()
+          : STR_EMPTY;
+    } else if (this._inputDraft && String(this._inputDraft).trim()) {
+      raw = String(this._inputDraft).trim();
+    } else {
+      const inp = this.template.querySelector('[data-id="search-input"]');
+      if (inp) {
+        raw =
+          inp.value !== undefined && inp.value !== null
+            ? String(inp.value).trim()
+            : STR_EMPTY;
+      }
+    }
+    if (raw === this._lastBlurCommittedValue) {
+      return;
+    }
+    this._lastBlurCommittedValue = raw;
     this.dispatchEvent(
       new CustomEvent("blurcommit", {
         detail: { value: raw }
@@ -204,6 +270,8 @@ export default class Fec_ComboBox extends LightningElement {
 
     this.value = undefined;
     this.searchKey = undefined;
+    this._inputDraft = STR_EMPTY;
+    this._lastBlurCommittedValue = STR_EMPTY;
     this.hasError = false;
     this._customValidityMsg = STR_EMPTY;
 
@@ -234,6 +302,7 @@ export default class Fec_ComboBox extends LightningElement {
       this.hasError = false;
       this._customValidityMsg = STR_EMPTY;
       this._justPicked = true;
+      this._lastBlurCommittedValue = String(value).trim();
 
       const event = new CustomEvent("change", {
         detail: {
