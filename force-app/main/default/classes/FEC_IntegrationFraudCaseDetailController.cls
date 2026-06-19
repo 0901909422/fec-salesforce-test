@@ -56,6 +56,46 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
 
         Map<String, Object> snapshotData = (Map<String, Object>) JSON.deserializeUntyped(snapshots[0].FEC_Data__c);
 
+        // Enrich infos with display name from Master Data Integration
+        if (snapshotData.containsKey('infos')) {
+            List<Object> infos = (List<Object>) snapshotData.get('infos');
+
+            // Collect distinct FEC_Info_ID__c values used in this snapshot
+            Set<String> propKeys = new Set<String>();
+            for (Object o : infos) {
+                Map<String, Object> info = (Map<String, Object>) o;
+                Object infoId = info.get('FEC_Info_ID__c');
+                if (infoId != null && String.isNotBlank(String.valueOf(infoId))) {
+                    propKeys.add(String.valueOf(infoId));
+                }
+            }
+
+            if (!propKeys.isEmpty()) {
+                Boolean isVietnamese = (userLang == 'vi');
+                Map<String, String> displayNameMap = new Map<String, String>();
+                List<FEC_Master_Data_Integration__c> masterRecords = [
+                    SELECT FEC_Source_Id__c, FEC_Source_Name__c, FEC_Source_NameVN__c
+                    FROM FEC_Master_Data_Integration__c
+                    WHERE FEC_Source_Id__c IN :propKeys
+                    AND FEC_Source_Type__c != :FEC_FraudConstantCommon.KEY_AVAILABLE_VALUE
+                ];
+                for (FEC_Master_Data_Integration__c m : masterRecords) {
+                    displayNameMap.put(
+                        m.FEC_Source_Id__c,
+                        isVietnamese ? m.FEC_Source_NameVN__c : m.FEC_Source_Name__c
+                    );
+                }
+
+                for (Object o : infos) {
+                    Map<String, Object> info = (Map<String, Object>) o;
+                    Object infoId = info.get('FEC_Info_ID__c');
+                    if (infoId != null) {
+                        info.put('displayName', displayNameMap.get(String.valueOf(infoId)));
+                    }
+                }
+            }
+        }
+
         // Format datetime fields in case data if they exist
         if (snapshotData.containsKey('case')) {
             Map<String, Object> caseData = (Map<String, Object>) snapshotData.get('case');
@@ -230,6 +270,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Sys_Channel__c,
                    FEC_Creator_Email__c,
                    CreatedDate,
+                   FEC_Created_Time__c,
+                   FEC_Updated_Time__c,
                    FEC_Integrate_Case_ID__c ,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
@@ -280,6 +322,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Creator_Email__c,
                    CreatedDate,
                    FEC_Integrate_Case_ID__c ,
+                   FEC_Created_Time__c,
+                   FEC_Updated_Time__c,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
             WHERE FEC_Integrate_Case_ID__c =:serviceCaseId
@@ -314,6 +358,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Creator_Email__c,
                    FEC_Investigation_Conclusion__c,
                    CreatedDate,
+                   FEC_Created_Time__c,
+                   FEC_Updated_Time__c,
                    FEC_Integrate_Case_ID__c,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
@@ -450,10 +496,14 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                     ),
             
                 FEC_FraudConstantCommon.KEY_CREATED_DATE =>
-                    FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
+                    FEC_IntegrationFraudCaseUtil.formatDateTime(
+                        c.FEC_Created_Time__c != null ? c.FEC_Created_Time__c : c.CreatedDate
+                    ),
             
                 FEC_FraudConstantCommon.KEY_LAST_MODIFIED_DATE =>
-                    FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate)
+                    FEC_IntegrationFraudCaseUtil.formatDateTime(
+                        c.FEC_Updated_Time__c != null ? c.FEC_Updated_Time__c : c.LastModifiedDate
+                    )
                     
             });
         }
@@ -485,8 +535,12 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                 'FEC_CS_Remark__c'            => c.FEC_CS_Remark__c,
                 'FEC_Investigation_Conclusion__c'
                                              => c.FEC_Investigation_Conclusion__c,
-                'CreatedDate'                 => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
-                'LastModifiedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate),
+                'CreatedDate'                 => FEC_IntegrationFraudCaseUtil.formatDateTime(
+                    c.FEC_Created_Time__c != null ? c.FEC_Created_Time__c : c.CreatedDate
+                ),
+                'LastModifiedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(
+                    c.FEC_Updated_Time__c != null ? c.FEC_Updated_Time__c : c.LastModifiedDate
+                ),
                 'Infos'        => buildInfoList(
                     c,
                     infoByCaseId,
