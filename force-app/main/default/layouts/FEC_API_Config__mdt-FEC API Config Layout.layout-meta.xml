@@ -24,6 +24,10 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
+                <field>FEC_Requestor_Id__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
                 <field>FEC_Account_Number_Hard_Code__c</field>
             </layoutItems>
             <layoutItems>

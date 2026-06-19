@@ -343,17 +343,7 @@ private class FEC_MFASOUTSTANDINGAUTHINQ_Test {
     static void testValidateRequest_RequestorAndDatetimeErrors() {
         registerDefaultCalloutMock();
         Test.startTest();
-        assertCalloutException(
-            'invalid RequestorID',
-            VALID_TRANS_ID,
-            'INVALID',
-            VALID_DATETIME,
-            'V1',
-            VALID_CONTEXT,
-            VALID_SIGNON,
-            VALID_ORG,
-            VALID_ACCT
-        );
+        // requestorId param bị override bởi FEC_API_Config__mdt.FEC_Requestor_Id__c trước validateRequest
         assertCalloutException(
             'blank Datetime',
             VALID_TRANS_ID,
@@ -484,6 +474,128 @@ private class FEC_MFASOUTSTANDINGAUTHINQ_Test {
             long31
         );
         Test.stopTest();
+    }
+
+    @IsTest
+    static void testCallService_SvcReturnFailureWithoutRcData() {
+        String xml =
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soapenv:Body><WSResponse>' +
+            '<Sys><Code>1</Code><Description>Success</Description></Sys>' +
+            '<M_FAS_OUTSTANDING_AUTH_INQ><VMX_ROOT><VMX_MSGOUT>' +
+            '<SVC_RETURN>F</SVC_RETURN>' +
+            '</VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ>' +
+            '</WSResponse></soapenv:Body></soapenv:Envelope>';
+        registerCalloutMock(200, xml);
+
+        Test.startTest();
+        try {
+            callWithDefaults(
+                VALID_TRANS_ID,
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                VALID_DATETIME,
+                'V1',
+                VALID_CONTEXT,
+                VALID_SIGNON,
+                VALID_ORG,
+                VALID_ACCT
+            );
+            System.assert(false, 'Expected SVC_RETURN failure without RC_DATA.');
+        } catch (CalloutException e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testCallService_ParsesAuthsTableRows() {
+        String xml =
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soapenv:Body><WSResponse>' +
+            '<Sys><Code>1</Code><Description>Success</Description></Sys>' +
+            '<M_FAS_OUTSTANDING_AUTH_INQ><VMX_ROOT><VMX_MSGOUT>' +
+            '<SVC_RETURN>S</SVC_RETURN>' +
+            '<AUTH_CD>CD01</AUTH_CD>' +
+            '<AUTHS_TABLE>' +
+            '<Row>' +
+            '<EFF_DATE>20260129</EFF_DATE>' +
+            '<TIME>120000</TIME>' +
+            '<AUTH_AMOUNT>150000</AUTH_AMOUNT>' +
+            '<Description>Merchant A</Description>' +
+            '<AUTHORIZATION_CODE>AUTH001</AUTHORIZATION_CODE>' +
+            '<CreditDebitFlag>D</CreditDebitFlag>' +
+            '<CREDIT_PLAN>Retail</CREDIT_PLAN>' +
+            '<MERCH_CAT>5411</MERCH_CAT>' +
+            '</Row>' +
+            '</AUTHS_TABLE>' +
+            '</VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ>' +
+            '</WSResponse></soapenv:Body></soapenv:Envelope>';
+        registerCalloutMock(200, xml);
+
+        Test.startTest();
+        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper result = callWithDefaults(
+            VALID_TRANS_ID,
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            VALID_DATETIME,
+            'V1',
+            VALID_CONTEXT,
+            VALID_SIGNON,
+            VALID_ORG,
+            VALID_ACCT
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, result.VMXMsgOut.Auths.size());
+        System.assertEquals('20260129', result.VMXMsgOut.Auths[0].EFF_DATE);
+        System.assertEquals('150000', result.VMXMsgOut.Auths[0].AUTH_AMOUNT);
+        System.assertEquals('Merchant A', result.VMXMsgOut.Auths[0].Description);
+        System.assertEquals('AUTH001', result.VMXMsgOut.Auths[0].AUTHORIZATION_CODE);
+        System.assertEquals('CD01', result.VMXMsgOut.Auths[0].AUTH_CD);
+    }
+
+    @IsTest
+    static void testCallService_ParsesDirectAuthsTableFields() {
+        String xml =
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soapenv:Body><WSResponse>' +
+            '<Sys><Code>1</Code><Description>Success</Description></Sys>' +
+            '<M_FAS_OUTSTANDING_AUTH_INQ><VMX_ROOT><VMX_MSGOUT>' +
+            '<SVC_RETURN>S</SVC_RETURN>' +
+            '<AUTHS_TABLE>' +
+            '<POSTING_DATE>2026-05-01</POSTING_DATE>' +
+            '<AUTH_AMT>99.50</AUTH_AMT>' +
+            '<TRANSACTION_DESC>Direct table auth</TRANSACTION_DESC>' +
+            '<DEBIT_CREDIT_FLAG>C</DEBIT_CREDIT_FLAG>' +
+            '<AuthCode>AC99</AuthCode>' +
+            '<MERCH_CAT_CD>5999</MERCH_CAT_CD>' +
+            '</AUTHS_TABLE>' +
+            '</VMX_MSGOUT></VMX_ROOT></M_FAS_OUTSTANDING_AUTH_INQ>' +
+            '</WSResponse></soapenv:Body></soapenv:Envelope>';
+        registerCalloutMock(200, xml);
+
+        Test.startTest();
+        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper result = callWithDefaults(
+            VALID_TRANS_ID,
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            VALID_DATETIME,
+            'V1',
+            VALID_CONTEXT,
+            VALID_SIGNON,
+            VALID_ORG,
+            VALID_ACCT
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, result.VMXMsgOut.Auths.size());
+        System.assertEquals('2026-05-01', result.VMXMsgOut.Auths[0].EFF_DATE);
+        System.assertEquals('99.50', result.VMXMsgOut.Auths[0].AUTH_AMOUNT);
+        System.assertEquals('Direct table auth', result.VMXMsgOut.Auths[0].Description);
+        System.assertEquals('C', result.VMXMsgOut.Auths[0].CreditDebitFlag);
+        System.assertEquals('AC99', result.VMXMsgOut.Auths[0].AUTHORIZATION_CODE);
+        System.assertEquals('5999', result.VMXMsgOut.Auths[0].MERCH_CAT);
     }
 
     private class MockHttpResponse implements HttpCalloutMock {

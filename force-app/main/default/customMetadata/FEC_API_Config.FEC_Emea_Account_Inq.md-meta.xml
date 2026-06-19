@@ -7,6 +7,10 @@
         <value xsi:type="xsd:string">/esb/CMS_VMXIntegrationWS</value>
     </values>
     <values>
+        <field>FEC_Requestor_Id__c</field>
+        <value xsi:type="xsd:string">PEGA-CSM</value>
+    </values>
+    <values>
         <field>FEC_SOAP_Action__c</field>
         <value xsi:type="xsd:string">http://fecredit.com.vn/cms/ws/v2/M_CMS_EMEA_ACCOUNT_INQ</value>
     </values>
