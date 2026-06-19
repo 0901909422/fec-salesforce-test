@@ -552,7 +552,17 @@ public without sharing class FEC_CreateCaseHandler {
             : null;
         
         interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
-        
+
+        // ---------------------------
+        // DEDUP: nếu đã có Case với cùng External Interaction ID thì trả về Case cũ
+        // (tránh DUPLICATE_VALUE khi user F5 / mở 2 tab / iframe bắn lại event /
+        //  production lag khiến client retry với cùng sessionID)
+        // ---------------------------
+        FEC_InteractionCaseResponse existingRes = findExistingInteractionCase(dto.externalInteractionId);
+        if (existingRes != null) {
+            return existingRes;
+        }
+
         // ---------------------------
         // CUSTOMER INFO
         // ---------------------------
@@ -581,7 +591,19 @@ public without sharing class FEC_CreateCaseHandler {
             interactionCase.put('FEC_Is_Chat_Automation__c', true);
         }
 
-        insert interactionCase;
+        try {
+            insert interactionCase;
+        } catch (DmlException e) {
+            // Race condition: một transaction song song (lag/retry/2 tab) vừa insert Case
+            // cùng External Interaction ID. Bắt DUPLICATE_VALUE và trả về Case đã tồn tại.
+            if (isDuplicateValueException(e)) {
+                FEC_InteractionCaseResponse dupRes = findExistingInteractionCase(dto.externalInteractionId);
+                if (dupRes != null) {
+                    return dupRes;
+                }
+            }
+            throw e;
+        }
         
         interactionCase = [
             SELECT Id, FEC_Link_ID__c, OwnerId
@@ -601,6 +623,45 @@ public without sharing class FEC_CreateCaseHandler {
         }
         
         return res;
+    }
+
+    /**
+     * Tìm Case Interaction đã tồn tại theo External Interaction ID (sessionID).
+     * @param strExternalInteractionId: External Interaction ID cần kiểm tra.
+     * @return FEC_InteractionCaseResponse của Case cũ, hoặc null nếu chưa tồn tại / id rỗng.
+     */
+    private static FEC_InteractionCaseResponse findExistingInteractionCase(String strExternalInteractionId) {
+        if (String.isBlank(strExternalInteractionId)) {
+            return null;
+        }
+        List<Case> lstExisting = [
+            SELECT Id, FEC_Link_ID__c
+            FROM Case
+            WHERE FEC_External_Interaction_ID__c = :strExternalInteractionId
+            LIMIT 1
+        ];
+        if (lstExisting.isEmpty()) {
+            return null;
+        }
+        FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
+        res.caseId = lstExisting[0].Id;
+        res.linkId = lstExisting[0].FEC_Link_ID__c;
+        if (res.linkId != null && res.linkId.contains('>')) {
+            res.caseNo = res.linkId.substringBetween('>', '</');
+        }
+        return res;
+    }
+
+    /**
+     * Kiểm tra DmlException có phải do vi phạm ràng buộc unique (DUPLICATE_VALUE) hay không.
+     */
+    private static Boolean isDuplicateValueException(DmlException e) {
+        for (Integer i = 0; i < e.getNumDml(); i++) {
+            if (e.getDmlType(i) == StatusCode.DUPLICATE_VALUE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Boolean hasCaseField(String fieldApiName) {
