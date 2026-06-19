@@ -8,7 +8,7 @@
     </values>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/esb/cms/CMS_RewardDebitWS</value>
+        <value xsi:type="xsd:string">/esb/CMS_RewardDebitWS</value>
     </values>
     <values>
         <field>FEC_FromDate_Hard_Code__c</field>
