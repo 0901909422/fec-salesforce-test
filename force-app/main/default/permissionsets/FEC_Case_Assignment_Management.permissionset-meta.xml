@@ -21,11 +21,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Case_Assignment__c.FEC_Assignment_Method__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Case_Assignment__c.FEC_Business_Hours__c</field>
         <readable>true</readable>
     </fieldPermissions>
