@@ -39,10 +39,7 @@ private class FEC_GetRepaySchedByAppIdCallout_Test {
                 req.getEndpoint().contains('/intapp/ext/sales/repayment-schedule?app-id=APP-123456'),
                 'Unexpected endpoint: ' + req.getEndpoint()
             );
-            System.assertEquals(
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-                req.getHeader('FEC-Requestor')
-            );
+            System.assertEquals('PEGA', req.getHeader('FEC-Requestor'));
             HttpResponse res = new HttpResponse();
             res.setHeader('Content-Type', 'application/json');
             res.setStatusCode(200);
