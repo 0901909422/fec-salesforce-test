@@ -127,14 +127,36 @@ public without sharing class FEC_StatementsAccountController {
         if (info != null) {
             if (info.MainCard != null) {
                 ch.FEC_Billing_Cycle__c = info.MainCard.BillingCycle;
-                ch.FEC_Total_Payment_Due__c = info.MainCard.LastPaymentAmount;
             }
             if (info.Statement != null) {
                 ch.FEC_Last_Statement_Date__c = info.Statement.LastStatementDate;
                 ch.FEC_Next_Statement_Date__c = info.Statement.NextStatementDate;
-                ch.FEC_Minimum_Payment_Due__c = info.Statement.LastStatementMPA;
                 ch.FEC_Payment_Due_Date__c = info.Statement.LastStatementDueDate;
             }
+
+            if (cardStatements != null && !cardStatements.isEmpty()) {
+                Date targetDate = info.Statement != null ? info.Statement.LastStatementDate : null;
+                FEC_GetCardSecInfo.CardStatement matchedCs;
+
+                for (FEC_GetCardSecInfo.CardStatement cs : cardStatements) {
+                    if (cs.StatementDate == null) {
+                        continue;
+                    }
+                    if (targetDate != null && cs.StatementDate == targetDate) {
+                        matchedCs = cs;
+                        break;
+                    }
+                    if (matchedCs == null || cs.StatementDate > matchedCs.StatementDate) {
+                        matchedCs = cs;
+                    }
+                }
+
+                if (matchedCs != null) {
+                    ch.FEC_Total_Payment_Due__c   = matchedCs.QualGraceBal;
+                    ch.FEC_Minimum_Payment_Due__c = matchedCs.TotalPaymentDue;
+                }
+            }
+
             update ch;
         }
 
