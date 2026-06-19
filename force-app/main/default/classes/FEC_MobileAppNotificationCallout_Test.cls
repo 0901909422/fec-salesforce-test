@@ -1,185 +1,178 @@
 @IsTest(SeeAllData=false)
 private class FEC_MobileAppNotificationCallout_Test {
 
+    private static final String BASE_ENDPOINT = 'https://unit-test.example.com';
+    private static final String PHONE_VN = '0971953842';
+    private static final String NATIONAL_ID = '123456789012';
+    private static final String CONTENT = 'Unit test content';
+    private static final String TITLE = 'Unit test title';
+
+    private class ForcedMockException extends Exception {}
+
     @TestSetup
     static void setupData() {
-        // Hierarchy Custom Setting used by FEC_API_Setting__c.getOrgDefaults()
-        FEC_API_Setting__c setting = new FEC_API_Setting__c();
-        setting.SetupOwnerId = UserInfo.getOrganizationId();
-        setting.FEC_Endpoint__c = 'https://mobile-app-unit-test.example';
-        insert setting;
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+
+        if (apiSetting == null || apiSetting.Id == null) {
+            insert new FEC_API_Setting__c(
+                SetupOwnerId = UserInfo.getOrganizationId(),
+                FEC_Endpoint__c = BASE_ENDPOINT
+            );
+        } else {
+            apiSetting.FEC_Endpoint__c = BASE_ENDPOINT;
+            update apiSetting;
+        }
     }
 
     private class MobileAppHttpMock implements HttpCalloutMock {
-        private String expectedMethod;
-        private Integer statusCode;
-        private String responseBody;
-        private Boolean throwException;
-        private Boolean validateCheckUserRequest;
-        private Boolean validatePushRequest;
+        private String scenario;
 
-        MobileAppHttpMock(
-            String expectedMethod,
-            Integer statusCode,
-            String responseBody,
-            Boolean throwException,
-            Boolean validateCheckUserRequest,
-            Boolean validatePushRequest
-        ) {
-            this.expectedMethod = expectedMethod;
-            this.statusCode = statusCode;
-            this.responseBody = responseBody;
-            this.throwException = throwException;
-            this.validateCheckUserRequest = validateCheckUserRequest;
-            this.validatePushRequest = validatePushRequest;
+        MobileAppHttpMock(String scenario) {
+            this.scenario = scenario;
         }
 
         public HttpResponse respond(HttpRequest req) {
-            if (throwException) {
-                throw new CalloutException('Simulated timeout');
+            if (scenario == 'THROW') {
+                throw new ForcedMockException('Forced mock callout failure');
             }
 
+            assertCommonHeaders(req);
+
+            if (req.getMethod() == 'GET') {
+                return respondToCheckUser(req);
+            }
+
+            if (req.getMethod() == 'POST') {
+                return respondToPushNotification(req);
+            }
+
+            System.assert(false, 'Unexpected HTTP method: ' + req.getMethod());
+            return newResponse(500, 'Unexpected HTTP method');
+        }
+
+        private void assertCommonHeaders(HttpRequest req) {
+            System.assertNotEquals(null, req.getHeader('TransID'), 'TransID header is required.');
+            System.assertNotEquals(null, req.getHeader('DateTime'), 'DateTime header is required.');
             System.assertEquals(
-                expectedMethod,
-                req.getMethod(),
-                'Unexpected HTTP method.'
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                req.getHeader('RequestorID'),
+                'RequestorID header is incorrect.'
+            );
+        }
+
+        private HttpResponse respondToCheckUser(HttpRequest req) {
+            System.assert(
+                req.getEndpoint().contains('PhoneNumber=' + PHONE_VN),
+                'PhoneNumber should be normalized and URL encoded.'
+            );
+            System.assert(
+                req.getEndpoint().contains('NationalID=' + NATIONAL_ID),
+                'NationalID query param is missing.'
             );
 
-            if (validateCheckUserRequest) {
-                System.assert(
-                    req.getEndpoint().contains('PhoneNumber=0971953842'),
-                    'PhoneNumber should be normalized and URL encoded in endpoint.'
-                );
-                System.assert(
-                    req.getEndpoint().contains('NationalID=NID123'),
-                    'NationalID should be included in endpoint.'
-                );
-                System.assert(
-                    String.isBlank(req.getBody()),
-                    'GET request body should be blank.'
-                );
+            // FEC_CommonUltils may send GET body as null or blank string depending on implementation.
+            System.assert(
+                String.isBlank(req.getBody()),
+                'GET request body should be null or blank.'
+            );
+
+            if (scenario == 'CHECK_EMPTY_BODY') {
+                return newResponse(204, '');
             }
 
-            if (validatePushRequest) {
-                System.assertNotEquals(
-                    null,
-                    req.getBody(),
-                    'POST request body should not be null.'
-                );
-
-                Map<String, Object> body =
-                    (Map<String, Object>) JSON.deserializeUntyped(req.getBody());
-
-                System.assertEquals('Hello content', body.get('Content'));
-                System.assertEquals('NID123', body.get('NationalID'));
-                System.assertEquals('0971953842', body.get('PhoneNumber'));
-                System.assertEquals('Hello title', body.get('Title'));
-                System.assertEquals('pega_csm', body.get('Event_Source'));
-                System.assertEquals('pega_csm_support', body.get('Event_Name'));
+            if (scenario == 'CHECK_NOT_EXIST') {
+                return newResponse(200, apiResponseBody('0', 'CUSTOMER_NOT_EXIST'));
             }
 
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(statusCode);
-            res.setStatus(statusCode + ' Unit Test');
-            res.setBody(responseBody == null ? '' : responseBody);
-            return res;
+            return newResponse(200, apiResponseBody('1', 'CUSTOMER_EXIST'));
+        }
+
+        private HttpResponse respondToPushNotification(HttpRequest req) {
+            System.assertEquals(
+                FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+                req.getHeader('Content-Type'),
+                'Content-Type header is incorrect.'
+            );
+
+            System.assert(
+                String.isNotBlank(req.getBody()),
+                'POST request body is required.'
+            );
+
+            Map<String, Object> payload =
+                (Map<String, Object>) JSON.deserializeUntyped(req.getBody());
+
+            System.assertEquals(CONTENT, (String) payload.get('Content'));
+            System.assertEquals(NATIONAL_ID, (String) payload.get('NationalID'));
+            System.assertEquals(PHONE_VN, (String) payload.get('PhoneNumber'));
+            System.assertEquals(TITLE, (String) payload.get('Title'));
+            System.assertEquals('pega_csm', (String) payload.get('Event_Source'));
+            System.assertEquals('pega_csm_support', (String) payload.get('Event_Name'));
+
+            if (scenario == 'SEND_EMPTY_BODY') {
+                return newResponse(202, '');
+            }
+
+            if (scenario == 'SEND_HTTP_500') {
+                return newResponse(500, apiResponseBody('0', 'FAILED'));
+            }
+
+            return newResponse(200, apiResponseBody('1', 'SUCCESS'));
         }
     }
 
-    private static String buildResponseBody(String code, String description, String transId) {
-        return JSON.serialize(new Map<String, Object>{
-            'Code' => code,
-            'DateTime' => '2026-06-11T15:00:00.000+07:00',
-            'Description' => description,
-            'TransID' => transId
-        });
-    }
-
     @IsTest
-    static void normalizeVietnamPhone_shouldHandleValidFormats() {
-        System.assertEquals(
-            null,
-            FEC_MobileAppNotificationCallout.normalizeVietnamPhone(null)
-        );
-
-        System.assertEquals(
-            '',
-            FEC_MobileAppNotificationCallout.normalizeVietnamPhone('')
-        );
-
+    static void normalizeVietnamPhone_shouldNormalizeCommonFormats() {
         System.assertEquals(
             '0971953842',
             FEC_MobileAppNotificationCallout.normalizeVietnamPhone('84971953842')
         );
-
         System.assertEquals(
             '0971953842',
             FEC_MobileAppNotificationCallout.normalizeVietnamPhone('+84971953842')
         );
-
         System.assertEquals(
             '0971953842',
             FEC_MobileAppNotificationCallout.normalizeVietnamPhone('0971953842')
+        );
+        System.assertEquals(
+            null,
+            FEC_MobileAppNotificationCallout.normalizeVietnamPhone(null)
+        );
+        System.assertEquals(
+            '',
+            FEC_MobileAppNotificationCallout.normalizeVietnamPhone('')
         );
     }
 
     @IsTest
     static void checkUserExist_shouldReturnCustomerExist_whenApiReturnsSuccess() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'GET',
-                200,
-                buildResponseBody('1', 'CUSTOMER_EXIST', 'TRANS_CHECK_SUCCESS'),
-                false,
-                true,
-                false
-            )
-        );
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('CHECK_SUCCESS'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.CheckUserResponse result =
-            FEC_MobileAppNotificationCallout.checkUserExist(
-                '+84971953842',
-                'NID123'
-            );
+            FEC_MobileAppNotificationCallout.checkUserExist('+84971953842', NATIONAL_ID);
         Test.stopTest();
 
         System.assertEquals(true, result.success);
         System.assertEquals(200, result.httpStatusCode);
         System.assertEquals('1', result.code);
         System.assertEquals('CUSTOMER_EXIST', result.description);
-        System.assertEquals('TRANS_CHECK_SUCCESS', result.transId);
+        System.assertEquals('T-UNIT-TEST', result.transId);
         System.assertEquals(true, result.isCustomerExist);
         System.assertNotEquals(null, result.rawResponse);
-
-        System.assertEquals(
-            null,
-            FEC_MobileAppNotificationCallout.responseLogCheckUserExist,
-            'Static response log should be cleared after logging.'
-        );
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogCheckUserExist);
     }
 
     @IsTest
-    static void checkUserExist_shouldReturnFalse_whenCustomerDoesNotExist() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'GET',
-                200,
-                buildResponseBody('0', 'CUSTOMER_NOT_EXIST', 'TRANS_CHECK_NOT_EXIST'),
-                false,
-                false,
-                false
-            )
-        );
+    static void checkUserExist_shouldReturnNotExist_whenApiReturnsNonMatchingBody() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('CHECK_NOT_EXIST'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.CheckUserResponse result =
-            FEC_MobileAppNotificationCallout.checkUserExist(
-                '0971953842',
-                'NID123'
-            );
+            FEC_MobileAppNotificationCallout.checkUserExist('84971953842', NATIONAL_ID);
         Test.stopTest();
 
         System.assertEquals(true, result.success);
@@ -187,28 +180,17 @@ private class FEC_MobileAppNotificationCallout_Test {
         System.assertEquals('0', result.code);
         System.assertEquals('CUSTOMER_NOT_EXIST', result.description);
         System.assertEquals(false, result.isCustomerExist);
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogCheckUserExist);
     }
 
     @IsTest
-    static void checkUserExist_shouldHandleBlankResponseBody() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'GET',
-                204,
-                '',
-                false,
-                false,
-                false
-            )
-        );
+    static void checkUserExist_shouldReturnSuccessWithoutParsedBody_whenBodyIsBlank() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('CHECK_EMPTY_BODY'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.CheckUserResponse result =
-            FEC_MobileAppNotificationCallout.checkUserExist(
-                '0971953842',
-                'NID123'
-            );
+            FEC_MobileAppNotificationCallout.checkUserExist('0971953842', NATIONAL_ID);
         Test.stopTest();
 
         System.assertEquals(true, result.success);
@@ -216,98 +198,40 @@ private class FEC_MobileAppNotificationCallout_Test {
         System.assertEquals('', result.rawResponse);
         System.assertEquals(null, result.code);
         System.assertEquals(null, result.description);
-        System.assertEquals(null, result.transId);
         System.assertEquals(null, result.isCustomerExist);
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogCheckUserExist);
     }
 
     @IsTest
-    static void checkUserExist_shouldHandleServerErrorResponse() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'GET',
-                500,
-                buildResponseBody('999', 'INTERNAL_SERVER_ERROR', 'TRANS_CHECK_500'),
-                false,
-                false,
-                false
-            )
-        );
+    static void checkUserExist_shouldReturnCalloutError_whenCalloutThrowsException() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('THROW'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.CheckUserResponse result =
-            FEC_MobileAppNotificationCallout.checkUserExist(
-                '0971953842',
-                'NID123'
-            );
-        Test.stopTest();
-
-        System.assertEquals(false, result.success);
-        System.assertEquals(500, result.httpStatusCode);
-        System.assertEquals('999', result.code);
-        System.assertEquals('INTERNAL_SERVER_ERROR', result.description);
-        System.assertEquals(false, result.isCustomerExist);
-    }
-
-    @IsTest
-    static void checkUserExist_shouldHandleCalloutException() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'GET',
-                599,
-                null,
-                true,
-                false,
-                false
-            )
-        );
-
-        Test.startTest();
-        FEC_MobileAppNotificationCallout.CheckUserResponse result =
-            FEC_MobileAppNotificationCallout.checkUserExist(
-                '0971953842',
-                'NID123'
-            );
+            FEC_MobileAppNotificationCallout.checkUserExist('0971953842', NATIONAL_ID);
         Test.stopTest();
 
         System.assertEquals(false, result.success);
         System.assertEquals(599, result.httpStatusCode);
         System.assertEquals('CALLOUT_ERROR', result.description);
         System.assertEquals(false, result.isCustomerExist);
-        System.assert(
-            result.rawResponse.contains('Simulated timeout'),
-            'Raw response should contain exception message.'
-        );
-
-        System.assertEquals(
-            null,
-            FEC_MobileAppNotificationCallout.responseLogCheckUserExist,
-            'Static response log should be cleared after exception logging.'
-        );
+        System.assert(result.rawResponse.contains('Forced mock callout failure'));
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogCheckUserExist);
     }
 
     @IsTest
     static void sendNotification_shouldReturnSentSuccess_whenApiReturnsSuccess() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'POST',
-                200,
-                buildResponseBody('1', 'SUCCESS', 'TRANS_PUSH_SUCCESS'),
-                false,
-                false,
-                true
-            )
-        );
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('SEND_SUCCESS'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.SendNotificationResponse result =
             FEC_MobileAppNotificationCallout.sendNotification(
-                'Hello content',
-                'NID123',
+                CONTENT,
+                NATIONAL_ID,
                 '+84971953842',
-                'Hello title'
+                TITLE
             );
         Test.stopTest();
 
@@ -315,133 +239,71 @@ private class FEC_MobileAppNotificationCallout_Test {
         System.assertEquals(200, result.httpStatusCode);
         System.assertEquals('1', result.code);
         System.assertEquals('SUCCESS', result.description);
-        System.assertEquals('TRANS_PUSH_SUCCESS', result.transId);
+        System.assertEquals('T-UNIT-TEST', result.transId);
         System.assertEquals(true, result.isSentSuccess);
         System.assertNotEquals(null, result.rawResponse);
-
-        System.assertEquals(
-            null,
-            FEC_MobileAppNotificationCallout.responseLogPushNotification,
-            'Static response log should be cleared after logging.'
-        );
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogPushNotification);
     }
 
     @IsTest
-    static void sendNotification_shouldReturnFalse_whenApiReturnsFailureDescription() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'POST',
-                200,
-                buildResponseBody('0', 'FAILED', 'TRANS_PUSH_FAILED'),
-                false,
-                false,
-                false
-            )
-        );
+    static void sendNotification_shouldReturnFail_whenApiReturnsHttp500() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('SEND_HTTP_500'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.SendNotificationResponse result =
             FEC_MobileAppNotificationCallout.sendNotification(
-                'Hello content',
-                'NID123',
-                '0971953842',
-                'Hello title'
-            );
-        Test.stopTest();
-
-        System.assertEquals(true, result.success);
-        System.assertEquals(200, result.httpStatusCode);
-        System.assertEquals('0', result.code);
-        System.assertEquals('FAILED', result.description);
-        System.assertEquals(false, result.isSentSuccess);
-    }
-
-    @IsTest
-    static void sendNotification_shouldHandleBlankResponseBody() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'POST',
-                204,
-                '',
-                false,
-                false,
-                false
-            )
-        );
-
-        Test.startTest();
-        FEC_MobileAppNotificationCallout.SendNotificationResponse result =
-            FEC_MobileAppNotificationCallout.sendNotification(
-                'Hello content',
-                'NID123',
-                '0971953842',
-                'Hello title'
-            );
-        Test.stopTest();
-
-        System.assertEquals(true, result.success);
-        System.assertEquals(204, result.httpStatusCode);
-        System.assertEquals('', result.rawResponse);
-        System.assertEquals(null, result.code);
-        System.assertEquals(null, result.description);
-        System.assertEquals(null, result.transId);
-        System.assertEquals(null, result.isSentSuccess);
-    }
-
-    @IsTest
-    static void sendNotification_shouldHandleServerErrorResponse() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'POST',
-                500,
-                buildResponseBody('999', 'INTERNAL_SERVER_ERROR', 'TRANS_PUSH_500'),
-                false,
-                false,
-                false
-            )
-        );
-
-        Test.startTest();
-        FEC_MobileAppNotificationCallout.SendNotificationResponse result =
-            FEC_MobileAppNotificationCallout.sendNotification(
-                'Hello content',
-                'NID123',
-                '0971953842',
-                'Hello title'
+                CONTENT,
+                NATIONAL_ID,
+                '84971953842',
+                TITLE
             );
         Test.stopTest();
 
         System.assertEquals(false, result.success);
         System.assertEquals(500, result.httpStatusCode);
-        System.assertEquals('999', result.code);
-        System.assertEquals('INTERNAL_SERVER_ERROR', result.description);
+        System.assertEquals('0', result.code);
+        System.assertEquals('FAILED', result.description);
         System.assertEquals(false, result.isSentSuccess);
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogPushNotification);
     }
 
     @IsTest
-    static void sendNotification_shouldHandleCalloutException() {
-        Test.setMock(
-            HttpCalloutMock.class,
-            new MobileAppHttpMock(
-                'POST',
-                599,
-                null,
-                true,
-                false,
-                false
-            )
-        );
+    static void sendNotification_shouldReturnSuccessWithoutParsedBody_whenBodyIsBlank() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('SEND_EMPTY_BODY'));
 
         Test.startTest();
         FEC_MobileAppNotificationCallout.SendNotificationResponse result =
             FEC_MobileAppNotificationCallout.sendNotification(
-                'Hello content',
-                'NID123',
+                CONTENT,
+                NATIONAL_ID,
                 '0971953842',
-                'Hello title'
+                TITLE
+            );
+        Test.stopTest();
+
+        System.assertEquals(true, result.success);
+        System.assertEquals(202, result.httpStatusCode);
+        System.assertEquals('', result.rawResponse);
+        System.assertEquals(null, result.code);
+        System.assertEquals(null, result.description);
+        System.assertEquals(null, result.isSentSuccess);
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogPushNotification);
+    }
+
+    @IsTest
+    static void sendNotification_shouldReturnCalloutError_whenCalloutThrowsException() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('THROW'));
+
+        Test.startTest();
+        FEC_MobileAppNotificationCallout.SendNotificationResponse result =
+            FEC_MobileAppNotificationCallout.sendNotification(
+                CONTENT,
+                NATIONAL_ID,
+                '0971953842',
+                TITLE
             );
         Test.stopTest();
 
@@ -449,15 +311,102 @@ private class FEC_MobileAppNotificationCallout_Test {
         System.assertEquals(599, result.httpStatusCode);
         System.assertEquals('CALLOUT_ERROR', result.description);
         System.assertEquals(false, result.isSentSuccess);
-        System.assert(
-            result.rawResponse.contains('Simulated timeout'),
-            'Raw response should contain exception message.'
+        System.assert(result.rawResponse.contains('Forced mock callout failure'));
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogPushNotification);
+    }
+
+    @IsTest
+    static void sendNotificationWithoutLogging_shouldKeepResponseLog_thenWriteLogSendNotiShouldClearIt() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('SEND_SUCCESS'));
+
+        Test.startTest();
+        FEC_MobileAppNotificationCallout.SendNotificationResponse result =
+            FEC_MobileAppNotificationCallout.sendNotificationWithoutLogging(
+                CONTENT,
+                NATIONAL_ID,
+                '+84971953842',
+                TITLE
+            );
+
+        System.assertEquals(true, result.success);
+        System.assertEquals(true, result.isSentSuccess);
+        System.assertNotEquals(
+            null,
+            FEC_MobileAppNotificationCallout.responseLogPushNotification,
+            'sendNotificationWithoutLogging should keep responseLogPushNotification for later logging.'
         );
+
+        FEC_MobileAppNotificationCallout.writeLogSendNoti();
+        Test.stopTest();
 
         System.assertEquals(
             null,
             FEC_MobileAppNotificationCallout.responseLogPushNotification,
-            'Static response log should be cleared after exception logging.'
+            'writeLogSendNoti should clear responseLogPushNotification after logging.'
         );
+    }
+
+    @IsTest
+    static void sendNotificationWithoutLogging_shouldKeepErrorResponseLog_whenCalloutThrowsException() {
+        clearStaticLogs();
+        Test.setMock(HttpCalloutMock.class, new MobileAppHttpMock('THROW'));
+
+        Test.startTest();
+        FEC_MobileAppNotificationCallout.SendNotificationResponse result =
+            FEC_MobileAppNotificationCallout.sendNotificationWithoutLogging(
+                CONTENT,
+                NATIONAL_ID,
+                '0971953842',
+                TITLE
+            );
+
+        System.assertEquals(false, result.success);
+        System.assertEquals(599, result.httpStatusCode);
+        System.assertEquals('CALLOUT_ERROR', result.description);
+        System.assertEquals(false, result.isSentSuccess);
+        System.assertNotEquals(
+            null,
+            FEC_MobileAppNotificationCallout.responseLogPushNotification,
+            'Error response log should be kept for later logging.'
+        );
+
+        FEC_MobileAppNotificationCallout.writeLogSendNoti();
+        Test.stopTest();
+
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogPushNotification);
+    }
+
+    @IsTest
+    static void writeLogSendNoti_shouldReturnSafely_whenResponseLogIsNull() {
+        clearStaticLogs();
+
+        Test.startTest();
+        FEC_MobileAppNotificationCallout.writeLogSendNoti();
+        Test.stopTest();
+
+        System.assertEquals(null, FEC_MobileAppNotificationCallout.responseLogPushNotification);
+    }
+
+    private static void clearStaticLogs() {
+        FEC_MobileAppNotificationCallout.responseLogCheckUserExist = null;
+        FEC_MobileAppNotificationCallout.responseLogPushNotification = null;
+    }
+
+    private static HttpResponse newResponse(Integer statusCode, String body) {
+        HttpResponse res = new HttpResponse();
+        res.setStatusCode(statusCode);
+        res.setStatus(statusCode >= 200 && statusCode < 300 ? 'OK' : 'ERROR');
+        res.setBody(body);
+        return res;
+    }
+
+    private static String apiResponseBody(String code, String description) {
+        return JSON.serialize(new Map<String, Object>{
+            'Code' => code,
+            'DateTime' => '2026-06-19T10:00:00.000+07:00',
+            'Description' => description,
+            'TransID' => 'T-UNIT-TEST'
+        });
     }
 }

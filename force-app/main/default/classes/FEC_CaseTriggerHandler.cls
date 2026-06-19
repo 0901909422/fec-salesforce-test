@@ -256,10 +256,10 @@ public without sharing class FEC_CaseTriggerHandler {
         rollupRemovePhoneEligibilityOnCaseSubmit(newCases, oldMap);
 
         // Auto Notification for ZNS, Mobile App
-        String newCasesJson = JSON.serialize(newCases);
-        String oldMapJson = JSON.serialize(oldMap);
-        FEC_AutoNotificationFuture.sendZNSAsync(newCasesJson, oldMapJson);
-        FEC_AutoNotificationFuture.sendMobileAppAsync(newCasesJson, oldMapJson);
+        FEC_NotificationService.sendZNSNotification(newCases, oldMap);
+        FEC_NotificationService.sendMobileAppNotification(newCases, oldMap);
+        FEC_ZNSNotificationCallout.writeLogSendNoti();
+        FEC_MobileAppNotificationCallout.writeLogSendNoti();
         isExecuting = false;
     }
 

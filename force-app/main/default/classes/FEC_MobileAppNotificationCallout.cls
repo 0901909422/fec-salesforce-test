@@ -196,6 +196,80 @@ public with sharing class FEC_MobileAppNotificationCallout {
         }
     }
 
+    // for Auto Notification
+    @AuraEnabled
+    public static SendNotificationResponse sendNotificationWithoutLogging(
+        String content,
+        String nationalId,
+        String phoneNumber,
+        String title
+    ) {
+        String endpoint = buildEndpoint(API_PUSH_NOTIFICATION);
+
+        String transId = FEC_CommonUltils.generateTransactionUUID();
+        String currentDateTime = FEC_CommonUltils.formatTimestamp(
+            Datetime.now(),
+            FEC_ConstantCommon.STR_DATETIME_FORMAT_Z
+        );
+
+        Map<String, String> headers = new Map<String, String>{
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID'     => transId,
+            'DateTime'    => currentDateTime,
+            'RequestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
+        };
+
+        SendNotificationRequest requestBody = new SendNotificationRequest();
+        requestBody.Content = content;
+        requestBody.NationalID = nationalId;
+        requestBody.PhoneNumber = normalizeVietnamPhone(phoneNumber);
+        requestBody.Title = title;
+        requestBody.Event_Source = 'pega_csm';
+        requestBody.Event_Name = 'pega_csm_support';
+
+        String payload = JSON.serialize(requestBody);
+
+        try {
+            HttpResponse res = sendRequest(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                headers,
+                payload
+            );
+
+            responseLogPushNotification = new FEC_ResponseLog(
+                API_PUSH_NOTIFICATION,
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                payload,
+                res,
+                null
+            );
+
+            return parseSendNotificationResponse(res);
+
+        } catch (Exception ex) {
+            HttpResponse errorRes = buildErrorHttpResponse(ex);
+
+            responseLogPushNotification = new FEC_ResponseLog(
+                API_PUSH_NOTIFICATION,
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                payload,
+                errorRes,
+                buildErrorMessage(ex)
+            );
+
+            SendNotificationResponse result = new SendNotificationResponse();
+            result.success = false;
+            result.httpStatusCode = 599;
+            result.rawResponse = ex.getMessage();
+            result.description = 'CALLOUT_ERROR';
+            result.isSentSuccess = false;
+            return result;
+        }
+    }
+
     // =========================================================================
     // Build endpoint from Custom Setting + Custom Metadata
     // =========================================================================
@@ -302,6 +376,16 @@ public with sharing class FEC_MobileAppNotificationCallout {
     // =========================================================================
     // Log API response
     // =========================================================================
+
+    public static void writeLogSendNoti() {
+        if (responseLogPushNotification == null) {
+            return;
+        }
+
+        logApiResponse(responseLogPushNotification);
+        responseLogPushNotification = null;
+    }
+
     private static void logApiResponse(FEC_ResponseLog responseLog) {
         if (responseLog == null) {
             return;

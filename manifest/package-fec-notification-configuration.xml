@@ -13,7 +13,6 @@
         <members>FEC_MobileAppNotificationCallout_Test</members>
         <members>FEC_CaseTriggerHandler</members>
         <members>FEC_NotificationService</members>
-        <members>FEC_AutoNotificationFuture</members>
         <members>FEC_NotificationHistoryService</members>
         <name>ApexClass</name>
     </types>
