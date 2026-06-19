@@ -37,6 +37,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     }
 
     // 05/06/2026 10:00 linhdev - OwnerId=$User.Id OR CONTAINS(FEC_Assignment_Users__c) OR OwnerId=Queue user là thành viên
+    // 18/06/2026 10:30 linhdev - bổ sung FEC_Assignment_Users__c chứa tên Queue user là thành viên (qua Role)
     private static String buildDefaultUserVisibilityClause() {
         List<String> visibilityParts = new List<String>();
         visibilityParts.add('FEC_Is_Owner_Or_Assigned__c = true');
@@ -44,10 +45,40 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         if (userQueueIds != null && !userQueueIds.isEmpty()) {
             visibilityParts.add(formatIdInClause('OwnerId', userQueueIds));
         }
+        Set<String> userQueueNames = FEC_AssignmentListHandler.getCurrentUserQueues(UserInfo.getUserId());
+        String assignmentQueueClause = buildAssignmentUsersContainsQueueNamesClause(userQueueNames);
+        if (String.isNotBlank(assignmentQueueClause)) {
+            visibilityParts.add(assignmentQueueClause);
+        }
         if (visibilityParts.size() == 1) {
             return visibilityParts[0];
         }
         return '(' + String.join(visibilityParts, ' OR ') + ')';
+    }
+
+    // 18/06/2026 10:30 linhdev - FEC_Assignment_Users__c LIKE tên Queue (Name) user là thành viên
+    private static String buildAssignmentUsersContainsQueueNamesClause(Set<String> queueNames) {
+        if (queueNames == null || queueNames.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        List<String> likeParts = new List<String>();
+        for (String queueName : queueNames) {
+            if (String.isBlank(queueName)) {
+                continue;
+            }
+            likeParts.add(
+                'FEC_Assignment_Users__c LIKE \'%' +
+                String.escapeSingleQuotes(queueName.trim()) +
+                '%\''
+            );
+        }
+        if (likeParts.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (likeParts.size() == 1) {
+            return likeParts[0];
+        }
+        return '(' + String.join(likeParts, ' OR ') + ')';
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {
