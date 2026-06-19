@@ -10,6 +10,35 @@ private class FEC_IncorrectPaymentController_Test {
         ];
     }
 
+    // 18/06/2026 18:00 linhdev - link Customer History nhưng giữ Case.FEC_Account_Contract_Number_Text__c blank (formula trả "" khi LEFT(Name,15)=LEFT(Id,15))
+    private static FEC_Customer_History__c linkCaseToCustomerHistoryWithBlankAccountContractText(
+        Id caseId,
+        String contractNumber,
+        String accountNumber
+    ) {
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            Name = 'temp-' + String.valueOf(System.currentTimeMillis()).right(4),
+            FEC_Case__c = caseId,
+            FEC_Contract_Number__c = contractNumber,
+            FEC_Account_Number__c = accountNumber
+        );
+        insert hist;
+        update new FEC_Customer_History__c(
+            Id = hist.Id,
+            Name = String.valueOf(hist.Id).left(15)
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = caseId,
+                FEC_Account_or_Contract__c = hist.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        return hist;
+    }
+
     // 18/06/2026 18:00 linhdev - setup Case.FEC_Account_Contract_Number_Text__c (formula: Loan + FEC_Account_or_Contract__r.Name)
     private static void linkCaseToLoanAccountContractText(Id caseId, String accountContractNumber) {
         String suffix = String.valueOf(System.currentTimeMillis()).right(4);
@@ -647,16 +676,7 @@ private class FEC_IncorrectPaymentController_Test {
     @IsTest
     static void testGetLoanContractOptionsFromApi_FallbackCustomerHistory() {
         Case c = [SELECT Id FROM Case LIMIT 1];
-        FEC_Customer_History__c hist = new FEC_Customer_History__c(
-            Name = 'IPP-FALLBACK-HIST',
-            FEC_Case__c = c.Id,
-            FEC_Contract_Number__c = '20170108-0005091'
-        );
-        insert hist;
-        update new Case(
-            Id = c.Id,
-            FEC_Account_or_Contract__c = hist.Id
-        );
+        linkCaseToCustomerHistoryWithBlankAccountContractText(c.Id, '20170108-0005091', null);
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
 
         Test.startTest();
@@ -711,16 +731,8 @@ private class FEC_IncorrectPaymentController_Test {
     @IsTest
     static void testGetLoanContractOptionsFromApi_FallbackAccountNumber() {
         Case c = [SELECT Id FROM Case LIMIT 1];
-        FEC_Customer_History__c hist = new FEC_Customer_History__c(
-            Name = '0001500100000030081',
-            FEC_Case__c = c.Id,
-            FEC_Account_Number__c = '0001500100000030081',
-            FEC_Contract_Number__c = '20170108-0005091'
-        );
-        insert hist;
-        update new Case(
-            Id = c.Id,
-            FEC_Account_or_Contract__c = hist.Id
+        linkCaseToCustomerHistoryWithBlankAccountContractText(
+            c.Id, '20170108-0005091', '0001500100000030081'
         );
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
 
