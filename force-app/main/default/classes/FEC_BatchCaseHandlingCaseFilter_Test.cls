@@ -264,7 +264,80 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
     }
 
     /**
-     * Kịch bản 2f: buildCompleteWhere với filter rỗng vẫn áp dụng default scope owner/assigned/queue.
+     * Kịch bản 2f: Case FEC_Assignment_Users__c chứa tên Queue mà login user là member phải match default filter.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_IncludesAssignmentQueueNameCase() {
+        List<Group> queues = [
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id queueId = queues[0].Id;
+        String queueName = queues[0].Name;
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(queueId, UserInfo.getUserId());
+        }
+
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (otherUsers.isEmpty()) {
+            System.assert(true, 'Skipped: no other active user in org.');
+            return;
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id caseId;
+        System.runAs(runUser) {
+            Case assignedQueueCase = new Case(
+                Subject = 'Assignment Queue Name Filter Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = otherUsers[0].Id,
+                FEC_ID_Search__c = 'FILTER-ASSIGN-QUEUE-NAME',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                assignedQueueCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert assignedQueueCase;
+            update new Case(
+                Id = assignedQueueCase.Id,
+                FEC_ID_Search__c = 'FILTER-ASSIGN-QUEUE-NAME',
+                FEC_Assignment_Users__c = queueName
+            );
+            caseId = assignedQueueCase.Id;
+        }
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String combined = String.join(baseWhere, ' AND ');
+        String whereClause = combined + ' AND Id = \'' + String.valueOf(caseId) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assert(
+            combined.contains('FEC_Assignment_Users__c LIKE'),
+            'Mệnh đề WHERE cơ sở phải chứa điều kiện FEC_Assignment_Users__c LIKE tên Queue.'
+        );
+        System.assertEquals(
+            1,
+            count,
+            'Case có FEC_Assignment_Users__c chứa tên Queue mà user là member phải match default filter.'
+        );
+    }
+
+    /**
+     * Kịch bản 2g: buildCompleteWhere với filter rỗng vẫn áp dụng default scope owner/assigned/queue.
      */
     @IsTest
     static void testBuildCompleteWhere_DefaultScopeIncludesQueueMemberCase() {
