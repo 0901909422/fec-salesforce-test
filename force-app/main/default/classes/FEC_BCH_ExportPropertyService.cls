@@ -1,13 +1,14 @@
 public with sharing class FEC_BCH_ExportPropertyService {
 
     // 12/06/2026 23:15 linhdev - Sub Section đúng theo Case Detail/MDS là 'Property Info' (FEC_ConstantCommon.PROPERTY_INFO), không phải 'Property'
-    private static final String SUB_SECTION_PROPERTY = FEC_ConstantCommon.PROPERTY_INFO;
+    // 18/06/2026 linhdev - COF export with property: thêm 'Updated Info'; các BP khác chỉ Property Info
 
     public class ExportPropertyColumn {
         @AuraEnabled public String columnKey;
         @AuraEnabled public String label;
         @AuraEnabled public String objectApiName;
         @AuraEnabled public String fieldApiName;
+        @AuraEnabled public Decimal subSectionOrder;
         @AuraEnabled public Decimal sortOrder;
     }
 
@@ -46,7 +47,8 @@ public with sharing class FEC_BCH_ExportPropertyService {
         }
         List<ExportPropertyColumn> columns = loadPropertyColumns(
             stageContext.stageIds,
-            stageContext.natureOfCaseIds
+            stageContext.natureOfCaseIds,
+            businessProcessCodes
         );
         bundle.columns = columns;
         if (columns.isEmpty()) {
@@ -88,22 +90,23 @@ public with sharing class FEC_BCH_ExportPropertyService {
         return ctx;
     }
 
-    // 12/06/2026 23:15 linhdev - query MDS Property Info theo Stage (+ NOC nếu xác định được) của Case đang xử lý
+    // 12/06/2026 23:15 linhdev - query MDS Property Info (+ Updated Info nếu COF) theo Stage (+ NOC) của Case đang xử lý
     private static List<ExportPropertyColumn> loadPropertyColumns(
         Set<Id> stageIds,
-        Set<Id> natureOfCaseIds
+        Set<Id> natureOfCaseIds,
+        List<String> businessProcessCodes
     ) {
         List<ExportPropertyColumn> out = new List<ExportPropertyColumn>();
         if (stageIds == null || stageIds.isEmpty()) {
             return out;
         }
-        String subSection = SUB_SECTION_PROPERTY;
+        Set<String> subSections = resolveExportPropertySubSections(businessProcessCodes);
         String soql =
             'SELECT FEC_Field_Label_Name__c, FEC_Field_Object_Name__c, ' +
-            'FEC_Field_API_Name__c, FEC_Field_Order_Display__c ' +
+            'FEC_Field_API_Name__c, FEC_Field_Order_Display__c, FEC_Sub_Section_Order__c ' +
             'FROM FEC_Master_Data_Setting__c ' +
             'WHERE FEC_Stage_Name__c IN :stageIds ' +
-            'AND FEC_Sub_Section__c = :subSection ' +
+            'AND FEC_Sub_Section__c IN :subSections ' +
             'AND FEC_Field_Status__c = TRUE ' +
             'AND FEC_Field_API_Name__c != NULL ' +
             'AND FEC_Field_Object_Name__c != NULL';
@@ -111,7 +114,8 @@ public with sharing class FEC_BCH_ExportPropertyService {
             soql += ' AND FEC_Nature_Of_Case__c IN :natureOfCaseIds';
         }
         soql +=
-            ' ORDER BY FEC_Field_Order_Display__c NULLS LAST, ' +
+            ' ORDER BY FEC_Sub_Section_Order__c NULLS LAST, ' +
+            'FEC_Field_Order_Display__c NULLS LAST, ' +
             'FEC_Field_Label_Name__c NULLS LAST';
         List<FEC_Master_Data_Setting__c> mdsRows = Database.query(soql);
         Map<String, ExportPropertyColumn> deduped = new Map<String, ExportPropertyColumn>();
@@ -133,12 +137,39 @@ public with sharing class FEC_BCH_ExportPropertyService {
                 : row.FEC_Field_Label_Name__c.trim();
             col.objectApiName = row.FEC_Field_Object_Name__c.trim();
             col.fieldApiName = row.FEC_Field_API_Name__c.trim();
+            col.subSectionOrder = row.FEC_Sub_Section_Order__c;
             col.sortOrder = row.FEC_Field_Order_Display__c;
             deduped.put(columnKey, col);
         }
         out.addAll(deduped.values());
         out.sort(new ExportPropertyColumnComparator());
         return out;
+    }
+
+    private static Set<String> resolveExportPropertySubSections(List<String> businessProcessCodes) {
+        Set<String> subSections = new Set<String>{
+            FEC_ConstantCommon.PROPERTY_INFO
+        };
+        if (includesCofBusinessProcess(businessProcessCodes)) {
+            subSections.add(FEC_ConstantCommon.UPDATED_INFO);
+        }
+        return subSections;
+    }
+
+    private static Boolean includesCofBusinessProcess(List<String> businessProcessCodes) {
+        if (businessProcessCodes == null || businessProcessCodes.isEmpty()) {
+            return false;
+        }
+        for (String code : businessProcessCodes) {
+            if (String.isBlank(code)) {
+                continue;
+            }
+            String prefix = FEC_BatchCaseHandlingTemplateHelper.mapBusinessProcessToTemplatePrefix(code);
+            if (FEC_ConstantCommon.BP_COF.equals(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Map<Id, Map<String, String>> resolvePropertyValues(
@@ -353,6 +384,27 @@ public with sharing class FEC_BCH_ExportPropertyService {
             if (b == null) {
                 return -1;
             }
+            Decimal aso = a.subSectionOrder;
+            Decimal bso = b.subSectionOrder;
+            if (aso == null && bso == null) {
+                return compareFieldOrder(a, b);
+            }
+            if (aso == null) {
+                return 1;
+            }
+            if (bso == null) {
+                return -1;
+            }
+            if (aso > bso) {
+                return 1;
+            }
+            if (aso < bso) {
+                return -1;
+            }
+            return compareFieldOrder(a, b);
+        }
+
+        private Integer compareFieldOrder(ExportPropertyColumn a, ExportPropertyColumn b) {
             Decimal ao = a.sortOrder;
             Decimal bo = b.sortOrder;
             if (ao == null && bo == null) {

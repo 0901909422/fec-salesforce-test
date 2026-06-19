@@ -727,6 +727,31 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
     }
 
     @IsTest
+    static void testSendAfterCaseUpdate_realDmlUpdateDoesNotThrowReadOnly() {
+        ensureSlaTemplates();
+        Id queueId = getOrCreateSlaQueueId();
+        Id complaintId = ensureCategory('Complaint');
+        Case row = insertCaseRow(buildEligibleSlaCase(
+            queueId,
+            complaintId,
+            'TS',
+            'RO-' + String.valueOf(System.currentTimeMillis())
+        ));
+
+        Test.startTest();
+        update new Case(
+            Id = row.Id,
+            FEC_SLA_Notification_1__c = System.now()
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(
+            null,
+            [SELECT FEC_SLA_Notification_1__c FROM Case WHERE Id = :row.Id].FEC_SLA_Notification_1__c
+        );
+    }
+
+    @IsTest
     static void testSendAfterCaseUpdate_oldMapMissingCaseEntry() {
         ensureSlaTemplates();
         Id queueId = getOrCreateSlaQueueId();

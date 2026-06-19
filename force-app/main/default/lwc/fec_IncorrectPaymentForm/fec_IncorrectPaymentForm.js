@@ -66,7 +66,19 @@ const CONST = {
 
 export default class Fec_IncorrectPaymentForm extends LightningElement {
 
-    @api recordId;
+    _recordId;
+    _hasConnected = false;
+    @api
+    get recordId() {
+        return this._recordId;
+    }
+    set recordId(value) {
+        const prev = this._recordId;
+        this._recordId = value;
+        if (value && value !== prev && this._hasConnected) {
+            this.loadSubCodeConfig();
+        }
+    }
 
     @api subCodeCode;
 
@@ -104,6 +116,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     _lastLoadedContract = STR_EMPTY;
     _pendingSelectedPaymentId = null;
     _loanContractOptionsLoaded = false;
+    _loanContractOptionsLoadPromise = null;
 
     customLabel = {
         loading: Loading,
@@ -304,7 +317,15 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     connectedCallback() {
-        if (this.recordId) this.loadSubCodeConfig();
+        this._hasConnected = true;
+        if (this.recordId) {
+            this.loadSubCodeConfig();
+        }
+    }
+
+    _resetLoanContractOptionsCache() {
+        this._loanContractOptionsLoaded = false;
+        this._loanContractOptionsLoadPromise = null;
     }
 
     get draftStorageKey() {
@@ -328,7 +349,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const key = this.draftStorageKey;
         if (!key) return;
         const payload = {
-            incorrectContract: this.incorrectContract || STR_EMPTY,
             paymentMethod: this.paymentMethod || STR_EMPTY,
             manualBillDate: this.manualBillDate || null,
             manualBillAmount: this.manualBillAmount != null ? this.manualBillAmount : null,
@@ -363,7 +383,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     applyLocalDraftIfAny() {
         const draft = this.readLocalDraft();
         if (!draft) return;
-        this.incorrectContract = draft.incorrectContract != null ? draft.incorrectContract : this.incorrectContract;
         this.paymentMethod = draft.paymentMethod != null ? draft.paymentMethod : this.paymentMethod;
         this.manualBillDate = draft.manualBillDate != null ? draft.manualBillDate : this.manualBillDate;
         this.manualBillAmount = draft.manualBillAmount != null ? draft.manualBillAmount : this.manualBillAmount;
@@ -386,6 +405,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     loadSubCodeConfig() {
+        this._resetLoanContractOptionsCache();
+        this._lastLoadedContract = STR_EMPTY;
         getSubCodeConfig({ caseId: this.recordId })
             .then((data) => {
                 this.subCode = data.subCode || STR_EMPTY;
@@ -434,10 +455,10 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 if (data.selectedPaymentHistoryId != null && String(data.selectedPaymentHistoryId).trim()) {
                     this._pendingSelectedPaymentId = String(data.selectedPaymentHistoryId).trim();
                 }
-                
+
                 const incorrectContractPromise = this.loadLoanContractOptions();
                 const correctContractPromise = Promise.resolve();
-                
+
                 // Load payment method options
                 const paymentMethodPromise = getPaymentMethodOptions()
                     .then((methodOpts) => {
@@ -446,15 +467,14 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     .catch(() => {
                         this.paymentMethodOptionlst = [];
                     });
-                
+
                 return Promise.all([incorrectContractPromise, correctContractPromise, paymentMethodPromise]);
             })
             .then(() => {
                 this.applyLocalDraftIfAny();
                 this.configLoaded = true;
-                if (this.incorrectContract && this.incorrectContract.trim()) {
-                    Promise.resolve().then(() => this.loadPaymentHistory());
-                }
+                // 18/06/2026 19:30 linhdev - reload Payment History khi Case đã lưu Incorrect Contract
+                this._tryLoadPaymentHistoryForSelectedContract();
             })
             .catch((err) => {
                 this.configLoaded = true;
@@ -465,14 +485,49 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             });
     }
 
-    // 18/06/2026 10:00 linhdev - API 20 GetCustomerList: danh sách Loan cho Incorrect/Correct Contract
-    loadLoanContractOptions() {
+    // 18/06/2026 19:30 linhdev - Case đã lưu Incorrect Contract: reload Payment History khi mở form
+    _tryLoadPaymentHistoryForSelectedContract() {
+        const contract = (this.incorrectContract || STR_EMPTY).trim();
+        if (contract) {
+            this.loadPaymentHistory();
+        }
+    }
+
+    // 19/06/2026 linhdev - chọn dropdown hoặc nhập tay + blur → gọi API 24 GetLoanSecInfo
+    _commitIncorrectContract(contract) {
+        const trimmed = (contract || STR_EMPTY).trim();
+        this.incorrectContract = trimmed;
+        if (!trimmed) {
+            this._clearPaymentHistoryState();
+            return;
+        }
+        this.loadPaymentHistory();
+    }
+
+    _clearPaymentHistoryState() {
+        this.paymentHistory = [];
+        this.paymentHistoryTableKey += 1;
+        this.paymentHistoryPage = 1;
+        this.selectedPaymentId = null;
+        this.selectedRowIds = [];
+        this._lastLoadedContract = STR_EMPTY;
+    }
+
+    // 18/06/2026 20:00 linhdev - API 20: gọi 1 lần/case (cache + dedupe); search/filter client-side trên ComboBox
+    loadLoanContractOptions(forceRefresh) {
         if (!this.recordId) {
             this.incorrectContractOptionlst = [];
             this.correctContractOptionlst = [];
+            this._loanContractOptionsLoaded = false;
             return Promise.resolve();
         }
-        return getIncorrectContractOptions({ caseId: this.recordId })
+        if (!forceRefresh && this._loanContractOptionsLoaded) {
+            return Promise.resolve();
+        }
+        if (this._loanContractOptionsLoadPromise) {
+            return this._loanContractOptionsLoadPromise;
+        }
+        this._loanContractOptionsLoadPromise = getIncorrectContractOptions({ caseId: this.recordId })
             .then((contractOpts) => {
                 const opts = contractOpts || [];
                 this.incorrectContractOptionlst = opts;
@@ -482,25 +537,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             .catch(() => {
                 this.incorrectContractOptionlst = [];
                 this.correctContractOptionlst = [];
+                this._loanContractOptionsLoaded = false;
+            })
+            .finally(() => {
+                this._loanContractOptionsLoadPromise = null;
             });
-    }
-
-    handleIncorrectContractSearchChange() {
-        this.loadLoanContractOptions();
-    }
-
-    // 18/06/2026 16:00 linhdev - focus dropdown Incorrect Contract: refresh API 20
-    handleIncorrectContractDropdownOpen() {
-        this.loadLoanContractOptions();
-    }
-
-    handleCorrectContractSearchChange() {
-        this.loadLoanContractOptions();
-    }
-
-    // 18/06/2026 16:00 linhdev - focus dropdown Correct Contract: refresh API 20
-    handleCorrectContractDropdownOpen() {
-        this.loadLoanContractOptions();
+        return this._loanContractOptionsLoadPromise;
     }
 
     handlePaymentHistoryPrev() {
@@ -559,56 +601,35 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             element.searchKey = undefined;
         }
         this.incorrectContract = STR_EMPTY;
-        this.paymentHistory = [];
-        this.paymentHistoryTableKey += 1;
-        this.paymentHistoryPage = 1;
-        this.selectedPaymentId = null;
-        this.selectedRowIds = [];
-        this._lastLoadedContract = STR_EMPTY;
+        this._clearPaymentHistoryState();
         this._persistSelectedPaymentHistory(null);
+        this.writeLocalDraft();
     }
 
     handleChangeIncorrectContract(e) {
         if (!e.detail || e.detail.fromPick !== true) {
             return;
         }
-        this.incorrectContract = e.detail.value || STR_EMPTY;
-        const contract = (this.incorrectContract || STR_EMPTY).trim();
-        if (!contract) {
-            this.paymentHistory = [];
-            this.paymentHistoryTableKey += 1;
-            this.selectedPaymentId = null;
-            this.selectedRowIds = [];
-            this._lastLoadedContract = STR_EMPTY;
-            return;
-        }
-        if (contract === this._lastLoadedContract) return;
-        this.loadPaymentHistory();
+        this._commitIncorrectContract(e.detail.value);
     }
 
     handleIncorrectContractBlurCommit(e) {
         const detail = e.detail || {};
         const v = detail.value != null ? String(detail.value).trim() : STR_EMPTY;
-        this.incorrectContract = v;
-        if (!v) {
-            this.paymentHistory = [];
-            this.paymentHistoryTableKey += 1;
-            this.selectedPaymentId = null;
-            this.selectedRowIds = [];
-            this._lastLoadedContract = STR_EMPTY;
-            return;
-        }
-        if (v === this._lastLoadedContract) return;
-        this.loadPaymentHistory();
+        this._commitIncorrectContract(v);
+        this.writeLocalDraft();
     }
 
     loadPaymentHistory() {
         const contract = (this.incorrectContract || STR_EMPTY).trim();
         if (!contract) {
-            this.paymentHistory = [];
-            this.paymentHistoryTableKey += 1;
+            this._clearPaymentHistoryState();
             return Promise.resolve();
         }
+        if (contract === this._lastLoadedContract) {
+            return Promise.resolve();
+        }
+        this._lastLoadedContract = contract;
         this.paymentHistoryLoading = true;
         this.selectedPaymentId = null;
         this.selectedRowIds = [];
@@ -619,7 +640,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     ...p,
                     paymentAmountDisplay: this.formatAmount(p.paymentAmount)
                 }));
-                this._lastLoadedContract = contract;
                 if (this._pendingSelectedPaymentId != null) {
                     const pendingId = String(this._pendingSelectedPaymentId);
                     const matched = this.paymentHistory.find((p) => String(p.id) === pendingId);
@@ -634,9 +654,13 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.paymentHistoryLoading = false;
             })
             .catch((err) => {
-                this.paymentHistory = [];
-                this.paymentHistoryTableKey += 1;
-                this.paymentHistoryPage = 1;
+                this._clearPaymentHistoryState();
+                const combo = this.template.querySelector(
+                    'c-fec_-combo-box[data-id="incorrect-contract"]'
+                );
+                if (combo && typeof combo.resetBlurCommitState === 'function') {
+                    combo.resetBlurCommitState();
+                }
                 this.paymentHistoryLoading = false;
                 this.dispatchEvent(new ShowToastEvent({
                     title: FEC_Toast_Error,
@@ -706,13 +730,23 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     handleManualBillAmountChange(event) {
         const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
-        this.manualBillAmount = v === STR_EMPTY || v == null ? null : (Number(v) || null);
+        if (v === STR_EMPTY || v == null || v === '') {
+            this.manualBillAmount = null;
+            return;
+        }
+        const n = Number(v);
+        this.manualBillAmount = isNaN(n) ? null : n;
     }
 
     // 08/06/2026 14:30 linhdev - Excess Amount nhập tùy ý khi chọn payment history (TH2)
     handleExcessAmountChange(event) {
         const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
-        this.excessAmount = v === STR_EMPTY || v == null ? null : (Number(v) || null);
+        if (v === STR_EMPTY || v == null || v === '') {
+            this.excessAmount = null;
+            return;
+        }
+        const n = Number(v);
+        this.excessAmount = isNaN(n) ? null : n;
     }
 
     // 08/06/2026 14:30 linhdev - TH2 dùng excessAmount (không lấy cứng paymentAmount) để validate/lưu
@@ -737,8 +771,9 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     handleAddAdjustment() {
-        // 18/06/2026 10:00 linhdev - Add Item: refresh danh sách Loan từ API 20 cho Correct Account/Contract
-        this.loadLoanContractOptions();
+        if (!this._loanContractOptionsLoaded) {
+            this.loadLoanContractOptions();
+        }
         this.adjustments = [...this.adjustments, { id: this.nextAdjustmentId, correctContract: STR_EMPTY, adjustedAmount: null }];
         this.nextAdjustmentId += 1;
     }
@@ -918,7 +953,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const hasIncorrectContract = !!(this.incorrectContract && String(this.incorrectContract).trim());
         const hasPaymentMethod = !!(this.paymentMethod && String(this.paymentMethod).trim());
         const hasManualBillDate = !!(this.manualBillDate && String(this.manualBillDate).trim());
-        const hasManualBillAmount = this.manualBillAmount != null && this.manualBillAmount !== 0;
+        const hasManualBillAmount = this.manualBillAmount != null;
         const hasSelectedPayment = !!this.selectedPayment;
         const hasAnyAdjustmentInput = (this.adjustments || []).some((a) => {
             const hasCorrectContract = !!(a.correctContract && String(a.correctContract).trim());
@@ -1075,10 +1110,10 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             const sumMsg = this.isTh2
                 ? this.customLabel.adjustedAmountMustEqualExcessAmount
                 : this.customLabel.adjustedAmountMustEqualPayment;
-            this.dispatchEvent(new ShowToastEvent({ 
-                title: FEC_Toast_Validation_Title, 
-                message: sumMsg, 
-                variant: CONST.VARIANT_WARNING 
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: sumMsg,
+                variant: CONST.VARIANT_WARNING
             }));
             return false;
         }
@@ -1154,11 +1189,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const billDate = ctx.billDate;
         const billAmount = ctx.billAmount;
         this.isLoading = true;
-        const payload = valid.map(a => ({ 
-            correctContract: (a.correctContract || STR_EMPTY).trim(), 
-            adjustedAmount: a.adjustedAmount 
+        const payload = valid.map(a => ({
+            correctContract: (a.correctContract || STR_EMPTY).trim(),
+            adjustedAmount: a.adjustedAmount
         }));
-        
+
         return saveAdjustment({
             caseId: this.recordId,
             incorrectContract: this.incorrectContract || STR_EMPTY,
@@ -1170,10 +1205,10 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             .then(() => {
                 this.isLoading = false;
                 this.clearLocalDraft();
-                this.dispatchEvent(new ShowToastEvent({ 
-                    title: FEC_Success_Title, 
-                    message: FEC_Toast_Save_Success, 
-                    variant: CONST.VARIANT_SUCCESS 
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Success_Title,
+                    message: FEC_Toast_Save_Success,
+                    variant: CONST.VARIANT_SUCCESS
                 }));
             })
             .catch((err) => {

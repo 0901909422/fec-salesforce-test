@@ -31,23 +31,94 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         if (String.isNotBlank(userVisibilityClause)) {
             parts.add(userVisibilityClause);
         }
-        parts.add('IsClosed = false');
-        parts.add('(FEC_Final_Status__c LIKE \'Pending - %\' OR FEC_Final_Status__c = \'Open\')');
+        // 18/06/2026 linhdev - spec điều kiện 1: Status = Open OR Pending (field Status chuẩn)
+        parts.add(
+            '(Status = \'' +
+            String.escapeSingleQuotes(FEC_ConstantCommon.CASE_STATUS_OPEN) +
+            '\' OR Status = \'' +
+            String.escapeSingleQuotes(FEC_ConstantCommon.CASE_STATUS_PENDING) +
+            '\')'
+        );
         return parts;
     }
 
     // 05/06/2026 10:00 linhdev - OwnerId=$User.Id OR CONTAINS(FEC_Assignment_Users__c) OR OwnerId=Queue user là thành viên
+    // 18/06/2026 10:30 linhdev - bổ sung FEC_Assignment_Users__c chứa tên Queue user là thành viên (qua Role)
+    // 18/06/2026 linhdev - điều kiện 2/3/4 spec OR: Owner/UserId assignment OR OwnerId queue OR assignment chứa tên queue
     private static String buildDefaultUserVisibilityClause() {
         List<String> visibilityParts = new List<String>();
-        visibilityParts.add('FEC_Is_Owner_Or_Assigned__c = true');
+        String ownerOrAssignedUserClause = buildOwnerOrAssignedUserClause();
+        if (String.isNotBlank(ownerOrAssignedUserClause)) {
+            visibilityParts.add(ownerOrAssignedUserClause);
+        }
         Set<Id> userQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(UserInfo.getUserId());
         if (userQueueIds != null && !userQueueIds.isEmpty()) {
             visibilityParts.add(formatIdInClause('OwnerId', userQueueIds));
+        }
+        Set<String> userQueueNames = FEC_AssignmentListHandler.getCurrentUserQueues(UserInfo.getUserId());
+        String assignmentQueueClause = buildAssignmentUsersContainsQueueNamesClause(userQueueNames);
+        if (String.isNotBlank(assignmentQueueClause)) {
+            visibilityParts.add(assignmentQueueClause);
+        }
+        if (visibilityParts.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
         }
         if (visibilityParts.size() == 1) {
             return visibilityParts[0];
         }
         return '(' + String.join(visibilityParts, ' OR ') + ')';
+    }
+
+    // 18/06/2026 linhdev - spec điều kiện 2: OwnerId = $User.Id OR FEC_Assignment_Users__c chứa UserId (18/15 ký tự)
+    private static String buildOwnerOrAssignedUserClause() {
+        Id userId = UserInfo.getUserId();
+        if (userId == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String userIdStr = String.valueOf(userId);
+        List<String> parts = new List<String>();
+        parts.add('OwnerId = \'' + String.escapeSingleQuotes(userIdStr) + '\'');
+        parts.add(
+            'FEC_Assignment_Users__c LIKE \'%' +
+            String.escapeSingleQuotes(userIdStr) +
+            '%\''
+        );
+        if (userIdStr.length() > 15) {
+            parts.add(
+                'FEC_Assignment_Users__c LIKE \'%' +
+                String.escapeSingleQuotes(userIdStr.substring(0, 15)) +
+                '%\''
+            );
+        }
+        if (parts.size() == 1) {
+            return parts[0];
+        }
+        return '(' + String.join(parts, ' OR ') + ')';
+    }
+
+    // 18/06/2026 10:30 linhdev - FEC_Assignment_Users__c LIKE tên Queue (Name) user là thành viên
+    private static String buildAssignmentUsersContainsQueueNamesClause(Set<String> queueNames) {
+        if (queueNames == null || queueNames.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        List<String> likeParts = new List<String>();
+        for (String queueName : queueNames) {
+            if (String.isBlank(queueName)) {
+                continue;
+            }
+            likeParts.add(
+                'FEC_Assignment_Users__c LIKE \'%' +
+                String.escapeSingleQuotes(queueName.trim()) +
+                '%\''
+            );
+        }
+        if (likeParts.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (likeParts.size() == 1) {
+            return likeParts[0];
+        }
+        return '(' + String.join(likeParts, ' OR ') + ')';
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {
@@ -311,6 +382,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         }
         if (!queueNames.isEmpty()) {
             Set<Id> queueIds = resolveQueueIdsByName(queueNames);
+            String ownerQueueClause = FEC_ConstantCommon.STR_EMPTY;
             if (!queueIds.isEmpty()) {
                 List<String> idLit = new List<String>();
                 for (Id queueId : queueIds) {
@@ -318,9 +390,44 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
                 }
                 String inList = '(' + String.join(idLit, ',') + ')';
                 if (op == 'equals') {
-                    clauseParts.add('OwnerId IN ' + inList);
+                    ownerQueueClause = 'OwnerId IN ' + inList;
                 } else if (op == 'not_equal_to') {
-                    clauseParts.add('OwnerId NOT IN ' + inList);
+                    ownerQueueClause = 'OwnerId NOT IN ' + inList;
+                }
+            }
+            String assignmentQueueClause = buildAssignmentUsersContainsQueueNamesClause(new Set<String>(queueNames));
+            if (op == 'equals') {
+                List<String> queueMatchParts = new List<String>();
+                if (String.isNotBlank(ownerQueueClause)) {
+                    queueMatchParts.add(ownerQueueClause);
+                }
+                if (String.isNotBlank(assignmentQueueClause)) {
+                    queueMatchParts.add(assignmentQueueClause);
+                }
+                if (!queueMatchParts.isEmpty()) {
+                    if (queueMatchParts.size() == 1) {
+                        clauseParts.add(queueMatchParts[0]);
+                    } else {
+                        clauseParts.add('(' + String.join(queueMatchParts, ' OR ') + ')');
+                    }
+                }
+            } else if (op == 'not_equal_to') {
+                List<String> queueExcludeParts = new List<String>();
+                if (String.isNotBlank(ownerQueueClause)) {
+                    queueExcludeParts.add(ownerQueueClause);
+                }
+                for (String queueName : queueNames) {
+                    if (String.isBlank(queueName)) {
+                        continue;
+                    }
+                    queueExcludeParts.add(
+                        '(NOT (FEC_Assignment_Users__c LIKE \'%' +
+                        String.escapeSingleQuotes(queueName.trim()) +
+                        '%\'))'
+                    );
+                }
+                if (!queueExcludeParts.isEmpty()) {
+                    clauseParts.add('(' + String.join(queueExcludeParts, ' AND ') + ')');
                 }
             }
         }
