@@ -269,6 +269,89 @@ public with sharing class FEC_ZNSNotificationCallout {
             );
 
             logApiResponse(responseLog);
+            responseLog = null;
+        }
+    }
+
+    public static SendZnsMessageResponseDto callSendZNSMessageByCaseWithoutLogging(
+        Id caseId,
+        String phone,
+        String templateId
+    ) {
+        List<SendZnsMessageTemplateData> templateData =
+            buildTemplateDataFromMappings(caseId, templateId);
+
+        String phoneNumber = replacePhonePrefix(phone, '0', '84');
+        return callSendZNSMessageWithoutLogging(
+            templateData,
+            phoneNumber,
+            templateId
+        );
+    }
+
+    public static SendZnsMessageResponseDto callSendZNSMessageWithoutLogging(
+        List<SendZnsMessageTemplateData> templateData,
+        String phone,
+        String templateId
+    ) {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_SEND_ZNS_MESSAGE);
+
+        String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
+        String transId = FEC_CommonUltils.generateTransactionUUID();
+        Datetime nowDt = Datetime.now();
+
+        String currentDateTime = FEC_CommonUltils.formatTimestamp(
+            nowDt,
+            FEC_ConstantCommon.STR_DATETIME_FORMAT_Z
+        );
+
+        Map<String, String> headers = new Map<String, String>{
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID'     => transId,
+            'DateTime'    => currentDateTime,
+            'RequestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
+        };
+
+        SendZnsMessageRequestDto reqDto = buildRequestDto(
+            templateData,
+            phone,
+            templateId,
+            transId,
+            nowDt,
+            currentDateTime
+        );
+
+        String payload = reqDto.toJson();
+        System.debug('SendZNSMessage Request Body: ' + payload);
+
+        HttpResponse res;
+        String errorMessage;
+
+        try {
+            res = sendRequestWithBody(endpoint, headers, payload);
+
+            if (res == null) {
+                return buildTestSuccessResponse(transId, currentDateTime);
+            }
+
+            System.debug('SendZNSMessage Response Body: ' + res.getBody());
+
+            return parseSendZnsMessageResponse(res.getBody());
+
+        } catch (Exception ex) {
+            errorMessage = ex.getMessage();
+            throw ex;
+
+        } finally {
+            responseLog = new FEC_ResponseLog(
+                API_SEND_ZNS_MESSAGE,
+                endpoint,
+                METHOD_POST,
+                payload,
+                res,
+                errorMessage
+            );
         }
     }
 
@@ -354,6 +437,15 @@ public with sharing class FEC_ZNSNotificationCallout {
     // =========================================================================
     // API Log
     // =========================================================================
+
+    public static void writeLogSendNoti() {
+        if (responseLog == null) {
+            return;
+        }
+
+        logApiResponse(responseLog);
+        responseLog = null;
+    }
 
     private static void logApiResponse(FEC_ResponseLog responseLog) {
         if (responseLog == null) {

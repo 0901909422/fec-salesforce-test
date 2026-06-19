@@ -603,7 +603,7 @@ public without sharing class FEC_NotificationService {
                 // =================================================================
                 try {
                     FEC_ZNSNotificationCallout.SendZnsMessageResponseDto res =
-                        FEC_ZNSNotificationCallout.callSendZNSMessageByCase(
+                        FEC_ZNSNotificationCallout.callSendZNSMessageByCaseWithoutLogging(
                             c.Id,
                             phoneNumber,
                             znsId
@@ -908,7 +908,7 @@ public without sharing class FEC_NotificationService {
                 // =================================================================
                 try {
                     FEC_MobileAppNotificationCallout.SendNotificationResponse res =
-                        FEC_MobileAppNotificationCallout.sendNotification(
+                        FEC_MobileAppNotificationCallout.sendNotificationWithoutLogging(
                             mobileContent,
                             nationalId,
                             phoneNumber,
