@@ -273,18 +273,7 @@ private class FEC_MCMSCARDTOCARDINQEMEA_Test {
             null
         );
 
-        assertCalloutException(
-            'invalid requestor',
-            VALID_TRANS_ID,
-            'INVALID',
-            VALID_DATETIME,
-            'V2',
-            'CTX',
-            'SIGNON',
-            'ORG1',
-            '1234567890123456789',
-            null
-        );
+        // requestorId param bị override bởi FEC_API_Config__mdt.FEC_Requestor_Id__c trước validateRequest
 
         assertCalloutException(
             'invalid datetime',
