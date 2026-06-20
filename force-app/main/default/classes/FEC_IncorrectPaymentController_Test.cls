@@ -39,7 +39,16 @@ private class FEC_IncorrectPaymentController_Test {
         return hist;
     }
 
-    // 18/06/2026 18:00 linhdev - setup Case.FEC_Account_Contract_Number_Text__c (formula: Loan + FEC_Account_or_Contract__r.Name)
+    private static void setCaseCustomerHistoryNationalId(Id caseId, String nationalId) {
+        Case linked = [SELECT FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1];
+        if (linked.FEC_Account_or_Contract__c != null) {
+            update new FEC_Customer_History__c(
+                Id = linked.FEC_Account_or_Contract__c,
+                FEC_National_ID_Passport_ID__c = nationalId
+            );
+        }
+    }
+
     private static void linkCaseToLoanAccountContractText(Id caseId, String accountContractNumber) {
         String suffix = String.valueOf(System.currentTimeMillis()).right(4);
         FEC_Product_Type__c prod = new FEC_Product_Type__c(
@@ -228,6 +237,7 @@ private class FEC_IncorrectPaymentController_Test {
     static void testGetLoanContractOptionsFromApi_WithMock() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         linkCaseToLoanAccountContractText(c.Id, '0001500100000030081');
+        setCaseCustomerHistoryNationalId(c.Id, '079195235215');
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
 
         Test.startTest();
@@ -448,12 +458,13 @@ private class FEC_IncorrectPaymentController_Test {
         System.assertEquals(0, options.size(), 'Without API 20 mock should not return Salesforce contract values.');
     }
 
-    // 18/06/2026 18:30 linhdev - verify API 20 request dùng FEC_Account_Contract_Number_Text__c là AccountNumber param
+    // 19/06/2026 linhdev - API 20 Incorrect Payment chỉ truyền NationalID, không truyền AccountNumber
     @IsTest
-    static void testGetLoanContractOptionsFromApi_UsesCaseAccountNumberInRequest() {
+    static void testGetLoanContractOptionsFromApi_PassesNationalIdOnlyInRequest() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         linkCaseToLoanAccountContractText(c.Id, '0001500100000030081');
-        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListVerifyAccountNumberRequest());
+        setCaseCustomerHistoryNationalId(c.Id, '079195235215');
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListVerifyNationalIdOnlyRequest());
 
         Test.startTest();
         List<FEC_CommonUltils.PicklistOption> options =
@@ -464,12 +475,13 @@ private class FEC_IncorrectPaymentController_Test {
         System.assertEquals('20170108-0005092', options[0].value);
     }
 
-    // 19/06/2026 linhdev - FEC_Account_Contract_Number_Text__c dạng contract vẫn truyền AccountNumber param theo payload API 20
+    // 19/06/2026 linhdev - có FEC_Account_Contract_Number_Text__c vẫn chỉ gọi API 20 bằng NationalID
     @IsTest
-    static void testGetLoanContractOptionsFromApi_UsesContractTextAsAccountNumberParam() {
+    static void testGetLoanContractOptionsFromApi_NationalIdOnlyWithContractTextOnCase() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         linkCaseToLoanAccountContractText(c.Id, '20171208-0001000');
-        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListVerifyAccountNumberContractFormatRequest());
+        setCaseCustomerHistoryNationalId(c.Id, '079195235215');
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListVerifyNationalIdOnlyRequest());
 
         Test.startTest();
         List<FEC_CommonUltils.PicklistOption> options =
@@ -591,6 +603,7 @@ private class FEC_IncorrectPaymentController_Test {
     static void testGetLoanContractOptionsFromApi_MultipleContractsDedupe() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         linkCaseToLoanAccountContractText(c.Id, '0001500100000030081');
+        setCaseCustomerHistoryNationalId(c.Id, '079195235215');
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListMultipleApplications());
 
         Test.startTest();
@@ -653,14 +666,29 @@ private class FEC_IncorrectPaymentController_Test {
         }
     }
 
-    // 18/06/2026 18:00 linhdev - API 20 fallback: National ID khi Case không có FEC_Account_Contract_Number_Text__c
+    // 18/06/2026 18:00 linhdev - API 20 fallback: National ID từ FEC_Account_or_Contract__r khi Case không có FEC_Account_Contract_Number_Text__c
     @IsTest
     static void testGetLoanContractOptionsFromApi_FallbackNationalId() {
         Case c = [SELECT Id FROM Case LIMIT 1];
-        update new Case(
-            Id = c.Id,
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            Name = 'temp-' + String.valueOf(System.currentTimeMillis()).right(4),
+            FEC_Case__c = c.Id,
             FEC_National_ID_Passport_ID__c = '079195235215'
         );
+        insert hist;
+        update new FEC_Customer_History__c(
+            Id = hist.Id,
+            Name = String.valueOf(hist.Id).left(15)
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                FEC_Account_or_Contract__c = hist.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
 
         Test.startTest();
@@ -677,6 +705,7 @@ private class FEC_IncorrectPaymentController_Test {
     static void testGetLoanContractOptionsFromApi_FallbackCustomerHistory() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         linkCaseToCustomerHistoryWithBlankAccountContractText(c.Id, '20170108-0005091', null);
+        setCaseCustomerHistoryNationalId(c.Id, '079195235215');
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
 
         Test.startTest();
@@ -727,13 +756,14 @@ private class FEC_IncorrectPaymentController_Test {
         Test.stopTest();
     }
 
-    // 18/06/2026 18:00 linhdev - API 20 fallback: AccountNumber từ Customer History khi không có FEC_Account_Contract_Number_Text__c
+    // 18/06/2026 18:00 linhdev - API 20 chỉ dùng National ID từ FEC_Account_or_Contract__r
     @IsTest
-    static void testGetLoanContractOptionsFromApi_FallbackAccountNumber() {
+    static void testGetLoanContractOptionsFromApi_FallbackNationalIdFromCustomerHistory() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         linkCaseToCustomerHistoryWithBlankAccountContractText(
             c.Id, '20170108-0005091', '0001500100000030081'
         );
+        setCaseCustomerHistoryNationalId(c.Id, '079195235215');
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListSuccess());
 
         Test.startTest();
@@ -796,32 +826,19 @@ private class FEC_IncorrectPaymentController_Test {
         }
     }
 
-    private class MockGetCustomerListVerifyAccountNumberRequest implements HttpCalloutMock {
+    private class MockGetCustomerListVerifyNationalIdOnlyRequest implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             System.assert(
-                req.getBody().contains('<AccountNumber>0001500100000030081</AccountNumber>'),
-                'API 20 should use Case FEC_Account_Contract_Number_Text__c as AccountNumber param.'
+                req.getBody().contains('<NationalID>079195235215</NationalID>'),
+                'API 20 should pass FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c as NationalID param.'
             );
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
-                '<Sys><Code>1</Code><Description>DATA FOUND</Description></Sys><Count>1</Count>' +
-                '<Customers><Customer><Applications><Application>' +
-                '<ContractNumber>20170108-0005092</ContractNumber><AccountNumber>0001500100000030081</AccountNumber>' +
-                '</Application></Applications></Customer></Customers>' +
-                '</cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class MockGetCustomerListVerifyAccountNumberContractFormatRequest implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
             System.assert(
-                req.getBody().contains('<AccountNumber>20171208-0001000</AccountNumber>'),
-                'API 20 should pass contract-format FEC_Account_Contract_Number_Text__c in AccountNumber param.'
+                !req.getBody().contains('<AccountNumber>'),
+                'API 20 Incorrect Payment should not pass AccountNumber param.'
+            );
+            System.assert(
+                !req.getBody().contains('<ContractNumber>'),
+                'API 20 Incorrect Payment should not pass ContractNumber param.'
             );
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
