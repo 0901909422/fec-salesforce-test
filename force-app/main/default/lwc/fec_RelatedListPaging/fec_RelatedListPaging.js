@@ -37,6 +37,8 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api selectionMode = 'multiple'; 
     @api enableCheckboxColumn = false;
     @api showRefreshWhenEmpty = false;
+    /** When true, rows with a navigable Id show pointer/hover styling (rowselect still fires for all tables). */
+    @api enableRowClickNavigation = false;
 
     _preSelectedIds = [];
 
@@ -251,12 +253,22 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     /* ================= DISPLAY RECORDS ================= */
     get displayRecords() {
+        const linkRecordIdField = (this.columns || []).find((col) => col.type === 'link')
+            ?.recordIdField || 'Id';
+
         return this.pagedRecords.map((row, index) => {
 
             const rowIndex = (this.currentPage - 1) * this.pageSize + index;
 
+            const hasNavId = !!(row[linkRecordIdField] || row.Id);
+            const rowClass = this.enableRowClickNavigation && hasNavId
+                ? `${this.rowSelectionClass} row-navigable`
+                : this.rowSelectionClass;
+
             return {
                 id: row.Id || `${this.currentPage}-${index}`,
+                navRecordId: row.Id || null,
+                rowClass,
                 isSelected: this.selectedRecordIds.has(row.Id),
                 rowNumber: rowIndex + 1,
                 cells: this.columns.map(col => {
@@ -822,13 +834,30 @@ export default class Fec_RelatedListPaging extends LightningElement {
         if (event.target.closest('button, a, lightning-input, lightning-button-icon, select, input')) {
             return;
         }
-        const rowId = event.currentTarget?.dataset?.id;
-        if (!rowId) {
+        const displayRowId = event.currentTarget?.dataset?.id;
+        if (!displayRowId) {
             return;
         }
+
+        const pageIndex = this.pagedRecords.findIndex((row, index) => {
+            const fallbackId = `${this.currentPage}-${index}`;
+            return (row.Id || fallbackId) === displayRowId;
+        });
+        if (pageIndex < 0) {
+            return;
+        }
+
+        const row = this.pagedRecords[pageIndex];
+        const linkColumn = (this.columns || []).find((col) => col.type === 'link');
+        const recordIdField = linkColumn?.recordIdField || 'Id';
+        const recordId = row?.[recordIdField] || row?.Id;
+        if (!recordId) {
+            return;
+        }
+
         this.dispatchEvent(
             new CustomEvent('rowselect', {
-                detail: { recordId: rowId },
+                detail: { recordId },
                 bubbles: true,
                 composed: true
             })

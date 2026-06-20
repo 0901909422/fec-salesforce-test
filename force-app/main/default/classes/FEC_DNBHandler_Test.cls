@@ -130,6 +130,8 @@ private class FEC_DNBHandler_Test {
             FEC_National_ID_Passport_ID__c = '123456789'
         );
         insert hist;
+        hist.Name = 'DNB-CONTRACT-' + suffix;
+        update hist;
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
@@ -246,7 +248,7 @@ private class FEC_DNBHandler_Test {
 
     private static Case getExistingCustomerCase() {
         return [
-            SELECT Id
+            SELECT Id, FEC_Account_Contract_Number_Text__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Subject = 'DNB Existing Customer Case'
             LIMIT 1
@@ -283,7 +285,10 @@ private class FEC_DNBHandler_Test {
         System.assertEquals('123456789', res.nationalId);
         System.assertEquals('0901234567', res.primaryPhoneNumber);
         System.assertEquals('interaction@example.com', res.interactionEmail);
-        System.assertEquals('DNB Customer Hist', res.contractId);
+        String expectedContractId = String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)
+            ? c.FEC_Account_Contract_Number_Text__c
+            : c.FEC_Product_Type__r.Name;
+        System.assertEquals(expectedContractId, res.contractId);
         System.assertEquals(2, res.processActionCount);
     }
 
@@ -432,7 +437,7 @@ private class FEC_DNBHandler_Test {
         Test.setMock(HttpCalloutMock.class, new DnbHttpMock(200, MOCK_GET_DNB_SUCCESS));
 
         Test.startTest();
-        FEC_GetDNBCalloutService.DNBResult res = FEC_DNBHandler.checkDNBExisting(c.Id);
+        FEC_GetDNBCalloutService.DNBResult res = FEC_DNBHandler.checkDNBExisting(c.Id, '123456789');
         Test.stopTest();
 
         System.assertEquals(true, res.success);
@@ -540,8 +545,8 @@ private class FEC_DNBHandler_Test {
         Test.setMock(HttpCalloutMock.class, new DnbHttpMock(200, MOCK_GET_DNB_SUCCESS));
 
         Test.startTest();
-        FEC_DNBHandler.createExistingDNBRows(c.Id);
-        FEC_DNBHandler.createExistingDNBRows(c.Id);
+        FEC_DNBHandler.createExistingDNBRows(c.Id, '123456789');
+        FEC_DNBHandler.createExistingDNBRows(c.Id, '123456789');
         Test.stopTest();
 
         System.assert(

@@ -87,7 +87,7 @@
                             <tbody>
                                 <template if:true={hasRecords}>
                                 <template for:each={displayRecords} for:item="row">
-                                    <tr key={row.id} data-id={row.id} onclick={handleRowSelect} class={rowSelectionClass}>
+                                    <tr key={row.id} data-id={row.id} onclick={handleRowSelect} class={row.rowClass}>
                                         <template if:true={showCheckboxColumn}>
                                             <td class="col-checkbox">
                                                 <lightning-input
