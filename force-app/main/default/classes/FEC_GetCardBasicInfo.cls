@@ -352,7 +352,11 @@ public with sharing class FEC_GetCardBasicInfo {
         Set<String> validRequestorIds = new Set<String>{
             FEC_ConstantCommon.REQUESTOR_CRM,
             FEC_ConstantCommon.REQUESTOR_PORTAL,
-            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
+            FEC_ConstantCommon.REQUESTOR_PEGA
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
