@@ -580,6 +580,11 @@ public without sharing class FEC_CustomerIntegrationService {
         hist.FEC_Block_Date__c = m.BlckDate;
         hist.FEC_Card_Activation_Status__c = FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag);
         hist.FEC_Card_Activation_Date__c = activationDateParsed;
+        FEC_GetCardBasicInfo.StatementInfo stmt = cardRes.CardBasicInfo.Statement;
+        if (stmt != null) {
+            hist.FEC_Last_Statement_Date__c = stmt.LastStatementDate;
+            hist.FEC_Next_Statement_Date__c = stmt.NextStatementDate;
+        }
 
         if (result != null) {
             result.plasticID = m.PlasticIndicator;
