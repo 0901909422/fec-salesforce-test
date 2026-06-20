@@ -920,6 +920,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_FACEBOOK_LOWER = 'facebook';
     public static final String CHANNEL_ZALO_LOWER = 'zalo';
     public static final String CHANNEL_WEBCHAT_LOWER = 'webchat';
+    public static final String CHANNEL_APPCHAT_LOWER = 'appchat';
     
     // ===== KYC =====
     public static final String KYC_METHOD_OTHER = 'Other';
@@ -1071,4 +1072,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String ERROR_SAVING_SEARCH_HISTORY = 'Error saving search history';
     public static final String STATUS_ACTIVE = 'Còn hiệu lực';
     public static final String STATUS_EXPIRED = 'Hết hiệu lực';
+
+     public static final String CASE_SUBCHANNEL_MOBILE_APP = 'Mobile App';
 }
