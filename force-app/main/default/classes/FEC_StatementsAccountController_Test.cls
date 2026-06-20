@@ -150,7 +150,9 @@ private class FEC_StatementsAccountController_Test {
             FEC_Case__c = c.Id,
             Name = 'STMT-' + suffix,
             FEC_Account_Number__c = acctNum,
-            FEC_Contract_Number__c = CONTRACT_NUMBER
+            FEC_Contract_Number__c = CONTRACT_NUMBER,
+            FEC_Billing_Cycle__c = 15,
+            FEC_Total_Payment_Due__c = 1000
         );
         insert ch;
 
@@ -228,15 +230,14 @@ private class FEC_StatementsAccountController_Test {
         Test.stopTest();
 
         Id chId = c.FEC_Account_or_Contract__c;
-        FEC_Statement__c header = [
+        FEC_Customer_History__c ch = [
             SELECT FEC_Total_Payment_Due__c, FEC_Billing_Cycle__c
-            FROM FEC_Statement__c
-            WHERE FEC_Customer_History__c = :chId
-                AND FEC_Statement_Date__c = null
+            FROM FEC_Customer_History__c
+            WHERE Id = :chId
             LIMIT 1
         ];
-        System.assertEquals(50000, header.FEC_Total_Payment_Due__c);
-        System.assertEquals(15, header.FEC_Billing_Cycle__c);
+        System.assertEquals(50000, ch.FEC_Total_Payment_Due__c);
+        System.assertEquals(15, ch.FEC_Billing_Cycle__c);
 
         System.assertEquals(
             1,

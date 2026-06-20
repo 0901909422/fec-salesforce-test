@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from "lwc";
+﻿import { LightningElement, api, wire } from "lwc";
 import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
@@ -28,8 +28,10 @@ import FEC_INTERACTION_SUB_CHANNEL from "@salesforce/label/c.FEC_Interaction_Sub
 import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
 import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
 import isInteractionPhoneActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked';
+import isInteractionChatActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionChatActionBlocked';
 import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
 import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
+import VALIDATE_INTERACTION_CHAT from "@salesforce/messageChannel/FEC_Validate_Interaction_Chat__c";
 import {
   publish,
   MessageContext,
@@ -187,7 +189,11 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
 
   get showExecute() {
     // 05/06/2026 10:00 tungnm37 - Hide Execute when current user is not Interaction owner on creation screen.
-    return this.canExecuteFlag === true || this.ubankExecuteAccess === true || (!this.isHandling && this.isOwner === true);
+    // 15/06/2026 - Khi đã chuyển sang handling thì luôn ẩn Execute, chỉ hiển thị Wrap-up và Create Case.
+    if (this.isHandling) {
+      return false;
+    }
+    return this.canExecuteFlag === true || this.ubankExecuteAccess === true || (this.isOwner === true);
   }
 
   // ===============================
@@ -303,12 +309,33 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     }
   }
 
+  async ensureInteractionChatBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionChatActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_CHAT, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionChatActionBlocked error", error);
+      return true;
+    }
+  }
+
   async ensureInteractionFieldsBeforeCreateCase(recordId) {
     const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
     if (!emailOk) {
       return false;
     }
-    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    const phoneOk = await this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    if (!phoneOk) {
+      return false;
+    }
+    return this.ensureInteractionChatBeforeCreateCase(recordId);
   }
 
   async handleCreateCase() {

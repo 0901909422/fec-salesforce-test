@@ -1,4 +1,4 @@
-import { LightningElement, api, track, wire } from "lwc";
+﻿import { LightningElement, api, track, wire } from "lwc";
 import {
   IsConsoleNavigation,
   openTab,
@@ -14,8 +14,10 @@ import canExecuteUbankEmailInteraction from "@salesforce/apex/FEC_CaseExecuteSer
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import isInteractionEmailActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked";
 import isInteractionPhoneActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked";
+import isInteractionChatActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionChatActionBlocked";
 import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
 import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
+import VALIDATE_INTERACTION_CHAT from "@salesforce/messageChannel/FEC_Validate_Interaction_Chat__c";
 
 import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
@@ -234,7 +236,11 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
   get showExecute() {
     // Owner or Ubank Email queue member can execute.
-    if (!this.isOwner && !this.ubankExecuteAccess && this.canExecuteFlag !== true) {
+    if (
+      !this.isOwner &&
+      !this.ubankExecuteAccess &&
+      this.canExecuteFlag !== true
+    ) {
       return false;
     }
 
@@ -248,7 +254,11 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     }
 
     // 3. Logic hiển thị nút "Execute" (Bắt đầu xử lý)
-    // - Phải CHƯA Ở TRONG trong chế độ xử lý (!isHandling)
+    // - Phải CHƯA Ở TRONG chế độ xử lý (!isHandling)
+    // - Khi đã chuyển sang handling thì luôn ẩn Execute, chỉ hiển thị Wrap-up & Create Case
+    if (this.isHandling) {
+      return false;
+    }
     if (this.canExecuteFlag === true || this.ubankExecuteAccess) {
       return true;
     }
@@ -336,9 +346,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
   async refreshUbankExecuteAccess() {
     try {
-      this.ubankExecuteAccess = await canExecuteUbankEmailInteraction({
-        caseId: this.recordId,
-      }) === true;
+      this.ubankExecuteAccess =
+        (await canExecuteUbankEmailInteraction({
+          caseId: this.recordId,
+        })) === true;
     } catch (error) {
       this.ubankExecuteAccess = false;
       console.error("canExecuteUbankEmailInteraction error:", error);
@@ -406,18 +417,39 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     }
   }
 
+  async ensureInteractionChatBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionChatActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_CHAT, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionChatActionBlocked error", error);
+      return true;
+    }
+  }
+
   async ensureInteractionFieldsBeforeCreateCase(recordId) {
     const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
     if (!emailOk) {
       return false;
     }
-    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    const phoneOk = await this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    if (!phoneOk) {
+      return false;
+    }
+    return this.ensureInteractionChatBeforeCreateCase(recordId);
   }
 
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
     const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(
-      this.createCaseSourceId
+      this.createCaseSourceId,
     );
     if (!canProceed) {
       return;
@@ -449,6 +481,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     setMode(isEdit);
     const payload = {
       isModeEdit: isEdit,
+      interactionCaseId: this.recordId,
     };
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
@@ -487,11 +520,16 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   handleMessage(message) {
-    if (
-      !this.isInteractionCase &&
-      message &&
-      typeof message.isModeEdit !== "undefined"
-    ) {
+    if (!message) {
+      return;
+    }
+
+    // Chỉ xử lý khi đúng record hiện tại
+    if (message.interactionCaseId !== this.recordId) {
+      return;
+    }
+
+    if (!this.isInteractionCase && typeof message.isModeEdit !== "undefined") {
       this.viewMode = message.isModeEdit ? "handling" : "review";
     }
   }
