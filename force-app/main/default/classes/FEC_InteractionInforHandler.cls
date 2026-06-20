@@ -121,10 +121,21 @@ public without sharing class FEC_InteractionInforHandler {
         );
     }
     
+    private static Boolean isManualEmailRequiredChannel(Case interaction) {
+        if (interaction == null) {
+            return false;
+        }
+        if (interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_EMAIL_NAME) {
+            return true;
+        }
+        return interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME
+            && interaction.FEC_Interaction_Subchannel__c == FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL;
+    }
+
     private static Boolean requiresManualInteractionEmail(Case interaction) {
         return interaction != null
             && interaction.FEC_Is_Manual__c == true
-            && interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_EMAIL_NAME
+            && isManualEmailRequiredChannel(interaction)
             && String.isBlank(interaction.FEC_Interaction_Email__c);
     }
 
@@ -134,7 +145,8 @@ public without sharing class FEC_InteractionInforHandler {
         }
         List<Case> rows = [
             SELECT Id, RecordType.DeveloperName, FEC_Interaction__c,
-                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Email__c
+                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Subchannel__c,
+                   FEC_Interaction_Email__c
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
@@ -149,7 +161,8 @@ public without sharing class FEC_InteractionInforHandler {
         if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
             && current.FEC_Interaction__c != null) {
             List<Case> interactions = [
-                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Email__c
+                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Subchannel__c,
+                       FEC_Interaction_Email__c
                 FROM Case
                 WHERE Id = :current.FEC_Interaction__c
                 LIMIT 1
@@ -164,11 +177,29 @@ public without sharing class FEC_InteractionInforHandler {
         return requiresManualInteractionEmail(getInteractionForEmailAction(recordId));
     }
 
+    private static Boolean isManualPhoneRequiredChannel(Case interaction) {
+        if (interaction == null) {
+            return false;
+        }
+        String channel = interaction.FEC_Channel__c;
+        if (channel == FEC_ConstantCommon.CHANNEL_INBOUND_NAME
+            || channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME
+            || channel == FEC_ConstantCommon.CHANNEL_F2F_NAME
+            || channel == FEC_ConstantCommon.CHANNEL_LETTER_NAME
+            || channel == FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME) {
+            return true;
+        }
+        if (channel == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME) {
+            return interaction.FEC_Interaction_Subchannel__c
+                != FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL;
+        }
+        return false;
+    }
+
     private static Boolean requiresManualInteractionPhone(Case interaction) {
         return interaction != null
             && interaction.FEC_Is_Manual__c == true
-            && (interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_INBOUND_NAME
-                || interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME)
+            && isManualPhoneRequiredChannel(interaction)
             && String.isBlank(interaction.FEC_Phone_Number__c);
     }
 
@@ -178,7 +209,8 @@ public without sharing class FEC_InteractionInforHandler {
         }
         List<Case> rows = [
             SELECT Id, RecordType.DeveloperName, FEC_Interaction__c,
-                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Phone_Number__c
+                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Subchannel__c,
+                   FEC_Phone_Number__c
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
@@ -193,7 +225,8 @@ public without sharing class FEC_InteractionInforHandler {
         if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
             && current.FEC_Interaction__c != null) {
             List<Case> interactions = [
-                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Phone_Number__c
+                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Subchannel__c,
+                       FEC_Phone_Number__c
                 FROM Case
                 WHERE Id = :current.FEC_Interaction__c
                 LIMIT 1
@@ -206,6 +239,54 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled(cacheable=false)
     public static Boolean isInteractionPhoneActionBlocked(Id recordId) {
         return requiresManualInteractionPhone(getInteractionForPhoneAction(recordId));
+    }
+
+    private static Boolean hasRequiredManualChatFields(Case interaction) {
+        return String.isNotBlank(interaction.FEC_Phone_Number__c)
+            && String.isNotBlank(interaction.FEC_Customer_Username__c);
+    }
+
+    private static Boolean requiresManualInteractionChat(Case interaction) {
+        return interaction != null
+            && interaction.FEC_Is_Manual__c == true
+            && interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT_NAME
+            && !hasRequiredManualChatFields(interaction);
+    }
+
+    private static Case getInteractionForChatAction(Id recordId) {
+        if (recordId == null) {
+            return null;
+        }
+        List<Case> rows = [
+            SELECT Id, RecordType.DeveloperName, FEC_Interaction__c,
+                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Phone_Number__c, FEC_Customer_Username__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return null;
+        }
+        Case current = rows[0];
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return current;
+        }
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            && current.FEC_Interaction__c != null) {
+            List<Case> interactions = [
+                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Phone_Number__c, FEC_Customer_Username__c
+                FROM Case
+                WHERE Id = :current.FEC_Interaction__c
+                LIMIT 1
+            ];
+            return interactions.isEmpty() ? null : interactions[0];
+        }
+        return null;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static Boolean isInteractionChatActionBlocked(Id recordId) {
+        return requiresManualInteractionChat(getInteractionForChatAction(recordId));
     }
 
     @AuraEnabled(cacheable=true)
@@ -861,6 +942,7 @@ public without sharing class FEC_InteractionInforHandler {
                    FEC_Interaction_Remarks__c,
                    FEC_Interaction__c,
                    FEC_Is_Manual__c,
+                   FEC_Channel__c,
                    IsClosed,
                    RecordType.DeveloperName
             FROM Case
@@ -889,6 +971,7 @@ public without sharing class FEC_InteractionInforHandler {
                            FEC_Outcome_Code__c,
                            FEC_Interaction_Remarks__c,
                            FEC_Is_Manual__c,
+                           FEC_Channel__c,
                            IsClosed
                     FROM Case
                     WHERE Id = :currentCase.FEC_Interaction__c
@@ -937,6 +1020,9 @@ public without sharing class FEC_InteractionInforHandler {
         result.put('FEC_Interaction_Remarks__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Interaction_Remarks__c) ? interactionCase.FEC_Interaction_Remarks__c : currentCase.FEC_Interaction_Remarks__c);
         result.put('FEC_Is_Manual__c', interactionCase != null ? interactionCase.FEC_Is_Manual__c : currentCase.FEC_Is_Manual__c);
         result.put('IsClosed', interactionCase != null ? interactionCase.IsClosed : currentCase.IsClosed);
+        Case manualChannelSource = interactionCase != null ? interactionCase : currentCase;
+        result.put('FEC_Is_Manual__c', manualChannelSource.FEC_Is_Manual__c);
+        result.put('FEC_Channel__c', manualChannelSource.FEC_Channel__c);
         return result;
     }
 
@@ -954,4 +1040,3 @@ public without sharing class FEC_InteractionInforHandler {
         update c;
     }
 }
-
