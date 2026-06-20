@@ -1,0 +1,52 @@
+.notification-tool-wrapper {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f3f2f2;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.tool-header {
+    background: #032d60;
+    padding: 1rem 1.5rem;
+    border-radius: 0;
+}
+
+.tool-title {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.tab-content {
+    background: #ffffff;
+    min-height: 400px;
+}
+
+.custom-toast {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    min-width: 300px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+}
+
+.slds-modal__content {
+    height: calc(90vh - 120px);
+    overflow: auto;
+} 
+
+.slds-modal__container.history-modal {
+    width: 60vw !important;
+    max-width: 60vw !important;
+}

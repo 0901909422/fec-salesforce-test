@@ -822,6 +822,56 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
    
     /**
+     * Resolves the URL for an archived/external service case.
+     *
+     * Used by the LWC when ServiceCaseLink is not a direct Salesforce URL
+     * (i.e. the live Case is no longer in SF and lives in the archive).
+     *
+     * Looks up the AthenaCases__x record by case_id__c, then delegates to
+     * ArchiveCaseController.fetchAndRedirect() to either find the local Case
+     * or fetch it from S3 and create a temp Case. Returns the resulting URL
+     * so the LWC can navigate to it (e.g. /<caseId>).
+     *
+     * @param caseId Service Case Id (FEC_Service_Case_ID__c) used to find archive
+     * @return Map with keys: url (String) and error (String, optional)
+     */
+    @AuraEnabled
+    public static Map<String, Object> openArchiveServiceCase(String caseId) {
+        Map<String, Object> response = new Map<String, Object>();
+        if (String.isBlank(caseId)) {
+            response.put('error', 'Missing caseId');
+            return response;
+        }
+
+        try {
+            List<AthenaCases__x> archives = ArchiveCaseController.queryArchiveCases(null, caseId);
+            if (archives.isEmpty()) {
+                response.put('error', System.Label.TECH_CASE_ARCHIVE_NOT_FOUND);
+                return response;
+            }
+
+            AthenaCases__x archive = archives[0];
+            ApexPages.StandardController std = new ApexPages.StandardController(archive);
+            ArchiveCaseController ctrl = new ArchiveCaseController(std);
+            PageReference pageRef = ctrl.fetchAndRedirect();
+
+            if (ctrl.hasError || pageRef == null) {
+                response.put('error', ctrl.errorMessage != null
+                    ? ctrl.errorMessage
+                    : System.Label.FEC_Toast_Error_Generic);
+                return response;
+            }
+
+            response.put('url', pageRef.getUrl());
+            return response;
+        } catch (Exception ex) {
+            log('openArchiveServiceCase error: ' + ex.getMessage());
+            response.put('error', ex.getMessage());
+            return response;
+        }
+    }
+
+    /**
      * Writes a log message to the debug log if debugging is enabled.
      *
      * This method centralizes logging behavior and ensures that debug

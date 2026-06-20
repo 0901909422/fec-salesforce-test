@@ -18674,25 +18674,375 @@
         <shortDescription>Manual Chat Customer Username Required</shortDescription>
         <value>Customer Username is required for manual Chat interaction.</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</shortDescription>
         <value>https://sf-csm-service-dev.fecredit.cloud/dispatcher/api/v1/attachments/download?s3Key=</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>TECH_CASE_ARCHIVE_NOT_FOUND</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_CASE_ARCHIVE_NOT_FOUND</shortDescription>
         <value>This Archive Case does not exist.</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>TECH_LIST_OBJ_NON_CHILD_OF_CASE</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_LIST_OBJ_NON_CHILD_OF_CASE</shortDescription>
         <value>FEC_CustomerAdditionalInfoConfig__c,FEC_CustomerAdditionalInfo__c</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Auto_Notification</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Add_Auto_Notification</shortDescription>
+        <value>Add Auto Notification</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Manual_Notification</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Add_Manual_Notification</shortDescription>
+        <value>Add Manual Notification</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Applicable_User_Groups</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Applicable_User_Groups</shortDescription>
+        <value>Applicable User Groups</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assigned_To_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assigned_To_Queue</shortDescription>
+        <value>Assigned to Queue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Auto_Notifications</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Auto_Notifications</shortDescription>
+        <value>Auto Notifications</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Available</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Available</shortDescription>
+        <value>Available</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Status_Updated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Channel_Status_Updated</shortDescription>
+        <value>Channel status updated.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Template_Empty_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Channel_Template_Empty_Message</shortDescription>
+        <value>Every Channel/Template line must have both a Channel and a Template selected.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Template_Unique_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Channel_Template_Unique_Message</shortDescription>
+        <value>Please select unique channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Checking_Mobile_App_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Checking Mobile App status...</shortDescription>
+        <value>Checking Mobile App status...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Comma_separated_email_addresses</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Comma_separated_email_addresses</shortDescription>
+        <value>Comma-separated email addresses</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Configuration_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Configuration_History</shortDescription>
+        <value>Configuration History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Does_Not_Uses_Mobile_App</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer does not use the Mobile App. Notification cannot be sent.</shortDescription>
+        <value>Customer does not use the Mobile App. Notification cannot be sent.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Uses_Mobile_App</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer uses the Mobile App. Notification can be sent.</shortDescription>
+        <value>Customer uses the Mobile App. Notification can be sent.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Notification_Confirm</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Delete_Notification_Confirm</shortDescription>
+        <value>Are you sure you want to delete this notification? This action cannot be undone.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Disabled</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disabled</shortDescription>
+        <value>Disabled</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enabled</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enabled</shortDescription>
+        <value>Enabled</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Export</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Export</shortDescription>
+        <value>Export</value>
+    </labels>
+    <labels>
+        <fullName>FEC_General_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_General_Information</shortDescription>
+        <value>General Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Manual_Notifications</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Manual_Notifications</shortDescription>
+        <value>Manual Notifications</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Mobile_App_Could_Not_Load_Data_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error: Could not load Mobile App status from the data source.</shortDescription>
+        <value>Error: Could not load Mobile App status from the data source.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Mobile_App_Noti_Send_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ZNS Mobile App Noti Send Error</shortDescription>
+        <value>Lỗi gửi thông báo Mobile App</value>
+    </labels>
+    <labels>
+        <fullName>FEC_National_Id_No_Valid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National Id No Valid</shortDescription>
+        <value>National ID không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_History_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_No_History_Records</shortDescription>
+        <value>No history records found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Notifications_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_No_Notifications_Msg</shortDescription>
+        <value>No notifications configured yet. Click &quot;Add&quot; to get started.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Templates_Linked</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_No_Templates_Linked</shortDescription>
+        <value>No templates linked yet.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Channel</shortDescription>
+        <value>Notification Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Settings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Channel_Settings</shortDescription>
+        <value>Channel Settings</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Settings_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Channel_Settings_Description</shortDescription>
+        <value>Enable or disable notification channels. Disabling a channel stops all outbound notifications for that channel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Settings_Disable</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Channel_Settings_Disable</shortDescription>
+        <value>Disabled — notifications paused</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Settings_Loading</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Channel_Settings_Loading</shortDescription>
+        <value>Loading channels...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Config_Disable_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Config_Disable_Warning</shortDescription>
+        <value>Cannot disable this notification: it is currently mapped to {0} active Nature of Case record(s). Please remove the mapping before disabling.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Deleted</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Deleted</shortDescription>
+        <value>Notification deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Management_Tool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Management_Tool</shortDescription>
+        <value>Notification Management Tool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Saved_Successfully</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Saved_Successfully</shortDescription>
+        <value>Notification saved successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Status_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Status_Active</shortDescription>
+        <value>Notification Status (Active)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Type_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notification_Type_Required</shortDescription>
+        <value>Notification Type is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Phone_Number_No_Valid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Phone Number No Valid</shortDescription>
+        <value>Số điện thoại không hợp lệ để gửi.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Receivers</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Receivers</shortDescription>
+        <value>Receivers</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Schedule_End_Time</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Schedule_End_Time</shortDescription>
+        <value>Schedule End Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Schedule_Start_Time</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Schedule_Start_Time</shortDescription>
+        <value>Schedule Start Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Product_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Select_Product_Type</shortDescription>
+        <value>Select Product Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Target_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Select_Target_Group</shortDescription>
+        <value>Select Target Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Zalo_Number_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select ZALO Number...</shortDescription>
+        <value>Select ZALO Number...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Selected</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Selected</shortDescription>
+        <value>Selected</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Code_Optional</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Sub_Code_Optional</shortDescription>
+        <value>Sub Code (Optional)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Template_Active</shortDescription>
+        <value>Template Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Template_Details</shortDescription>
+        <value>Template Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ZNS_Message_Send_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ZNS Message Send Error</shortDescription>
+        <value>Lỗi gửi tin nhắn ZNS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Zalo_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Zalo Number</shortDescription>
+        <value>Zalo Number</value>
     </labels>
 </CustomLabels>

@@ -33,32 +33,126 @@
           </div>
 
           <template if:true={selectedNotificationId}>
-            <div class="slds-grid slds-gutters slds-m-top_medium">
-              <div class="slds-col slds-size_1-of-2">
-                <template if:false={isSelectEmailMode}>
+
+            <!-- ══ Email Channel (default behavior) ══════════════════════ -->
+            <template if:true={isEmailChannel}>
+              <div class="slds-grid slds-gutters slds-m-top_medium">
+                <div class="slds-col slds-size_1-of-2">
+                  <template if:false={isSelectEmailMode}>
+                    <lightning-input
+                      type="text"
+                      label={label.FEC_Target_Email}
+                      value={targetEmail}
+                      onchange={handleEmailChange}
+                    >
+                    </lightning-input>
+                  </template>
+
+                  <template if:true={isSelectEmailMode}>
+                    <div class="slds-is-relative">
+                      <lightning-input
+                        type="search"
+                        label={label.FEC_Target_Email}
+                        value={searchTerm}
+                        onchange={handleSearchInput}
+                        placeholder={SEARCH_PLACEHOLDER}
+                        onkeyup={handleEmailInputKeyup}
+                        is-loading={isSearching}
+                      >
+                      </lightning-input>
+
+                      <template if:true={isDropdownOpen}>
+                        <div
+                          class="slds-dropdown dropdown-menu slds-dropdown_length-5 slds-dropdown_fluid slds-dropdown_left slds-p-around_none"
+                          role="listbox"
+                        >
+                          <ul
+                            class="slds-listbox slds-listbox_vertical"
+                            role="presentation"
+                          >
+                            <template
+                              for:each={userSearchResults}
+                              for:item="user"
+                            >
+                              <li
+                                key={user.Id}
+                                role="presentation"
+                                class="slds-listbox__item"
+                              >
+                                <div
+                                  class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta"
+                                  role="option"
+                                  data-email={user.Email}
+                                  onclick={handleSelectUser}
+                                  
+                                >
+                                  <span class="slds-media__body">
+                                    <span
+                                      class="slds-listbox__option-text slds-listbox__option-text_entity"
+                                      >{user.Name}</span
+                                    >
+                                    <span
+                                      class="slds-listbox__option-meta slds-listbox__option-meta_entity"
+                                      >{user.Email}</span
+                                    >
+                                  </span>
+                                </div>
+                              </li>
+                            </template>
+                            <template if:true={noResults}>
+                              <li role="presentation" class="slds-listbox__item">
+                                <div
+                                  class="slds-media slds-listbox__option slds-listbox__option_entity"
+                                >
+                                  <span
+                                    class="slds-media__body slds-p-around_small"
+                                  >
+                                    <span
+                                      class="slds-listbox__option-text slds-listbox__option-text_entity slds-text-color_weak"
+                                      >Không tìm thấy kết quả.</span
+                                    >
+                                  </span>
+                                </div>
+                              </li>
+                            </template>
+                          </ul>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+                <div class="slds-col slds-size_1-of-2">
                   <lightning-input
                     type="text"
-                    label={label.FEC_Target_Email}
-                    value={targetEmail}
-                    onchange={handleEmailChange}
+                    label={label.FEC_Target_Group}
+                    value={selectedTargetGroup}
+                    readonly
                   >
                   </lightning-input>
-                </template>
+                </div>
+              </div>
+            </template>
 
-                <template if:true={isSelectEmailMode}>
+            <!-- ══ ZNS Channel ════════════════════════════════════════════ -->
+            <template if:true={isZNSChannel}>
+              <div class="slds-grid slds-gutters slds-m-top_medium">
+                <div class="slds-col slds-size_1-of-2">
                   <div class="slds-is-relative">
                     <lightning-input
+                      data-id="zaloNumberInput"
                       type="search"
-                      label={label.FEC_Target_Email}
-                      value={searchTerm}
-                      onchange={handleSearchInput}
-                      placeholder={SEARCH_PLACEHOLDER}
-                      onkeyup={handleEmailInputKeyup}
-                      is-loading={isSearching}
+                      label={label.FEC_Zalo_Number}
+                      value={zaloSearchTerm}
+                      placeholder={label.FEC_Select_Zalo_Number_Placeholder}
+                      onchange={handleZaloSearchInput}
+                      onfocus={handleZaloSearchFocus}
+                      onblur={handleZaloSearchBlur}
+                      is-loading={isZaloSearching}
+                      required
                     >
                     </lightning-input>
 
-                    <template if:true={isDropdownOpen}>
+                    <template if:true={isZaloDropdownOpen}>
                       <div
                         class="slds-dropdown dropdown-menu slds-dropdown_length-5 slds-dropdown_fluid slds-dropdown_left slds-p-around_none"
                         role="listbox"
@@ -68,35 +162,30 @@
                           role="presentation"
                         >
                           <template
-                            for:each={userSearchResults}
-                            for:item="user"
+                            for:each={zaloSearchResults}
+                            for:item="contact"
                           >
                             <li
-                              key={user.Id}
+                              key={contact.Phone}
                               role="presentation"
                               class="slds-listbox__item"
                             >
                               <div
                                 class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta"
                                 role="option"
-                                data-email={user.Email}
-                                onclick={handleSelectUser}
-                                
+                                data-phone={contact.Phone}
+                                onclick={handleSelectZaloContact}
                               >
                                 <span class="slds-media__body">
                                   <span
                                     class="slds-listbox__option-text slds-listbox__option-text_entity"
-                                    >{user.Name}</span
-                                  >
-                                  <span
-                                    class="slds-listbox__option-meta slds-listbox__option-meta_entity"
-                                    >{user.Email}</span
+                                    >{contact.Phone}</span
                                   >
                                 </span>
                               </div>
                             </li>
                           </template>
-                          <template if:true={noResults}>
+                          <template if:true={noZaloResults}>
                             <li role="presentation" class="slds-listbox__item">
                               <div
                                 class="slds-media slds-listbox__option slds-listbox__option_entity"
@@ -106,7 +195,7 @@
                                 >
                                   <span
                                     class="slds-listbox__option-text slds-listbox__option-text_entity slds-text-color_weak"
-                                    >Không tìm thấy kết quả.</span
+                                    >{label.FEC_Common_No_Results_Label}</span
                                   >
                                 </span>
                               </div>
@@ -116,18 +205,56 @@
                       </div>
                     </template>
                   </div>
-                </template>
+                </div>
+                <div class="slds-col slds-size_1-of-2">
+                  <lightning-input
+                    type="text"
+                    label={label.FEC_Target_Group}
+                    value={selectedTargetGroup}
+                    readonly
+                  >
+                  </lightning-input>
+                </div>
               </div>
-              <div class="slds-col slds-size_1-of-2">
-                <lightning-input
-                  type="text"
-                  label={label.FEC_Target_Group}
-                  value={selectedTargetGroup}
-                  readonly
-                >
-                </lightning-input>
+            </template>
+
+            <!-- ══ Mobile App Channel ═════════════════════════════════════ -->
+            <template if:true={isMobileAppChannel}>
+              <div class="slds-grid slds-gutters slds-m-top_medium">
+                <div class="slds-col slds-size_1-of-1">
+                  <template if:true={isCheckingMobileApp}>
+                    <div class="slds-align_absolute-center slds-p-around_small">
+                      <lightning-spinner alternative-text={label.FEC_Checking_Mobile_App_Status} size="small"></lightning-spinner>
+                      <span class="slds-m-left_small slds-text-body_small">{label.FEC_Checking_Mobile_App_Status}</span>
+                    </div>
+                  </template>
+                  <template if:false={isCheckingMobileApp}>
+                    <template if:true={mobileAppStatusChecked}>
+                      <template if:false={isMobileAppStatusError}><template if:true={isMobileAppUser}>
+                        <div class="slds-notify slds-notify_alert slds-theme_success slds-theme_alert-texture" role="alert">
+                          <lightning-icon icon-name="utility:check" alternative-text="success" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                          {label.FEC_Customer_Uses_Mobile_App}
+                        </div>
+                      </template>
+                      <template if:false={isMobileAppUser}>
+                        <div class="slds-notify slds-notify_alert slds-theme_warning" role="alert">
+                          <lightning-icon icon-name="utility:warning" alternative-text="warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                          {label.FEC_Customer_Does_Not_Uses_Mobile_App}
+                        </div>
+                      </template></template>
+
+                      <template if:true={isMobileAppStatusError}>
+                        <div class="slds-notify slds-notify_alert slds-theme_warning" role="alert">
+                          <lightning-icon icon-name="utility:warning" alternative-text="warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                          {label.FEC_Mobile_App_Could_Not_Load_Data_Error}
+                        </div>
+                      </template>
+                    </template>
+                  </template>
+                </div>
               </div>
-            </div>
+            </template>
+
           </template>
         </template>
 
@@ -136,6 +263,7 @@
         </template>
       </div>
       <template if:true={record}>
+        <template if:false={record.isZNSTemplate}>
         <c-fec_template-preview-modal
           subject={record.subject}
           email-body={record.emailBody}
@@ -145,13 +273,49 @@
           onclose={handleClosePreview}
           
         ></c-fec_template-preview-modal>
+        </template>
+
+        <!-- ═══════════════════════════ -->
+        <!-- Preview ZNS Modal (iframe)      -->
+        <!-- ═══════════════════════════ -->
+        <template if:true={record.isZNSTemplate}><template if:true={_isPreviewOpen}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="preview-modal-heading" class="slds-modal slds-fade-in-open slds-modal_large">
+              <div class="slds-modal__container">
+              <!-- Header -->
+              <header class="slds-modal__header">
+                <lightning-button-icon
+                  icon-name="utility:close"
+                  variant="bare-inverse"
+                  alternative-text="Close"
+                  title="Close"
+                  class="slds-modal__close"
+                  onclick={handleClosePreview}>
+                </lightning-button-icon>
+                <h2 id="preview-modal-heading" class="slds-text-heading_medium slds-hyphenate">Template Preview</h2>
+              </header>
+              <!-- Body -->
+              <div class="slds-modal__content slds-p-around_medium" style="min-height: 300px;">
+                <iframe src={record.previewZNSUrl} width="100%" height="500" frameborder="0"></iframe>
+                <p class="slds-m-top_small slds-text-body_small slds-text-color_weak">
+                  Nếu không hiển thị được, <a target="_blank" rel="noopener noreferrer" href={record.previewZNSUrl}>nhấn vào đây để xem trên tab mới</a>.
+                </p>
+              </div>
+              <!-- Footer -->
+              <footer class="slds-modal__footer">
+                <lightning-button label="Close" onclick={handleClosePreview}></lightning-button>
+              </footer>
+              </div>
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template></template>
       </template>
 
       <div slot="footer">
         <lightning-button
           label={label.FEC_Action_Preview}
           onclick={handlePreview}
-          disabled={isActionDisabled}
+          disabled={isPreviewDisabled}
           class="slds-m-right_x-small"
         ></lightning-button>
         <lightning-button

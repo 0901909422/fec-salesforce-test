@@ -1,0 +1,406 @@
+<template>
+    <section role="dialog" tabindex="-1" aria-modal="true"
+             class="slds-modal slds-fade-in-open slds-modal_large">
+        <div class="slds-modal__container modal-container">
+
+            <!-- Header -->
+            <header class="slds-modal__header modal-header">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                    title={labels.FEC_Btn_Close} onclick={handleCancel}>
+                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                </button>
+                <h2 class="slds-modal__title slds-hyphenate" style="color:aliceblue">{modalTitle}</h2>
+            </header>
+
+            <!-- Body -->
+            <div class="slds-modal__content slds-p-around_medium modal-body">
+
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text={labels.FEC_Termination_Loading_Alt}></lightning-spinner>
+                </template>
+
+                <!-- ─── SECTION 1: General Information ─── -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        <span class="section-title">{labels.FEC_General_Information}</span>
+                    </div>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+
+                        <!-- Notification Type -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input
+                                label={labels.FEC_Notification_History_Col_Notification_Type}
+                                value={formData.notificationType}
+                                required
+                                data-field="notificationType"
+                                onchange={handleFieldChange}
+                                message-when-value-missing={labels.FEC_Notification_Type_Required}
+                                class={notificationTypeClass}>
+                            </lightning-input>
+                            <template if:true={duplicateError}>
+                                <p class="error-msg">
+                                    <lightning-icon icon-name="utility:error" size="xx-small" variant="error"></lightning-icon>
+                                    &nbsp;{duplicateError}
+                                </p>
+                            </template>
+                        </div>
+
+                        <!-- Target Group -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-combobox
+                                label={labels.FEC_Target_Group}
+                                value={formData.targetGroup}
+                                options={targetGroupOptions}
+                                required
+                                data-field="targetGroup"
+                                onchange={handleFieldChange}
+                                placeholder={labels.FEC_Select_Target_Group}>
+                            </lightning-combobox>
+                        </div>
+
+                        <!-- Customer Type (conditional) -->
+                        <template if:true={isCustomer}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-dual-listbox
+                                    label={labels.FEC_Label_Customer_Type}
+                                    source-label={labels.FEC_Available}
+                                    selected-label={labels.FEC_Selected}
+                                    options={customerTypeOptions}
+                                    value={formData.customerType}
+                                    data-field="customerType"
+                                    onchange={handleFieldChange}>
+                                </lightning-dual-listbox>
+                            </div>
+                        </template>
+
+                        <!-- Channel -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-dual-listbox
+                                label={labels.FEC_Col_Channel}
+                                source-label={labels.FEC_Available}
+                                selected-label={labels.FEC_Selected}
+                                options={channelOptions}
+                                value={formData.channel}
+                                required
+                                data-field="channel"
+                                onchange={handleFieldChange}>
+                            </lightning-dual-listbox>
+                        </div>
+
+                        <!-- Notification Status -->
+                        <!-- <div class="slds-col slds-size_1-of-2 slds-align_absolute-center">
+                            <lightning-input
+                                type="checkbox"
+                                label="Notification Status (Active)"
+                                checked={formData.notificationStatus}
+                                data-field="notificationStatus"
+                                onchange={handleCheckboxChange}>
+                            </lightning-input>
+                        </div> -->
+
+                    </div>
+                </div>
+
+                <!-- ─── SECTION 2: Nature of Case ─── -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <lightning-icon icon-name="utility:cases" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        <span class="section-title">{labels.FEC_Section_Nature_Of_Case}</span>
+                    </div>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+
+                        <!-- Channel -->
+                        <!-- <div class="slds-col slds-size_1-of-2">
+                            <lightning-dual-listbox
+                                label="Channel"
+                                source-label={labels.FEC_Available}
+                                selected-label={labels.FEC_Selected}
+                                options={channelOptions}
+                                value={formData.channel}
+                                required
+                                data-field="channel"
+                                onchange={handleFieldChange}>
+                            </lightning-dual-listbox>
+                        </div> -->
+
+                        <!-- Product Type -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-combobox
+                                label={labels.FEC_Label_Product_Type}
+                                value={formData.productType}
+                                options={productTypeOptions}
+                                required
+                                placeholder={labels.FEC_Select_Product_Type}
+                                data-field="productType"
+                                onchange={handleProductTypeChange}>
+                            </lightning-combobox>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-combobox
+                                label={labels.FEC_Label_Category}
+                                value={formData.category}
+                                options={categoryOptions}
+                                required
+                                placeholder={labels.FEC_Placeholder_Select_Category}
+                                data-field="category"
+                                onchange={handleCategoryChange}
+                                disabled={isCategoryDisabled}>
+                            </lightning-combobox>
+                        </div>
+
+                        <!-- Sub Category -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-dual-listbox
+                                label={labels.FEC_Sub_Category_Label}
+                                source-label={labels.FEC_Available}
+                                selected-label={labels.FEC_Selected}
+                                options={subCategoryOptions}
+                                value={formData.subCategory}
+                                required
+                                data-field="subCategory"
+                                onchange={handleSubCategoryChange}
+                                disabled={isSubCategoryDisabled}>
+                            </lightning-dual-listbox>
+                        </div>
+
+                        <!-- Sub Code -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-dual-listbox
+                                label={labels.FEC_Sub_Code_Optional}
+                                source-label={labels.FEC_Available}
+                                selected-label={labels.FEC_Selected}
+                                options={subCodeOptions}
+                                value={formData.subCode}
+                                data-field="subCode"
+                                onchange={handleFieldChange}
+                                disabled={isSubCodeDisabled}>
+                            </lightning-dual-listbox>
+                        </div>
+
+                        <!-- Customer fields: Current & Changed Status -->
+                        <template if:true={isCustomer}><template if:false={isManual}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-dual-listbox
+                                    label={labels.FEC_Current_Status}
+                                    source-label={labels.FEC_Available}
+                                    selected-label={labels.FEC_Selected}
+                                    options={caseStatusOptions}
+                                    value={formData.currentStatus}
+                                    required
+                                    data-field="currentStatus"
+                                    onchange={handleFieldChange}>
+                                </lightning-dual-listbox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-dual-listbox
+                                    label={labels.FEC_Label_Changed_Status}
+                                    source-label={labels.FEC_Available}
+                                    selected-label={labels.FEC_Selected}
+                                    options={caseStatusOptions}
+                                    value={formData.changedStatus}
+                                    required
+                                    data-field="changedStatus"
+                                    onchange={handleFieldChange}>
+                                </lightning-dual-listbox>
+                            </div>
+                        </template></template>
+
+                        <!-- Internal User fields -->
+                        <template if:true={isInternalUser}>
+                            <template if:false={isManual}><div class="slds-col slds-size_1-of-2">
+                                <lightning-combobox
+                                    label={labels.FEC_Assigned_To_Queue}
+                                    value={formData.assignedToQueue}
+                                    options={queueOptions}
+                                    placeholder={labels.title_Queue}
+                                    data-field="assignedToQueue"
+                                    onchange={handleFieldChange}>
+                                </lightning-combobox>
+                            </div></template>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-textarea
+                                    label={labels.FEC_Receivers}
+                                    value={formData.receivers}
+                                    placeholder={labels.FEC_Comma_separated_email_addresses}
+                                    data-field="receivers"
+                                    onchange={handleFieldChange}>
+                                </lightning-textarea>
+                            </div>
+                            <template if:false={isManual}><div class="slds-col slds-size_1-of-2">
+                                <lightning-input
+                                    type="time"
+                                    label={labels.FEC_Schedule_Start_Time}
+                                    value={formData.scheduleStartTime}
+                                    data-field="scheduleStartTime"
+                                    onchange={handleFieldChange}>
+                                </lightning-input>
+                            </div></template>
+                            <template if:false={isManual}><div class="slds-col slds-size_1-of-2">
+                                <lightning-input
+                                    type="time"
+                                    label={labels.FEC_Schedule_End_Time}
+                                    value={formData.scheduleEndTime}
+                                    data-field="scheduleEndTime"
+                                    onchange={handleFieldChange}>
+                                </lightning-input>
+                            </div></template>
+                        </template>
+
+                        <!-- Manual-only: Applicable User Groups & Case Stage -->
+                        <template if:true={isManual}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-dual-listbox
+                                    label={labels.FEC_Applicable_User_Groups}
+                                    source-label={labels.FEC_Available}
+                                    selected-label={labels.FEC_Selected}
+                                    options={userGroupOptions}
+                                    value={formData.applicableUserGroups}
+                                    required
+                                    data-field="applicableUserGroups"
+                                    onchange={handleFieldChange}>
+                                </lightning-dual-listbox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-dual-listbox
+                                    label={labels.FEC_Tab_Case_Stage}
+                                    source-label={labels.FEC_Available}
+                                    selected-label={labels.FEC_Selected}
+                                    options={caseStageOptions}
+                                    value={formData.caseStage}
+                                    data-field="caseStage"
+                                    onchange={handleFieldChange}>
+                                </lightning-dual-listbox>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+
+                <!-- ─── SECTION 3: Notification Information ─── -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <lightning-icon icon-name="utility:notification" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        <span class="section-title">{labels.FEC_Notification_Information}</span>
+                    </div>
+
+                    <!-- Notification Status -->
+                    <div class="slds-col slds-size_1-of-2 slds-align_absolute-left">
+                        <lightning-input
+                            type="checkbox"
+                            label={labels.FEC_Notification_Status_Active}
+                            checked={formData.notificationStatus}
+                            data-field="notificationStatus"
+                            onchange={handleCheckboxChange}>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Channel / Template Line Items -->
+                    <div class="line-items-wrapper">
+                        <div class="line-items-head slds-grid slds-gutters_small">
+                            <div class="slds-col slds-size_6-of-12">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    {labels.FEC_Notification_Channel}
+                                </label>
+                            </div>
+                            <div class="slds-col slds-size_6-of-12">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    {labels.FEC_Notification_Template}
+                                </label>
+                            </div>
+                            <div class="slds-col slds-size_1-of-12"></div>
+                        </div>
+
+                        <template for:each={channelTemplateLines} for:item="line">
+                            <div key={line.key} class="slds-grid slds-gutters_small slds-m-top_x-small line-item-row">
+                                <!-- Notification Channel picker -->
+                                <div class="slds-col slds-size_5-of-12">
+                                    <lightning-combobox
+                                        class="combobox-channel"
+                                        label=""
+                                        variant="label-hidden"
+                                        value={line.channelId}
+                                        options={notifChannelOptions}
+                                        placeholder="Select Channel"
+                                        data-key={line.key}
+                                        data-field="channelId"
+                                        onchange={handleLineChange}
+                                        required>
+                                    </lightning-combobox>
+                                </div>
+                                <!-- Warning icon -->
+                                <div class="slds-col slds-size_1-of-12 slds-align_absolute-center">
+                                    <template if:false={line.isChannelActive}>
+                                    <lightning-icon 
+                                        icon-name="utility:warning" 
+                                        size="small" 
+                                        variant="warning"></lightning-icon></template>
+                                </div>
+                                <!-- Template picker (filtered) -->
+                                <div class="slds-col slds-size_5-of-12">
+                                    <lightning-combobox
+                                        label=""
+                                        variant="label-hidden"
+                                        value={line.templateId}
+                                        options={line.templateOptions}
+                                        placeholder="Select Template"
+                                        disabled={line.isTemplateDisabled}
+                                        data-key={line.key}
+                                        data-field="templateId"
+                                        onchange={handleLineChange}
+                                        required>
+                                    </lightning-combobox>
+                                </div>
+                                <!-- Delete line button -->
+                                <div class="slds-col slds-size_1-of-12 slds-align_absolute-center">
+                                    <button class="slds-button slds-button_icon slds-button_icon-error"
+                                        title="Delete Item"
+                                        data-key={line.key}
+                                        onclick={handleDeleteLine}
+                                        disabled={isOnlyLine}>
+                                        <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Add Item button -->
+                        <div class="slds-m-top_small">
+                            <lightning-button
+                                label={labels.FEC_Add_Item_Label}
+                                variant="neutral"
+                                onclick={handleAddLine}>
+                            </lightning-button>
+                        </div>
+
+                        <!-- Line validation error -->
+                        <template if:true={lineError}>
+                            <p class="error-msg slds-m-top_x-small">
+                                <lightning-icon icon-name="utility:error" size="xx-small" variant="error"></lightning-icon>
+                                &nbsp;{lineError}
+                            </p>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="slds-modal__footer">
+                <lightning-button label={labels.FEC_Cancel} onclick={handleCancel}></lightning-button>
+                <lightning-button
+                    variant="brand"
+                    label={labels.FEC_Button_Save}
+                    onclick={handleSave}
+                    disabled={isLoading}>
+                </lightning-button>
+            </footer>
+
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

@@ -64,6 +64,7 @@
         <members>FEC_TimesNewRomanBold</members>
         <members>FEC_TimesNewRomanBoldItalic</members>
         <members>FEC_TimesNewRomanItalic</members>
+        <members>Logo</members>
         <name>StaticResource</name>
     </types>
 

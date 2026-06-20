@@ -7276,7 +7276,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
     if (fraudEl) {
       if (typeof fraudEl.setRemarks === 'function') {
-        fraudEl.setRemarks(this.remarkContent);
+        //fraudEl.setRemarks(this.remarkContent);
       }
       if (typeof fraudEl.submitFraudWithoutCallout === 'function') {
         await fraudEl.submitFraudWithoutCallout();

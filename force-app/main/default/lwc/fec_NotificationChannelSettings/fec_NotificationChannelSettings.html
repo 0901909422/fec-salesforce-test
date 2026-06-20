@@ -1,0 +1,60 @@
+<template>
+    <div class="channel-settings-wrapper slds-p-around_medium">
+        <div class="settings-header">
+            <h3 class="settings-title">{labels.FEC_Notification_Channel_Settings}</h3>
+            <p class="settings-subtitle">{labels.FEC_Notification_Channel_Settings_Description}</p>
+        </div>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text={labels.FEC_Notification_Channel_Settings_Loading}></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <div class="channels-grid">
+                <template for:each={localChannels} for:item="ch">
+                    <div key={ch.Id} class={ch.cardClass}>
+                        <div class="channel-card-icon">
+                            <lightning-icon icon-name={ch.icon} size="medium" class={ch.iconClass}></lightning-icon>
+                        </div>
+                        <div class="channel-card-body">
+                            <p class="channel-name">{ch.Name}</p>
+                            <p class="channel-status-label">{ch.statusLabel}</p>
+                        </div>
+                        <div class="channel-card-toggle">
+                            <lightning-input
+                                type="toggle"
+                                checked={ch.FEC_Noti_Channel_Status__c}
+                                label=""
+                                variant="label-hidden"
+                                message-toggle-active={labels.FEC_Enabled}
+                                message-toggle-inactive={labels.FEC_Disabled}
+                                data-id={ch.Id}
+                                onchange={handleToggle}>
+                            </lightning-input>
+                        </div>
+                        <template if:false={ch.FEC_Noti_Channel_Status__c}>
+                            <div class="disabled-overlay">
+                                <lightning-icon icon-name="utility:warning" size="small" variant="warning"></lightning-icon>
+                                <span class="slds-m-left_x-small">{labels.FEC_Notification_Channel_Settings_Disable}</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <div class="settings-footer">
+                <lightning-button
+                    variant="brand"
+                    label={labels.FEC_Button_Submit}
+                    onclick={handleSubmit}
+                    disabled={hasNoPendingChanges}>
+                </lightning-button>
+                <lightning-button
+                    label={labels.FEC_Cancel}
+                    class="slds-m-left_small"
+                    onclick={handleCancel}>
+                </lightning-button>
+            </div>
+        </template>
+    </div>
+</template>

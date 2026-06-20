@@ -1,0 +1,238 @@
+<template>
+    <!-- ── Loading ── -->
+    <template if:true={isLoading}>
+        <div class="loading-wrap">
+            <lightning-spinner alternative-text={label.Loading} size="small"></lightning-spinner>
+        </div>
+    </template>
+
+    <template if:false={isLoading}>
+    <div class="zns-container">
+
+        <!-- ── Top bar ── -->
+        <div class="top-bar">
+            <button class="btn-history" onclick={handleOpenHistory}>{label.FEC_Btn_History}</button>
+            <span class="template-label">
+                {label.FEC_Template_ID}&nbsp;<button class="link-btn" onclick={handleOpenPreview}><span class="template-id-value">{record.subject}</span></button>
+            </span>
+        </div>
+
+        
+
+        <!-- ── Main table ── -->
+        <div class="table-scroll">
+            <table class="param-table">
+                <thead>
+                    <tr class="header-row">
+                        <!-- Parameter -->
+                        <th class={colClass.paramName}>
+                            <div class="th-title" onclick={handleSort} data-field="paramName">
+                                {label.FEC_Parameter} <span class="sort-icon">{sortIcon.paramName}</span>
+                            </div>
+                            <input class="filter-input" type="text" placeholder={label.FEC_DT_Search_Placeholder}
+                                   oninput={handleFilter} data-field="paramName" />
+                        </th>
+                        <!-- Loại -->
+                        <th class={colClass.paramType}>
+                            <div class="th-title" onclick={handleSort} data-field="paramType">
+                                {label.FEC_Label_Type} <span class="sort-icon">{sortIcon.paramType}</span>
+                            </div>
+                            <input class="filter-input" type="text" placeholder={label.FEC_DT_Search_Placeholder}
+                                   oninput={handleFilter} data-field="paramType" />
+                        </th>
+                        <!-- Page Context -->
+                        <th class={colClass.pageContext}>
+                            <div class="th-title" onclick={handleSort} data-field="pageContext">
+                                {label.FEC_Page_Context} <span class="sort-icon">{sortIcon.pageContext}</span>
+                            </div>
+                            <input class="filter-input" type="text" placeholder={label.FEC_DT_Search_Placeholder}
+                                   oninput={handleFilter} data-field="pageContext" />
+                        </th>
+                        <!-- Tên trường dữ liệu -->
+                        <th class={colClass.fieldName}>
+                            <div class="th-title" onclick={handleSort} data-field="fieldName">
+                                {label.FEC_Label_Field_Object_Name} <span class="sort-icon">{sortIcon.fieldName}</span>
+                            </div>
+                            <input class="filter-input" type="text" placeholder={label.FEC_DT_Search_Placeholder}
+                                   oninput={handleFilter} data-field="fieldName" />
+                        </th>
+                        <!-- Function -->
+                        <th class={colClass.functionLabel}>
+                            <div class="th-title" onclick={handleSort} data-field="functionLabel">
+                                {label.FEC_Function} <span class="sort-icon">{sortIcon.functionLabel}</span>
+                            </div>
+                            <input class="filter-input" type="text" placeholder={label.FEC_DT_Search_Placeholder}
+                                   oninput={handleFilter} data-field="functionLabel" />
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template if:true={hasRows}>
+                        <template for:each={displayedRows} for:item="row">
+                            <tr key={row.id}
+                                class={row.rowClass}
+                                onclick={handleRowClick}
+                                data-id={row.id}>
+
+                                <!-- Parameter – non-editable -->
+                                <td class={row.paramNameClass}>{row.paramName}</td>
+
+                                <!-- Loại – non-editable -->
+                                <td>{row.paramType}</td>
+
+                                <!-- Page Context – editable -->
+                                <td>
+                                    <template if:true={row.isSelected}>
+                                        <select class="inline-select"
+                                                data-field="pageContext"
+                                                onchange={handlePageContextChange}
+                                                onclick={stopPropagation}>
+                                            <option value="">{label.FEC_Opt_Select}</option>
+                                            <template for:each={pageContextOptions} for:item="opt">
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                    <template if:false={row.isSelected}>
+                                        <span>{row.pageContext}</span>
+                                    </template>
+                                </td>
+
+                                <!-- Tên trường dữ liệu – editable -->
+                                <td>
+                                    <template if:true={row.isSelected}>
+                                        <select class="inline-select"
+                                                data-field="fieldName"
+                                                onchange={handleFieldNameChange}
+                                                onclick={stopPropagation}>
+                                            <option value="">{label.FEC_Opt_Select}</option>
+                                            <template for:each={fieldOptions} for:item="opt">
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                    <template if:false={row.isSelected}>
+                                        <span>{row.fieldName}</span>
+                                    </template>
+                                </td>
+
+                                <!-- Function – editable -->
+                                <td>
+                                    <template if:true={row.isSelected}>
+                                        <select class="inline-select"
+                                                data-field="functionValue"
+                                                onchange={handleFunctionChange}
+                                                onclick={stopPropagation}>
+                                            <template for:each={functionOptions} for:item="opt">
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                    <template if:false={row.isSelected}>
+                                        <span>{row.functionLabel}</span>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+
+                    <template if:false={hasRows}>
+                        <tr>
+                            <td colspan="5" class="empty-state">{label.FEC_Msg_No_Content}</td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Footer ── -->
+        <div class="footer-bar">
+            <button class="btn-save" onclick={handleSave} disabled={isLoading}>{label.FEC_Button_Save}</button>
+        </div>
+
+    </div><!-- /zns-container --></template>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- History Modal                              -->
+    <!-- ══════════════════════════════════════════ -->
+    <template if:true={showHistoryModal}>
+        <div class="modal-overlay" onclick={handleCloseHistory}>
+            <div class="modal-box" onclick={stopPropagation}>
+
+                <div class="modal-header">
+                    <span class="modal-title">{label.templateHistoryTabLabel}</span>
+                    <button class="modal-x-btn" onclick={handleCloseHistory}>&#x2715;</button>
+                </div>
+
+                <div class="modal-body">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>{label.FEC_Template_ID}</th>
+                                <th>{label.lastModLabel}</th>
+                                <th>{label.lastModByLabel}</th>
+                                <th>{label.FEC_Field}</th>
+                                <th>{label.OldValue_Column}</th>
+                                <th>{label.NewValue_Column}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template if:true={hasHistory}>
+                                <template for:each={historyRows} for:item="h">
+                                    <tr key={h.recordId}>
+                                        <td>{h.templateId}</td>
+                                        <td>{h.modifiedOnFormatted}</td>
+                                        <td>{h.modifiedBy}</td>
+                                        <td class="field-changed">{h.fieldChanged}</td>
+                                        <td class="old-value">{h.oldValue}</td>
+                                        <td class="new-value">{h.newValue}</td>
+                                    </tr>
+                                </template>
+                            </template>
+                            <template if:false={hasHistory}>
+                                <tr>
+                                    <td colspan="6" class="empty-state">{label.FEC_Msg_No_Content}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick={handleCloseHistory}>{label.FEC_Merge_Field_Cancel}</button>
+                    <button class="btn-complete" onclick={handleCloseHistory}>{label.FEC_Btn_Finish}</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- Preview Modal (iframe)                     -->
+    <!-- ══════════════════════════════════════════ -->
+    <template if:true={showPreviewModal}>
+        <div class="modal-overlay" onclick={handleClosePreview}>
+            <div class="modal-box modal-preview-box" onclick={stopPropagation}>
+
+                <div class="modal-header">
+                    <span class="modal-title">{label.previewLabel}</span>
+                    <button class="modal-x-btn" onclick={handleClosePreview}>&#x2715;</button>
+                </div>
+
+                <div class="modal-body preview-body">
+                    <iframe src={record.previewZNSUrl}
+                            class="preview-iframe"
+                            frameborder="0">
+                    </iframe>
+                    <p class="preview-fallback">
+                        Nếu không hiển thị được,
+                        <a target="_blank" rel="noopener noreferrer" href={record.previewZNSUrl}>
+                            nhấn vào đây để xem trên tab mới
+                        </a>.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </template>
+
+</template>

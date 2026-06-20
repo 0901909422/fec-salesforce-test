@@ -1,0 +1,85 @@
+.datatable-wrapper {
+    position: relative;
+}
+
+.spinner-container {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.noti-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.col-expand  { width: 2.5rem; }
+.col-center  { text-align: center !important; width: 5rem; }
+.col-actions { width: 8rem; text-align: center !important; }
+
+.data-row { background: #fff; }
+.data-row:hover { background: #f3f2f2; }
+.data-row_expanded { background: #e8f4fd; }
+
+.expand-btn {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
+.action-btn {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+    color: #0070d2;
+    transition: background 0.15s;
+}
+.action-btn:hover { background: #e0f0ff; }
+.action-btn_delete { color: #c23934; }
+.action-btn_delete:hover { background: #fce9e9; }
+
+/* Channel badges */
+.channel-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.channel-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #d4e9fd;
+    color: #032d60;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.channel-badge_disabled {
+    background: #fce9e9;
+    color: #c23934;
+    border: 1px dashed #c23934;
+}
+
+/* Expanded template panel */
+.expanded-row > td {
+    padding: 0 !important;
+}
+.template-detail-panel {
+    background: #f8f8f8;
+    border-left: 4px solid #0070d2;
+    padding: 1rem 1.5rem;
+}
+.detail-title {
+    font-weight: 700;
+    color: #032d60;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+.inner-table {
+    font-size: 0.8125rem;
+}

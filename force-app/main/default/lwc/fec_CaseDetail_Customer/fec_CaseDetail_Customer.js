@@ -218,6 +218,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   // NEW: lightning-datatable — comment block này khi revert về related-list-paging
   get remarkHistoryColumns() {
+
+    let dateTimeField = "CreatedDate"; 
+    if (this.remarklst && this.remarklst.length > 0) {
+        const hasArchiveDate = this.remarklst.some(item => item.ArchiveCreatedDate__c);
+        if (hasArchiveDate) dateTimeField = "ArchiveCreatedDate__c";
+    }
+
     return [
       {
         label: FEC_Case_Remark_Label,
@@ -233,7 +240,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       },
       { label: "User", fieldName: "FEC_User__c", type: "text" },
       { label: "User Role", fieldName: "FEC_User_Role__c", type: "text" },
-      { label: "Date Time", fieldName: "CreatedDate", type: "text" },
+      { label: "Date Time", fieldName: dateTimeField, type: "text" },
     ];
   }
 

@@ -272,7 +272,8 @@ export default class FraudIntegrationMapping extends LightningElement {
             subCode: this.subCode,
             channelCode: this.channel,
             serviceType: this.serviceType,
-            userTypeId: this.userType
+            userTypeId: this.userType,
+            productLine: this.productLine
         })
             .then(r => {
                 //console.log('[SUCCESS] Additional Properties:', r);
@@ -588,7 +589,8 @@ export default class FraudIntegrationMapping extends LightningElement {
             subCode: this.subCode,
             channelCode: this.channel,
             serviceType: this.serviceType,
-            userTypeId: this.userType
+            userTypeId: this.userType,
+            productLine: this.productLine
 
         })
             .then(r => {
@@ -619,7 +621,8 @@ export default class FraudIntegrationMapping extends LightningElement {
             subCode: this.subCode,
             channelCode: this.channel,
             serviceType: this.serviceType,
-            userTypeId: this.userType
+            userTypeId: this.userType,
+            productLine: this.productLine
 
         })
             .then(r => {

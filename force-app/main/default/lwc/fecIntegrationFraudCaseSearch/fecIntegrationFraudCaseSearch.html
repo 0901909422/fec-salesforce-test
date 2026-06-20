@@ -1,6 +1,10 @@
 <template>
     <lightning-card title={labels.screenTitle}>
 
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+
         <!-- Search Filters -->
         <div class="search-grid">
             <lightning-input label={labels.fraudCaseId} value={fraudCaseId} onchange={handleChange} data-field="fraudCaseId"></lightning-input>

@@ -9,6 +9,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getAvailableNotifications from '@salesforce/apex/FEC_Notification.getAvailableNotifications';
 import sendManualNotification from '@salesforce/apex/FEC_Notification.sendManualNotification';
+import sendManualZnsNotification from '@salesforce/apex/FEC_Notification.sendManualZnsNotification';
 import previewTemplate from '@salesforce/apex/FEC_Notification.previewTemplate';
 import labelSendManualNotification from '@salesforce/label/c.FEC_Send_Manual_Notification';
 import LBL_SFT_Notification_Type from '@salesforce/label/c.LBL_SFT_Notification_Type';
@@ -24,6 +25,17 @@ import FEC_Email_Sent_Success from '@salesforce/label/c.FEC_Email_Sent_Success';
 import FEC_Email_Send_Error from '@salesforce/label/c.FEC_Email_Send_Error';
 import fec_UserSearchModal from 'c/fec_UserSearchModal';
 import searchInternalUsers from '@salesforce/apex/FEC_Notification.searchInternalUsers';
+import FEC_ZNS_Message_Send_Error from '@salesforce/label/c.FEC_ZNS_Message_Send_Error';
+import FEC_Zalo_Number from '@salesforce/label/c.FEC_Zalo_Number';
+import FEC_Select_Zalo_Number_Placeholder from '@salesforce/label/c.FEC_Select_Zalo_Number_Placeholder';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
+import FEC_Checking_Mobile_App_Status from '@salesforce/label/c.FEC_Checking_Mobile_App_Status';
+import FEC_Customer_Uses_Mobile_App from '@salesforce/label/c.FEC_Customer_Uses_Mobile_App';
+import FEC_Customer_Does_Not_Uses_Mobile_App from '@salesforce/label/c.FEC_Customer_Does_Not_Uses_Mobile_App';
+import checkUserExist from '@salesforce/apex/FEC_MobileAppNotificationCallout.checkUserExist';
+import sendManualMobileAppNotification from '@salesforce/apex/FEC_Notification.sendManualMobileAppNotification';
+import FEC_Mobile_App_Noti_Send_Error from '@salesforce/label/c.FEC_Mobile_App_Noti_Send_Error';
+import FEC_Mobile_App_Could_Not_Load_Data_Error from '@salesforce/label/c.FEC_Mobile_App_Could_Not_Load_Data_Error';
 import { 
     SEARCH_PLACEHOLDER, 
     TARGET_GROUP_INTERNAL_USER,
@@ -33,9 +45,11 @@ import {
     ERROR_MODAL_TITLE,
     MSG_ENTER_EMAIL_CORRECTLY,
     NOTIFICATION_CHANNEL_SF_APP,
-    FEC_SENT_SUCCESS
+    FEC_SENT_SUCCESS,
+    NOTIFICATION_CHANNEL_ZNS,
+    NOTIFICATION_CHANNEL_MOBILE_APP
 } from 'c/fec_CommonConst';
-
+const PATTERN_ZALO_PHONE = /^(0|\+84)[0-9]{9}$/;
 
 export default class Fec_ManualNotification extends NavigationMixin(LightningElement) {
     @api recordId; 
@@ -58,7 +72,16 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         FEC_Error_Loading_Template_List: FEC_Error_Loading_Template_List,
         FEC_MSG_IPP_AddIpp_Default_Success: FEC_MSG_IPP_AddIpp_Default_Success,
         FEC_Email_Sent_Success: FEC_Email_Sent_Success,
-        FEC_Email_Send_Error: FEC_Email_Send_Error
+        FEC_Email_Send_Error: FEC_Email_Send_Error,
+        FEC_ZNS_Message_Send_Error: FEC_ZNS_Message_Send_Error,
+        FEC_Zalo_Number: FEC_Zalo_Number,
+        FEC_Select_Zalo_Number_Placeholder: FEC_Select_Zalo_Number_Placeholder,
+        FEC_Common_No_Results_Label: FEC_Common_No_Results_Label,
+        FEC_Checking_Mobile_App_Status: FEC_Checking_Mobile_App_Status,
+        FEC_Customer_Uses_Mobile_App: FEC_Customer_Uses_Mobile_App,
+        FEC_Customer_Does_Not_Uses_Mobile_App: FEC_Customer_Does_Not_Uses_Mobile_App,
+        FEC_Mobile_App_Noti_Send_Error: FEC_Mobile_App_Noti_Send_Error,
+        FEC_Mobile_App_Could_Not_Load_Data_Error: FEC_Mobile_App_Could_Not_Load_Data_Error
     };
     
     selectedNotificationId;
@@ -89,6 +112,36 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     @track userSearchResults = [];
     @track searchTerm = '';
     searchTimeout;
+    @track isSending = false;
+
+    // ZNS state
+    @track zaloNumber = '';
+    @track zaloSearchTerm = '';
+    @track zaloSearchResults = [];
+    @track isZaloDropdownOpen = false;
+    @track isZaloSearching = false;
+    zaloSearchTimeout;
+    zaloNumData = [];
+
+    // Mobile App state
+    @track isMobileAppUser = false;
+    @track isCheckingMobileApp = false;
+    @track mobileAppStatusChecked = false;
+    @track isMobileAppStatusError = false;
+    nationalId = '';
+    primaryPhoneNumber = '';
+
+    get isZNSChannel() {
+        return this.selectedChannel === NOTIFICATION_CHANNEL_ZNS;
+    }
+
+    get isMobileAppChannel() {
+        return this.selectedChannel === NOTIFICATION_CHANNEL_MOBILE_APP;
+    }
+
+    get isEmailChannel() {
+        return !!this.selectedChannel && !this.isZNSChannel && !this.isMobileAppChannel;
+    }
 
     // Getter kiểm tra Select Email Mode
     get isSelectEmailMode() {
@@ -105,6 +158,10 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     //     return defaultEdit && !this.isSubmited;
     // }
 
+    get noZaloResults() {
+        return this.zaloSearchResults.length === 0;
+    }
+
     async connectedCallback() {
         this.subscribeToMessageChannel();
         try {
@@ -116,6 +173,21 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             this.subCategoryId = res.FEC_SubCategory__c;
             this.subCodeId = res.FEC_SubCode__c;
             this.fetchNotifications();
+
+            if (res?.FEC_Phone_Number__c) {
+                this.zaloNumData.push({
+                    Phone: res.FEC_Phone_Number__c
+                });
+            }
+            if (res?.FEC_Account_or_Contract__r?.FEC_Primary_Phone__c) {
+                this.zaloNumData.push({
+                    Phone: res.FEC_Account_or_Contract__r.FEC_Primary_Phone__c
+                });
+                this.primaryPhoneNumber = res.FEC_Account_or_Contract__r.FEC_Primary_Phone__c;
+            }
+            if (res?.FEC_Account_or_Contract__r?.FEC_National_ID_Passport_ID__c) {
+                this.nationalId = res.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
+            }
         } catch(error) {
             console.error('Error fetching Case details in fec_ManualNotification: ', error);
         }
@@ -201,6 +273,12 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             this.searchTerm = '';
             this.isDropdownOpen = false;
             this.userSearchResults = [];
+            this.zaloNumber = '';
+            this.zaloSearchTerm = '';
+            this.zaloSearchResults = [];
+            this.isZaloDropdownOpen = false;
+            this.isMobileAppUser = false;
+            this.mobileAppStatusChecked = false;
             this.error = undefined;
         } catch (error) {
             this.error = this.label.FEC_Error_Loading_Template_List + ': ' + (error.body ? error.body.message : JSON.stringify(error));
@@ -259,14 +337,29 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                 this.selectedTemplateId = selectedChannelObj.templateId;
             }
         }
-        
-        if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP) {
-            this.targetEmail = '';
-            this.searchTerm = '';
-            this.isDropdownOpen = false;
-            this.userSearchResults = [];
+
+        // Reset tất cả channel-specific state trước khi xử lý channel mới
+        this.targetEmail = '';
+        this.searchTerm = '';
+        this.isDropdownOpen = false;
+        this.userSearchResults = [];
+        this.zaloNumber = '';
+        this.zaloSearchTerm = '';
+        this.zaloSearchResults = [];
+        this.isZaloDropdownOpen = false;
+        this.isMobileAppUser = false;
+        this.mobileAppStatusChecked = false;
+
+        if (this.isZNSChannel || this.isMobileAppChannel) {
+            // ZNS và Mobile App không dùng email
+        } else if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP) {
+            // Email search mode - targetEmail rỗng, user tự search
         } else {
             this.targetEmail = selectedItem ? selectedItem.targetEmail : '';
+        }
+
+        if (this.isMobileAppChannel) {
+            this.handleCheckMobileAppStatus();
         }
     }
 
@@ -344,7 +437,132 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         input.reportValidity();
     }
 
+    // ── ZNS handlers ─────────────────────────────────────────────────────────
+
+    searchZaloContacts = ({ searchTerm }) => {
+        const keyword = searchTerm?.trim();
+
+        const result = (this.zaloNumData || []).filter(item => {
+            if (!keyword) {
+                return true;
+            }
+
+            return item.Phone?.includes(keyword);
+        });
+
+        return Promise.resolve(result);
+    };
+
+    handleZaloSearchFocus() {
+        clearTimeout(this.zaloBlurTimeout);
+        this.isZaloDropdownOpen = true;
+        this.searchZaloContacts({ searchTerm: '' })
+            .then(result => {
+                this.zaloSearchResults = result;
+            })
+        .catch(error => {
+            console.error('Lỗi tìm kiếm Zalo contacts:', error);
+        });
+    }
+
+    handleZaloSearchBlur() {
+        this.zaloBlurTimeout = setTimeout(() => {
+            this.isZaloDropdownOpen = false;
+        }, 200);
+    }
+
+    handleZaloSearchInput(event) {
+        this.zaloSearchTerm = event.target.value;
+        this.zaloNumber = '';
+
+        if (!this.zaloSearchTerm) {
+            this.isZaloDropdownOpen = false;
+            this.zaloSearchResults = [];
+            this.isZaloSearching = false;
+            return;
+        }
+
+        // Nếu user gõ thẳng số điện thoại hợp lệ thì confirm luôn, không cần search
+        if (PATTERN_ZALO_PHONE.test(this.zaloSearchTerm.trim())) {
+            this.zaloNumber = this.zaloSearchTerm.trim();
+            this.isZaloDropdownOpen = false;
+            this.zaloSearchResults = [];
+            return;
+        }
+
+        this.isZaloSearching = true;
+        this.isZaloDropdownOpen = true;
+
+        clearTimeout(this.zaloSearchTimeout);
+        this.zaloSearchTimeout = setTimeout(() => {
+            this.searchZaloContacts({ searchTerm: this.zaloSearchTerm })
+                .then(result => {
+                    this.zaloSearchResults = result;
+                    this.isZaloSearching = false;
+                })
+                .catch(error => {
+                    console.error('Lỗi tìm kiếm Zalo contacts:', error);
+                    this.isZaloSearching = false;
+                });
+        }, 300);
+    }
+
+    handleSelectZaloContact(event) {
+        clearTimeout(this.zaloBlurTimeout);
+        const phone = event.currentTarget.dataset.phone;
+        this.zaloNumber = phone;
+        this.zaloSearchTerm = phone;
+        this.isZaloDropdownOpen = false;
+
+        // Clear trạng thái invalid của lightning-input
+        Promise.resolve().then(() => {
+            const inputCmp = this.template.querySelector('[data-id="zaloNumberInput"]');
+
+            if (inputCmp) {
+                inputCmp.setCustomValidity('');
+                inputCmp.reportValidity();
+            }
+        });
+    }
+
+    // ── Mobile App handler ────────────────────────────────────────────────────
+
+    handleCheckMobileAppStatus() {
+        this.isCheckingMobileApp = true;
+        this.mobileAppStatusChecked = false;
+        checkUserExist({ phoneNumber: this.primaryPhoneNumber, nationalId: this.nationalId })
+            .then(result => {
+                this.isMobileAppUser = result?.isCustomerExist === true;
+                this.mobileAppStatusChecked = true;
+                this.isCheckingMobileApp = false;
+                if (result.httpStatusCode >= 500 && result.httpStatusCode < 600) {
+                    this.isMobileAppStatusError = true;
+                } else {
+                    this.isMobileAppStatusError = false;
+                }
+                
+            })
+            .catch(error => {
+                console.error('Lỗi kiểm tra Mobile App status:', error);
+                this.isMobileAppUser = false;
+                this.mobileAppStatusChecked = true;
+                this.isCheckingMobileApp = false;
+                this.isMobileAppStatusError = true;
+            });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     get isActionDisabled() {
+        if (this.isSending) return true;
+        if (!this.selectedNotificationId || !this.selectedChannel) return true;
+        if (this.isZNSChannel) return !this.zaloNumber;
+        if (this.isMobileAppChannel) return !this.mobileAppStatusChecked || !this.isMobileAppUser;
+        return false;
+    }
+
+    // Preview chỉ cần channel + templateId, không phụ thuộc Zalo/MobileApp status
+    get isPreviewDisabled() {
         return !this.selectedNotificationId || !this.selectedChannel;
     }
 
@@ -396,61 +614,158 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             emailBody:              rec.FEC_Body__c || '',
             lastModifiedBy:         rec.LastModifiedBy ? rec.LastModifiedBy.Name : '',
             lastModifiedById:       rec.LastModifiedById || '',
-            lastModifiedDate:       rec.LastModifiedDate
+            lastModifiedDate:       rec.LastModifiedDate,
+            isZNSTemplate:          rec.FEC_Is_ZNS_Template__c,
+            previewZNSUrl:          rec.FEC_Preview_ZNS_Url__c,
+            templateZNSStatus:      rec.FEC_Template_ZNS_Status__c
         };
     }
 
     handleSend() {
-        console.log('--- [handleSend] targetEmail: ' + this.targetEmail);
-        let isValid = true;
-        
-        const inputs = this.template.querySelectorAll('lightning-input');
-        inputs.forEach(input => {
-            if (!input.reportValidity()) {
+        // ZNS và Mobile App không validate email
+        if (!this.isZNSChannel && !this.isMobileAppChannel) {
+            console.log('--- [handleSend] targetEmail: ' + this.targetEmail);
+            let isValid = true;
+            
+            const inputs = this.template.querySelectorAll('lightning-input');
+            inputs.forEach(input => {
+                if (!input.reportValidity()) {
+                    isValid = false;
+                }
+            });
+            if (!this.targetEmail) {
                 isValid = false;
             }
-        });
-        if (!this.targetEmail) {
-            isValid = false;
-        }
-        if (!isValid) {
-            this.dispatchEvent(
-                new ShowToastEvent({
-                    title: ERROR_MODAL_TITLE,
-                    message: MSG_ENTER_EMAIL_CORRECTLY,
-                    variant: 'error',
-                })
-            );
-            return;
-        }
+            if (!isValid) {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: ERROR_MODAL_TITLE,
+                        message: MSG_ENTER_EMAIL_CORRECTLY,
+                        variant: 'error',
+                    })
+                );
+                return;
+            }
 
             sendManualNotification({
-            caseId: this.recordId,
-            templateId: this.selectedTemplateId,
-            toEmail: this.targetEmail,
-            fecNotificationConfigId: this.selectedNotificationId,
-            selectedChannel: this.selectedChannel
-        })
-                .then(() => {
-                    this.dispatchEvent(
-                        new ShowToastEvent({
-                            title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
-                            message: FEC_SENT_SUCCESS,
-                            variant: 'success',
-                        })
-                    );
-                    // Reset states
-                    this.selectedNotificationId = null; 
-                    this.selectedTemplateId = null;
-                    this.selectedChannel = '';
-                    this.channelOptions = [];
-                    this.selectedTargetGroup = '';
-                    this.targetEmail = '';
-                    this.searchTerm = '';
-                    this.isDropdownOpen = false;
-                })
-                .catch(error => {
-                    this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
-                });
+                caseId: this.recordId,
+                templateId: this.selectedTemplateId,
+                toEmail: this.targetEmail,
+                fecNotificationConfigId: this.selectedNotificationId,
+                selectedChannel: this.selectedChannel
+            })
+                    .then(() => {
+                        this.dispatchEvent(
+                            new ShowToastEvent({
+                                title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
+                                message: FEC_SENT_SUCCESS,
+                                variant: 'success',
+                            })
+                        );
+                        // Reset states
+                        this.selectedNotificationId = null; 
+                        this.selectedTemplateId = null;
+                        this.selectedChannel = '';
+                        this.channelOptions = [];
+                        this.selectedTargetGroup = '';
+                        this.targetEmail = '';
+                        this.searchTerm = '';
+                        this.isDropdownOpen = false;
+                        this.zaloNumber = '';
+                        this.zaloSearchTerm = '';
+                        this.isZaloDropdownOpen = false;
+                        this.zaloSearchResults = [];
+                        this.isMobileAppUser = false;
+                        this.mobileAppStatusChecked = false;
+                    })
+                    .catch(error => {
+                        this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
+                    });
+        }
+
+        if (this.isZNSChannel) {
+            console.log("--Sending ZNS Notification---");
+            this.isSending = true;
+            sendManualZnsNotification({
+                caseId: this.recordId,
+                templateId: this.selectedTemplateId,
+                toPhoneNumber: this.zaloNumber,
+                fecNotificationConfigId: this.selectedNotificationId,
+                selectedChannel: this.selectedChannel
+            })
+                    .then(() => {
+                        this.dispatchEvent(
+                            new ShowToastEvent({
+                                title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
+                                message: FEC_SENT_SUCCESS,
+                                variant: 'success',
+                            })
+                        );
+                        // Reset states
+                        this.selectedNotificationId = null; 
+                        this.selectedTemplateId = null;
+                        this.selectedChannel = '';
+                        this.channelOptions = [];
+                        this.selectedTargetGroup = '';
+                        this.targetEmail = '';
+                        this.searchTerm = '';
+                        this.isDropdownOpen = false;
+                        this.zaloNumber = '';
+                        this.zaloSearchTerm = '';
+                        this.isZaloDropdownOpen = false;
+                        this.zaloSearchResults = [];
+                        this.isMobileAppUser = false;
+                        this.mobileAppStatusChecked = false;
+                    })
+                    .catch(error => {
+                        this.error =  this.label.FEC_ZNS_Message_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
+                    }) 
+                    .finally(() => {
+                        this.isSending = false;
+                    });
+        }
+
+        if (this.isMobileAppChannel) {
+            console.log("--Sending Mobile App Notification---");
+            this.isSending = true;
+            sendManualMobileAppNotification({
+                caseId: this.recordId,
+                templateId: this.selectedTemplateId,
+                toPhoneNumber: this.primaryPhoneNumber,
+                toNationalId: this.nationalId,
+                fecNotificationConfigId: this.selectedNotificationId,
+                selectedChannel: this.selectedChannel
+            })
+                    .then(() => {
+                        this.dispatchEvent(
+                            new ShowToastEvent({
+                                title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
+                                message: FEC_SENT_SUCCESS,
+                                variant: 'success',
+                            })
+                        );
+                        // Reset states
+                        this.selectedNotificationId = null; 
+                        this.selectedTemplateId = null;
+                        this.selectedChannel = '';
+                        this.channelOptions = [];
+                        this.selectedTargetGroup = '';
+                        this.targetEmail = '';
+                        this.searchTerm = '';
+                        this.isDropdownOpen = false;
+                        this.zaloNumber = '';
+                        this.zaloSearchTerm = '';
+                        this.isZaloDropdownOpen = false;
+                        this.zaloSearchResults = [];
+                        this.isMobileAppUser = false;
+                        this.mobileAppStatusChecked = false;
+                    })
+                    .catch(error => {
+                        this.error =  this.label.FEC_Mobile_App_Noti_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
+                    }) 
+                    .finally(() => {
+                        this.isSending = false;
+                    });
+        }
     }
 }

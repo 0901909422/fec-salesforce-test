@@ -491,7 +491,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 mapping.FEC_Int_Sub_Category_Id__c,
                 mapping.FEC_Int_Sub_Code_Id__c,
                 mapping.FEC_Int_Channel__c,
-                mapping.FEC_Int_Service_Type_Id__c
+                mapping.FEC_Int_Service_Type_Id__c,
+                mapping.FEC_Int_Product_Line_Id__c
             );
     }
     //Get Auto Mapping Property
@@ -511,13 +512,16 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
     String subCategory,
     String subCode,
     String channelCode,
-    String serviceType
+    String serviceType,
+    String productLine
     ) {
         log('[START] loadAdditionalProperties'
             + ' | category=' + category
             + ' | subCategory=' + subCategory
             + ' | subCode=' + subCode
             + ' | channelCode=' + channelCode
+            + ' | serviceType=' + serviceType
+            + ' | productLine=' + productLine
         );
         FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
 
@@ -540,6 +544,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 OR FEC_Source_Parent_Id__c = :category
                 OR FEC_Source_Parent_Id__c = :subCategory
                 OR FEC_Source_Parent_Id__c = :serviceType
+                OR FEC_Source_Parent_Id__c = :productLine
             )
             ORDER BY FEC_Source_Id__c
         ];
@@ -1424,6 +1429,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         log('LOG-upsertFraudCaseService integrationCaseId: '+ integrationCaseId);
         String serviceCaseDataId = caseDataId;
         FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
+        //Savepoint sp = Database.setSavepoint();
         try {
 
             // =============================================================
@@ -1463,6 +1469,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             rec.FEC_Service_Case_ID__c = serviceCaseId;
             rec.FEC_Parent_CaseID__c = parentCaseId;
             rec.FEC_Case_Status__c = caseStatus;
+            rec.FEC_Created_Time__c = Datetime.now();
             // ----- SYS -----
             if (sys != null) {
                 rec.FEC_Sys_Transaction_Id__c = sys.TransactionID;
@@ -1492,11 +1499,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             rec.OwnerId = UserInfo.getUserId();
 
-            // Set business "Created Time" only when creating a new record so it is not
-            // overwritten on subsequent upserts.
-            if (existing.isEmpty()) {
-                rec.FEC_Created_Time__c = Datetime.now();
-            }
+            
+            rec.FEC_Updated_Time__c = Datetime.now();
 
             log('LOG-upsertFraudCaseService RECORD: '+ JSON.serialize(rec));
 
@@ -1523,6 +1527,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             ];
 
             if (!oldInfos.isEmpty()) {
+                log('DELETING OLD INFOS COUNT: ' + oldInfos.size());
                 delete oldInfos;
             }
 
@@ -1557,6 +1562,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                             String fileName  = infoValue.substring(0, firstPipe);
                             String extension = infoValue.substring(firstPipe + 1, secondPipe);
                             String base64Val = infoValue.substring(secondPipe + 1);
+                            log('SAVE FILE: name=' + fileName + ' ext=' + extension + ' base64Len=' + (base64Val == null ? 0 : base64Val.length()));
                             Id contentDocumentId =
                                 saveAttachedFile(fileName, base64Val, rec.Id);
             
@@ -1583,6 +1589,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 }
             
                 if (!newInfos.isEmpty()) {
+                    log('INSERTING NEW INFOS COUNT: ' + newInfos.size());
                     insert newInfos;
                 }
             }
@@ -1592,9 +1599,10 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
         } catch (Exception ex) {
 
-            log('ERROR IN UPSERT FRAUD CASE: ' + ex.getMessage());
+            //Database.rollback(sp);
+            log('ERROR IN UPSERT FRAUD CASE: ' + ex.getTypeName() + ' - ' + ex.getMessage());
+            log('LINE: ' + ex.getLineNumber());
             log('STACKTRACE: ' + ex.getStackTraceString());
-
             return false;
         }
     }
