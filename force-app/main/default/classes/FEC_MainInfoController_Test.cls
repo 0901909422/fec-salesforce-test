@@ -93,7 +93,7 @@ private class FEC_MainInfoController_Test {
         List<FEC_MainInfoController.PicklistOptionDTO> provinces =
             FEC_MainInfoController.getProvinceOptionsForCountryFecCode('2');
         List<FEC_MainInfoController.PicklistOptionDTO> districts =
-            FEC_MainInfoController.getDistrictOptionsForProvinceCode('HN');
+            FEC_MainInfoController.getDistrictOptionsForProvinceCode('HN', null);
         Test.stopTest();
 
         System.assertNotEquals(0, provinces.size());
@@ -143,7 +143,7 @@ private class FEC_MainInfoController_Test {
 
         Test.startTest();
         List<FEC_MainInfoController.PicklistOptionDTO> districts =
-            FEC_MainInfoController.getDistrictOptionsForProvinceCode('HCM');
+            FEC_MainInfoController.getDistrictOptionsForProvinceCode('HCM', null);
         List<FEC_MainInfoController.PicklistOptionDTO> provinces =
             FEC_MainInfoController.getProvinceOptionsForAddress();
         Test.stopTest();
@@ -172,10 +172,7 @@ private class FEC_MainInfoController_Test {
             'Bld',
             'Street',
             null,
-            null,
-            true,
-            null
-        );
+            null, null);
         Test.stopTest();
 
         System.assertEquals(
@@ -288,9 +285,9 @@ private class FEC_MainInfoController_Test {
         );
 
         Test.startTest();
-        FEC_MainInfoController.syncLocalMailingAddressSelection(
-            c.Id,
-            FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT
+        FEC_MainInfoController.syncMailingAddressFlagsFromCardMailingInd(
+            chId,
+            'R'
         );
         Test.stopTest();
 
@@ -482,7 +479,6 @@ private class FEC_MainInfoController_Test {
                 null,
                 'Y',
                 null,
-                null,
                 null
             );
         Test.stopTest();
@@ -509,7 +505,7 @@ private class FEC_MainInfoController_Test {
 
         Test.startTest();
         List<FEC_MainInfoController.PicklistOptionDTO> districts =
-            FEC_MainInfoController.getDistrictOptionsForProvinceCode('DP');
+            FEC_MainInfoController.getDistrictOptionsForProvinceCode('DP', null);
         Test.stopTest();
 
         System.assertNotEquals(0, districts.size());
@@ -527,10 +523,7 @@ private class FEC_MainInfoController_Test {
             '20',
             'Office St',
             null,
-            null,
-            false,
-            null
-        );
+            null, null);
 
         Test.startTest();
         FEC_MainInfoController.savePendingAddress(
@@ -542,10 +535,7 @@ private class FEC_MainInfoController_Test {
             null,
             null,
             null,
-            null,
-            false,
-            null
-        );
+            null, null);
         Test.stopTest();
 
         System.assertEquals(
@@ -615,10 +605,7 @@ private class FEC_MainInfoController_Test {
                 '1',
                 'Street ' + addrType,
                 null,
-                null,
-                false,
-                null
-            );
+                null, null);
         }
         Test.stopTest();
 
@@ -681,7 +668,7 @@ private class FEC_MainInfoController_Test {
 
         Test.startTest();
         List<FEC_MainInfoController.PicklistOptionDTO> districts =
-            FEC_MainInfoController.getDistrictOptionsForProvinceCode('RP2');
+            FEC_MainInfoController.getDistrictOptionsForProvinceCode('RP2', null);
         Test.stopTest();
 
         System.assertEquals(1, districts.size());
@@ -708,7 +695,7 @@ private class FEC_MainInfoController_Test {
 
         Test.startTest();
         List<FEC_MainInfoController.PicklistOptionDTO> districts =
-            FEC_MainInfoController.getDistrictOptionsForProvinceCode('WP');
+            FEC_MainInfoController.getDistrictOptionsForProvinceCode('WP', null);
         Test.stopTest();
 
         System.assertEquals(1, districts.size());
@@ -941,10 +928,7 @@ private class FEC_MainInfoController_Test {
             '1',
             'First St',
             null,
-            null,
-            false,
-            null
-        );
+            null, null);
 
         Test.startTest();
         FEC_MainInfoController.savePendingAddress(
@@ -956,10 +940,7 @@ private class FEC_MainInfoController_Test {
             '2',
             'Updated St',
             null,
-            null,
-            true,
-            null
-        );
+            null, null);
         Test.stopTest();
 
         FEC_Address_Info__c row = [
@@ -971,7 +952,7 @@ private class FEC_MainInfoController_Test {
         ];
         System.assertEquals('B2', row.FEC_Building__c);
         System.assertEquals(parent.Id, row.FEC_Parent_Address__c);
-        System.assertEquals(true, row.FEC_Mailing_Address__c);
+        System.assertEquals(false, row.FEC_Mailing_Address__c);
     }
 
     @IsTest
@@ -991,10 +972,7 @@ private class FEC_MainInfoController_Test {
                 '1',
                 'St',
                 null,
-                null,
-                false,
-                null
-            );
+                null, null);
         } catch (AuraHandledException e) {
             invalidParent = true;
         }
@@ -1008,10 +986,7 @@ private class FEC_MainInfoController_Test {
                 '1',
                 'St',
                 null,
-                null,
-                false,
-                null
-            );
+                null, null);
         } catch (AuraHandledException e) {
             invalidType = true;
         }
@@ -1032,8 +1007,8 @@ private class FEC_MainInfoController_Test {
         );
 
         Test.startTest();
-        FEC_MainInfoController.syncLocalMailingAddressSelection(c.Id, null);
-        FEC_MainInfoController.syncLocalMailingAddressSelection(c.Id, 'Invalid Type');
+        FEC_MainInfoController.syncMailingAddressFlagsFromCardMailingInd(chId, null);
+        FEC_MainInfoController.syncMailingAddressFlagsFromCardMailingInd(chId, 'Invalid');
         FEC_MainInfoController.clearMainInfoCache(null);
         FEC_MainInfoController.clearCasePendingAddressRows(null);
         Test.stopTest();
@@ -1567,10 +1542,7 @@ private class FEC_MainInfoController_Test {
             '19',
             'Json Pending St',
             null,
-            null,
-            true,
-            pendingJson
-        );
+            null, pendingJson);
         Test.stopTest();
 
         FEC_Address_Info__c row = [
@@ -1581,7 +1553,7 @@ private class FEC_MainInfoController_Test {
             LIMIT 1
         ];
         System.assert(row.FEC_Address__c.contains('AID99'));
-        System.assertEquals(true, row.FEC_Mailing_Address__c);
+        System.assertEquals(false, row.FEC_Mailing_Address__c);
     }
 
     @IsTest
