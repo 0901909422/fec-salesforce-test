@@ -784,12 +784,13 @@ export default class Fec_UpdateAddress extends LightningElement {
         return this.stripTrailingCountryForDisplay(addr.address);
     }
 
-    /** Cờ địa chỉ giao phát (DTO map từ SF: có giá trị, thường là "Yes"). */
+    /** Cờ địa chỉ giao phát (DTO map từ SF: "Yes" / "No" hoặc pending "Y" / ""). */
     isMailingFlagYes(addr) {
         if (!addr || addr.mailingAddress == null || addr.mailingAddress === '') {
             return false;
         }
-        return true;
+        const v = String(addr.mailingAddress).trim().toUpperCase();
+        return v === 'YES' || v === 'Y';
     }
 
     /** Địa chỉ hiện tại (DTO); cột Updated ưu tiên DTO, sau đó preview form, cuối cùng đồng bộ với Original. */
