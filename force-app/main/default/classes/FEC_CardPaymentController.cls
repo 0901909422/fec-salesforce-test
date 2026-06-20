@@ -233,15 +233,11 @@ public with sharing class FEC_CardPaymentController {
             }
             totalIPPAccruedInterest = applyIppAccruedInterestTotalRule(totalIPPAccruedInterest, customerHistoryId);
             setAggregateTotalsOnDto(dto, totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
-            Boolean hasAggregateData = totalCurrentBalance != 0 || totalCloseFeeAmount != 0 || totalPlanPaymentAmount != 0
-                || totalAccruedInterest != 0 || totalIPPAccruedInterest != 0 || totalPerDiem != 0 || totalDeferredInterest != 0;
-            // Có dữ liệu Card Payment nhưng chưa tính Full Payment Amount — tiếp tục gọi API
-            if (dto.fullPaymentAmount == 0 && hasAggregateData && String.isNotBlank(accountNumber)) {
-                // fall through to API path below
-            } else {
+            if (String.isBlank(accountNumber)) {
                 saveCardPaymentTotalsToDatabase(customerHistoryId, dto.fullPaymentAmount, dto.loanBalance, dto.fullPaymentWithoutIPP, dto.fullIPPPaymentAmount);
                 return dto;
             }
+            // Có accountNumber → luôn gọi API để lấy OnlineTotalBalance real-time
         }
 
         // Gọi 3 API mỗi lần load: GetCardBasicInfo, EmeaAccountInq, GetCardPlanInfo
@@ -253,76 +249,65 @@ public with sharing class FEC_CardPaymentController {
             Decimal fullPaymentWithoutIPP = 0;
             Decimal onlineTotalBalance = 0;
 
-        try {
-            String transId = UUID.randomUUID().toString();
-            String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
-            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
-            
-            FEC_GetCardBasicInfo.ResponseWrapper basicInfoResult = 
-                FEC_GetCardBasicInfo.callGetCardBasicInfo(transId, requestorId, dateTimeStr, accountNumber);
-            
-            if (basicInfoResult != null && 
-                basicInfoResult.CardBasicInfo != null && 
-                basicInfoResult.CardBasicInfo.MainCard != null &&
-                basicInfoResult.CardBasicInfo.MainCard.LoanBalance != null) {
-                loanBalance = basicInfoResult.CardBasicInfo.MainCard.LoanBalance;
-            }
-        } catch (Exception e) {
-            System.debug('GetCardBasicInfo API error: ' + e.getMessage());
-        }
-
-        try {
+            FEC_CommonUltils.beginDeferredApiLogging();
             try {
-                FEC_EmeaAccountInqService.EmeaInput emeaInput = new FEC_EmeaAccountInqService.EmeaInput();
-                emeaInput.context = 'ACCOUNT';
-                emeaInput.name = 'ACCOUNT_INQ';
-                emeaInput.org = 'FEC';
-                emeaInput.account = accountNumber;
-                
-                FEC_EmeaAccountInqService.EmeaResult emeaResult = 
-                    FEC_EmeaAccountInqService.callAccountInquiry(emeaInput);
-                
-                if (emeaResult != null && emeaResult.responseCode == '1') {
-                    Decimal currBal = emeaResult.currBal != null ? emeaResult.currBal : 0;
-                    Decimal amtMemoDb = emeaResult.amtMemoDb != null ? emeaResult.amtMemoDb : 0;
-                    Decimal amtMemoCr = emeaResult.amtMemoCr != null ? emeaResult.amtMemoCr : 0;
-                    onlineTotalBalance = currBal + amtMemoDb - amtMemoCr;
+                try {
+                    String transId = UUID.randomUUID().toString();
+                    String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+                    String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
+
+                    FEC_GetCardBasicInfo.ResponseWrapper basicInfoResult =
+                        FEC_GetCardBasicInfo.callGetCardBasicInfo(transId, requestorId, dateTimeStr, accountNumber);
+
+                    if (basicInfoResult != null &&
+                        basicInfoResult.CardBasicInfo != null &&
+                        basicInfoResult.CardBasicInfo.MainCard != null &&
+                        basicInfoResult.CardBasicInfo.MainCard.LoanBalance != null) {
+                        loanBalance = basicInfoResult.CardBasicInfo.MainCard.LoanBalance;
+                    }
+                } catch (Exception e) {
+                    System.debug('GetCardBasicInfo API error: ' + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.debug('M_CMS_EMEA_ACCOUNT_INQ API error: ' + e.getMessage());
-            }
 
-            Decimal totalDeferredInterestPlan = 0;
-            Decimal totalAccuredInterestPlan = 0;
-            Decimal totalPerDiemPlan = 0;
-            
-            try {
-                FEC_GetCardPlanInfo.CardPlanResult planResult = 
-                    FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
-                
-                if (planResult != null && planResult.responseCode == '1' && planResult.plans != null) {
-                    for (FEC_GetCardPlanInfo.CardPlan plan : planResult.plans) {
-                        if (String.isNotBlank(plan.planNumber) && !plan.planNumber.startsWith('9')) {
-                            if (plan.deferredInterest != null) {
-                                totalDeferredInterestPlan += plan.deferredInterest;
-                            }
-                            if (plan.accruedInterest != null) {
-                                totalAccuredInterestPlan += plan.accruedInterest / 100;
-                            }
-                            if (plan.perDiem != null) {
-                                totalPerDiemPlan += plan.perDiem / 100;
+                try {
+                    FEC_EmeaAccountInqService.EmeaResult emeaResult =
+                        FEC_EmeaAccountInqService.callAccountInquiry(buildEmeaAccountInqInput(accountNumber));
+                    onlineTotalBalance = resolveOnlineTotalBalance(emeaResult);
+                } catch (Exception e) {
+                    System.debug('M_CMS_EMEA_ACCOUNT_INQ API error: ' + e.getMessage());
+                }
+
+                Decimal totalDeferredInterestPlan = 0;
+                Decimal totalAccuredInterestPlan = 0;
+                Decimal totalPerDiemPlan = 0;
+
+                try {
+                    FEC_GetCardPlanInfo.CardPlanResult planResult =
+                        FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
+
+                    if (planResult != null && planResult.responseCode == '1' && planResult.plans != null) {
+                        for (FEC_GetCardPlanInfo.CardPlan plan : planResult.plans) {
+                            if (String.isNotBlank(plan.planNumber) && !plan.planNumber.startsWith('9')) {
+                                if (plan.deferredInterest != null) {
+                                    totalDeferredInterestPlan += plan.deferredInterest;
+                                }
+                                if (plan.accruedInterest != null) {
+                                    totalAccuredInterestPlan += plan.accruedInterest / 100;
+                                }
+                                if (plan.perDiem != null) {
+                                    totalPerDiemPlan += plan.perDiem / 100;
+                                }
                             }
                         }
                     }
+                } catch (Exception e) {
+                    System.debug('GetCardPlanInfo API error: ' + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.debug('GetCardPlanInfo API error: ' + e.getMessage());
-            }
 
-            fullPaymentWithoutIPP = onlineTotalBalance + totalDeferredInterestPlan + totalAccuredInterestPlan + totalPerDiemPlan - loanBalance;
-        } catch (Exception e) {
-            System.debug('Calculate Full Payment Without IPP error: ' + e.getMessage());
-        }
+                fullPaymentWithoutIPP = onlineTotalBalance + totalDeferredInterestPlan + totalAccuredInterestPlan + totalPerDiemPlan - loanBalance;
+            } finally {
+                FEC_CommonUltils.flushDeferredApiLogs();
+            }
 
         Decimal fullIPPPaymentAmount = 0;
         Decimal totalCurrentBalance = 0;
@@ -358,9 +343,7 @@ public with sharing class FEC_CardPaymentController {
         fullPaymentAmount = onlineTotalBalance + totalAccruedInterest + totalDeferredInterest
                 + totalPerDiem + totalIPPAccruedInterest + totalCloseFeeAmount;
 
-        if (fullPaymentAmount != 0 && fullPaymentWithoutIPP != 0) {
-            fullIPPPaymentAmount = fullPaymentAmount - fullPaymentWithoutIPP;
-        }
+        fullIPPPaymentAmount = fullPaymentAmount - fullPaymentWithoutIPP;
 
         if (fullPaymentAmount != 0 || loanBalance != 0 || fullPaymentWithoutIPP != 0 || fullIPPPaymentAmount != 0
                 || totalCurrentBalance != 0 || totalCloseFeeAmount != 0 || totalPlanPaymentAmount != 0 || totalAccruedInterest != 0
@@ -517,6 +500,38 @@ public with sharing class FEC_CardPaymentController {
         if (!emptyRows.isEmpty()) {
             delete emptyRows;
         }
+    }
+
+    private static FEC_EmeaAccountInqService.EmeaInput buildEmeaAccountInqInput(String accountNumber) {
+        FEC_EmeaAccountInqService.EmeaInput input = new FEC_EmeaAccountInqService.EmeaInput();
+        input.context = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+        input.name = UserInfo.getUserId();
+        input.org = FEC_ConstantCommon.REQUESTOR_ORG;
+        input.account = accountNumber;
+        input.dualInd = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+        input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+        return input;
+    }
+
+    @TestVisible
+    private static Boolean isEmeaAccountInqSuccess(FEC_EmeaAccountInqService.EmeaResult emeaRes) {
+        if (emeaRes == null || String.isBlank(emeaRes.responseCode)) {
+            return false;
+        }
+        String code = emeaRes.responseCode.trim();
+        return code == '1' || code == FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+    }
+
+    /** OnlineTotalBalance = CURR_BAL + AMT_MEMO_DB - AMT_MEMO_CR từ M_CMS_EMEA_ACCOUNT_INQ. */
+    @TestVisible
+    public static Decimal resolveOnlineTotalBalance(FEC_EmeaAccountInqService.EmeaResult emeaRes) {
+        if (!isEmeaAccountInqSuccess(emeaRes)) {
+            return 0;
+        }
+        Decimal currBal = emeaRes.currBal != null ? emeaRes.currBal : 0;
+        Decimal amtMemoDb = emeaRes.amtMemoDb != null ? emeaRes.amtMemoDb : 0;
+        Decimal amtMemoCr = emeaRes.amtMemoCr != null ? emeaRes.amtMemoCr : 0;
+        return currBal + amtMemoDb - amtMemoCr;
     }
 
     /** true khi (NextStatementDate - today) ≤ 4 ngày. */
