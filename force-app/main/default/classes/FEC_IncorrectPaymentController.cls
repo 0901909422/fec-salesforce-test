@@ -223,11 +223,7 @@ public without sharing class FEC_IncorrectPaymentController {
             return null;
         }
         List<Case> cases = [
-            SELECT FEC_National_ID_Passport_ID__c, FEC_Account_Contract_Number_Text__c,
-                FEC_Account_or_Contract__c,
-                FEC_Account_or_Contract__r.FEC_Account_Number__c,
-                FEC_Account_or_Contract__r.FEC_Contract_Number__c,
-                FEC_Product_Type__r.Name
+            SELECT FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -235,35 +231,15 @@ public without sharing class FEC_IncorrectPaymentController {
         if (cases.isEmpty()) {
             return null;
         }
-        Case c = cases[0];
-        String nationalId = c.FEC_National_ID_Passport_ID__c;
-        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
-        // 18/06/2026 18:30 linhdev - luồng Incorrect Payment: truyền Case.FEC_Account_Contract_Number_Text__c vào API 20 (AccountNumber param)
-        if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
-            return FEC_GetCustomerList.getCustomerList(
-                requestorId, null, false, null, nationalId, null, null, c.FEC_Account_Contract_Number_Text__c.trim(), null, null, null
-            );
+        String nationalId = cases[0].FEC_Account_or_Contract__r != null
+            ? cases[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            : null;
+        if (String.isBlank(nationalId)) {
+            return null;
         }
-        String rawAccountNumber = c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null;
-        String rawContractNumber = c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null;
-        String productTypeName = c.FEC_Product_Type__r != null ? c.FEC_Product_Type__r.Name : null;
-        String accountNumber = FEC_CommonUltils.resolveAccountNumber(productTypeName, rawAccountNumber, rawContractNumber);
-        if (String.isNotBlank(accountNumber)) {
-            return FEC_GetCustomerList.getCustomerList(
-                requestorId, null, false, null, nationalId, null, null, accountNumber, null, null, null
-            );
-        }
-        if (String.isNotBlank(rawContractNumber)) {
-            return FEC_GetCustomerList.getCustomerList(
-                requestorId, null, false, null, nationalId, null, null, null, rawContractNumber, null, null
-            );
-        }
-        if (String.isNotBlank(nationalId)) {
-            return FEC_GetCustomerList.getCustomerList(
-                requestorId, null, false, null, nationalId, null, null, null, null, null, null
-            );
-        }
-        return null;
+        return FEC_GetCustomerList.getCustomerList(
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false, null, nationalId, null, null, null, null, null, null
+        );
     }
 
     private static List<String> extractLoanContractNumbers(FEC_GetCustomerList.ResponseWrapper res) {
