@@ -1278,6 +1278,9 @@ public without sharing class FEC_CustomerIntegrationService {
             addr.FEC_Number__c = ai.NumberStr;
             addr.FEC_Street__c = ai.Street;
             addr.FEC_ZipCode__c = ai.ZipCode;
+            addr.FEC_Property_Status__c = ai.PropertyStatus;
+            addr.FEC_Years__c = ai.Years;
+            addr.FEC_Months__c = ai.Months;
             addr.FEC_Ward__c = null;
             addr.FEC_Ward_Text__c = null;
 
