@@ -53,6 +53,7 @@ public with sharing class FEC_GetLoanSecInfo {
     public class LPI {
         public Decimal PendingPenalInt;
         public Decimal AppliedLPI;
+        public Decimal LPIAccruedNID;
     }
 
     // ===================== PASS DUE =====================
@@ -327,6 +328,7 @@ public with sharing class FEC_GetLoanSecInfo {
         LPI lpi = new LPI();
         lpi.PendingPenalInt = FEC_CommonUltils.xmlValToDecimal(n, 'PendingPenalInt');
         lpi.AppliedLPI = FEC_CommonUltils.xmlValToDecimal(n, 'AppliedLPI');
+        lpi.LPIAccruedNID = FEC_CommonUltils.xmlValToDecimal(n, 'LPIAccruedNID');
         return lpi;
     }
 

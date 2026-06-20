@@ -43,6 +43,14 @@ public without sharing class FEC_CaseBusinessService {
    */
   private static Set<Id> caseIdsSkipOwnerChangeRoutingHistory = new Set<Id>();
 
+  public static void beginCaseSubmitNotificationSuppress() {
+    FEC_NotificationService.suppressForCaseSubmit = true;
+  }
+
+  public static void endCaseSubmitNotificationSuppress() {
+    FEC_NotificationService.suppressForCaseSubmit = false;
+  }
+
   public static void registerSkipOwnerChangeRoutingHistory(Id caseId) {
     if (caseId != null) {
       caseIdsSkipOwnerChangeRoutingHistory.add(caseId);
@@ -2397,17 +2405,27 @@ public without sharing class FEC_CaseBusinessService {
 
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
-    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
-    markCaseSubmittedAndClearDrafts(caseId);
-    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+    beginCaseSubmitNotificationSuppress();
+    try {
+      String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
+      markCaseSubmittedAndClearDrafts(caseId);
+      FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+    } finally {
+      endCaseSubmitNotificationSuppress();
+    }
   }
 //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   @AuraEnabled
   public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
-    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
-    markCaseSubmittedAndClearDrafts(caseId);
-    createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
-    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+    beginCaseSubmitNotificationSuppress();
+    try {
+      String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
+      markCaseSubmittedAndClearDrafts(caseId);
+      createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+      FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+    } finally {
+      endCaseSubmitNotificationSuppress();
+    }
   }
 
   private static String readCaseFinalStatusBeforeSubmit(String caseId) {
@@ -2473,6 +2491,7 @@ public without sharing class FEC_CaseBusinessService {
 
   // 29/05/2026 - service core: Queueable/batch gọi runInternal; không throw AuraHandledException
   public static Object runInternal(String method, Map<String, String> params) {
+    beginCaseSubmitNotificationSuppress();
     try {
       Method selectedMethod = METHOD_MAP.get(method);
       if (
@@ -2740,6 +2759,8 @@ public without sharing class FEC_CaseBusinessService {
       throw new CaseBusinessServiceException(resolveExceptionMessage(e));
     } catch (Exception e) {
       throw new CaseBusinessServiceException(resolveExceptionMessage(e));
+    } finally {
+      endCaseSubmitNotificationSuppress();
     }
   }
 

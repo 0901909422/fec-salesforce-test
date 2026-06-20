@@ -677,7 +677,8 @@ export default class Fec_UpdateAddress extends LightningElement {
             street,
             district,
             city,
-            isMailingAddress
+            isMailingAddress,
+            pendingAddressJson
         } = p;
         return savePendingAddress({
             caseId: this.resolvedCaseId,
@@ -689,7 +690,8 @@ export default class Fec_UpdateAddress extends LightningElement {
             street: street ?? '',
             districtCode: district ?? '',
             provinceCode: city ?? '',
-            isMailingAddress: isMailingAddress === true
+            isMailingAddress: isMailingAddress === true,
+            pendingAddressJson: pendingAddressJson ?? null
         });
     }
 
@@ -784,12 +786,13 @@ export default class Fec_UpdateAddress extends LightningElement {
         return this.stripTrailingCountryForDisplay(addr.address);
     }
 
-    /** Cờ địa chỉ giao phát (DTO map từ SF: có giá trị, thường là "Yes"). */
+    /** Cờ địa chỉ giao phát (DTO map từ SF: "Yes" / "No" hoặc pending "Y" / ""). */
     isMailingFlagYes(addr) {
         if (!addr || addr.mailingAddress == null || addr.mailingAddress === '') {
             return false;
         }
-        return true;
+        const v = String(addr.mailingAddress).trim().toUpperCase();
+        return v === 'YES' || v === 'Y';
     }
 
     /** Địa chỉ hiện tại (DTO); cột Updated ưu tiên DTO, sau đó preview form, cuối cùng đồng bộ với Original. */
@@ -937,6 +940,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     buildInfoPayloadFromContext(ctx, sfAddressType, isMailingYn) {
+        const labels = this._labelsFromOriginalAddressForType(sfAddressType);
         return {
             caseId: this.resolvedCaseId,
             sfAddressType,
@@ -960,8 +964,51 @@ export default class Fec_UpdateAddress extends LightningElement {
                     ? String(ctx.district).trim()
                     : '',
             city: ctx.city || '',
+            districtLabel: labels.districtLabel,
+            cityLabel: labels.cityLabel,
             isMailingAddress: isMailingYn
         };
+    }
+
+    /**
+     * Khi chỉ đổi mailing cho dòng chưa edit, lấy nhãn từ Original/addresses hiện có
+     * (API context chỉ trả mã district/city).
+     */
+    _labelsFromOriginalAddressForType(sfAddressType) {
+        const orig =
+            this.findAddress(sfAddressType, this.originalAddressesSnapshot) ||
+            this.findAddress(sfAddressType);
+        if (!orig) {
+            return { districtLabel: '', cityLabel: '' };
+        }
+        const districtLabel =
+            orig.ward != null && String(orig.ward).trim() !== ''
+                ? String(orig.ward).trim()
+                : '';
+        const full = this.formatAddress(orig);
+        let cityLabel = '';
+        if (full) {
+            const parts = full
+                .split(',')
+                .map((p) => p.trim())
+                .filter((p) => p !== '');
+            if (parts.length > 0) {
+                cityLabel = this.stripTrailingCountryForDisplay(
+                    parts[parts.length - 1]
+                );
+            }
+            if (
+                districtLabel &&
+                cityLabel &&
+                cityLabel.toLowerCase() === districtLabel.toLowerCase() &&
+                parts.length >= 2
+            ) {
+                cityLabel = this.stripTrailingCountryForDisplay(
+                    parts[parts.length - 2]
+                );
+            }
+        }
+        return { districtLabel, cityLabel };
     }
 
     rowFromSfAddressType(sfAddressType) {
@@ -1095,7 +1142,7 @@ export default class Fec_UpdateAddress extends LightningElement {
         return this.isMailingFlagYes(this.getAddressByRow(row));
     }
 
-    ensurePicklistValue(options, value) {
+    ensurePicklistValue(options, value, preferredLabel) {
         if (!value) {
             return options || [];
         }
@@ -1112,7 +1159,11 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (exists) {
             return list;
         }
-        return [...list, { label: value, value: v }];
+        const normalizedPreferredLabel =
+            preferredLabel != null && String(preferredLabel).trim() !== ''
+                ? String(preferredLabel).trim()
+                : v;
+        return [...list, { label: normalizedPreferredLabel, value: v }];
     }
 
     resetMailingForm() {
@@ -1177,6 +1228,8 @@ export default class Fec_UpdateAddress extends LightningElement {
 
         const sfAddressType = this.sfTypeFromRow(row);
         const pendingData = this._parsePendingJsonForType(sfAddressType);
+        const districtLabelFallback =
+            this._labelsFromOriginalAddressForType(sfAddressType).districtLabel;
 
         if (pendingData) {
             // Lần 2+: lấy dữ liệu từ pending JSON đã lưu vào Case (chuẩn hóa mã tỉnh legacy → bộ picklist UI)
@@ -1235,7 +1288,18 @@ export default class Fec_UpdateAddress extends LightningElement {
                         }));
                         this.districtOptions = this.ensurePicklistValue(
                             dOpts,
-                            this.mailingDistrict
+                            this.mailingDistrict,
+                            pendingData.districtLabel || districtLabelFallback
+                        );
+                    } else if (
+                        this.mailingCity &&
+                        this.mailingDistrict != null &&
+                        String(this.mailingDistrict).trim() !== ''
+                    ) {
+                        this.districtOptions = this.ensurePicklistValue(
+                            [],
+                            this.mailingDistrict,
+                            pendingData.districtLabel || districtLabelFallback
                         );
                     } else {
                         this.districtOptions = [];
@@ -1262,14 +1326,27 @@ export default class Fec_UpdateAddress extends LightningElement {
                             this.mailingDistrict = d;
                             this.districtOptions = this.ensurePicklistValue(
                                 this.districtOptions,
-                                this.mailingDistrict
+                                this.mailingDistrict,
+                                pendingData.districtLabel || districtLabelFallback
                             );
                             const pendingSanitized = { ...pendingData };
                             delete pendingSanitized.ward;
                             const enriched = {
                                 ...pendingSanitized,
                                 district: d,
-                                city: String(this.mailingCity || '').trim() || pendingSanitized.city
+                                city: String(this.mailingCity || '').trim() || pendingSanitized.city,
+                                cityLabel:
+                                    pendingSanitized.cityLabel ||
+                                    this._labelFromOptions(
+                                        this.provinceOptions,
+                                        this.mailingCity
+                                    ),
+                                districtLabel:
+                                    pendingSanitized.districtLabel ||
+                                    this._labelFromOptions(
+                                        this.districtOptions,
+                                        d
+                                    )
                             };
                             return this._savePendingAddressRecord({
                                 sfAddressType,
@@ -1281,7 +1358,8 @@ export default class Fec_UpdateAddress extends LightningElement {
                                 street: enriched.street ?? '',
                                 district: enriched.district ?? '',
                                 city: enriched.city ?? '',
-                                isMailingAddress: enriched.isMailingAddress === 'Y'
+                                isMailingAddress: enriched.isMailingAddress === 'Y',
+                                pendingAddressJson: JSON.stringify(enriched)
                             }).then(() => {
                                 const pk = this._pendingJsonFieldKey(sfAddressType);
                                 if (pk) {
@@ -1361,9 +1439,21 @@ export default class Fec_UpdateAddress extends LightningElement {
                             }));
                             this.districtOptions = this.ensurePicklistValue(
                                 dOpts,
-                                this.mailingDistrict
+                                this.mailingDistrict,
+                                districtLabelFallback
                             );
                         });
+                    }
+                    if (
+                        this.mailingDistrict != null &&
+                        String(this.mailingDistrict).trim() !== ''
+                    ) {
+                        this.districtOptions = this.ensurePicklistValue(
+                            [],
+                            this.mailingDistrict,
+                            districtLabelFallback
+                        );
+                        return undefined;
                     }
                     this.districtOptions = [];
                     return undefined;
@@ -1535,7 +1625,8 @@ export default class Fec_UpdateAddress extends LightningElement {
                 street: primaryInfo.street,
                 district: primaryInfo.district,
                 city: primaryInfo.city,
-                isMailingAddress: primaryInfo.isMailingAddress === 'Y'
+                isMailingAddress: primaryInfo.isMailingAddress === 'Y',
+                pendingAddressJson: JSON.stringify(primaryInfo)
             });
             this._hasPendingDbDraft = true;
             // Cập nhật mainInfoData với JSON vừa lưu để lần edit tiếp theo lấy đúng dữ liệu
@@ -1583,7 +1674,8 @@ export default class Fec_UpdateAddress extends LightningElement {
                     street: infoOther.street,
                     district: infoOther.district,
                     city: infoOther.city,
-                    isMailingAddress: infoOther.isMailingAddress === 'Y'
+                    isMailingAddress: infoOther.isMailingAddress === 'Y',
+                    pendingAddressJson: JSON.stringify(infoOther)
                 });
                 // Cập nhật mainInfoData để lần edit sau lấy đúng dữ liệu cho row này
                 const otherPendingKey = this._pendingJsonFieldKey(sf);
@@ -1884,7 +1976,8 @@ export default class Fec_UpdateAddress extends LightningElement {
                 street: primaryInfo.street,
                 district: primaryInfo.district,
                 city: primaryInfo.city,
-                isMailingAddress: primaryInfo.isMailingAddress === 'Y'
+                isMailingAddress: primaryInfo.isMailingAddress === 'Y',
+                pendingAddressJson: JSON.stringify(primaryInfo)
             });
             this._hasPendingDbDraft = true;
             const primaryPendingKey =
@@ -1932,7 +2025,8 @@ export default class Fec_UpdateAddress extends LightningElement {
                     street: infoOther.street,
                     district: infoOther.district,
                     city: infoOther.city,
-                    isMailingAddress: infoOther.isMailingAddress === 'Y'
+                    isMailingAddress: infoOther.isMailingAddress === 'Y',
+                    pendingAddressJson: JSON.stringify(infoOther)
                 });
                 const otherPendingKey = this._pendingJsonFieldKey(sf);
                 if (otherPendingKey) {
