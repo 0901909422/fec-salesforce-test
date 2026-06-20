@@ -164,8 +164,7 @@ private class FEC_UpdateCustomerAddress_Test {
                 '',
                 'Yes',
                 'No',
-                'Yes',
-                'No'
+                'Yes'
             );
             Test.stopTest();
             System.assertEquals(true, res.success);
@@ -310,7 +309,6 @@ private class FEC_UpdateCustomerAddress_Test {
                 null,
                 null,
                 null,
-                null,
                 null
             );
         Test.stopTest();
@@ -376,7 +374,7 @@ private class FEC_UpdateCustomerAddress_Test {
         // Vì toSingleChar là private, gọi updateCustomerAddress sẽ gián tiếp cover nó
         FEC_UpdateCustomerAddress.CustomerAddressInfo info = new FEC_UpdateCustomerAddress.CustomerAddressInfo();
         info.cifNumber = 'C'; info.addressId = 'A'; info.addressType = 'T';
-        info.isMailingAddress = 'Yes'; // Sẽ convert sang 'Y'
+        info.isPrimary = 'Yes'; // Sẽ convert sang 'Y'
         
         Test.setMock(HttpCalloutMock.class, new SoapMock());
         Test.startTest();
@@ -564,7 +562,7 @@ private class FEC_UpdateCustomerAddress_Test {
         info.propertyStatus = 'Owned';
         info.years = '1';
         info.months = '2';
-        info.isMailingAddress = 'No';
+        info.isPrimary = 'No';
         info.isPrimary = 'Yes';
         info.receiveStatement = '1';
         info.cardDelivery = '0';

@@ -109,7 +109,7 @@ public without sharing class FEC_TerminationLoanController {
         addField(rows, System.Label.FEC_Termination_Field_Pending_Penal_Interest_Label, lpi?.PendingPenalInt, false);
         addField(rows, System.Label.FEC_Termination_Field_Total_Principal_Paid_Label, secLoan?.TotalPrincipalPaid, false);
         addField(rows, System.Label.FEC_Termination_Field_Interest_On_Termination_Label, termSim?.InterestOnTermination, false);
-        addField(rows, System.Label.FEC_Termination_Field_LPI_Paid_Label, lpi?.AppliedLPI, false);
+        addField(rows, System.Label.FEC_Termination_Field_LPI_Paid_Label, lpi?.LPIAccruedNID, false);
         addField(rows, System.Label.FEC_Termination_Field_Total_Interest_Paid_Label, secLoan?.TotalInterestPaid, false);
         result.put('earlyTermination', rows);
     }
@@ -139,7 +139,7 @@ public without sharing class FEC_TerminationLoanController {
         rec.FEC_Pending_Penal_Interest__c = lpi?.PendingPenalInt;
         rec.FEC_Total_Principal_Paid__c = secLoan?.TotalPrincipalPaid;
         rec.FEC_Interest_On_Termination__c = termSim?.InterestOnTermination;
-        rec.FEC_LPI_Paid__c = lpi?.AppliedLPI;
+        rec.FEC_LPI_Paid__c = lpi?.LPIAccruedNID;
         rec.FEC_Total_Interest_Paid__c = secLoan?.TotalInterestPaid;
         rec.FEC_Total_Overdue_Amount__c = termSim?.TotalDues;
         rec.FEC_Installments_Overdue__c = termSim?.InstallmentsOverdue;
