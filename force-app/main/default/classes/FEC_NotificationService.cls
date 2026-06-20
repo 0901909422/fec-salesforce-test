@@ -7,6 +7,10 @@
  */
 public without sharing class FEC_NotificationService {
 
+    /** Bật trong transaction Submit Case — bỏ qua query/gửi notification (tránh SOQL 101). */
+    @TestVisible
+    public static Boolean suppressForCaseSubmit = false;
+
     /**
      * Method Description: Gửi Email notification khi Case được route đến Queue
      * Điều kiện lọc Notification record:
@@ -22,6 +26,9 @@ public without sharing class FEC_NotificationService {
      * @created: 2026/04/06 
      */
     public static void sendEmailNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (suppressForCaseSubmit) {
+            return;
+        }
         System.debug('--- [sendEmailNotifications] START cases=' + newCases.size());
         List<Case> routedCases = filterCasesRoutedToQueue(newCases, oldMap);
         System.debug('--- [sendEmailNotifications] routedCases=' + routedCases.size());
@@ -227,6 +234,9 @@ public without sharing class FEC_NotificationService {
      * @created: 2026/04/06
      */
     public static void sendSFAppNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (suppressForCaseSubmit) {
+            return;
+        }
         List<Case> routedCases = filterCasesRoutedToQueue(newCases, oldMap);
         if (routedCases.isEmpty()) return;
 

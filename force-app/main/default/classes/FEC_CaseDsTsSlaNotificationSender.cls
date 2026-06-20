@@ -4,6 +4,9 @@
 public without sharing class FEC_CaseDsTsSlaNotificationSender {
 
     public static void sendAfterCaseUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (FEC_NotificationService.suppressForCaseSubmit) {
+            return;
+        }
         if (newCases == null || newCases.isEmpty() || oldMap == null) {
             return;
         }

@@ -1302,6 +1302,9 @@ public without sharing class FEC_CaseTriggerHandler {
      * Lần 2 (đỏ): FEC_SLA_Violating_Warning__c đổi — nội dung "Đã vượt quá thời gian xử lý".
      */
       private static void sendSLANotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (FEC_NotificationService.suppressForCaseSubmit) {
+            return;
+        }
         try {
             List<Case> slaCases = new List<Case>();
             Set<Id> slaCaseIds = new Set<Id>();

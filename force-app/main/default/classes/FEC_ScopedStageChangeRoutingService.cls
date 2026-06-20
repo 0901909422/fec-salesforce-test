@@ -454,24 +454,29 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
     }
 
-    Boolean isCreationStage = updatedCase.FEC_Is_Submited__c != true;
-    FEC_CaseBusinessService.markCaseSubmittedAndClearDrafts(caseId);
-    if (isCreationStage && String.isNotBlank(natureOfCaseId)) {
-      FEC_CaseBusinessService.createCaseFlowHistory(
-        caseId,
-        natureOfCaseId,
-        fieldListJson
-      );
-    }
+    FEC_CaseBusinessService.beginCaseSubmitNotificationSuppress();
+    try {
+      Boolean isCreationStage = updatedCase.FEC_Is_Submited__c != true;
+      FEC_CaseBusinessService.markCaseSubmittedAndClearDrafts(caseId);
+      if (isCreationStage && String.isNotBlank(natureOfCaseId)) {
+        FEC_CaseBusinessService.createCaseFlowHistory(
+          caseId,
+          natureOfCaseId,
+          fieldListJson
+        );
+      }
 
-    applyScopedRouteCaseUpdate(
-      caseId,
-      updatedCase,
-      selectedChange,
-      resolvedNextStageId,
-      queueId,
-      finalStatusBeforeSubmit
-    );
+      applyScopedRouteCaseUpdate(
+        caseId,
+        updatedCase,
+        selectedChange,
+        resolvedNextStageId,
+        queueId,
+        finalStatusBeforeSubmit
+      );
+    } finally {
+      FEC_CaseBusinessService.endCaseSubmitNotificationSuppress();
+    }
   }
 
   //thangtv: đọc history mới nhất (Route to / Revert) để chọn nhánh Stage Change và owner khi Revert
