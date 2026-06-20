@@ -24,7 +24,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STR_DASH = '-';
     /** Legacy em-dash placeholder (historical UI); treat as missing like STR_DASH. */
     public static final String STR_EM_DASH = '\u2014';
-
+    
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';
     
@@ -61,7 +61,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
     public static final String DATETIME_FORMAT_OUTPUT1 = 'dd/MM/yyyy, HH:mm:ss';
     public static final String DATETIME_FORMAT_LOG = 'yyyy-MM-dd HH:mm:ss';
-
+    
     public static final String PAYMENT_PREFIX = 'pay_';
     
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
@@ -247,7 +247,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_EVOUCHER = 'EVoucher';
     public static final String PRODUCT_TYPE_MVOUCHER = 'MVoucher';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
-
+    
     /** FEC_Customer_History__c.FEC_Contract_Status__c — picklist Closed_Active_Charge_Off. */
     public static final String CUSTOMER_HISTORY_CONTRACT_STATUS_ACTIVE = 'Active';
     public static final String CUSTOMER_HISTORY_CONTRACT_STATUS_CLOSED = 'Closed';
@@ -270,7 +270,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
     public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
     public static final String INTERACTION_STATUS_CLOSED = 'Closed';
-
+    
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
     public static final String INTERACTION_REVIEW_MODE = 'review';
@@ -299,7 +299,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DISB_LOG_CRMID    = 'CRMID=';
     public static final String DISB_LOG_STATUS   = ' DISB_STATUS=';
     public static final String DISB_LOG_RESPONSE = ' Response=';
-
+    
     // Fast Cash RC35 — Disbursement Status on Case
     public static final String FAST_CASH_SUB_CATEGORY_CODE_RC35 = 'RC35';
     public static final String FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL = 'Pending-CustomerWithdrawal';
@@ -465,7 +465,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
     public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
     public static final String PHONE_NORMALIZE_REGEX = '^(?:\\+?84|0)?([1-9]\\d{8,9})$';
-
+    
     /** Kênh hợp lệ cho API FEC_CancelCSCaseService (SOAP). */
     public static final String CANCEL_CS_CHANNEL_CHAT = 'Chat';
     public static final String CANCEL_CS_CHANNEL_F2F = 'F2F';
@@ -639,13 +639,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_2 = 'RL16.03';
     public static final String FEC_SUB_CATEGORY_CODE_RL05 = 'RL05';
     public static final String SUB_CODE_RL0503 = 'RL05.03';
-
+    
     /** FEC_Action_Button__c.FEC_Type__c */
     public static final String ACTION_BUTTON_TYPE_ROUTING_ACTION = 'Routing Action';
     /** FEC_Stage_Screen__c.FEC_Field_Type__c */
     public static final String STAGE_SCREEN_FIELD_TYPE_ALL = 'All';
     public static final String STAGE_SCREEN_FIELD_TYPE_NEW = 'New';
-
+    
     // RD Payment Contract Assessment — picklist API values & routing keys
     public static final String RD_ASSESSMENT_CANNOT_CLOSE            = 'Cannot close contract';
     public static final String RD_ASSESSMENT_CLOSE_WITH_STATEMENT    = 'Contract can be closed with statement';
@@ -695,7 +695,7 @@ public with sharing class FEC_ConstantCommon {
     // ================= TEAM =================
     public static final String TEAM_CS_SUPPORT = 'CS Support';
     public static final String TEAM_CS_CUSTOMER_CARE = 'CS Customer Care';
-
+    
     // RD Payment — FEC_Team_User_Group__c / FEC_Next_Queue__c (scoped Stage 2+ filter → query Stage Change)
     /** assessment "không thể đóng" → FEC_Team_User_Group__c = SP; FEC_Next_Queue__c = FEC_DQ_CS_Support. */
     public static final String RD_ASSESSMENT_TEAM_CS_SUPPORT = RD_ASSESSMENT_TEAM_SP;
@@ -708,7 +708,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String RD_ASSESSMENT_QUEUE_CS_CUSTOMER_CARE = QUEUE_DQ_CS_CUSTOMER_CARE_NAME;
     /** FEC_Next_Queue__c kỳ vọng cùng team CP (đóng không cần tờ trình). */
     public static final String RD_ASSESSMENT_QUEUE_CONTRACT_PROCESSING = QUEUE_DQ_CONTRACT_PROCESSING_NAME;
-
+    
     /** MRC RL05 / Route to — FEC_Stage_Change__c.FEC_Team_User_Group__c */
     public static final String STAGE_CHANGE_TEAM_USER_GROUP_CP = RD_ASSESSMENT_TEAM_CP;
     public static final String STAGE_CHANGE_TEAM_USER_GROUP_PM = 'PM';
@@ -741,16 +741,16 @@ public with sharing class FEC_ConstantCommon {
     public static final String BP_GSR= 'GSR';
     public static final String BP_COF= 'COF';
     public static final String BP_COMPLAINT_OR_FEEDBACK = 'Complaint Or Feedback';
-
+    
     /** CRP-1726 GetCSCaseStatus — category allowed for Complaint/Feedback case type */
     public static final String FEC_CATEGORY_FEEDBACK_UB = 'Feedback UB';
-
+    
     /** CRP-1726 GetCSCaseStatus — mapped CaseStatus labels (Vietnamese) */
     public static final String GET_CASE_STATUS_VN_CLOSED = 'Đã đóng';
     public static final String GET_CASE_STATUS_VN_IN_PROGRESS = 'Đang xử lý';
     public static final String GET_CASE_STATUS_VN_OPEN = 'Đang mở';
     public static final String GET_CASE_STATUS_VN_UNDEFINED = 'Chưa xác định';
-
+    
     // ================= MY CASE API — channel function names =================
     public static final String MY_CASE_FUNCTION_CREATE_CS_CASE = 'CreateCSCase';
     public static final String MY_CASE_FUNCTION_GET_CS_CASE_STATUS = 'GetCSCaseStatus';
@@ -1064,12 +1064,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String INPUT_SEPARATOR_REGEX_12 =  '^\\d{12}$';
     public static final String INPUT_SEPARATOR_REGEX_9 =  '^\\d{9}$';
     public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$';
-
+    
     /** IPP Conversion (API 41): IPPEligibilityFlag value for retail eligible transactions. */
     public static final String IPP_ELIGIBILITY_FLAG_RETAIL = 'R';
     /** IPP Conversion: FEC_Transaction__c.FEC_Type__c value for unbilled sync. */
     public static final String TRANSACTION_TYPE_UNBILLED = 'Unbilled';
-
+    
     public static final Set<String> IPP_ELIGIBLE_TRANSACTION_CODES = new Set<String>{
         '0105', '0106', '0112', '0121', '0126', '0235', '0243', '2100', '2102', '2601',
         '4123', '4131', '4225', '4241', '4251', '5001', '3002', '3006', '2139', '2141',
@@ -1078,6 +1078,18 @@ public with sharing class FEC_ConstantCommon {
     public static final String ERROR_SAVING_SEARCH_HISTORY = 'Error saving search history';
     public static final String STATUS_ACTIVE = 'Còn hiệu lực';
     public static final String STATUS_EXPIRED = 'Hết hiệu lực';
+    
+    public static final String CASE_SUBCHANNEL_MOBILE_APP = 'Mobile App';
+    
+    public static final String DNB_CHANNEL_CALL = 'Call';
+    public static final String DNB_CHANNEL_EMAIL = 'Email';
+    public static final String DNB_CHANNEL_SMS = 'SMS';
 
-     public static final String CASE_SUBCHANNEL_MOBILE_APP = 'Mobile App';
+    public static final String DNB_CHANNEL_PHONE_RAW = 'PHONE';
+    public static final String DNB_CHANNEL_EMAIL_RAW = 'EMAIL';
+    public static final String DNB_CHANNEL_SMS_RAW = 'SMS';
+    
+    public static final String DNB_TYPE_INTERACTION_PHONE = 'Interaction Phone';
+    public static final String DNB_TYPE_INTERACTION_EMAIL = 'Interaction Email';
+    public static final String DNB_TYPE_RETURN_FROM_DB = 'Return form DB';
 }
