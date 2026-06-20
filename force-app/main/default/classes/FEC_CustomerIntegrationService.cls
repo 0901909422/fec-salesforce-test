@@ -1279,8 +1279,8 @@ public without sharing class FEC_CustomerIntegrationService {
             addr.FEC_Street__c = ai.Street;
             addr.FEC_ZipCode__c = ai.ZipCode;
             addr.FEC_Property_Status__c = ai.PropertyStatus;
-            addr.FEC_Years__c = ai.Years;
-            addr.FEC_Months__c = ai.Months;
+            addr.FEC_Years__c = ai.Years != null ? String.valueOf(ai.Years) : '';
+            addr.FEC_Months__c = ai.Months != null ? String.valueOf(ai.Months) : '';
             addr.FEC_Ward__c = null;
             addr.FEC_Ward_Text__c = null;
 
