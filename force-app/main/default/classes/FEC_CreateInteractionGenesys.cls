@@ -226,6 +226,9 @@ public without sharing class FEC_CreateInteractionGenesys {
         if (normalized == FEC_ConstantCommon.CHANNEL_WEBCHAT_LOWER) {
             return FEC_ConstantCommon.CHANNEL_WEBCHAT;
         }
+        if (normalized == FEC_ConstantCommon.CHANNEL_APPCHAT_LOWER) {
+            return FEC_ConstantCommon.CASE_SUBCHANNEL_MOBILE_APP;
+        }
         
         return FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
     }

@@ -45,6 +45,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     // 05/06/2026 10:00 linhdev - OwnerId=$User.Id OR CONTAINS(FEC_Assignment_Users__c) OR OwnerId=Queue user là thành viên
     // 18/06/2026 10:30 linhdev - bổ sung FEC_Assignment_Users__c chứa tên Queue user là thành viên (qua Role)
     // 18/06/2026 linhdev - điều kiện 2/3/4 spec OR: Owner/UserId assignment OR OwnerId queue OR assignment chứa tên queue
+    // 19/06/2026 linhdev - OwnerId=$User.Id hoặc OwnerId=Queue member chỉ khi FEC_Assignment_Count__c = 0
     private static String buildDefaultUserVisibilityClause() {
         List<String> visibilityParts = new List<String>();
         String ownerOrAssignedUserClause = buildOwnerOrAssignedUserClause();
@@ -53,7 +54,9 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         }
         Set<Id> userQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(UserInfo.getUserId());
         if (userQueueIds != null && !userQueueIds.isEmpty()) {
-            visibilityParts.add(formatIdInClause('OwnerId', userQueueIds));
+            visibilityParts.add(
+                '(' + formatIdInClause('OwnerId', userQueueIds) + ' AND ' + buildAssignmentCountZeroClause() + ')'
+            );
         }
         Set<String> userQueueNames = FEC_AssignmentListHandler.getCurrentUserQueues(UserInfo.getUserId());
         String assignmentQueueClause = buildAssignmentUsersContainsQueueNamesClause(userQueueNames);
@@ -69,7 +72,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         return '(' + String.join(visibilityParts, ' OR ') + ')';
     }
 
-    // 18/06/2026 linhdev - spec điều kiện 2: OwnerId = $User.Id OR FEC_Assignment_Users__c chứa UserId (18/15 ký tự)
+    // 18/06/2026 linhdev - spec điều kiện 2: OwnerId = $User.Id (với FEC_Assignment_Count__c = 0) OR FEC_Assignment_Users__c chứa UserId (18/15 ký tự)
     private static String buildOwnerOrAssignedUserClause() {
         Id userId = UserInfo.getUserId();
         if (userId == null) {
@@ -77,7 +80,13 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         }
         String userIdStr = String.valueOf(userId);
         List<String> parts = new List<String>();
-        parts.add('OwnerId = \'' + String.escapeSingleQuotes(userIdStr) + '\'');
+        parts.add(
+            '(OwnerId = \'' +
+            String.escapeSingleQuotes(userIdStr) +
+            '\' AND ' +
+            buildAssignmentCountZeroClause() +
+            ')'
+        );
         parts.add(
             'FEC_Assignment_Users__c LIKE \'%' +
             String.escapeSingleQuotes(userIdStr) +
@@ -119,6 +128,11 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             return likeParts[0];
         }
         return '(' + String.join(likeParts, ' OR ') + ')';
+    }
+
+    // 19/06/2026 linhdev - Case chưa có Routing assignment (rollup FEC_Assignment_Count__c)
+    private static String buildAssignmentCountZeroClause() {
+        return '(FEC_Assignment_Count__c = 0 OR FEC_Assignment_Count__c = null)';
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {
@@ -390,7 +404,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
                 }
                 String inList = '(' + String.join(idLit, ',') + ')';
                 if (op == 'equals') {
-                    ownerQueueClause = 'OwnerId IN ' + inList;
+                    ownerQueueClause = '(OwnerId IN ' + inList + ' AND ' + buildAssignmentCountZeroClause() + ')';
                 } else if (op == 'not_equal_to') {
                     ownerQueueClause = 'OwnerId NOT IN ' + inList;
                 }
