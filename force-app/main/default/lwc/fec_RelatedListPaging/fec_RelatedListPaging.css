@@ -113,6 +113,14 @@
     background: #fafaf9;
 }
 
+.address-table tbody tr.row-navigable {
+    cursor: pointer;
+}
+
+.address-table tbody tr.row-navigable:hover {
+    background: #f3f9ff;
+}
+
 /* Column Sizes */
 .col-number {
     width: 10px;
