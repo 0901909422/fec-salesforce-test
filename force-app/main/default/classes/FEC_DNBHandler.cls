@@ -1098,6 +1098,38 @@ public without sharing class FEC_DNBHandler {
         if (!mergedResult.isEmpty()) {
             List<FEC_Do_Not_Bother__c> dnbToInsert = new List<FEC_Do_Not_Bother__c>();
             
+            // for (FEC_GetDNBCalloutService.ResultItem item : mergedResult) {
+                //     FEC_Do_Not_Bother__c dnbRecord = new FEC_Do_Not_Bother__c();
+                
+                //     dnbRecord.FEC_Case__c = caseId;
+                
+                //     Boolean isActive = item.do_not_bother;
+                
+                //     dnbRecord.FEC_Current_Status__c = isActive
+                //         ? FEC_ConstantCommon.DNB_STATUS_ACTIVE
+                //         : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
+                
+                //     dnbRecord.FEC_Original_Reason__c = item.reason;
+                //     dnbRecord.FEC_DNB_Channel__c = item.source;
+                //     dnbRecord.FEC_Type__c = item.type;
+                //     dnbRecord.FEC_Phone_Email__c = item.type_value;
+                
+                //     dnbRecord.FEC_Customer_History__c = caseRecord.FEC_Account_or_Contract__c;
+                
+                //     if (String.isNotBlank(item.expected_exclude_time)
+                //     && item.expected_exclude_time != 'N/A') {
+                    //         try {
+                        //             dnbRecord.FEC_Expiry_Date__c =
+                        //                 FEC_CommonUltils.parseDate(item.expected_exclude_time);
+                        
+                    //         } catch (Exception e) {
+                        //             System.debug('Date parse error: ' + e.getMessage());
+                    //         }
+                //     }
+                
+                //     dnbToInsert.add(dnbRecord);
+            // }
+            
             for (FEC_GetDNBCalloutService.ResultItem item : mergedResult) {
                 FEC_Do_Not_Bother__c dnbRecord = new FEC_Do_Not_Bother__c();
                 
@@ -1110,18 +1142,40 @@ public without sharing class FEC_DNBHandler {
                     : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
                 
                 dnbRecord.FEC_Original_Reason__c = item.reason;
-                dnbRecord.FEC_DNB_Channel__c = item.source;
-                dnbRecord.FEC_Type__c = item.type;
+                
+                // DNB Channel mapping
+                if (item.type == FEC_ConstantCommon.DNB_CHANNEL_PHONE_RAW) {
+                    dnbRecord.FEC_DNB_Channel__c = FEC_ConstantCommon.DNB_CHANNEL_CALL;
+                } else if (item.type == FEC_ConstantCommon.DNB_CHANNEL_EMAIL_RAW) {
+                    dnbRecord.FEC_DNB_Channel__c = FEC_ConstantCommon.DNB_CHANNEL_EMAIL;
+                } else if (item.type == FEC_ConstantCommon.DNB_CHANNEL_SMS_RAW) {
+                    dnbRecord.FEC_DNB_Channel__c = FEC_ConstantCommon.DNB_CHANNEL_SMS;
+                } else {
+                    dnbRecord.FEC_DNB_Channel__c = item.source;
+                }
+                
+                // Type mapping
+                if (item.type_value == caseRecord.FEC_Phone_Number__c) {
+                    dnbRecord.FEC_Type__c = FEC_ConstantCommon.DNB_TYPE_INTERACTION_PHONE;
+                } else if (
+                caseRecord.FEC_Interaction__r != null &&
+                    item.type_value == caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+                ) {
+                    dnbRecord.FEC_Type__c = FEC_ConstantCommon.DNB_TYPE_INTERACTION_EMAIL;
+                } else {
+                    dnbRecord.FEC_Type__c =  FEC_ConstantCommon.DNB_TYPE_RETURN_FROM_DB;
+                }
+                
                 dnbRecord.FEC_Phone_Email__c = item.type_value;
                 
-                dnbRecord.FEC_Customer_History__c = caseRecord.FEC_Account_or_Contract__c;
+                dnbRecord.FEC_Customer_History__c =
+                    caseRecord.FEC_Account_or_Contract__c;
                 
                 if (String.isNotBlank(item.expected_exclude_time)
                 && item.expected_exclude_time != 'N/A') {
                     try {
                         dnbRecord.FEC_Expiry_Date__c =
                             FEC_CommonUltils.parseDate(item.expected_exclude_time);
-                        
                     } catch (Exception e) {
                         System.debug('Date parse error: ' + e.getMessage());
                     }
