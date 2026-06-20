@@ -103,6 +103,11 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
             combined.contains('OwnerId = \'') && combined.contains('FEC_Assignment_Users__c LIKE'),
             'Mệnh đề WHERE cơ sở phải lọc Owner hoặc user trong FEC_Assignment_Users__c theo spec.'
         );
+        // 19/06/2026 linhdev - Owner/Queue owner phải kèm FEC_Assignment_Count__c = 0
+        System.assert(
+            combined.contains('FEC_Assignment_Count__c = 0'),
+            'Mệnh đề WHERE cơ sở phải lọc FEC_Assignment_Count__c = 0 cho Owner hoặc Queue owner.'
+        );
     }
 
     /**
@@ -311,6 +316,113 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
     }
 
     /**
+     * Kịch bản 2g: Case owner trực tiếp nhưng FEC_Assignment_Count__c > 0 không match qua nhánh Owner.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_ExcludesDirectOwnerCaseWithAssignmentCount() {
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id loginUserId = UserInfo.getUserId();
+        Case ownerCase = new Case(
+            Subject = 'Direct Owner With Assignment Filter Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            OwnerId = loginUserId,
+            FEC_ID_Search__c = 'FILTER-DIRECT-OWNER-ASG',
+            FEC_Customer_Type__c = 'Existing'
+        );
+        if (bulkCaseRtId != null) {
+            ownerCase.RecordTypeId = bulkCaseRtId;
+        }
+        insert ownerCase;
+        update new Case(Id = ownerCase.Id, FEC_ID_Search__c = 'FILTER-DIRECT-OWNER-ASG');
+        insertRoutingAssignment(ownerCase.Id);
+
+        Decimal assignmentCount = [
+            SELECT FEC_Assignment_Count__c
+            FROM Case
+            WHERE Id = :ownerCase.Id
+        ].FEC_Assignment_Count__c;
+        if (assignmentCount == null || assignmentCount <= 0) {
+            System.assert(true, 'Skipped: FEC_Assignment_Count__c chưa được rollup trên Case mồi.');
+            return;
+        }
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(ownerCase.Id) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(
+            0,
+            count,
+            'Case owner trực tiếp với FEC_Assignment_Count__c > 0 phải bị loại khỏi default filter.'
+        );
+    }
+
+    /**
+     * Kịch bản 2h: Case owned by queue (user là member) nhưng FEC_Assignment_Count__c > 0 không match qua nhánh Queue Owner.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_ExcludesQueueOwnedCaseWithAssignmentCount() {
+        List<Group> queues = [
+            SELECT Id
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id queueId = queues[0].Id;
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(queueId, UserInfo.getUserId());
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id caseId;
+        System.runAs(runUser) {
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned With Assignment Filter Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = 'FILTER-QUEUE-OWNED-ASG',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                queueOwnedCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert queueOwnedCase;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = 'FILTER-QUEUE-OWNED-ASG');
+            insertRoutingAssignment(queueOwnedCase.Id);
+            caseId = queueOwnedCase.Id;
+        }
+
+        Decimal assignmentCount = [
+            SELECT FEC_Assignment_Count__c
+            FROM Case
+            WHERE Id = :caseId
+        ].FEC_Assignment_Count__c;
+        if (assignmentCount == null || assignmentCount <= 0) {
+            System.assert(true, 'Skipped: FEC_Assignment_Count__c chưa được rollup trên Case mồi.');
+            return;
+        }
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(caseId) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(
+            0,
+            count,
+            'Case owned by queue với FEC_Assignment_Count__c > 0 phải bị loại khỏi default filter.'
+        );
+    }
+
+    /**
      * Kịch bản 2f: Case FEC_Assignment_Users__c chứa tên Queue mà login user là member phải match default filter.
      */
     @IsTest
@@ -442,6 +554,24 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         if (existing.isEmpty()) {
             insert new GroupMember(GroupId = groupId, UserOrGroupId = userOrGroupId);
         }
+    }
+
+    private static void insertRoutingAssignment(Id caseId) {
+        String status;
+        for (Schema.PicklistEntry entry :
+            FEC_Assignment__c.FEC_Assignment_Status__c.getDescribe().getPicklistValues()) {
+            if (entry.isActive()) {
+                status = entry.getValue();
+                break;
+            }
+        }
+        insert new FEC_Assignment__c(
+            FEC_Case__c = caseId,
+            FEC_Assignment_Name__c = 'BCH Filter Assignment ' + String.valueOf(System.currentTimeMillis()),
+            FEC_Assignment_Status__c = status,
+            FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
+            FEC_Assignment_Owner__c = UserInfo.getUserId()
+        );
     }
 
     /**
@@ -858,6 +988,81 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         Test.stopTest();
 
         System.assert(whereParts.size() >= 1);
+        String combined = String.join(whereParts, ' AND ');
+        System.assert(
+            combined.contains('FEC_Assignment_Count__c = 0'),
+            'Filter Queue equals phải kèm FEC_Assignment_Count__c = 0 cho nhánh OwnerId IN queue.'
+        );
+    }
+
+    /**
+     * Kịch bản: filter Queue equals phải loại Case Owner = queue nhưng FEC_Assignment_Count__c > 0.
+     */
+    @IsTest
+    static void testBuildCompleteWhere_QueueFilterExcludesQueueOwnerWithAssignmentCount() {
+        List<Group> queues = [
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id queueId = queues[0].Id;
+        String queueName = queues[0].Name;
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(queueId, UserInfo.getUserId());
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id caseId;
+        System.runAs(runUser) {
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Filter Owner With Assignment Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = 'FILTER-QUEUE-OWNER-ASG',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                queueOwnedCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert queueOwnedCase;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = 'FILTER-QUEUE-OWNER-ASG');
+            insertRoutingAssignment(queueOwnedCase.Id);
+            caseId = queueOwnedCase.Id;
+        }
+
+        Decimal assignmentCount = [
+            SELECT FEC_Assignment_Count__c
+            FROM Case
+            WHERE Id = :caseId
+        ].FEC_Assignment_Count__c;
+        if (assignmentCount == null || assignmentCount <= 0) {
+            System.assert(true, 'Skipped: FEC_Assignment_Count__c chưa được rollup trên Case mồi.');
+            return;
+        }
+
+        String filtersJson = '[{"propertyKey":"QUEUE","operatorKey":"equals","valueList":["' +
+            String.escapeSingleQuotes(queueName) +
+            '"]}]';
+
+        Test.startTest();
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(
+            FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson)
+        );
+        String whereClause = String.join(whereParts, ' AND ') + ' AND Id = \'' + String.valueOf(caseId) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(
+            0,
+            count,
+            'Filter Queue equals phải loại Case Owner = queue khi FEC_Assignment_Count__c > 0.'
+        );
     }
 
     /**
