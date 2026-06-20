@@ -33,7 +33,6 @@ public with sharing class FEC_UpdateCustomerAddress {
     @AuraEnabled public String propertyStatus;
     @AuraEnabled public String years;
     @AuraEnabled public String months;
-    @AuraEnabled public String isMailingAddress;
     @AuraEnabled public String isPrimary;
     @AuraEnabled public String receiveStatement;
     @AuraEnabled public String cardDelivery;
@@ -150,7 +149,6 @@ public with sharing class FEC_UpdateCustomerAddress {
     String propertyStatus,
     String years,
     String months,
-    String isMailingAddress,
     String isPrimary,
     String receiveStatement,
     String cardDelivery
@@ -196,7 +194,6 @@ public with sharing class FEC_UpdateCustomerAddress {
     info.propertyStatus = propertyStatus;
     info.years = years;
     info.months = months;
-    info.isMailingAddress = isMailingAddress;
     info.isPrimary = isPrimary;
     info.receiveStatement = receiveStatement;
     info.cardDelivery = cardDelivery;
@@ -255,7 +252,9 @@ public with sharing class FEC_UpdateCustomerAddress {
         FEC_Building__c,
         FEC_Number__c,
         FEC_Street__c,
-        FEC_Mailing_Address__c,
+        FEC_Property_Status__c,
+        FEC_Years__c,
+        FEC_Months__c,
         FEC_District__r.FEC_Code__c,
         FEC_Province__r.FEC_Code__c
       FROM FEC_Address_Info__c
@@ -285,10 +284,9 @@ public with sharing class FEC_UpdateCustomerAddress {
               (String) data.get('street'),
               (String) data.get('district'),
               (String) data.get('city'),
-              (String) data.get('propertyStatus'),
-              (String) data.get('years'),
-              (String) data.get('months'),
-              (String) data.get('isMailingAddress'),
+              resolvePropertyStatus(row, data),
+              resolveYears(row, data),
+              resolveMonths(row, data),
               (String) data.get('isPrimary'),
               (String) data.get('receiveStatement'),
               (String) data.get('cardDelivery')
@@ -312,10 +310,9 @@ public with sharing class FEC_UpdateCustomerAddress {
               row.FEC_Street__c,
               districtCode,
               provinceCode,
-              '',
-              '',
-              '',
-              row.FEC_Mailing_Address__c == true ? 'Y' : 'N',
+              row.FEC_Property_Status__c,
+              blankToNullText(row.FEC_Years__c),
+              blankToNullText(row.FEC_Months__c),
               '',
               '',
               ''
@@ -334,15 +331,6 @@ public with sharing class FEC_UpdateCustomerAddress {
 
     if (result != null && result.success == true) {
       selectedCase.FEC_Process_Action_Count__c = -1;
-
-      String selectedMailingSfType = null;
-      for (FEC_Address_Info__c row : pendingRows) {
-        if (row != null && row.FEC_Mailing_Address__c == true) {
-          selectedMailingSfType = row.FEC_Address_Type__c;
-          break;
-        }
-      }
-      FEC_MainInfoController.syncLocalMailingAddressSelection(caseId, selectedMailingSfType);
 
       FEC_MainInfoController.clearCasePendingAddressRows(selectedCase.Id);
     } else {
@@ -539,7 +527,6 @@ public with sharing class FEC_UpdateCustomerAddress {
     addIfPresent(addrNode, 'PropertyStatus', info.propertyStatus);
     addIfPresent(addrNode, 'Years', info.years);
     addIfPresent(addrNode, 'Months', info.months);
-    addYIfPresent(addrNode, 'IsMailingAddress', info.isMailingAddress);
     addYIfPresent(addrNode, 'IsPrimary', info.isPrimary);
     addYIfPresent(addrNode, 'ReceiveStatement', info.receiveStatement);
     addYIfPresent(addrNode, 'CardDelivery', info.cardDelivery);
@@ -550,6 +537,58 @@ public with sharing class FEC_UpdateCustomerAddress {
     if (String.isNotBlank(val)) {
       FEC_CommonUltils.addTextNodeSafe(parent, el, val);
     }
+  }
+
+  private static String resolvePropertyStatus(
+    FEC_Address_Info__c row,
+    Map<String, Object> data
+  ) {
+    String fromJson = stringFromJsonField(data, 'propertyStatus');
+    if (String.isNotBlank(fromJson)) {
+      return fromJson;
+    }
+    return row != null ? row.FEC_Property_Status__c : null;
+  }
+
+  private static String resolveYears(
+    FEC_Address_Info__c row,
+    Map<String, Object> data
+  ) {
+    String fromJson = stringFromJsonField(data, 'years');
+    if (String.isNotBlank(fromJson)) {
+      return fromJson;
+    }
+    return row != null ? blankToNullText(row.FEC_Years__c) : null;
+  }
+
+  private static String resolveMonths(
+    FEC_Address_Info__c row,
+    Map<String, Object> data
+  ) {
+    String fromJson = stringFromJsonField(data, 'months');
+    if (String.isNotBlank(fromJson)) {
+      return fromJson;
+    }
+    return row != null ? blankToNullText(row.FEC_Months__c) : null;
+  }
+
+  private static String stringFromJsonField(Map<String, Object> data, String key) {
+    if (data == null || String.isBlank(key) || !data.containsKey(key)) {
+      return null;
+    }
+    Object raw = data.get(key);
+    if (raw == null) {
+      return null;
+    }
+    String val = String.valueOf(raw).trim();
+    return String.isNotBlank(val) ? val : null;
+  }
+
+  private static String blankToNullText(String val) {
+    if (String.isBlank(val)) {
+      return null;
+    }
+    return val.trim();
   }
 
   private static void addYIfPresent(Dom.XmlNode parent, String el, String val) {

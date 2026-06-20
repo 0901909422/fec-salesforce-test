@@ -373,9 +373,13 @@ public without sharing class FEC_MainInfoController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<PicklistOptionDTO> getDistrictOptionsForProvinceCode(String provinceCode) {
+    public static List<PicklistOptionDTO> getDistrictOptionsForProvinceCode(
+        String provinceCode,
+        String selectedDistrictCode
+    ) {
         List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
         if (String.isBlank(provinceCode)) {
+            appendSelectedDistrictOptionIfMissing(opts, selectedDistrictCode);
             return opts;
         }
         String code = provinceCode.trim();
@@ -386,31 +390,67 @@ public without sharing class FEC_MainInfoController {
               AND FEC_Country__r.FEC_Code__c = :FEC_COUNTRY_MASTER_API
             LIMIT 1
         ];
-        if (provs.isEmpty()) {
-            return opts;
-        }
-        Id provinceId = provs[0].Id;
+        if (!provs.isEmpty()) {
+            Id provinceId = provs[0].Id;
 
-        for (FEC_District__c d : [
-            SELECT Name, FEC_Code__c, FEC_Name_VN__c
-            FROM FEC_District__c
-            WHERE FEC_Province__c = :provinceId
-            ORDER BY FEC_Name_VN__c NULLS LAST, Name
-        ]) {
-            if (String.isBlank(d.FEC_Code__c)) {
-                continue;
+            for (FEC_District__c d : [
+                SELECT Name, FEC_Code__c, FEC_Name_VN__c
+                FROM FEC_District__c
+                WHERE FEC_Province__c = :provinceId
+                ORDER BY FEC_Name_VN__c NULLS LAST, Name
+            ]) {
+                if (String.isBlank(d.FEC_Code__c)) {
+                    continue;
+                }
+                PicklistOptionDTO o = new PicklistOptionDTO();
+                o.value = d.FEC_Code__c;
+                String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(d.FEC_Name_VN__c);
+                if (String.isBlank(lbl)) {
+                    lbl = String.isNotBlank(d.Name) ? d.Name : d.FEC_Code__c;
+                }
+                o.label = lbl;
+                opts.add(o);
             }
-            PicklistOptionDTO o = new PicklistOptionDTO();
-            o.value = d.FEC_Code__c;
-            // Fallback: FEC_Name_VN__c → Name → FEC_Code__c (không skip record có label rỗng)
-            String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(d.FEC_Name_VN__c);
-            if (String.isBlank(lbl)) {
-                lbl = String.isNotBlank(d.Name) ? d.Name : d.FEC_Code__c;
-            }
-            o.label = lbl;
-            opts.add(o);
         }
+        appendSelectedDistrictOptionIfMissing(opts, selectedDistrictCode);
         return opts;
+    }
+
+    /**
+     * Bổ sung option Ward đang chọn (mã CIF) khi không nằm trong bộ country 2 của tỉnh —
+     * ví dụ FEC_Code__c = 780 thuộc country 1 nhưng vẫn cần label FEC_Name_VN__c trên UI.
+     */
+    @TestVisible
+    private static void appendSelectedDistrictOptionIfMissing(
+        List<PicklistOptionDTO> opts,
+        String selectedDistrictCode
+    ) {
+        if (opts == null || String.isBlank(selectedDistrictCode)) {
+            return;
+        }
+        String dc = selectedDistrictCode.trim();
+        for (PicklistOptionDTO existing : opts) {
+            if (existing != null && dc.equals(existing.value)) {
+                return;
+            }
+        }
+        List<FEC_District__c> rows = [
+            SELECT FEC_Code__c, FEC_Name_VN__c, Name
+            FROM FEC_District__c
+            WHERE FEC_Code__c = :dc
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return;
+        }
+        String lbl = districtLabelFromFecDistrictRecord(rows[0]);
+        if (String.isBlank(lbl) || lbl.trim().equalsIgnoreCase(dc)) {
+            return;
+        }
+        PicklistOptionDTO extra = new PicklistOptionDTO();
+        extra.value = rows[0].FEC_Code__c;
+        extra.label = lbl;
+        opts.add(0, extra);
     }
 
     @AuraEnabled
@@ -681,64 +721,6 @@ public without sharing class FEC_MainInfoController {
             Id = c.FEC_Account_or_Contract__c,
             FEC_API_Cache__c = null
         );
-    }
-
-    /** Đồng bộ FEC_Mailing_Address__c theo lựa chọn UI (1 type = true, còn lại false). */
-    @AuraEnabled
-    public static void syncLocalMailingAddressSelection(
-        Id caseId,
-        String selectedSfAddressType
-    ) {
-        if (caseId == null) {
-            return;
-        }
-        Set<String> allowedTypes = new Set<String>{
-            FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
-            FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
-            FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT
-        };
-        String targetType = String.isBlank(selectedSfAddressType)
-            ? null
-            : selectedSfAddressType.trim();
-        if (targetType != null && !allowedTypes.contains(targetType)) {
-            return;
-        }
-
-        Case c = [
-            SELECT FEC_Account_or_Contract__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (c.FEC_Account_or_Contract__c == null) {
-            return;
-        }
-
-        List<FEC_Address_Info__c> rows = [
-            SELECT Id, FEC_Address_Type__c, FEC_Mailing_Address__c
-            FROM FEC_Address_Info__c
-            WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
-              AND FEC_Case__c = null
-        ];
-        if (rows.isEmpty()) {
-            return;
-        }
-
-        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
-        for (FEC_Address_Info__c row : rows) {
-            Boolean shouldMailing = (targetType != null && row.FEC_Address_Type__c == targetType);
-            Boolean currentMailing = row.FEC_Mailing_Address__c == true;
-            if (currentMailing != shouldMailing) {
-                toUpdate.add(new FEC_Address_Info__c(
-                    Id = row.Id,
-                    FEC_Mailing_Address__c = shouldMailing
-                ));
-            }
-        }
-
-        if (!toUpdate.isEmpty()) {
-            update toUpdate;
-        }
     }
 
     /** Ghi pending (Case) lên master FEC_Address_Info__c sau Process Action. */
@@ -1352,6 +1334,9 @@ public without sharing class FEC_MainInfoController {
             addr.FEC_Number__c   = ai.NumberStr;
             addr.FEC_Street__c   = ai.Street;
             addr.FEC_ZipCode__c  = ai.ZipCode;
+            addr.FEC_Property_Status__c = ai.PropertyStatus;
+            addr.FEC_Years__c = ai.Years != null ? String.valueOf(ai.Years) : null;
+            addr.FEC_Months__c = ai.Months != null ? String.valueOf(ai.Months) : null;
 
             /* ===== WARD (Xã): không đồng bộ từ API GetAddressesList ===== */
             addr.FEC_Ward__c = null;
@@ -1794,7 +1779,9 @@ public without sharing class FEC_MainInfoController {
         );
         m.put('districtLabel', pendingDistrictLabelFromRow(row));
         m.put('cityLabel', pendingProvinceLabelFromRow(row));
-        m.put('isMailingAddress', row.FEC_Mailing_Address__c == true ? 'Y' : 'N');
+        m.put('propertyStatus', row.FEC_Property_Status__c);
+        m.put('years', blankToNullText(row.FEC_Years__c));
+        m.put('months', blankToNullText(row.FEC_Months__c));
         return JSON.serialize(m);
     }
 
@@ -1813,7 +1800,9 @@ public without sharing class FEC_MainInfoController {
                 FEC_Building__c,
                 FEC_Number__c,
                 FEC_Street__c,
-                FEC_Mailing_Address__c,
+                FEC_Property_Status__c,
+                FEC_Years__c,
+                FEC_Months__c,
                 FEC_District__r.FEC_Code__c,
                 FEC_District__r.FEC_Name_VN__c,
                 FEC_District__r.Name,
@@ -1854,6 +1843,69 @@ public without sharing class FEC_MainInfoController {
         }
     }
 
+    private class PendingPropertyFields {
+        String propertyStatus;
+        String years;
+        String months;
+    }
+
+    private static PendingPropertyFields resolvePendingPropertyFields(
+        String pendingAddressJson,
+        Id parentAddressInfoId
+    ) {
+        PendingPropertyFields out = new PendingPropertyFields();
+        if (String.isNotBlank(pendingAddressJson) && pendingAddressJson.trim().startsWith('{')) {
+            try {
+                Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(
+                    pendingAddressJson.trim()
+                );
+                if (data != null) {
+                    Object prop = data.get('propertyStatus');
+                    out.propertyStatus = prop != null ? String.valueOf(prop).trim() : null;
+                    out.years = parsePendingTextField(data.get('years'));
+                    out.months = parsePendingTextField(data.get('months'));
+                }
+            } catch (Exception e) {
+                // fallback parent
+            }
+        }
+        if (parentAddressInfoId != null) {
+            List<FEC_Address_Info__c> parents = [
+                SELECT FEC_Property_Status__c, FEC_Years__c, FEC_Months__c
+                FROM FEC_Address_Info__c
+                WHERE Id = :parentAddressInfoId
+                LIMIT 1
+            ];
+            if (!parents.isEmpty()) {
+                FEC_Address_Info__c parent = parents[0];
+                if (String.isBlank(out.propertyStatus)) {
+                    out.propertyStatus = parent.FEC_Property_Status__c;
+                }
+                if (String.isBlank(out.years)) {
+                    out.years = parent.FEC_Years__c;
+                }
+                if (String.isBlank(out.months)) {
+                    out.months = parent.FEC_Months__c;
+                }
+            }
+        }
+        return out;
+    }
+
+    private static String parsePendingTextField(Object raw) {
+        if (raw == null) {
+            return null;
+        }
+        return blankToNullText(String.valueOf(raw));
+    }
+
+    private static String blankToNullText(String val) {
+        if (String.isBlank(val)) {
+            return null;
+        }
+        return val.trim();
+    }
+
     /** Lưu địa chỉ pending (FEC_Case__c = Case); pendingAddressJson → FEC_Address__c. */
     @AuraEnabled
     public static void savePendingAddress(
@@ -1866,7 +1918,6 @@ public without sharing class FEC_MainInfoController {
         String street,
         String districtCode,
         String provinceCode,
-        Boolean isMailingAddress,
         String pendingAddressJson
     ) {
         if (caseId == null || String.isBlank(sfAddressType)) {
@@ -1929,6 +1980,10 @@ public without sharing class FEC_MainInfoController {
 
         String nameVal = sfAddressType.left(80);
         String addressJson = resolvePendingAddressJsonForStorage(pendingAddressJson);
+        PendingPropertyFields propertyFields = resolvePendingPropertyFields(
+            addressJson,
+            parentAddressInfoId
+        );
 
         if (!existing.isEmpty()) {
             FEC_Address_Info__c upd = new FEC_Address_Info__c(
@@ -1941,7 +1996,10 @@ public without sharing class FEC_MainInfoController {
                 FEC_District__c = distId,
                 FEC_Province__c = provId,
                 FEC_Country__c = countryId,
-                FEC_Mailing_Address__c = (isMailingAddress == true),
+                FEC_Property_Status__c = propertyFields.propertyStatus,
+                FEC_Years__c = propertyFields.years,
+                FEC_Months__c = propertyFields.months,
+                FEC_Mailing_Address__c = false,
                 FEC_Parent_Address__c = parentAddressInfoId,
                 FEC_Address__c = addressJson
             );
@@ -1961,7 +2019,10 @@ public without sharing class FEC_MainInfoController {
             FEC_District__c = distId,
             FEC_Province__c = provId,
             FEC_Country__c = countryId,
-            FEC_Mailing_Address__c = (isMailingAddress == true),
+            FEC_Property_Status__c = propertyFields.propertyStatus,
+            FEC_Years__c = propertyFields.years,
+            FEC_Months__c = propertyFields.months,
+            FEC_Mailing_Address__c = false,
             FEC_Parent_Address__c = parentAddressInfoId,
             FEC_Address__c = addressJson
         );
