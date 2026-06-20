@@ -264,67 +264,72 @@ public with sharing class FEC_UpdateCustomerAddress {
     List<FEC_Address_Info__c> sortedPending = sortPendingCaseAddresses(pendingRows);
 
     UpdateResult result;
-    for (FEC_Address_Info__c row : sortedPending) {
-      if (row == null || String.isBlank(row.FEC_Address_Type__c)) {
-        continue;
-      }
-      String addrStored = row.FEC_Address__c;
-      try {
-        if (String.isNotBlank(addrStored) && addrStored.trim().startsWith('{')) {
-          Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(addrStored);
-          result = updateCustomerAddressParams(
-            caseId,
-            row.FEC_Address_Type__c,
-            (String) data.get('cifNumber'),
-            (String) data.get('addressId'),
-            (String) data.get('addressType'),
-            (String) data.get('number_x'),
-            (String) data.get('building'),
-            (String) data.get('street'),
-            (String) data.get('district'),
-            (String) data.get('city'),
-            (String) data.get('propertyStatus'),
-            (String) data.get('years'),
-            (String) data.get('months'),
-            (String) data.get('isMailingAddress'),
-            (String) data.get('isPrimary'),
-            (String) data.get('receiveStatement'),
-            (String) data.get('cardDelivery')
-          );
-        } else {
-          List<String> meta = FEC_MainInfoController.unpackPendingAddressApiMeta(addrStored);
-          String districtCode = (row.FEC_District__r != null)
-            ? row.FEC_District__r.FEC_Code__c
-            : null;
-          String provinceCode = (row.FEC_Province__r != null)
-            ? row.FEC_Province__r.FEC_Code__c
-            : null;
-          result = updateCustomerAddressParams(
-            caseId,
-            row.FEC_Address_Type__c,
-            meta[0],
-            meta[1],
-            meta[2],
-            row.FEC_Number__c,
-            row.FEC_Building__c,
-            row.FEC_Street__c,
-            districtCode,
-            provinceCode,
-            '',
-            '',
-            '',
-            row.FEC_Mailing_Address__c == true ? 'Y' : 'N',
-            '',
-            '',
-            ''
-          );
+    FEC_CommonUltils.beginDeferredApiLogging();
+    try {
+      for (FEC_Address_Info__c row : sortedPending) {
+        if (row == null || String.isBlank(row.FEC_Address_Type__c)) {
+          continue;
         }
-      } finally {
-        logApiResponse();
+        String addrStored = row.FEC_Address__c;
+        try {
+          if (String.isNotBlank(addrStored) && addrStored.trim().startsWith('{')) {
+            Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(addrStored);
+            result = updateCustomerAddressParams(
+              caseId,
+              row.FEC_Address_Type__c,
+              (String) data.get('cifNumber'),
+              (String) data.get('addressId'),
+              (String) data.get('addressType'),
+              (String) data.get('number_x'),
+              (String) data.get('building'),
+              (String) data.get('street'),
+              (String) data.get('district'),
+              (String) data.get('city'),
+              (String) data.get('propertyStatus'),
+              (String) data.get('years'),
+              (String) data.get('months'),
+              (String) data.get('isMailingAddress'),
+              (String) data.get('isPrimary'),
+              (String) data.get('receiveStatement'),
+              (String) data.get('cardDelivery')
+            );
+          } else {
+            List<String> meta = FEC_MainInfoController.unpackPendingAddressApiMeta(addrStored);
+            String districtCode = (row.FEC_District__r != null)
+              ? row.FEC_District__r.FEC_Code__c
+              : null;
+            String provinceCode = (row.FEC_Province__r != null)
+              ? row.FEC_Province__r.FEC_Code__c
+              : null;
+            result = updateCustomerAddressParams(
+              caseId,
+              row.FEC_Address_Type__c,
+              meta[0],
+              meta[1],
+              meta[2],
+              row.FEC_Number__c,
+              row.FEC_Building__c,
+              row.FEC_Street__c,
+              districtCode,
+              provinceCode,
+              '',
+              '',
+              '',
+              row.FEC_Mailing_Address__c == true ? 'Y' : 'N',
+              '',
+              '',
+              ''
+            );
+          }
+        } finally {
+          logApiResponse();
+        }
+        if (result == null || result.success != true) {
+          break;
+        }
       }
-      if (result == null || result.success != true) {
-        break;
-      }
+    } finally {
+      FEC_CommonUltils.flushDeferredApiLogs();
     }
 
     if (result != null && result.success == true) {
