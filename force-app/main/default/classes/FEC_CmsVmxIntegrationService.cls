@@ -20,7 +20,7 @@ public without sharing class FEC_CmsVmxIntegrationService {
     /**
      * Invoked after LockUnlock, PIN Reissue, or Replace Card APIs return business success.
      * Dùng deferred logging để tránh lỗi "uncommitted work pending" khi có nhiều callout
-     * (fetchCurrentBlockCode + executeNonmonUpdate) trong cùng transaction.
+      * trong cùng transaction.
      */
     public static FEC_VmxNonmonUpdCallout.NonmonUpdResult onCmsOperationSuccess(Id caseId, String operationType) {
         return onCmsOperationSuccess(caseId, operationType, null);
@@ -36,7 +36,7 @@ public without sharing class FEC_CmsVmxIntegrationService {
 
     /**
      * Overload đầy đủ nhận cả newBlockCode và oldBlockCode từ caller.
-     * oldBlockCode: block code trước khi thao tác (dùng cho Unblock Card — sau khi unblock thì inquiry không còn BLK_CD).
+      * oldBlockCode: block code trước khi thao tác, giữ nguyên giá trị caller truyền vào.
      * newBlockCode: block code sau khi thao tác (dùng cho Block Card — giá trị user chọn).
      */
     public static FEC_VmxNonmonUpdCallout.NonmonUpdResult onCmsOperationSuccess(Id caseId, String operationType, String newBlockCode, String oldBlockCode) {
@@ -76,12 +76,7 @@ public without sharing class FEC_CmsVmxIntegrationService {
     private static FEC_VmxNonmonUpdCallout.NonmonUpdInput buildNonmonUpdInput(Id caseId, String operationType, String newBlockCode, String oldBlockCode) {
         Case caseRecord = loadCase(caseId);
 
-        // Nếu oldBlockCode không được truyền vào thì fallback gọi inquiry API.
-        // Với Block/Unblock Card, oldBlockCode luôn được truyền từ LWC nên không cần gọi API.
         String resolvedOldBlockCode = oldBlockCode;
-        if (resolvedOldBlockCode == null && requiresCurrentBlockCodeLookup(operationType)) {
-            resolvedOldBlockCode = fetchCurrentBlockCode(caseRecord);
-        }
 
         // Ưu tiên newBlockCode được truyền vào từ caller (giá trị thực tế từ LWC/params),
         // fallback về field trên Case nếu không có.
@@ -117,45 +112,6 @@ public without sharing class FEC_CmsVmxIntegrationService {
 
         String newBlk = normalizeMemoValue(newBlockCode);
         return 'Old Block Code = ' + oldBlk + ' New Block Code =' + newBlk;
-    }
-
-    @TestVisible
-    private static Boolean requiresCurrentBlockCodeLookup(String operationType) {
-        return OP_BLOCK_CARD.equals(operationType)
-            || OP_UNBLOCK_CARD.equals(operationType)
-            || OP_CARD_REPLACEMENT.equals(operationType);
-    }
-
-    @TestVisible
-    private static String fetchCurrentBlockCode(Case caseRecord) {
-        if (caseRecord == null || String.isBlank(caseRecord.FEC_Account_Number__c)) {
-            return null;
-        }
-
-        try {
-            FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper response = FEC_MCMSCARDTOCARDINQEMEA.callService(
-                FEC_CommonUltils.generateTransactionUUID(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA_CARD,
-                FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                FEC_ConstantCommon.REQUESTOR_ORG_EMEA_CARD,
-                caseRecord.FEC_Account_Number__c,
-                caseRecord.FEC_Customer_Name__c
-            );
-            return extractCurrentBlockCode(response, resolveCardLast4(caseRecord));
-        } catch (Exception ex) {
-            FEC_CommonUltils.logException(
-                'FEC_CmsVmxIntegrationService',
-                'fetchCurrentBlockCode',
-                ex.getMessage(),
-                ex.getStackTraceString()
-            );
-            return null;
-        } finally {
-            FEC_MCMSCARDTOCARDINQEMEA.logApiResponse();
-        }
     }
 
     @TestVisible
