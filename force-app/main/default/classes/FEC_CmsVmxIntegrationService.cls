@@ -23,13 +23,30 @@ public without sharing class FEC_CmsVmxIntegrationService {
      * (fetchCurrentBlockCode + executeNonmonUpdate) trong cùng transaction.
      */
     public static FEC_VmxNonmonUpdCallout.NonmonUpdResult onCmsOperationSuccess(Id caseId, String operationType) {
+        return onCmsOperationSuccess(caseId, operationType, null);
+    }
+
+    /**
+     * Overload nhận newBlockCode từ caller để tránh phụ thuộc vào DB (field chưa chắc đã được save).
+     * Dùng cho Block Card / Unblock Card khi blockCode được pass trực tiếp từ LWC params.
+     */
+    public static FEC_VmxNonmonUpdCallout.NonmonUpdResult onCmsOperationSuccess(Id caseId, String operationType, String newBlockCode) {
+        return onCmsOperationSuccess(caseId, operationType, newBlockCode, null);
+    }
+
+    /**
+     * Overload đầy đủ nhận cả newBlockCode và oldBlockCode từ caller.
+     * oldBlockCode: block code trước khi thao tác (dùng cho Unblock Card — sau khi unblock thì inquiry không còn BLK_CD).
+     * newBlockCode: block code sau khi thao tác (dùng cho Block Card — giá trị user chọn).
+     */
+    public static FEC_VmxNonmonUpdCallout.NonmonUpdResult onCmsOperationSuccess(Id caseId, String operationType, String newBlockCode, String oldBlockCode) {
         if (caseId == null || String.isBlank(operationType)) {
             return null;
         }
 
         FEC_CommonUltils.beginDeferredApiLogging();
         try {
-            FEC_VmxNonmonUpdCallout.NonmonUpdInput input = buildNonmonUpdInput(caseId, operationType);
+            FEC_VmxNonmonUpdCallout.NonmonUpdInput input = buildNonmonUpdInput(caseId, operationType, newBlockCode, oldBlockCode);
             return FEC_VmxNonmonUpdCallout.executeNonmonUpdate(input);
         } catch (Exception ex) {
             FEC_CommonUltils.logException(
@@ -47,15 +64,35 @@ public without sharing class FEC_CmsVmxIntegrationService {
 
     @TestVisible
     private static FEC_VmxNonmonUpdCallout.NonmonUpdInput buildNonmonUpdInput(Id caseId, String operationType) {
+        return buildNonmonUpdInput(caseId, operationType, null, null);
+    }
+
+    @TestVisible
+    private static FEC_VmxNonmonUpdCallout.NonmonUpdInput buildNonmonUpdInput(Id caseId, String operationType, String newBlockCode) {
+        return buildNonmonUpdInput(caseId, operationType, newBlockCode, null);
+    }
+
+    @TestVisible
+    private static FEC_VmxNonmonUpdCallout.NonmonUpdInput buildNonmonUpdInput(Id caseId, String operationType, String newBlockCode, String oldBlockCode) {
         Case caseRecord = loadCase(caseId);
-        String currentBlockCode = requiresCurrentBlockCodeLookup(operationType)
-            ? fetchCurrentBlockCode(caseRecord)
-            : null;
+
+        // Nếu oldBlockCode không được truyền vào thì fallback gọi inquiry API.
+        // Với Block/Unblock Card, oldBlockCode luôn được truyền từ LWC nên không cần gọi API.
+        String resolvedOldBlockCode = oldBlockCode;
+        if (resolvedOldBlockCode == null && requiresCurrentBlockCodeLookup(operationType)) {
+            resolvedOldBlockCode = fetchCurrentBlockCode(caseRecord);
+        }
+
+        // Ưu tiên newBlockCode được truyền vào từ caller (giá trị thực tế từ LWC/params),
+        // fallback về field trên Case nếu không có.
+        String resolvedNewBlockCode = String.isNotBlank(newBlockCode)
+            ? newBlockCode
+            : caseRecord.FEC_New_Block_Code__c;
 
         FEC_VmxNonmonUpdCallout.NonmonUpdInput input = FEC_VmxNonmonUpdCallout.buildDefaultInput();
         input.account = caseRecord.FEC_Account_Number__c;
         input.memo1 = buildMemo1(caseRecord.FEC_ID_Search__c, operationType);
-        input.memo2 = buildMemo2(operationType, caseRecord.FEC_New_Block_Code__c, currentBlockCode);
+        input.memo2 = buildMemo2(operationType, resolvedNewBlockCode, resolvedOldBlockCode);
         // TODO: map actionCode from operationType
         return input;
     }
