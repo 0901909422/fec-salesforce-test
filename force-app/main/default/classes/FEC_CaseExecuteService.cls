@@ -421,13 +421,17 @@ public without sharing class FEC_CaseExecuteService {
     
     try {
       FEC_CaseTriggerHandler.isSystemUpdate = true;
-      
-      update updateCase;
-      
+
       /*
        * Execute Case (không Assignment): queue/main queue → user.
-       * isSystemUpdate chặn trigger Change Owner trùng; ghi history tường minh (khớp buildRoutingActionHistoryRecord).
+       * registerSkip chặn trigger createRoutingActionHistoryOnOwnerChange; ghi history tường minh 1 lần.
        */
+      if (recordRoutingHistoryOnExecute) {
+        FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
+      }
+
+      update updateCase;
+
       if (recordRoutingHistoryOnExecute) {
         createRoutingActionHistory(caseId, oldOwnerId, userId);
       }
