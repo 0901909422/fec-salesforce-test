@@ -587,10 +587,11 @@ public without sharing class FEC_TransactionsController {
         TransactionDTO dto,
         FEC_VMXAUTHDETAILINQ.AuthTableRow auth
     ) {
-        String mfasEff = auth.EFF_DATE;
-        String vmxEff = String.isNotBlank(auth.EFF_DATE_AUTH_DETAIL)
+        String mfasEff = formatPendingEffDisplay(auth.EFF_DATE, auth.TRANS_TIME);
+        String vmxEffRaw = String.isNotBlank(auth.EFF_DATE_AUTH_DETAIL)
             ? auth.EFF_DATE_AUTH_DETAIL
             : auth.EFF_DATE;
+        String vmxEff = formatPendingEffDisplay(vmxEffRaw, auth.TRANS_TIME);
 
         dto.effectiveDateDualDisplay = dualDisplay(mfasEff, vmxEff);
         dto.transactionAmountDualDisplay = dualDisplay(
@@ -793,7 +794,7 @@ public without sharing class FEC_TransactionsController {
         if (String.isBlank(datePart)) {
             return null;
         }
-        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart;
+        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart + ' 00:00:00';
     }
 
     private static String formatOutstandingAuthPostDate(
@@ -806,6 +807,22 @@ public without sharing class FEC_TransactionsController {
         return postDate != null
             ? formatDateDdMmYyyy(postDate)
             : auth.POSTING_DATE;
+    }
+
+    /** Pending VMX: EFF_DATE (yyyyMMdd) + optional TIME (HHmmss); date-only → 00:00:00 */
+    private static String formatPendingEffDisplay(String effRaw, String transTimeRaw) {
+        if (String.isBlank(effRaw)) {
+            return null;
+        }
+        Date effDate = FEC_CommonUltils.parseDate(effRaw.trim());
+        String datePart = effDate != null
+            ? formatDateDdMmYyyy(effDate)
+            : effRaw.trim();
+        String timePart = formatHostTime(transTimeRaw);
+        if (String.isBlank(datePart)) {
+            return null;
+        }
+        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart + ' 00:00:00';
     }
 
     private static String formatDateDdMmYyyy(Date d) {
