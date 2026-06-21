@@ -2735,10 +2735,11 @@ public without sharing class FEC_CaseBusinessService {
           System.debug(OC_001);
         }
         when BLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', blockCode, BLOCK_CARD);
+          String currentBlockCode = (String)params.get('currentBlockCode');
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', blockCode, currentBlockCode, BLOCK_CARD);
         }
         when UNBLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', blockCode, UNBLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', blockCode, blockCode, UNBLOCK_CARD);
         }
         when PIN_REISSUE {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);

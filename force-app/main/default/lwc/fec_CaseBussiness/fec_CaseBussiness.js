@@ -5597,6 +5597,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         params = {
           caseId: this.recordId,
           blockCode: this.newBlockCode,
+          currentBlockCode: this.currentBlockCode,
         };
         break;
 

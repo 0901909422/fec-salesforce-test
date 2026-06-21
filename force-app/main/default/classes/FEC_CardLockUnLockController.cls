@@ -1,6 +1,6 @@
 public with sharing class FEC_CardLockUnLockController {
 
-    public static UpdateResult lockUnblockCard(String recordId, String funcCode, String blockCode, String method) {
+    public static UpdateResult lockUnblockCard(String recordId, String funcCode, String blockCode, String currentBlockCode, String method) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
         FEC_CommonUltils.beginDeferredApiLogging();
@@ -57,7 +57,11 @@ public with sharing class FEC_CardLockUnLockController {
                 String operationType = funcCode == 'B'
                     ? FEC_CmsVmxIntegrationService.OP_BLOCK_CARD
                     : FEC_CmsVmxIntegrationService.OP_UNBLOCK_CARD;
-                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(objCasse.Id, operationType);
+                // Block Card: blockCode = new block code, currentBlockCode = old block code từ LWC.
+                // Unblock Card: blockCode = current block code (= old block code), new block code = null.
+                String newBlockCodeForMemo = funcCode == 'B' ? blockCode : null;
+                String oldBlockCodeForMemo = funcCode == 'B' ? currentBlockCode : blockCode;
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(objCasse.Id, operationType, newBlockCodeForMemo, oldBlockCodeForMemo);
             }
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
