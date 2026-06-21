@@ -136,16 +136,22 @@ public without sharing class FEC_CaseManagerListService {
       return result;
     }
 
-    Map<Id, User> usersById = new Map<Id, User>([SELECT Id, ManagerId, IsActive FROM User WHERE Id IN :userIds]);
-    Map<Id, User> managerUsersById = loadManagerUsers(usersById.values());
+    // tungnm37: query UserRoleId instead of ManagerId to use role hierarchy
+    Map<Id, User> usersById = new Map<Id, User>([SELECT Id, UserRoleId, IsActive FROM User WHERE Id IN :userIds]);
+    // tungnm37: load all active users in ancestor roles
+    Map<Id, List<User>> usersByRoleId = loadActiveUsersByRoleId(usersById.values());
+    // tungnm37: load parent role map for hierarchy traversal
+    Map<Id, Id> parentRoleByRoleId = loadAncestorParentRoles(usersById.values());
 
     for (Id uid : userIds) {
       User u = usersById.get(uid);
-      if (u == null || u.ManagerId == null) {
+      // tungnm37: check UserRoleId instead of ManagerId
+      if (u == null || u.UserRoleId == null) {
         result.put(uid, null);
         continue;
       }
-      result.put(uid, composeManagerCsv(ancestorManagerIdsOrderedForUser(u.ManagerId, managerUsersById), managerUsersById));
+      // tungnm37: compose CSV from users in ancestor roles
+      result.put(uid, composeManagerCsv(ancestorRoleIdsOrderedForUser(u.UserRoleId, parentRoleByRoleId), usersByRoleId));
     }
 
     return result;
@@ -167,12 +173,13 @@ public without sharing class FEC_CaseManagerListService {
    * Nạp map RoleId → ParentRoleId cho mọi role trên các chuỗi ancestor xuất phát từ starterRoleIds.
    * Mỗi vòng chỉ một SOQL SELECT ... WHERE Id IN :frontier.
    */
-  private static Map<Id, User> loadManagerUsers(Iterable<User> starterUsers) {
-    Map<Id, User> managerUsersById = new Map<Id, User>();
+  // tungnm37: load ancestor parent role IDs from UserRole.ParentRoleId
+  private static Map<Id, Id> loadAncestorParentRoles(Iterable<User> starterUsers) {
+    Map<Id, Id> parentRoleByRoleId = new Map<Id, Id>();
     Set<Id> frontier = new Set<Id>();
     for (User u : starterUsers) {
-      if (u != null && u.ManagerId != null) {
-        frontier.add(u.ManagerId);
+      if (u != null && u.UserRoleId != null) {
+        frontier.add(u.UserRoleId);
       }
     }
 
@@ -193,28 +200,29 @@ public without sharing class FEC_CaseManagerListService {
         break;
       }
 
-      Map<Id, User> rowsById = new Map<Id, User>([SELECT Id, ManagerId, IsActive FROM User WHERE Id IN :toQuery]);
+      Map<Id, UserRole> rowsById = new Map<Id, UserRole>([SELECT Id, ParentRoleId FROM UserRole WHERE Id IN :toQuery]);
       frontier.clear();
       for (Id qid : toQuery) {
         visited.add(qid);
-        User managerUser = rowsById.get(qid);
-        if (managerUser == null) {
+        UserRole roleRow = rowsById.get(qid);
+        if (roleRow == null) {
           continue;
         }
-        managerUsersById.put(qid, managerUser);
-        if (managerUser.ManagerId != null && !visited.contains(managerUser.ManagerId)) {
-          frontier.add(managerUser.ManagerId);
+        parentRoleByRoleId.put(qid, roleRow.ParentRoleId);
+        if (roleRow.ParentRoleId != null && !visited.contains(roleRow.ParentRoleId)) {
+          frontier.add(roleRow.ParentRoleId);
         }
       }
     }
 
-    return managerUsersById;
+    return parentRoleByRoleId;
   }
 
   /** Thứ tự: role cha trực tiếp của Owner trước, rồi lần lượt lên trên — chỉ dùng map, không SOQL. */
-  private static List<Id> ancestorManagerIdsOrderedForUser(Id managerUserId, Map<Id, User> managerUsersById) {
-    List<Id> ancestorManagerIdsOrdered = new List<Id>();
-    Id cursor = managerUserId;
+  // tungnm37: traverse role hierarchy via ParentRoleId
+  private static List<Id> ancestorRoleIdsOrderedForUser(Id roleId, Map<Id, Id> parentRoleByRoleId) {
+    List<Id> ancestorRoleIdsOrdered = new List<Id>();
+    Id cursor = roleId;
     Set<Id> visited = new Set<Id>();
     Integer depth = 0;
 
@@ -223,27 +231,34 @@ public without sharing class FEC_CaseManagerListService {
         break;
       }
       visited.add(cursor);
-      ancestorManagerIdsOrdered.add(cursor);
-      User managerUser = managerUsersById.get(cursor);
-      cursor = managerUser == null ? null : managerUser.ManagerId;
+      cursor = parentRoleByRoleId.get(cursor);
+      if (cursor != null) {
+        ancestorRoleIdsOrdered.add(cursor);
+      }
       depth++;
     }
-    return ancestorManagerIdsOrdered;
+    return ancestorRoleIdsOrdered;
   }
 
   /** Ghép full CSV theo thứ tự từ role gần đến xa, không giới hạn độ dài. */
-  private static String composeManagerCsv(List<Id> ancestorManagerIdsOrdered, Map<Id, User> managerUsersById) {
+  // tungnm37: compose CSV from all active users in ancestor roles
+  private static String composeManagerCsv(List<Id> ancestorRoleIdsOrdered, Map<Id, List<User>> usersByRoleId) {
     List<String> orderedManagerIds = new List<String>();
     Set<Id> seenUserIds = new Set<Id>();
 
-    for (Id managerUserId : ancestorManagerIdsOrdered) {
-      User managerUser = managerUsersById.get(managerUserId);
-      if (managerUser == null || !managerUser.IsActive) {
+    for (Id roleId : ancestorRoleIdsOrdered) {
+      List<User> usersInRole = usersByRoleId.get(roleId);
+      if (usersInRole == null || usersInRole.isEmpty()) {
         continue;
       }
-      if (!seenUserIds.contains(managerUserId)) {
-        seenUserIds.add(managerUserId);
-        orderedManagerIds.add(String.valueOf(managerUserId));
+      for (User userInRole : usersInRole) {
+        if (userInRole == null || !userInRole.IsActive) {
+          continue;
+        }
+        if (!seenUserIds.contains(userInRole.Id)) {
+          seenUserIds.add(userInRole.Id);
+          orderedManagerIds.add(String.valueOf(userInRole.Id));
+        }
       }
     }
 
@@ -404,5 +419,58 @@ public without sharing class FEC_CaseManagerListService {
       return null;
     }
     return String.join(orderedManagerIds, CSV_DELIMITER);
+  }
+
+  // tungnm37: load active users for all ancestor roles in role hierarchy
+  private static Map<Id, List<User>> loadActiveUsersByRoleId(Iterable<User> starterUsers) {
+    Set<Id> allAncestorRoleIds = new Set<Id>();
+    Set<Id> frontier = new Set<Id>();
+    for (User u : starterUsers) {
+      if (u != null && u.UserRoleId != null) {
+        allAncestorRoleIds.add(u.UserRoleId);
+        frontier.add(u.UserRoleId);
+      }
+    }
+
+    Set<Id> visited = new Set<Id>();
+    Integer depthGuard = 0;
+    while (!frontier.isEmpty() && depthGuard < MAX_ROLE_HIERARCHY_DEPTH) {
+      depthGuard++;
+      Set<Id> toQuery = new Set<Id>();
+      for (Id rid : frontier) {
+        if (!visited.contains(rid)) {
+          toQuery.add(rid);
+        }
+      }
+      if (toQuery.isEmpty()) {
+        break;
+      }
+      for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole WHERE Id IN :toQuery]) {
+        visited.add(ur.Id);
+        if (ur.ParentRoleId != null && !allAncestorRoleIds.contains(ur.ParentRoleId)) {
+          allAncestorRoleIds.add(ur.ParentRoleId);
+          frontier.add(ur.ParentRoleId);
+        }
+      }
+    }
+
+    Map<Id, List<User>> usersByRoleId = new Map<Id, List<User>>();
+    if (allAncestorRoleIds.isEmpty()) {
+      return usersByRoleId;
+    }
+
+    for (User usr : [
+      SELECT Id, UserRoleId, IsActive
+      FROM User
+      WHERE IsActive = TRUE AND UserRoleId IN :allAncestorRoleIds
+      ORDER BY LastName ASC, Name ASC, Id ASC
+    ]) {
+      if (!usersByRoleId.containsKey(usr.UserRoleId)) {
+        usersByRoleId.put(usr.UserRoleId, new List<User>());
+      }
+      usersByRoleId.get(usr.UserRoleId).add(usr);
+    }
+
+    return usersByRoleId;
   }
 }
