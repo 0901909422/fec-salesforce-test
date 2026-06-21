@@ -465,6 +465,12 @@ public without sharing class FEC_CardClosureRefundController {
             FEC_CardLockUnLockCallout.logApiResponse();
 
             applyCardLockApiResponse(dto, response, transId, true);
+            if (dto.success == true) {
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    ctx.caseId,
+                    FEC_CmsVmxIntegrationService.OP_BLOCK_CARD
+                );
+            }
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
@@ -554,6 +560,12 @@ public without sharing class FEC_CardClosureRefundController {
             FEC_CardLockUnLockCallout.logApiResponse();
 
             applyCardLockApiResponse(dto, response, transId, false);
+            if (dto.success == true) {
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    ctx.caseId,
+                    FEC_CmsVmxIntegrationService.OP_UNBLOCK_CARD
+                );
+            }
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Unlock_Failed;

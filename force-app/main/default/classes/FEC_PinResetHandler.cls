@@ -76,6 +76,10 @@ public without sharing class FEC_PinResetHandler {
             Boolean isSuccess = response.RespCode == '0';
             
             if (isSuccess) {
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    selectedCase.Id,
+                    FEC_CmsVmxIntegrationService.OP_PIN_RESET
+                );
                 selectedCase.FEC_Is_PIN_Reset_Success__c = true;
                 if (count > 0) {
                     selectedCase.FEC_Process_Action_Count__c = count - 1;

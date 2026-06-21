@@ -306,6 +306,10 @@ public without sharing class FEC_CardReplacementAddressController {
             if (FEC_ReplacementCardCallout.isSuccess(response)) {
                 result.success = true;
                 objCasse.FEC_Process_Action_Count__c = -1;
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    objCasse.Id,
+                    FEC_CmsVmxIntegrationService.OP_CARD_REPLACEMENT
+                );
             } else {
                 result.success = false;
                 if (objCasse.FEC_Process_Action_Count__c == null) {
