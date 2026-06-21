@@ -278,6 +278,7 @@ public without sharing class FEC_CardReplacementAddressController {
     public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, String replacementFee) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             objCasse = [
                 SELECT Id,
@@ -301,8 +302,7 @@ public without sharing class FEC_CardReplacementAddressController {
                 replacementFeeFlag,
                 objCasse.FEC_Account_Number__c
             );
-            FEC_ReplacementCardCallout.logApiResponse();
-            
+
             if (FEC_ReplacementCardCallout.isSuccess(response)) {
                 result.success = true;
                 objCasse.FEC_Process_Action_Count__c = -1;
@@ -330,6 +330,8 @@ public without sharing class FEC_CardReplacementAddressController {
                 ex.getStackTraceString()
             );
         } finally {
+            FEC_ReplacementCardCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
             FEC_CommonUltils.createProcessActionHistory(
                 method,
                 objCasse,
