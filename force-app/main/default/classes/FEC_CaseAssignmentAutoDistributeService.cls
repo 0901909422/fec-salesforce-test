@@ -1106,7 +1106,6 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 }
                 caseUpdate.FEC_Recently_Auto_Case_Assignment__c = configAssignmentId;
                 caseUpdate.OwnerId = target.assignedUserId;
-                FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(target.caseRecord.Id);
                 appliedCount++;
             } else if (target.assignmentRecordId != null) {
                 assignmentUpdates.add(
