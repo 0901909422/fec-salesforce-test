@@ -45,19 +45,11 @@ public without sharing class FEC_CaseManagerListService {
         continue;
       }
       if (c.OwnerId.getSObjectType() != User.SObjectType) {
-        toUpdate.add(
-          new Case(Id = c.Id, FEC_Manager_ID_List__c = null, FEC_Manager_ID_List_2__c = null)
-        );
+        toUpdate.add(new Case(Id = c.Id, FEC_Manager_ID_List__c = null, FEC_Manager_ID_List_2__c = null));
       } else {
         String fullCsv = csvByOwner.containsKey(c.OwnerId) ? csvByOwner.get(c.OwnerId) : null;
         List<String> chunks = splitManagerCsv(fullCsv);
-        toUpdate.add(
-          new Case(
-            Id = c.Id,
-            FEC_Manager_ID_List__c = chunks[0],
-            FEC_Manager_ID_List_2__c = chunks[1]
-          )
-        );
+        toUpdate.add(new Case(Id = c.Id, FEC_Manager_ID_List__c = chunks[0], FEC_Manager_ID_List_2__c = chunks[1]));
       }
     }
 
@@ -89,9 +81,7 @@ public without sharing class FEC_CaseManagerListService {
    * Gọi từ FEC_RoutingActionHistoryTrigger (after insert RAH): đồng bộ lại FEC_Manager_ID_List__c
    * theo Owner hiện tại của Case (sau khi insert history có thể đã đổi owner trong cùng transaction).
    */
-  public static void applyAfterRoutingHistoryInsert(
-    List<FEC_Routing_Action_History__c> newRecords
-  ) {
+  public static void applyAfterRoutingHistoryInsert(List<FEC_Routing_Action_History__c> newRecords) {
     if (newRecords == null || newRecords.isEmpty()) {
       return;
     }
@@ -114,11 +104,7 @@ public without sharing class FEC_CaseManagerListService {
     if (pendingCaseIds.isEmpty()) {
       return;
     }
-    List<Case> cases = [
-      SELECT Id, OwnerId
-      FROM Case
-      WHERE Id IN :pendingCaseIds
-    ];
+    List<Case> cases = [SELECT Id, OwnerId FROM Case WHERE Id IN :pendingCaseIds];
     syncFromOwnerCases(cases, null);
     // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
     txnManagerListSyncedCaseIds.addAll(pendingCaseIds);
@@ -150,58 +136,22 @@ public without sharing class FEC_CaseManagerListService {
       return result;
     }
 
-    Map<Id, User> usersById = new Map<Id, User>(
-      [SELECT Id, UserRoleId FROM User WHERE Id IN :userIds]
-    );
-
-    Set<Id> starterRoleIds = new Set<Id>();
-    for (User u : usersById.values()) {
-      if (u.UserRoleId != null) {
-        starterRoleIds.add(u.UserRoleId);
-      }
-    }
-
-    Map<Id, Id> roleIdToParentId = loadRoleHierarchyParentMap(starterRoleIds);
-
-    Set<Id> allAncestorRoleIds = new Set<Id>();
-    Map<Id, List<Id>> userIdToAncestorRoles = new Map<Id, List<Id>>();
+    // tungnm37: query UserRoleId instead of ManagerId to use role hierarchy
+    Map<Id, User> usersById = new Map<Id, User>([SELECT Id, UserRoleId, IsActive FROM User WHERE Id IN :userIds]);
+    // tungnm37: load all active users in ancestor roles
+    Map<Id, List<User>> usersByRoleId = loadActiveUsersByRoleId(usersById.values());
+    // tungnm37: load parent role map for hierarchy traversal
+    Map<Id, Id> parentRoleByRoleId = loadAncestorParentRoles(usersById.values());
 
     for (Id uid : userIds) {
       User u = usersById.get(uid);
+      // tungnm37: check UserRoleId instead of ManagerId
       if (u == null || u.UserRoleId == null) {
-        continue;
-      }
-      List<Id> anc = ancestorRoleIdsOrderedForRole(u.UserRoleId, roleIdToParentId);
-      userIdToAncestorRoles.put(uid, anc);
-      allAncestorRoleIds.addAll(anc);
-    }
-
-    if (allAncestorRoleIds.isEmpty()) {
-      return result;
-    }
-
-    Map<Id, List<Id>> roleIdToUserIds = new Map<Id, List<Id>>();
-    for (Id rid : allAncestorRoleIds) {
-      roleIdToUserIds.put(rid, new List<Id>());
-    }
-
-    for (User u : [
-      SELECT Id, UserRoleId
-      FROM User
-      WHERE UserRoleId IN :allAncestorRoleIds AND IsActive = TRUE
-    ]) {
-      if (roleIdToUserIds.containsKey(u.UserRoleId)) {
-        roleIdToUserIds.get(u.UserRoleId).add(u.Id);
-      }
-    }
-
-    for (Id uid : userIds) {
-      List<Id> ancestorRoleIdsOrdered = userIdToAncestorRoles.get(uid);
-      if (ancestorRoleIdsOrdered == null || ancestorRoleIdsOrdered.isEmpty()) {
         result.put(uid, null);
         continue;
       }
-      result.put(uid, composeManagerCsv(ancestorRoleIdsOrdered, roleIdToUserIds));
+      // tungnm37: compose CSV from users in ancestor roles
+      result.put(uid, composeManagerCsv(ancestorRoleIdsOrderedForUser(u.UserRoleId, parentRoleByRoleId), usersByRoleId));
     }
 
     return result;
@@ -223,13 +173,16 @@ public without sharing class FEC_CaseManagerListService {
    * Nạp map RoleId → ParentRoleId cho mọi role trên các chuỗi ancestor xuất phát từ starterRoleIds.
    * Mỗi vòng chỉ một SOQL SELECT ... WHERE Id IN :frontier.
    */
-  private static Map<Id, Id> loadRoleHierarchyParentMap(Set<Id> startingRoleIds) {
-    Map<Id, Id> roleIdToParentId = new Map<Id, Id>();
-    if (startingRoleIds == null || startingRoleIds.isEmpty()) {
-      return roleIdToParentId;
+  // tungnm37: load ancestor parent role IDs from UserRole.ParentRoleId
+  private static Map<Id, Id> loadAncestorParentRoles(Iterable<User> starterUsers) {
+    Map<Id, Id> parentRoleByRoleId = new Map<Id, Id>();
+    Set<Id> frontier = new Set<Id>();
+    for (User u : starterUsers) {
+      if (u != null && u.UserRoleId != null) {
+        frontier.add(u.UserRoleId);
+      }
     }
 
-    Set<Id> frontier = new Set<Id>(startingRoleIds);
     Set<Id> visited = new Set<Id>();
     Integer depthGuard = 0;
 
@@ -237,9 +190,9 @@ public without sharing class FEC_CaseManagerListService {
       depthGuard++;
 
       Set<Id> toQuery = new Set<Id>();
-      for (Id rid : frontier) {
-        if (!visited.contains(rid)) {
-          toQuery.add(rid);
+      for (Id uid : frontier) {
+        if (!visited.contains(uid)) {
+          toQuery.add(uid);
         }
       }
 
@@ -247,77 +200,64 @@ public without sharing class FEC_CaseManagerListService {
         break;
       }
 
-      Map<Id, UserRole> rowsById = new Map<Id, UserRole>(
-        [SELECT Id, ParentRoleId FROM UserRole WHERE Id IN :toQuery]
-      );
-
+      Map<Id, UserRole> rowsById = new Map<Id, UserRole>([SELECT Id, ParentRoleId FROM UserRole WHERE Id IN :toQuery]);
       frontier.clear();
       for (Id qid : toQuery) {
         visited.add(qid);
-        UserRole ur = rowsById.get(qid);
-        Id parentId = ur == null ? null : ur.ParentRoleId;
-        roleIdToParentId.put(qid, parentId);
-        if (parentId != null && !visited.contains(parentId)) {
-          frontier.add(parentId);
+        UserRole roleRow = rowsById.get(qid);
+        if (roleRow == null) {
+          continue;
+        }
+        parentRoleByRoleId.put(qid, roleRow.ParentRoleId);
+        if (roleRow.ParentRoleId != null && !visited.contains(roleRow.ParentRoleId)) {
+          frontier.add(roleRow.ParentRoleId);
         }
       }
     }
 
-    return roleIdToParentId;
+    return parentRoleByRoleId;
   }
 
   /** Thứ tự: role cha trực tiếp của Owner trước, rồi lần lượt lên trên — chỉ dùng map, không SOQL. */
-  private static List<Id> ancestorRoleIdsOrderedForRole(
-    Id ownerRoleId,
-    Map<Id, Id> roleIdToParentId
-  ) {
+  // tungnm37: traverse role hierarchy via ParentRoleId
+  private static List<Id> ancestorRoleIdsOrderedForUser(Id roleId, Map<Id, Id> parentRoleByRoleId) {
     List<Id> ancestorRoleIdsOrdered = new List<Id>();
-    Id cursor = ownerRoleId;
+    Id cursor = roleId;
     Set<Id> visited = new Set<Id>();
     Integer depth = 0;
 
     while (cursor != null && depth < MAX_ROLE_HIERARCHY_DEPTH) {
-      if (!roleIdToParentId.containsKey(cursor)) {
+      if (visited.contains(cursor)) {
         break;
       }
-      Id parentRoleId = roleIdToParentId.get(cursor);
-      if (parentRoleId == null) {
-        break;
+      visited.add(cursor);
+      cursor = parentRoleByRoleId.get(cursor);
+      if (cursor != null) {
+        ancestorRoleIdsOrdered.add(cursor);
       }
-      if (visited.contains(parentRoleId)) {
-        break;
-      }
-      visited.add(parentRoleId);
-      ancestorRoleIdsOrdered.add(parentRoleId);
-      cursor = parentRoleId;
       depth++;
     }
     return ancestorRoleIdsOrdered;
   }
 
   /** Ghép full CSV theo thứ tự từ role gần đến xa, không giới hạn độ dài. */
-  private static String composeManagerCsv(
-    List<Id> ancestorRoleIdsOrdered,
-    Map<Id, List<Id>> roleIdToUserIds
-  ) {
+  // tungnm37: compose CSV from all active users in ancestor roles
+  private static String composeManagerCsv(List<Id> ancestorRoleIdsOrdered, Map<Id, List<User>> usersByRoleId) {
     List<String> orderedManagerIds = new List<String>();
     Set<Id> seenUserIds = new Set<Id>();
 
-    for (Id rid : ancestorRoleIdsOrdered) {
-      List<Id> idsForRole = roleIdToUserIds.get(rid);
-      if (idsForRole == null || idsForRole.isEmpty()) {
+    for (Id roleId : ancestorRoleIdsOrdered) {
+      List<User> usersInRole = usersByRoleId.get(roleId);
+      if (usersInRole == null || usersInRole.isEmpty()) {
         continue;
       }
-      List<String> sortKeys = new List<String>();
-      for (Id uid : idsForRole) {
-        sortKeys.add(String.valueOf(uid));
-      }
-      sortKeys.sort();
-      for (String key : sortKeys) {
-        Id uid = (Id) key;
-        if (!seenUserIds.contains(uid)) {
-          seenUserIds.add(uid);
-          orderedManagerIds.add(key);
+      for (User userInRole : usersInRole) {
+        if (userInRole == null || !userInRole.IsActive) {
+          continue;
+        }
+        if (!seenUserIds.contains(userInRole.Id)) {
+          seenUserIds.add(userInRole.Id);
+          orderedManagerIds.add(String.valueOf(userInRole.Id));
         }
       }
     }
@@ -378,5 +318,158 @@ public without sharing class FEC_CaseManagerListService {
     }
     List<Case> cases = [SELECT Id, OwnerId FROM Case WHERE Id IN :caseIds];
     syncFromOwnerCases(cases, null);
+  }
+
+  //tungnm37 sync manager list tu assignment owner len case theo design My Team
+  public static void syncAssignmentManagerListByCaseIds(Set<Id> caseIds) {
+    if (caseIds == null || caseIds.isEmpty()) {
+      return;
+    }
+
+    List<FEC_Assignment__c> assignments = [
+      SELECT Id, FEC_Case__c, FEC_Assignment_Owner__c, FEC_Assignment_Type__c,
+             FEC_Assignment_Status__c, FEC_Manager_ID_List__c
+      FROM FEC_Assignment__c
+      WHERE FEC_Case__c IN :caseIds
+      ORDER BY CreatedDate, Id
+    ];
+
+    Set<Id> assignmentOwnerIds = new Set<Id>();
+    for (FEC_Assignment__c assignment : assignments) {
+      if (assignment.FEC_Assignment_Owner__c != null) {
+        assignmentOwnerIds.add(assignment.FEC_Assignment_Owner__c);
+      }
+    }
+
+    Map<Id, String> csvByOwner = buildManagerCsvForUserIds(assignmentOwnerIds);
+    List<FEC_Assignment__c> assignmentUpdates = new List<FEC_Assignment__c>();
+    Map<Id, List<String>> caseIdToManagerIds = new Map<Id, List<String>>();
+    Map<Id, Set<String>> caseIdToSeenManagerIds = new Map<Id, Set<String>>();
+
+    for (Id caseId : caseIds) {
+      caseIdToManagerIds.put(caseId, new List<String>());
+      caseIdToSeenManagerIds.put(caseId, new Set<String>());
+    }
+
+    for (FEC_Assignment__c assignment : assignments) {
+      String assignmentManagerCsv = assignment.FEC_Assignment_Owner__c == null ? null : csvByOwner.get(assignment.FEC_Assignment_Owner__c);
+
+      if (assignment.FEC_Manager_ID_List__c != assignmentManagerCsv) {
+        assignmentUpdates.add(new FEC_Assignment__c(Id = assignment.Id, FEC_Manager_ID_List__c = assignmentManagerCsv));
+      }
+
+      if (!shouldIncludeAssignmentManagerList(assignment, assignmentManagerCsv)) {
+        continue;
+      }
+
+      //tungnm37 rollup full assignment manager list len case de split sang field _2 khi vuot 255 ky tu
+      for (String managerId : assignmentManagerCsv.split(CSV_DELIMITER)) {
+        if (!caseIdToSeenManagerIds.get(assignment.FEC_Case__c).contains(managerId)) {
+          caseIdToSeenManagerIds.get(assignment.FEC_Case__c).add(managerId);
+          caseIdToManagerIds.get(assignment.FEC_Case__c).add(managerId);
+        }
+      }
+    }
+    if (!assignmentUpdates.isEmpty()) {
+      Database.update(assignmentUpdates, AccessLevel.SYSTEM_MODE);
+    }
+
+    List<Case> caseUpdates = new List<Case>();
+    for (Id caseId : caseIds) {
+      String fullCsv = composeLongTextManagerCsv(caseIdToManagerIds.get(caseId));
+      List<String> assignmentManagerChunks = splitManagerCsv(fullCsv);
+      caseUpdates.add(new Case(
+        Id = caseId,
+        FEC_Assignment_Manager_ID_List__c = assignmentManagerChunks[0],
+        FEC_Assignment_Manager_ID_List_2__c = assignmentManagerChunks[1]
+      ));
+    }
+
+    if (!caseUpdates.isEmpty()) {
+      Boolean priorSystem = FEC_CaseTriggerHandler.isSystemUpdate;
+      FEC_CaseTriggerHandler.isSystemUpdate = true;
+      try {
+        Database.update(caseUpdates, AccessLevel.SYSTEM_MODE);
+      } finally {
+        FEC_CaseTriggerHandler.isSystemUpdate = priorSystem;
+      }
+    }
+  }
+
+  //tungnm37 chi lay routing assignment chua dong theo design
+  private static Boolean shouldIncludeAssignmentManagerList(FEC_Assignment__c assignment, String helperCsv) {
+    if (assignment == null || String.isBlank(helperCsv)) {
+      return false;
+    }
+    if (assignment.FEC_Assignment_Type__c != 'Routing') {
+      return false;
+    }
+
+    String statusValue = assignment.FEC_Assignment_Status__c;
+    if (statusValue == 'AutoRecalled' || statusValue == 'Completed' || statusValue == 'AutoCompleted') {
+      return false;
+    }
+    return statusValue == null || !statusValue.startsWith('Resolved');
+  }
+
+  //tungnm37 long text field luu full manager list khong cat bot
+  private static String composeLongTextManagerCsv(List<String> orderedManagerIds) {
+    if (orderedManagerIds == null || orderedManagerIds.isEmpty()) {
+      return null;
+    }
+    return String.join(orderedManagerIds, CSV_DELIMITER);
+  }
+
+  // tungnm37: load active users for all ancestor roles in role hierarchy
+  private static Map<Id, List<User>> loadActiveUsersByRoleId(Iterable<User> starterUsers) {
+    Set<Id> allAncestorRoleIds = new Set<Id>();
+    Set<Id> frontier = new Set<Id>();
+    for (User u : starterUsers) {
+      if (u != null && u.UserRoleId != null) {
+        allAncestorRoleIds.add(u.UserRoleId);
+        frontier.add(u.UserRoleId);
+      }
+    }
+
+    Set<Id> visited = new Set<Id>();
+    Integer depthGuard = 0;
+    while (!frontier.isEmpty() && depthGuard < MAX_ROLE_HIERARCHY_DEPTH) {
+      depthGuard++;
+      Set<Id> toQuery = new Set<Id>();
+      for (Id rid : frontier) {
+        if (!visited.contains(rid)) {
+          toQuery.add(rid);
+        }
+      }
+      if (toQuery.isEmpty()) {
+        break;
+      }
+      for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole WHERE Id IN :toQuery]) {
+        visited.add(ur.Id);
+        if (ur.ParentRoleId != null && !allAncestorRoleIds.contains(ur.ParentRoleId)) {
+          allAncestorRoleIds.add(ur.ParentRoleId);
+          frontier.add(ur.ParentRoleId);
+        }
+      }
+    }
+
+    Map<Id, List<User>> usersByRoleId = new Map<Id, List<User>>();
+    if (allAncestorRoleIds.isEmpty()) {
+      return usersByRoleId;
+    }
+
+    for (User usr : [
+      SELECT Id, UserRoleId, IsActive
+      FROM User
+      WHERE IsActive = TRUE AND UserRoleId IN :allAncestorRoleIds
+      ORDER BY LastName ASC, Name ASC, Id ASC
+    ]) {
+      if (!usersByRoleId.containsKey(usr.UserRoleId)) {
+        usersByRoleId.put(usr.UserRoleId, new List<User>());
+      }
+      usersByRoleId.get(usr.UserRoleId).add(usr);
+    }
+
+    return usersByRoleId;
   }
 }

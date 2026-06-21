@@ -191,7 +191,7 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
                 return;
             }
 
-            await takeOwnership({ caseId });
+            await takeOwnership({ caseId, queueId: this.selectedQueue });
 
             this.newCaseId = caseId;              
             await this.handleClose(); 
@@ -200,7 +200,6 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
             this.toastError(this, error);
         }
     }
-
 
     showToast(component, { title, message, variant = 'info', mode = 'dismissible' }) {
         component.dispatchEvent(new ShowToastEvent({ title, message, variant, mode }));

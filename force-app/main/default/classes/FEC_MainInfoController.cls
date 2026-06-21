@@ -585,7 +585,12 @@ public without sharing class FEC_MainInfoController {
         PicklistOptionDTO extra = new PicklistOptionDTO();
         extra.value = rows[0].FEC_Code__c;
         extra.label = lbl;
-        opts.add(0, extra);
+        // Apex: add(0, x) on empty list throws List index out of bounds: 0 — use add(x) when empty.
+        if (opts.isEmpty()) {
+            opts.add(extra);
+        } else {
+            opts.add(0, extra);
+        }
     }
 
     @AuraEnabled
