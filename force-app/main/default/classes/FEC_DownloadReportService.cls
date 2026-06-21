@@ -15,7 +15,7 @@ public without sharing class FEC_DownloadReportService {
     public static void generateDailyReports() {
 
         String baseUrl = URL.getOrgDomainUrl().toExternalForm();
-        String today   = Date.today().format();
+        String today   = Date.today().addDays(-1).format();
 
         for (Map<String, String> config : FEC_ConstantCommon.REPORT_CONFIGS) {
 
