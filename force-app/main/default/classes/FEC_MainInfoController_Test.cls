@@ -394,6 +394,7 @@ private class FEC_MainInfoController_Test {
         hist.FEC_API_Cache__c = JSON.serialize(cached);
         update hist;
 
+        Test.setMock(HttpCalloutMock.class, new MainInfoHttpCalloutMock());
         Test.startTest();
         FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
         Test.stopTest();
@@ -727,6 +728,7 @@ private class FEC_MainInfoController_Test {
         hist.FEC_API_Cache__c = JSON.serialize(cached);
         update hist;
 
+        Test.setMock(HttpCalloutMock.class, new MainInfoHttpCalloutMock());
         Test.startTest();
         FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
         Test.stopTest();
@@ -1722,5 +1724,197 @@ private class FEC_MainInfoController_Test {
             );
             return res;
         }
+    }
+
+    @IsTest
+    static void testSaveCaseSelectedAddressInfo() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Address_Info__c master = new FEC_Address_Info__c(
+            FEC_Customer_History__c = c.FEC_Account_or_Contract__c,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Street__c = 'Master St'
+        );
+        insert master;
+
+        Test.startTest();
+        FEC_MainInfoController.saveCaseSelectedAddressInfo(c.Id, master.Id);
+        FEC_MainInfoController.saveCaseSelectedAddressInfo(c.Id, null);
+        Test.stopTest();
+
+        Case updated = [
+            SELECT FEC_Selected_Address_Info__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+        System.assertEquals(null, updated.FEC_Selected_Address_Info__c);
+
+        Boolean nullCaseThrown = false;
+        Boolean invalidMasterThrown = false;
+        try {
+            FEC_MainInfoController.saveCaseSelectedAddressInfo(null, master.Id);
+        } catch (AuraHandledException e) {
+            nullCaseThrown = true;
+        }
+        try {
+            FEC_MainInfoController.saveCaseSelectedAddressInfo(c.Id, UserInfo.getUserId());
+        } catch (AuraHandledException e) {
+            invalidMasterThrown = true;
+        }
+        System.assertEquals(true, nullCaseThrown);
+        System.assertEquals(true, invalidMasterThrown);
+    }
+
+    @IsTest
+    static void testInitializeCasePendingAddressesFromMasters() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        Id chId = c.FEC_Account_or_Contract__c;
+
+        System.assertEquals(0, FEC_MainInfoController.initializeCasePendingAddressesFromMasters(null));
+
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = chId,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Building__c = 'B1',
+            FEC_Number__c = '1',
+            FEC_Street__c = 'Perm St'
+        );
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = chId,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
+            FEC_Building__c = 'B2',
+            FEC_Number__c = '2',
+            FEC_Street__c = 'Office St'
+        );
+
+        Test.startTest();
+        Integer created = FEC_MainInfoController.initializeCasePendingAddressesFromMasters(c.Id);
+        Integer secondRun = FEC_MainInfoController.initializeCasePendingAddressesFromMasters(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(2, created);
+        System.assertEquals(0, secondRun);
+        System.assertEquals(
+            2,
+            [SELECT COUNT() FROM FEC_Address_Info__c WHERE FEC_Case__c = :c.Id]
+        );
+    }
+
+    @IsTest
+    static void testPersistCaseUpdatedInfoAddressForType() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+
+        Test.startTest();
+        FEC_MainInfoController.persistCaseUpdatedInfoAddressForType(
+            c.Id,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            'Updated Permanent'
+        );
+        FEC_MainInfoController.persistCaseUpdatedInfoAddressForType(
+            c.Id,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
+            'Updated Office'
+        );
+        FEC_MainInfoController.persistCaseUpdatedInfoAddressForType(
+            c.Id,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+            'Updated Current'
+        );
+        FEC_MainInfoController.persistCaseUpdatedInfoAddressForType(null, 'Bad', 'X');
+        Test.stopTest();
+
+        Case updated = [
+            SELECT
+                FEC_Updated_Info_Permanent_Address__c,
+                FEC_Updated_Info_Office_Address__c,
+                FEC_Updated_Info_Current_Address__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+        System.assertEquals('Updated Permanent', updated.FEC_Updated_Info_Permanent_Address__c);
+        System.assertEquals('Updated Office', updated.FEC_Updated_Info_Office_Address__c);
+        System.assertEquals('Updated Current', updated.FEC_Updated_Info_Current_Address__c);
+    }
+
+    @IsTest
+    static void testAppendSelectedDistrictOptionIfMissing() {
+        FEC_Country__c country1 = new FEC_Country__c(Name = 'Legacy', FEC_Code__c = '1');
+        insert country1;
+        insert new FEC_District__c(
+            Name = 'Legacy Ward',
+            FEC_Code__c = 'LEG780',
+            FEC_Name_VN__c = 'Phường Legacy',
+            FEC_Country__c = country1.Id
+        );
+
+        List<FEC_MainInfoController.PicklistOptionDTO> opts =
+            new List<FEC_MainInfoController.PicklistOptionDTO>();
+        FEC_MainInfoController.PicklistOptionDTO existing =
+            new FEC_MainInfoController.PicklistOptionDTO();
+        existing.value = 'OTHER';
+        existing.label = 'Other Ward';
+        opts.add(existing);
+
+        Test.startTest();
+        FEC_MainInfoController.appendSelectedDistrictOptionIfMissing(opts, 'LEG780');
+        FEC_MainInfoController.appendSelectedDistrictOptionIfMissing(opts, 'LEG780');
+        FEC_MainInfoController.appendSelectedDistrictOptionIfMissing(null, 'X');
+        FEC_MainInfoController.appendSelectedDistrictOptionIfMissing(opts, null);
+        Test.stopTest();
+
+        System.assertEquals(2, opts.size());
+        System.assertEquals('LEG780', opts[0].value);
+        System.assertEquals('Phường Legacy', opts[0].label);
+    }
+
+    @IsTest
+    static void testLoadMainInfo_CacheHitWithPendingAndUpdatedInfo() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        Id chId = c.FEC_Account_or_Contract__c;
+
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = chId,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Street__c = '123 Main',
+            FEC_Mailing_Address__c = true
+        );
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = chId,
+            FEC_Case__c = c.Id,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Building__c = 'P-Bld',
+            FEC_Number__c = '9',
+            FEC_Street__c = 'Pending St',
+            FEC_Address__c = '{"cifNumber":"CIF001","addressId":"ADDR1","addressType":"PERMNENT"}'
+        );
+
+        FEC_Customer_History__c hist = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :chId
+            LIMIT 1
+        ];
+        FEC_MainInfoController.MainInfoDTO cached = new FEC_MainInfoController.MainInfoDTO();
+        cached.fullName = 'Pending Cache';
+        cached.cifNumber = CIF_NUMBER;
+        hist.FEC_API_Cache__c = JSON.serialize(cached);
+        hist.FEC_Primary_Phone__c = '0909111222';
+        update hist;
+
+        update new Case(
+            Id = c.Id,
+            FEC_Updated_Info_Permanent_Address__c = 'Case Updated Perm',
+            FEC_Selected_Address_Info__c = [
+                SELECT Id FROM FEC_Address_Info__c WHERE FEC_Case__c = :c.Id LIMIT 1
+            ].Id
+        );
+
+        Test.setMock(HttpCalloutMock.class, new MainInfoHttpCalloutMock());
+        Test.startTest();
+        FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
+        Test.stopTest();
+
+        System.assertEquals('Pending Cache', result.fullName);
+        System.assertNotEquals(null, result.pendingPermanentAddressJson);
+        System.assertEquals('Case Updated Perm', result.updatedInfoPermanentAddress);
     }
 }
