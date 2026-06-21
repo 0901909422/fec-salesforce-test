@@ -97,6 +97,10 @@ public without sharing class FEC_GetNextWorkController {
                 :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
                 :FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
             )
+            AND (
+                FEC_Assignment_Count__c = null
+                OR FEC_Assignment_Count__c = 0
+            )
             ORDER BY FEC_Case_Created_On__c ASC NULLS LAST, CreatedDate ASC
             LIMIT 1
         ];
@@ -204,12 +208,25 @@ public without sharing class FEC_GetNextWorkController {
         }
 
         String queueName = queues[0].Name;
-        String queueIdPattern = '%' + String.valueOf(queueId) + '%';
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_Assignment__c a : [
+            SELECT FEC_Case__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Assignment_Owner_Text__c = :queueName
+            AND FEC_Assignment_Status__c != :FEC_ConstantCommon.STATUS_COMPLETED
+            AND FEC_Case__c != null
+        ]) {
+            caseIds.add(a.FEC_Case__c);
+        }
+        if (caseIds.isEmpty()) {
+            return null;
+        }
 
         List<Case> cases = [
             SELECT Id, FEC_Case_Created_On__c, CreatedDate
             FROM Case
-            WHERE RecordType.DeveloperName IN (
+            WHERE Id IN :caseIds
+            AND RecordType.DeveloperName IN (
                 :FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME,
                 :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
             )
@@ -221,33 +238,11 @@ public without sharing class FEC_GetNextWorkController {
                 :FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
             )
             AND FEC_Assignment_Count__c > 0
-            AND FEC_Assignment_Users__c LIKE :queueIdPattern
             ORDER BY FEC_Case_Created_On__c ASC NULLS LAST, CreatedDate ASC
-            LIMIT 50
+            LIMIT 1
         ];
-        if (cases.isEmpty()) {
-            return null;
-        }
 
-        Set<Id> caseIds = new Map<Id, Case>(cases).keySet();
-        Set<Id> validCaseIds = new Set<Id>();
-        for (AggregateResult ar : [
-            SELECT FEC_Case__c caseId
-            FROM FEC_Assignment__c
-            WHERE FEC_Case__c IN :caseIds
-            AND FEC_Assignment_Owner_Text__c = :queueName
-            AND FEC_Assignment_Status__c != :FEC_ConstantCommon.STATUS_COMPLETED
-            GROUP BY FEC_Case__c
-        ]) {
-            validCaseIds.add((Id) ar.get('caseId'));
-        }
-
-        for (Case c : cases) {
-            if (validCaseIds.contains(c.Id)) {
-                return c;
-            }
-        }
-        return null;
+        return cases.isEmpty() ? null : cases[0];
     }
 
     private static Id takeAssignmentOwnership(Id caseId, Id queueId) {
