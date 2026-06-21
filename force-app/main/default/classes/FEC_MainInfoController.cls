@@ -2180,7 +2180,7 @@ public without sharing class FEC_MainInfoController {
     /**
      * Luồng Update Address: clone pending (FEC_Case__c = Case) từ từng master có sẵn
      * (Permanent / Office / Current) — 1 master → 1 pending, 2 → 2, 3 → 3.
-     * Chỉ copy các cột địa chỉ; không ghi FEC_Address__c (JSON build khi load LWC / gọi API).
+     * Chỉ copy các cột địa chỉ + FEC_Mailing_Address__c từ master; không ghi FEC_Address__c (JSON build khi load LWC / gọi API).
      * Idempotent: bỏ qua nếu Case đã có pending hoặc đã có FEC_Updated_Info_* (đã Save/Submit).
      */
     @AuraEnabled
@@ -2228,6 +2228,7 @@ public without sharing class FEC_MainInfoController {
                 FEC_Property_Status__c,
                 FEC_Years__c,
                 FEC_Months__c,
+                FEC_Mailing_Address__c,
                 FEC_District__r.FEC_Code__c,
                 FEC_District__r.FEC_Name_VN__c,
                 FEC_District__r.Name,
@@ -2268,7 +2269,7 @@ public without sharing class FEC_MainInfoController {
                 FEC_Years__c = master.FEC_Years__c,
                 FEC_Months__c = master.FEC_Months__c,
                 FEC_Parent_Address__c = master.Id,
-                FEC_Mailing_Address__c = false
+                FEC_Mailing_Address__c = master.FEC_Mailing_Address__c == true
             ));
         }
         if (toInsert.isEmpty()) {
