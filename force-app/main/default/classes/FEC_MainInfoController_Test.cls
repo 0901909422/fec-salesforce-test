@@ -172,7 +172,9 @@ private class FEC_MainInfoController_Test {
             'Bld',
             'Street',
             null,
-            null, null);
+            null,
+            false,
+            null);
         Test.stopTest();
 
         System.assertEquals(
@@ -479,6 +481,7 @@ private class FEC_MainInfoController_Test {
                 null,
                 'Y',
                 null,
+                null,
                 null
             );
         Test.stopTest();
@@ -523,7 +526,9 @@ private class FEC_MainInfoController_Test {
             '20',
             'Office St',
             null,
-            null, null);
+            null,
+            false,
+            null);
 
         Test.startTest();
         FEC_MainInfoController.savePendingAddress(
@@ -535,7 +540,9 @@ private class FEC_MainInfoController_Test {
             null,
             null,
             null,
-            null, null);
+            null,
+            false,
+            null);
         Test.stopTest();
 
         System.assertEquals(
@@ -605,7 +612,9 @@ private class FEC_MainInfoController_Test {
                 '1',
                 'Street ' + addrType,
                 null,
-                null, null);
+                null,
+                false,
+                null);
         }
         Test.stopTest();
 
@@ -928,7 +937,9 @@ private class FEC_MainInfoController_Test {
             '1',
             'First St',
             null,
-            null, null);
+            null,
+            false,
+            null);
 
         Test.startTest();
         FEC_MainInfoController.savePendingAddress(
@@ -940,7 +951,9 @@ private class FEC_MainInfoController_Test {
             '2',
             'Updated St',
             null,
-            null, null);
+            null,
+            false,
+            null);
         Test.stopTest();
 
         FEC_Address_Info__c row = [
@@ -972,7 +985,9 @@ private class FEC_MainInfoController_Test {
                 '1',
                 'St',
                 null,
-                null, null);
+                null,
+                false,
+                null);
         } catch (AuraHandledException e) {
             invalidParent = true;
         }
@@ -986,7 +1001,9 @@ private class FEC_MainInfoController_Test {
                 '1',
                 'St',
                 null,
-                null, null);
+                null,
+                false,
+                null);
         } catch (AuraHandledException e) {
             invalidType = true;
         }
@@ -1135,7 +1152,7 @@ private class FEC_MainInfoController_Test {
     }
 
     @IsTest
-    static void testSyncMasterAddressesFromPendingRows() {
+    static void testSyncCaseUpdatedInfoFromPendingRow() {
         Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
         Id chId = c.FEC_Account_or_Contract__c;
 
@@ -1155,41 +1172,36 @@ private class FEC_MainInfoController_Test {
         );
         insert dist;
 
-        FEC_Address_Info__c master = new FEC_Address_Info__c(
-            FEC_Customer_History__c = chId,
-            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
-            FEC_Street__c = 'Old Master St'
-        );
-        insert master;
-
         FEC_Address_Info__c pending = new FEC_Address_Info__c(
             FEC_Customer_History__c = chId,
             FEC_Case__c = c.Id,
             FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
-            FEC_Parent_Address__c = master.Id,
-            FEC_Address__c = '{"building":"New Bld","number_x":"99","street":"New St","district":"SD01","city":"SP01"}'
+            FEC_Building__c = 'New Bld',
+            FEC_Number__c = '99',
+            FEC_Street__c = 'New St',
+            FEC_Province__c = prov.Id,
+            FEC_District__c = dist.Id,
+            FEC_Country__c = country.Id
         );
+        insert pending;
 
         Test.startTest();
-        FEC_MainInfoController.syncMasterAddressesFromPendingRows(chId, null);
-        FEC_MainInfoController.syncMasterAddressesFromPendingRows(null, new List<FEC_Address_Info__c>{ pending });
-        FEC_MainInfoController.syncMasterAddressesFromPendingRows(chId, new List<FEC_Address_Info__c>{ pending });
+        FEC_MainInfoController.syncCaseUpdatedInfoFromPendingRow(null, pending.Id);
+        FEC_MainInfoController.syncCaseUpdatedInfoFromPendingRow(c.Id, null);
+        FEC_MainInfoController.syncCaseUpdatedInfoFromPendingRow(c.Id, pending.Id);
         Test.stopTest();
 
-        FEC_Address_Info__c updated = [
-            SELECT FEC_Building__c, FEC_Street__c, FEC_Province__c, FEC_District__c, FEC_Country__c
-            FROM FEC_Address_Info__c
-            WHERE Id = :master.Id
+        Case updatedCase = [
+            SELECT FEC_Updated_Info_Permanent_Address__c
+            FROM Case
+            WHERE Id = :c.Id
         ];
-        System.assertEquals('New Bld', updated.FEC_Building__c);
-        System.assertEquals('New St', updated.FEC_Street__c);
-        System.assertEquals(prov.Id, updated.FEC_Province__c);
-        System.assertEquals(dist.Id, updated.FEC_District__c);
-        System.assertEquals(country.Id, updated.FEC_Country__c);
+        System.assertNotEquals(null, updatedCase.FEC_Updated_Info_Permanent_Address__c);
+        System.assert(updatedCase.FEC_Updated_Info_Permanent_Address__c.contains('New St'));
     }
 
     @IsTest
-    static void testSyncMasterAddressesFromPendingRows_JsonPending() {
+    static void testSyncCaseUpdatedInfoFromPendingRow_OfficePending() {
         Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
         Id chId = c.FEC_Account_or_Contract__c;
 
@@ -1211,11 +1223,12 @@ private class FEC_MainInfoController_Test {
             FEC_Country__c = country.Id
         );
         insert prov;
-        insert new FEC_District__c(
+        FEC_District__c dist = new FEC_District__c(
             Name = 'Json Dist',
             FEC_Code__c = 'JD01',
             FEC_Province__c = prov.Id
         );
+        insert dist;
 
         insert new FEC_Address_Info__c(
             FEC_Customer_History__c = chId,
@@ -1227,26 +1240,25 @@ private class FEC_MainInfoController_Test {
             FEC_Customer_History__c = chId,
             FEC_Case__c = c.Id,
             FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
-            FEC_Address__c = '{"building":"JB","number_x":"7","street":"Json Street","district":"JD01","city":"JP01"}'
+            FEC_Building__c = 'JB',
+            FEC_Number__c = '7',
+            FEC_Street__c = 'Json Street',
+            FEC_Province__c = prov.Id,
+            FEC_District__c = dist.Id
         );
+        insert pending;
 
         Test.startTest();
-        FEC_MainInfoController.syncMasterAddressesFromPendingRows(
-            chId,
-            new List<FEC_Address_Info__c>{ pending }
-        );
+        FEC_MainInfoController.syncCaseUpdatedInfoFromPendingRow(c.Id, pending.Id);
         Test.stopTest();
 
-        FEC_Address_Info__c updated = [
-            SELECT FEC_Building__c, FEC_Street__c
-            FROM FEC_Address_Info__c
-            WHERE FEC_Customer_History__c = :chId
-              AND FEC_Case__c = null
-              AND FEC_Address_Type__c = :FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE
-            LIMIT 1
+        Case updatedCase = [
+            SELECT FEC_Updated_Info_Office_Address__c
+            FROM Case
+            WHERE Id = :c.Id
         ];
-        System.assertEquals('JB', updated.FEC_Building__c);
-        System.assertEquals('Json Street', updated.FEC_Street__c);
+        System.assertNotEquals(null, updatedCase.FEC_Updated_Info_Office_Address__c);
+        System.assert(updatedCase.FEC_Updated_Info_Office_Address__c.contains('Json Street'));
     }
 
     @IsTest
@@ -1542,7 +1554,9 @@ private class FEC_MainInfoController_Test {
             '19',
             'Json Pending St',
             null,
-            null, pendingJson);
+            null,
+            false,
+            pendingJson);
         Test.stopTest();
 
         FEC_Address_Info__c row = [
