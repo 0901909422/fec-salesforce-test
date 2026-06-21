@@ -442,7 +442,7 @@ private class FEC_UpdateCustomerAddress_Test {
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
-            update new Case(Id = c.Id, FEC_Selected_Address_Info__c = pendingId);
+            update new Case(Id = c.Id, FEC_Selected_Address__c = pendingId);
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
@@ -493,7 +493,7 @@ private class FEC_UpdateCustomerAddress_Test {
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
-            update new Case(Id = c.Id, FEC_Selected_Address_Info__c = pendingId);
+            update new Case(Id = c.Id, FEC_Selected_Address__c = pendingId);
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
@@ -550,7 +550,7 @@ private class FEC_UpdateCustomerAddress_Test {
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
-            update new Case(Id = c.Id, FEC_Selected_Address_Info__c = pendingId);
+            update new Case(Id = c.Id, FEC_Selected_Address__c = pendingId);
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
