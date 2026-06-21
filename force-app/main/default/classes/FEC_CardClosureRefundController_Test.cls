@@ -66,6 +66,32 @@ private class FEC_CardClosureRefundController_Test {
         }
     }
 
+    private class CmsVmxNonmonCompositeMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            String body = req.getBody() != null ? req.getBody() : '';
+            if (body.contains('VMX_NONMON_UPD') || body.contains('NONMON')) {
+                res.setBody(
+                    '<?xml version="1.0" encoding="UTF-8"?>' +
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><WSResponse>' +
+                    '<Sys><TransID>T-NONMON</TransID><Code>1</Code><Description>Success</Description></Sys>' +
+                    '<VMX_NONMON_UPD><VMX_ROOT><VMX_MSGOUT><SVC_RETURN>P</SVC_RETURN></VMX_MSGOUT></VMX_ROOT></VMX_NONMON_UPD>' +
+                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+            } else if (body.contains('"Func":"U"')) {
+                res.setBody('{"Sys":{"Code":"2","Description":"UNLOCK_SUCCESS","TransID":"TXN-UNLOCK"}}');
+            } else {
+                res.setBody(
+                    '{"Sys":{"TransID":"TXN-LOCK","DateTime":"2026-06-03T17:24:43.867415513+07:00",' +
+                    '"Code":"1","Description":"LOCK_SUCCESS","BlockCode":"C"}}'
+                );
+            }
+            return res;
+        }
+    }
+
     private class CardLockFailureMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
@@ -99,6 +125,23 @@ private class FEC_CardClosureRefundController_Test {
                 '<RETURN_DESC>CARD NUMBER NOT FOUND</RETURN_DESC></RC_DATA>' +
                 '</VMX_MSGOUT></VMX_ROOT></VMX_ACCT_BLKCD_UPD_EMEA>' +
                 '</WSResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class DisbInfoBadDateMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '{"Sys2":{"Code2":"1","TransID":"TXN-BAD-DT","Description":"OK"},' +
+                '"Applications":[{"Application":{' +
+                '"ApplicationID":"APP-BAD-DT",' +
+                '"AppStatusLos":"Open",' +
+                '"DisbAmount":"not-a-number",' +
+                '"RequestedDt":"bad-date-format",' +
+                '"DisbStatus":"ORIG"}}]}'
             );
             return res;
         }
@@ -147,6 +190,114 @@ private class FEC_CardClosureRefundController_Test {
                 '"AppStatusLos":"Open",' +
                 '"DisbStatus":"CANCELLED"}}]}'
             );
+            return res;
+        }
+    }
+
+    private class DisbInfoInvalidYmdMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '{"Sys2":{"Code2":"1","TransID":"TXN-DISB","Description":"OK"},' +
+                '"Applications":[{"Application":{' +
+                '"ApplicationID":"APP-API-001",' +
+                '"AppStatusLos":"Resolved-Completed",' +
+                '"DisbAmount":"15,000,000",' +
+                '"RequestedDt":"abc/def/ghi",' +
+                '"DisbStatus":"CONFIRMED"}}]}'
+            );
+            return res;
+        }
+    }
+
+    private class DisbInfoCancelledResolvedMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '{"Sys2":{"Code2":"1","TransID":"TXN-DISB","Description":"OK"},' +
+                '"Applications":[{"Application":{' +
+                '"ApplicationID":"APP-CAN-RES",' +
+                '"AppStatusLos":"Resolved-Cancelled",' +
+                '"DisbAmount":"15,000,000",' +
+                '"RequestedDt":"2026/05/20 15:00:00",' +
+                '"DisbStatus":"CANCELLED"}}]}'
+            );
+            return res;
+        }
+    }
+
+    private class DisbInfoUnknownStatusMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '{"Sys2":{"Code2":"1","TransID":"TXN-DISB","Description":"OK"},' +
+                '"Applications":[{"Application":{' +
+                '"ApplicationID":"APP-UNK",' +
+                '"AppStatusLos":"Open",' +
+                '"DisbAmount":"15,000,000",' +
+                '"RequestedDt":"2026/05/20 15:00:00",' +
+                '"DisbStatus":"UNKNOWN_STATUS_XYZ"}}]}'
+            );
+            return res;
+        }
+    }
+
+    private class DisbInfoBlankDisbStatusMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '{"Sys2":{"Code2":"1","TransID":"TXN-DISB","Description":"OK"},' +
+                '"Applications":[{"Application":{' +
+                '"ApplicationID":"APP-BLANK",' +
+                '"AppStatusLos":"Open",' +
+                '"DisbAmount":"15,000,000",' +
+                '"RequestedDt":"2026/05/20 15:00:00"}}]}'
+            );
+            return res;
+        }
+    }
+
+    private class DisbInfoMalformedJsonMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('not-json{{{');
+            return res;
+        }
+    }
+
+    private class CardUnlockMissingDescriptionMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('{"Sys":{"Code":"2","TransID":"TXN-UNLOCK-NODESC"}}');
+            return res;
+        }
+    }
+
+    private class CardLockGenericSuccessDescMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            String body = req.getBody() != null ? req.getBody() : '';
+            if (body.contains('VMX_NONMON_UPD') || body.contains('NONMON')) {
+                res.setBody(
+                    '<?xml version="1.0" encoding="UTF-8"?>' +
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><WSResponse>' +
+                    '<Sys><TransID>T-NONMON</TransID><Code>1</Code><Description>Success</Description></Sys>' +
+                    '<VMX_NONMON_UPD><VMX_ROOT><VMX_MSGOUT><SVC_RETURN>P</SVC_RETURN></VMX_MSGOUT></VMX_ROOT></VMX_NONMON_UPD>' +
+                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+            } else {
+                res.setBody(
+                    '{"Sys":{"TransID":"TXN-LOCK-GEN","Code":"1","Description":"Operation success completed","BlockCode":"C"}}'
+                );
+            }
             return res;
         }
     }
@@ -328,7 +479,7 @@ private class FEC_CardClosureRefundController_Test {
     static void testBlockCard_Success() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
-            Test.setMock(HttpCalloutMock.class, new CardLockSuccessMock());
+            Test.setMock(HttpCalloutMock.class, new CmsVmxNonmonCompositeMock());
 
             Test.startTest();
             FEC_CardClosureRefundController.LockUnlockResultDTO result =
@@ -370,7 +521,7 @@ private class FEC_CardClosureRefundController_Test {
     static void testUnblockCard_SuccessAndValidationFails() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
-            Test.setMock(HttpCalloutMock.class, new CardUnlockSuccessMock());
+            Test.setMock(HttpCalloutMock.class, new CmsVmxNonmonCompositeMock());
 
             Test.startTest();
             FEC_CardClosureRefundController.LockUnlockResultDTO resSuccess =
@@ -537,6 +688,58 @@ private class FEC_CardClosureRefundController_Test {
     }
 
     @IsTest
+    static void testGetCardLockUnlockUiContext_DeletedCaseId() {
+        System.runAs(testRunAsUser()) {
+            Case c = new Case(Subject = 'Temp Deleted Case', Status = FEC_ConstantCommon.CASE_STATUS_OPEN, Origin = 'Phone');
+            insert c;
+            Id deletedCaseId = c.Id;
+            delete c;
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO context =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(deletedCaseId);
+            Test.stopTest();
+
+            System.assertEquals(false, context.showBlockCardButton);
+        }
+    }
+
+    @IsTest
+    static void testGetCardLockUnlockUiContext_BadDisbParseFields() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new DisbInfoBadDateMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO context =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(c.Id);
+            Test.stopTest();
+
+            System.assertEquals('APP-BAD-DT', context.pendingApplicationId);
+            System.assertEquals(null, context.pendingDisbursedAmount);
+            System.assertEquals(null, context.pendingDisbursementApprovalDate);
+        }
+    }
+
+    @IsTest
+    static void testFinalizeBlockCard_RequireVmxBothApis() {
+        System.runAs(testRunAsUser()) {
+            FEC_Customer_History__c cust = [SELECT Id FROM FEC_Customer_History__c LIMIT 1];
+            cust.FEC_Block_Code_1__c = null;
+            update cust;
+
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+
+            Test.startTest();
+            FEC_CardClosureRefundController.LockUnlockResultDTO dto =
+                FEC_CardClosureRefundController.finalizeBlockCard(c.Id, true, true, true);
+            Test.stopTest();
+
+            System.assertEquals(true, dto.success);
+        }
+    }
+
+    @IsTest
     static void testBlockCardLockApi_UnsuccessfulDescription_Fails() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
@@ -589,6 +792,135 @@ private class FEC_CardClosureRefundController_Test {
             System.assertEquals(false, result.success);
             System.assertEquals(3, result.cardBlockServiceAttemptsAfter);
             System.assertEquals(true, result.hideBlockCardAfterAction);
+        }
+    }
+
+    @IsTest
+    static void testGetCardLockUnlockUiContext_InvalidRequestedDtParse() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new DisbInfoInvalidYmdMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO context =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(c.Id);
+            Test.stopTest();
+
+            System.assertEquals('APP-API-001', context.pendingApplicationId);
+            System.assertEquals(null, context.pendingDisbursementApprovalDate);
+        }
+    }
+
+    @IsTest
+    static void testGetCardLockUnlockUiContext_CancelledResolvedCsDecision() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new DisbInfoCancelledResolvedMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO context =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(CS_DECISION_18, context.pendingCsDecision);
+        }
+    }
+
+    @IsTest
+    static void testGetCardLockUnlockUiContext_UnknownDisbStatus() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new DisbInfoUnknownStatusMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO context =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(null, context.pendingCsDecision);
+        }
+    }
+
+    @IsTest
+    static void testGetCardLockUnlockUiContext_BlankDisbStatus() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new DisbInfoBlankDisbStatusMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO context =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(null, context.pendingCsDecision);
+        }
+    }
+
+    @IsTest
+    static void testGetCardLockUnlockUiContext_MalformedDisbJson() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new DisbInfoMalformedJsonMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.CardLockUiContextDTO malformed =
+                FEC_CardClosureRefundController.getCardLockUnlockUiContext(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(null, malformed.pendingApplicationId);
+        }
+    }
+
+    @IsTest
+    static void testUnblockCard_FailsWhenUnlockDescriptionMissing() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new CardUnlockMissingDescriptionMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.LockUnlockResultDTO result =
+                FEC_CardClosureRefundController.unblockCard(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(false, result.success);
+            System.assertEquals('2', result.code);
+        }
+    }
+
+    @IsTest
+    static void testBlockCardLockApi_GenericSuccessDescription() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new CardLockGenericSuccessDescMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.LockUnlockApiResultDTO lockApi =
+                FEC_CardClosureRefundController.blockCardLockApi(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(true, lockApi.success);
+            System.assertEquals('Operation success completed', lockApi.description);
+        }
+    }
+
+    @IsTest
+    static void testBlockCardAccountBlkcdApi_ResolveCardNbrFromAccountNumber() {
+        System.runAs(testRunAsUser()) {
+            FEC_Customer_History__c cust = [SELECT Id FROM FEC_Customer_History__c LIMIT 1];
+            cust.FEC_Block_Code_1__c = null;
+            cust.Name = ' ';
+            update cust;
+
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new VmxSysSuccessSvcReturnFailureMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.LockUnlockApiResultDTO vmxApi =
+                FEC_CardClosureRefundController.blockCardAccountBlkcdApi(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(false, vmxApi.success);
+            System.assert(vmxApi.errorMessage != null);
         }
     }
 }

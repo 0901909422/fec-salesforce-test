@@ -27,6 +27,10 @@ public with sharing class FEC_PinReplacementController {
             if (response.isSuccess) {
                 result.success = true;
                 objCasse.FEC_Process_Action_Count__c = -1;
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    objCasse.Id,
+                    FEC_CmsVmxIntegrationService.OP_PIN_REPLACEMENT
+                );
             } else {
                 result.success = false;
                 if (objCasse.FEC_Process_Action_Count__c == null) {

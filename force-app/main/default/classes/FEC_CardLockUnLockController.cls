@@ -55,6 +55,10 @@ public with sharing class FEC_CardLockUnLockController {
             } else {
                 result.success = true;
                 objCasse.FEC_Process_Action_Count__c = -1;
+                String operationType = funcCode == 'B'
+                    ? FEC_CmsVmxIntegrationService.OP_BLOCK_CARD
+                    : FEC_CmsVmxIntegrationService.OP_UNBLOCK_CARD;
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(objCasse.Id, operationType);
             }
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
