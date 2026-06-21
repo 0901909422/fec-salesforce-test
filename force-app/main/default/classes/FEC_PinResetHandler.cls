@@ -45,6 +45,7 @@ public without sharing class FEC_PinResetHandler {
     public static FEC_PINReissueServiceCallout.PINResponse resetPin(String caseId, string nationalId, string mobile, String method) {
         Case selectedCase;
         FEC_PINReissueServiceCallout.PINResponse response;
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             
             List<Case> caseList = [
@@ -66,7 +67,6 @@ public without sharing class FEC_PinResetHandler {
             
             String transactionId = String.valueOf(UUID.randomUUID());
             response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile, selectedCase.FEC_Is_Test_API__c);
-            FEC_PINReissueServiceCallout.logApiResponse();
             
             Integer count =
                 selectedCase.FEC_Process_Action_Count__c == null
@@ -102,15 +102,16 @@ public without sharing class FEC_PinResetHandler {
             
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
-        }finally {
+        } finally {
+            FEC_PINReissueServiceCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
             if (selectedCase != null) {
                 FEC_CommonUltils.createProcessActionHistory(
                     method,
-                selectedCase,
-                response != null && response.RespCode == '0' ? true : false
-                    );
+                    selectedCase,
+                    response != null && response.RespCode == '0' ? true : false
+                );
             }
-            
         }
     }
     

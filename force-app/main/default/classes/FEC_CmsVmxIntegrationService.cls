@@ -19,12 +19,15 @@ public without sharing class FEC_CmsVmxIntegrationService {
 
     /**
      * Invoked after LockUnlock, PIN Reissue, or Replace Card APIs return business success.
+     * Dùng deferred logging để tránh lỗi "uncommitted work pending" khi có nhiều callout
+     * (fetchCurrentBlockCode + executeNonmonUpdate) trong cùng transaction.
      */
     public static FEC_VmxNonmonUpdCallout.NonmonUpdResult onCmsOperationSuccess(Id caseId, String operationType) {
         if (caseId == null || String.isBlank(operationType)) {
             return null;
         }
 
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             FEC_VmxNonmonUpdCallout.NonmonUpdInput input = buildNonmonUpdInput(caseId, operationType);
             return FEC_VmxNonmonUpdCallout.executeNonmonUpdate(input);
@@ -38,6 +41,7 @@ public without sharing class FEC_CmsVmxIntegrationService {
             return null;
         } finally {
             FEC_VmxNonmonUpdCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
     }
 
@@ -112,6 +116,8 @@ public without sharing class FEC_CmsVmxIntegrationService {
                 ex.getStackTraceString()
             );
             return null;
+        } finally {
+            FEC_MCMSCARDTOCARDINQEMEA.logApiResponse();
         }
     }
 
