@@ -353,24 +353,23 @@ public without sharing class FEC_CaseManagerListService {
 
     for (FEC_Assignment__c assignment : assignments) {
       String assignmentManagerCsv = assignment.FEC_Assignment_Owner__c == null ? null : csvByOwner.get(assignment.FEC_Assignment_Owner__c);
-      List<String> assignmentManagerChunks = splitManagerCsv(assignmentManagerCsv);
 
       if (assignment.FEC_Manager_ID_List__c != assignmentManagerCsv) {
         assignmentUpdates.add(new FEC_Assignment__c(Id = assignment.Id, FEC_Manager_ID_List__c = assignmentManagerCsv));
       }
 
-      if (!shouldIncludeAssignmentManagerList(assignment, assignmentManagerChunks[0])) {
+      if (!shouldIncludeAssignmentManagerList(assignment, assignmentManagerCsv)) {
         continue;
       }
 
-      for (String managerId : assignmentManagerChunks[0].split(CSV_DELIMITER)) {
+      //tungnm37 rollup full assignment manager list len case de split sang field _2 khi vuot 255 ky tu
+      for (String managerId : assignmentManagerCsv.split(CSV_DELIMITER)) {
         if (!caseIdToSeenManagerIds.get(assignment.FEC_Case__c).contains(managerId)) {
           caseIdToSeenManagerIds.get(assignment.FEC_Case__c).add(managerId);
           caseIdToManagerIds.get(assignment.FEC_Case__c).add(managerId);
         }
       }
     }
-
     if (!assignmentUpdates.isEmpty()) {
       Database.update(assignmentUpdates, AccessLevel.SYSTEM_MODE);
     }
