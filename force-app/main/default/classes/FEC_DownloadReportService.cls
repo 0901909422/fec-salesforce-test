@@ -15,7 +15,7 @@ public without sharing class FEC_DownloadReportService {
     public static void generateDailyReports() {
 
         String baseUrl = URL.getOrgDomainUrl().toExternalForm();
-        String today   = Date.today().addDays(-1).format();
+        String today   = formatReportDate(Date.today().addDays(-1));
 
         for (Map<String, String> config : FEC_ConstantCommon.REPORT_CONFIGS) {
 
@@ -63,7 +63,7 @@ public without sharing class FEC_DownloadReportService {
         try {
 
             Reports.ReportResults results =
-                Reports.ReportManager.runReport((Id) reportId, true);
+                runReportWithReportIdFields((Id) reportId);
 
             List<String> excelHeaders = buildExcelHeaders(results);
 
@@ -133,6 +133,111 @@ public without sharing class FEC_DownloadReportService {
     }
 
     // =========================================================
+    // REPORT RUN 
+    // =========================================================
+    @TestVisible
+    private static Reports.ReportResults runReportWithReportIdFields(Id reportId) {
+        Reports.ReportDescribeResult describeResult =
+            Reports.ReportManager.describeReport(reportId);
+        Reports.ReportMetadata reportMetadata = describeResult.getReportMetadata();
+
+        List<String> detailColumns = reportMetadata.getDetailColumns();
+        List<String> reportColumns = ensureReportIdColumns(detailColumns);
+
+        if (!detailColumns.equals(reportColumns)) {
+            reportMetadata.setDetailColumns(reportColumns);
+            return Reports.ReportManager.runReport(reportId, reportMetadata, true);
+        }
+
+        return Reports.ReportManager.runReport(reportId, true);
+    }
+
+    @TestVisible
+    private static List<String> ensureReportIdColumns(List<String> detailColumns) {
+        List<String> result = swapToReportIdColumns(detailColumns);
+        String prefix = resolveCaseColumnPrefix(detailColumns);
+
+        if (!hasColumnEndingWith(result, 'FEC_Interaction_ID_Report__c')) {
+            result.add(0, prefix + 'FEC_Interaction_ID_Report__c');
+        }
+
+        if (!hasColumnEndingWith(result, 'FEC_Case_ID_Report__c')) {
+            result.add(findCaseIdInsertIndex(result), prefix + 'FEC_Case_ID_Report__c');
+        }
+
+        return result;
+    }
+
+    @TestVisible
+    private static String resolveCaseColumnPrefix(List<String> columns) {
+        for (String column : columns) {
+            Integer dotIndex = column.indexOf('.');
+            if (dotIndex > 0) {
+                return column.substring(0, dotIndex + 1);
+            }
+        }
+        return 'Case.';
+    }
+
+    @TestVisible
+    private static Boolean hasColumnEndingWith(List<String> columns, String suffix) {
+        for (String column : columns) {
+            if (column.endsWith(suffix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @TestVisible
+    private static Integer findCaseIdInsertIndex(List<String> columns) {
+        for (Integer i = 0; i < columns.size(); i++) {
+            String lowerCol = columns[i].toLowerCase();
+            if (
+                lowerCol.contains('case_status') ||
+                lowerCol.endsWith('fec_case_status__c')
+            ) {
+                return i;
+            }
+        }
+
+        for (Integer i = 0; i < columns.size(); i++) {
+            if (columns[i].endsWith('FEC_Interaction_ID_Report__c')) {
+                Integer nextIndex = i + 1;
+                return nextIndex < columns.size() ? nextIndex : columns.size();
+            }
+        }
+
+        return columns.size();
+    }
+
+    @TestVisible
+    private static List<String> swapToReportIdColumns(List<String> detailColumns) {
+        List<String> result = new List<String>();
+        for (String column : detailColumns) {
+            result.add(swapColumnToReportField(column));
+        }
+        return result;
+    }
+
+    @TestVisible
+    private static String swapColumnToReportField(String column) {
+        if (
+            column.endsWith('FEC_Case_ID__c') &&
+            !column.contains('FEC_Case_ID_Report__c')
+        ) {
+            return column.replace('FEC_Case_ID__c', 'FEC_Case_ID_Report__c');
+        }
+        if (
+            column.endsWith('FEC_Interaction_ID__c') &&
+            !column.contains('FEC_Interaction_ID_Report__c')
+        ) {
+            return column.replace('FEC_Interaction_ID__c', 'FEC_Interaction_ID_Report__c');
+        }
+        return column;
+    }
+
+    // =========================================================
     // REPORT DATA
     // =========================================================
     @TestVisible
@@ -162,6 +267,27 @@ public without sharing class FEC_DownloadReportService {
         Reports.ReportResults results,
         List<String> sheetRowParts
     ) {
+        List<String> detailColumns =
+            results.getReportMetadata().getDetailColumns();
+        Map<String, Reports.DetailColumn> columnMeta =
+            results.getReportExtendedMetadata().getDetailColumnInfo();
+
+        List<String> columnDataTypes = new List<String>();
+        List<String> columnLabels = new List<String>();
+        for (String colName : detailColumns) {
+            String dataType = null;
+            String colLabel = colName;
+            if (columnMeta != null && columnMeta.containsKey(colName)) {
+                Reports.DetailColumn col = columnMeta.get(colName);
+                dataType = col.getDataType() != null
+                    ? String.valueOf(col.getDataType())
+                    : null;
+                colLabel = col.getLabel();
+            }
+            columnDataTypes.add(dataType);
+            columnLabels.add(colLabel);
+        }
+
         Map<String, Reports.ReportFact> factMap = results.getFactMap();
         List<String> factKeys = new List<String>(factMap.keySet());
         factKeys.sort();
@@ -188,7 +314,13 @@ public without sharing class FEC_DownloadReportService {
             }
 
             for (Reports.ReportDetailRow row : section.getRows()) {
-                String rowXml = buildOoxmlDataRow(rowNum, row);
+                String rowXml = buildOoxmlDataRow(
+                    rowNum,
+                    row,
+                    columnDataTypes,
+                    columnLabels,
+                    detailColumns
+                );
                 if (String.isNotBlank(rowXml)) {
                     sheetRowParts.add(rowXml);
                     rowNum++;
@@ -197,26 +329,170 @@ public without sharing class FEC_DownloadReportService {
         }
     }
 
+    private static final Set<String> DATETIME_COLUMN_LABELS = new Set<String>{
+        'Interaction Created On',
+        'Last Updated On',
+        'Case Created On',
+        'Submitted On',
+        'Assigned On'
+    };
+
     @TestVisible
-    private static String resolveCellLabel(Reports.ReportDataCell cell) {
+    private static String resolveCellLabel(
+        Reports.ReportDataCell cell,
+        String dataType,
+        String columnLabel,
+        String columnName
+    ) {
+        if (cell == null) {
+            return '';
+        }
 
-        String label = '';
+        Object value = cell.getValue();
+        if (value instanceof DateTime) {
+            return ((DateTime) value).format('dd/MM/yyyy, HH:mm');
+        }
 
+        String label = extractCellText(cell);
+        label = stripHtml(label);
+
+        if (!shouldFormatAsDateTime(dataType, columnLabel, columnName)) {
+            return label;
+        }
+
+        String formatted = formatDateTimeString(label);
+        return String.isNotBlank(formatted) ? formatted : label;
+    }
+
+    @TestVisible
+    private static String extractCellText(Reports.ReportDataCell cell) {
         if (
             cell.getLabel() != null &&
             String.isNotBlank(String.valueOf(cell.getLabel())) &&
             !String.valueOf(cell.getLabel()).equals('null')
         ) {
-            label = String.valueOf(cell.getLabel());
-
-        } else if (
+            return String.valueOf(cell.getLabel());
+        }
+        if (
             cell.getValue() != null &&
             !String.valueOf(cell.getValue()).equals('null')
         ) {
-            label = String.valueOf(cell.getValue());
+            return String.valueOf(cell.getValue());
+        }
+        return '';
+    }
+
+    @TestVisible
+    private static Boolean shouldFormatAsDateTime(
+        String dataType,
+        String columnLabel,
+        String columnName
+    ) {
+        if (String.isNotBlank(dataType) && dataType.equalsIgnoreCase('datetime')) {
+            return true;
+        }
+        if (String.isNotBlank(columnLabel) && DATETIME_COLUMN_LABELS.contains(columnLabel)) {
+            return true;
+        }
+        if (String.isNotBlank(columnName)) {
+            String lowerName = columnName.toLowerCase();
+            if (
+                lowerName.contains('created_on') ||
+                lowerName.contains('updated_on') ||
+                lowerName.contains('submitted_on') ||
+                lowerName.contains('assigned_on') ||
+                lowerName.contains('last_updated')
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @TestVisible
+    private static String formatDateTimeString(String label) {
+        if (String.isBlank(label)) {
+            return null;
         }
 
-        return stripHtml(label);
+        String trimmed = label.trim();
+
+        if (Pattern.compile('^\\d{2}/\\d{2}/\\d{4}, \\d{2}:\\d{2}$').matcher(trimmed).matches()) {
+            return trimmed;
+        }
+
+        if (Pattern.compile('^\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}$').matcher(trimmed).matches()) {
+            return trimmed.replace(' ', ', ');
+        }
+
+        Matcher ddmmMatch = Pattern.compile(
+            '^(\\d{1,2})/(\\d{1,2})/(\\d{4}),?\\s+(\\d{1,2}):(\\d{2})$'
+        ).matcher(trimmed);
+        if (ddmmMatch.matches()) {
+            Integer firstPart = Integer.valueOf(ddmmMatch.group(1));
+            Integer secondPart = Integer.valueOf(ddmmMatch.group(2));
+            Integer year = Integer.valueOf(ddmmMatch.group(3));
+            Integer hour = Integer.valueOf(ddmmMatch.group(4));
+            Integer minute = Integer.valueOf(ddmmMatch.group(5));
+
+            Integer day;
+            Integer month;
+            if (firstPart > 12) {
+                day = firstPart;
+                month = secondPart;
+            } else if (secondPart > 12) {
+                month = firstPart;
+                day = secondPart;
+            } else {
+                day = secondPart;
+                month = firstPart;
+            }
+
+            return pad2(day) + '/' + pad2(month) + '/' + year + ', ' +
+                pad2(hour) + ':' + pad2(minute);
+        }
+
+        Matcher us12Match = Pattern.compile(
+            '^(\\d{1,2})/(\\d{1,2})/(\\d{4}),?\\s+(\\d{1,2}):(\\d{2})\\s*(AM|PM)$'
+        ).matcher(trimmed.toUpperCase());
+        if (us12Match.matches()) {
+            Integer month = Integer.valueOf(us12Match.group(1));
+            Integer day = Integer.valueOf(us12Match.group(2));
+            Integer year = Integer.valueOf(us12Match.group(3));
+            Integer hour = Integer.valueOf(us12Match.group(4));
+            Integer minute = Integer.valueOf(us12Match.group(5));
+            String ampm = us12Match.group(6);
+
+            if (ampm.equalsIgnoreCase('PM') && hour != 12) {
+                hour += 12;
+            } else if (ampm.equalsIgnoreCase('AM') && hour == 12) {
+                hour = 0;
+            }
+
+            return pad2(day) + '/' + pad2(month) + '/' + year + ', ' +
+                pad2(hour) + ':' + pad2(minute);
+        }
+
+        return null;
+    }
+
+    @TestVisible
+    private static String formatReportDate(Date reportDate) {
+        return DateTime.newInstance(
+            reportDate.year(),
+            reportDate.month(),
+            reportDate.day()
+        ).format(FEC_ConstantCommon.DATE_FORMAT_DDMMYYYY);
+    }
+
+    @TestVisible
+    private static String pad2(Integer val) {
+        return val < 10 ? '0' + String.valueOf(val) : String.valueOf(val);
+    }
+
+    @TestVisible
+    private static String resolveCellLabel(Reports.ReportDataCell cell) {
+        return resolveCellLabel(cell, null, null, null);
     }
 
     // =========================================================
@@ -295,7 +571,13 @@ public without sharing class FEC_DownloadReportService {
     }
 
     @TestVisible
-    private static String buildOoxmlDataRow(Integer rowNum, Reports.ReportDetailRow row) {
+    private static String buildOoxmlDataRow(
+        Integer rowNum,
+        Reports.ReportDetailRow row,
+        List<String> columnDataTypes,
+        List<String> columnLabels,
+        List<String> columnNames
+    ) {
 
         List<Reports.ReportDataCell> dataCells = row.getDataCells();
 
@@ -305,7 +587,14 @@ public without sharing class FEC_DownloadReportService {
 
         List<String> cells = new List<String>();
         for (Integer i = 0; i < dataCells.size(); i++) {
-            cells.add(buildOoxmlCell(rowNum, i, resolveCellLabel(dataCells[i])));
+            String dataType = i < columnDataTypes.size() ? columnDataTypes[i] : null;
+            String columnLabel = i < columnLabels.size() ? columnLabels[i] : null;
+            String columnName = i < columnNames.size() ? columnNames[i] : null;
+            cells.add(buildOoxmlCell(
+                rowNum,
+                i,
+                resolveCellLabel(dataCells[i], dataType, columnLabel, columnName)
+            ));
         }
 
         return '<row r="' + rowNum + '">' + String.join(cells, '') + '</row>';
