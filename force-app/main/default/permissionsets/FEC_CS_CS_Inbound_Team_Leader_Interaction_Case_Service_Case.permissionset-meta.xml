@@ -125,6 +125,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Assignment_Manager_ID_List__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Assignment_Manager_ID_List_2__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Bank_Branch_Name_Noaccent__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -3318,6 +3328,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Assignment__c.FEC_Recently_Auto_Case_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Manager_ID_List__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
