@@ -252,7 +252,7 @@ public with sharing class FEC_UpdateCustomerAddress {
     return updateCustomerAddress(info);
   }
 
-  /** Chỉ gọi API cho pending khớp Case.FEC_Selected_Address_Info__c (master parent hoặc Id pending Add New). */
+  /** Chỉ gọi API cho pending khớp Case.FEC_Selected_Address__c (Id pending Updated hoặc master parent). */
   private static FEC_Address_Info__c resolvePendingRowForSelectedAddress(
     Id selectedAddressInfoId,
     List<FEC_Address_Info__c> pendingRows
@@ -352,18 +352,18 @@ public with sharing class FEC_UpdateCustomerAddress {
 
     Case selectedCase = caselst[0];
     Id selectedMasterAddressId = [
-      SELECT FEC_Selected_Address_Info__c
+      SELECT FEC_Selected_Address__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
-    ].FEC_Selected_Address_Info__c;
+    ].FEC_Selected_Address__c;
 
     UpdateResult result = new UpdateResult();
     if (selectedMasterAddressId == null) {
       result.success = false;
       result.errorMessage = String.format(
         System.Label.FEC_MSG_Param_Required,
-        new List<String>{ 'FEC_Selected_Address_Info__c' }
+        new List<String>{ 'FEC_Selected_Address__c' }
       );
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;
@@ -407,7 +407,7 @@ public with sharing class FEC_UpdateCustomerAddress {
       result.success = false;
       result.errorMessage = String.format(
         System.Label.FEC_MSG_Not_Found,
-        new List<String>{ 'Pending Address for FEC_Selected_Address_Info__c' }
+        new List<String>{ 'Pending Address for FEC_Selected_Address__c' }
       );
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;

@@ -757,7 +757,7 @@ public without sharing class FEC_ContractClosureController {
         }
         Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
         String fallbackApi;
-        for (String api : new List<String>{ 'FEC_Selected_Address__c', 'FEC_Selected_Address_Info__c', 'FEC_Selected_Address_Id__c' }) {
+        for (String api : new List<String>{ 'FEC_Selected_Address__c', 'FEC_Selected_Address_Id__c' }) {
             Schema.SObjectField fieldRef = fm.get(flc(api));
             if (fieldRef != null) {
                 caseSelectedAddressFieldApiCache = fieldRef.getDescribe().getName();
