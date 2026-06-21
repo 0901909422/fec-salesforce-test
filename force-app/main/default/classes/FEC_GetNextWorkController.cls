@@ -171,20 +171,16 @@ public without sharing class FEC_GetNextWorkController {
             isGetNextWork = true; 
             update c;           
 
-            FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
-                FEC_Case__c = caseId,
-                FEC_Routing_Action__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION,
-                FEC_Decision__c = FEC_ConstantCommon.STR_EMPTY,
-                FEC_Original_User_Queue__c = oldCase.Owner.Name,
-                FEC_Updated_User_Queue__c = FEC_CommonUltils.getEmailPrefix(u.Email),
-                FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
-                    ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
+            FEC_Routing_Action_History__c history = buildGetNextWorkRoutingHistory(
+                caseId,
+                oldCase.Owner.Name,
+                FEC_CommonUltils.getEmailPrefix(u.Email),
+                oldCase.FEC_Current_Case_Stage__r != null
+                    ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c
                     : null,
-                FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email),
-                FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
-                FEC_Original_User_Queue_ID__c = oldCase.OwnerId,
-                FEC_Updated_User_Queue_ID__c = currentUserId,
-                FEC_Description__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION
+                u.UserRole != null ? u.UserRole.Name : null,
+                oldCase.OwnerId,
+                currentUserId
             );
             insert history;
 
@@ -308,30 +304,49 @@ public without sharing class FEC_GetNextWorkController {
                 LIMIT 1
             ];
 
-            FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
-                FEC_Case__c = caseId,
-                FEC_Assignment__c = assignments[0].Id,
-                FEC_Routing_Action__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION,
-                FEC_Routing_Action_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
-                FEC_Decision__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION,
-                FEC_Original_User_Queue__c = queue.Name,
-                FEC_Updated_User_Queue__c = FEC_CommonUltils.getEmailPrefix(u.Email),
-                FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null
+            FEC_Routing_Action_History__c history = buildGetNextWorkRoutingHistory(
+                caseId,
+                queue.Name,
+                FEC_CommonUltils.getEmailPrefix(u.Email),
+                oldCase.FEC_Current_Case_Stage__r != null
                     ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c
                     : null,
-                FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email),
-                FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
-                FEC_Original_User_Queue_ID__c = queueId,
-                FEC_Updated_User_Queue_ID__c = currentUserId,
-                FEC_Current_Status__c = statusBefore,
-                FEC_Changed_Status__c = endCase.Status
+                u.UserRole != null ? u.UserRole.Name : null,
+                queueId,
+                currentUserId
             );
-
+            history.FEC_Assignment__c = assignments[0].Id;
+            history.FEC_Routing_Action_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT;
+            history.FEC_Current_Status__c = statusBefore;
+            history.FEC_Changed_Status__c = endCase.Status;
             insert history;
             return caseId;
         } finally {
             isGetNextWork = false; 
         }
+    }
+
+    private static FEC_Routing_Action_History__c buildGetNextWorkRoutingHistory(
+        Id caseId,
+        String originalUserQueue,
+        String updatedUserQueue,
+        String stageName,
+        String userRole,
+        Id originalUserQueueId,
+        Id updatedUserQueueId
+    ) {
+        String userPrefix = updatedUserQueue;
+        return new FEC_Routing_Action_History__c(
+            FEC_Case__c = caseId,
+            FEC_Routing_Action__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION,
+            FEC_Original_User_Queue__c = originalUserQueue,
+            FEC_Updated_User_Queue__c = updatedUserQueue,
+            FEC_Stage_Name__c = stageName,
+            FEC_User__c = userPrefix,
+            FEC_User_Role__c = userRole,
+            FEC_Original_User_Queue_ID__c = originalUserQueueId,
+            FEC_Updated_User_Queue_ID__c = updatedUserQueueId
+        );
     }
 
     private static Boolean isCaseOlder(Case a, Case b) {
