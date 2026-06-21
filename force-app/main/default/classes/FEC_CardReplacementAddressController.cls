@@ -382,7 +382,9 @@ public without sharing class FEC_CardReplacementAddressController {
                 objCasse.FEC_Process_Action_Count__c = -1;
                 FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
                     objCasse.Id,
-                    FEC_CmsVmxIntegrationService.OP_CARD_REPLACEMENT
+                    FEC_CmsVmxIntegrationService.OP_CARD_REPLACEMENT,
+                    null,
+                    cardBlockCode
                 );
             } else {
                 result.success = false;
