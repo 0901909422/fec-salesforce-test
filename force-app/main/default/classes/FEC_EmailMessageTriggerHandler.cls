@@ -74,9 +74,6 @@ public without sharing class FEC_EmailMessageTriggerHandler {
             Case oldInteraction = parentCaseMap.get(em.ParentId);
             if (oldInteraction == null) continue;
             if (oldInteraction.RecordType == null || oldInteraction.RecordType.DeveloperName != 'Interaction') continue;
-            // Email-to-Case already created a child Interaction and Case trigger set ParentId.
-            // Keep the EmailMessage on that Interaction; do not create another child.
-            if (oldInteraction.ParentId != null) continue;
 
             Case newInteraction = new Case();
             newInteraction.RecordTypeId = oldInteraction.RecordTypeId;
