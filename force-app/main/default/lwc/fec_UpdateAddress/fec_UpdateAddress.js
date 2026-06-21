@@ -239,7 +239,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this.originalSnapshotInitialized = true;
                 }
                 this._applyCaseUpdatedInfoTextsToDisplay(data);
-                this._applySelectedMailingAddressToDisplay(data);
                 this.syncMailingSelectionFromData();
                 if (!this.mailingSelectedRow && preservedMailingRow) {
                     this._applyMailingRowToAddresses(preservedMailingRow);
@@ -437,9 +436,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this._applyPendingAddressTextsToDisplay(data);
                 }
                 this._applyCaseUpdatedInfoTextsToDisplay(data);
-                if (!this._hasPendingDbDraft) {
-                    this._applySelectedMailingAddressToDisplay(data);
-                }
 
                 this.syncMailingSelectionFromData();
                 this.preloadProvinceOptions();
@@ -553,42 +549,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (dirty) {
             this.mainInfoData = { ...(this.mainInfoData || {}), addresses };
         }
-    }
-
-    /**
-     * Khôi phục checkbox Mailing từ Case.FEC_Selected_Address__c sau Address Update API
-     * (pending đã xóa, isMailingAddress không còn trong JSON).
-     */
-    _applySelectedMailingAddressToDisplay(data) {
-        const selectedId = data?.selectedMailingAddressId;
-        if (!selectedId || String(selectedId).trim() === '') {
-            return;
-        }
-        this._applyMailingToAddressByMasterId(String(selectedId).trim());
-    }
-
-    _applyMailingToAddressByMasterId(masterId) {
-        if (!masterId) {
-            return;
-        }
-        const addresses = Array.isArray(this.mainInfoData?.addresses)
-            ? this.mainInfoData.addresses.map((a) => {
-                if (!a || !a.addressInfoId) {
-                    return a;
-                }
-                const isSelected =
-                    String(a.addressInfoId).trim() === masterId;
-                return {
-                    ...a,
-                    mailingAddress: isSelected ? 'Y' : ''
-                };
-            })
-            : [];
-        this.mainInfoData = {
-            ...(this.mainInfoData || {}),
-            addresses,
-            selectedMailingAddressId: masterId
-        };
     }
 
     _applyMailingRowToAddresses(mailingRow) {
@@ -807,7 +767,8 @@ export default class Fec_UpdateAddress extends LightningElement {
             street,
             district,
             city,
-            pendingAddressJson
+            pendingAddressJson,
+            isMailingAddress
         } = p;
         return savePendingAddress({
             caseId: this.resolvedCaseId,
@@ -819,20 +780,20 @@ export default class Fec_UpdateAddress extends LightningElement {
             street: street ?? '',
             districtCode: district ?? '',
             provinceCode: city ?? '',
-            isMailingAddress: false,
+            isMailingAddress: isMailingAddress === true,
             pendingAddressJson: pendingAddressJson ?? null
         });
     }
 
     /**
-     * Ghi Case.FEC_Selected_Address_Info__c = master (sửa loại có trên CIF) hoặc Id pending (Add New).
+     * Ghi Case.FEC_Selected_Address__c = pending vừa Save (Updated) hoặc master gốc khi chưa có pending.
      */
     async _persistLastEditedAddressSelection(sfAddressType, pendingRowId) {
         if (!this.resolvedCaseId || !sfAddressType) {
             return;
         }
         const masterId = this._parentAddressIdForSfType(sfAddressType);
-        const selectedId = masterId || pendingRowId || null;
+        const selectedId = pendingRowId || masterId || null;
         await saveCaseSelectedAddressInfo({
             caseId: this.resolvedCaseId,
             masterAddressInfoId: selectedId
@@ -1537,6 +1498,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                                 street: enriched.street ?? '',
                                 district: enriched.district ?? '',
                                 city: enriched.city ?? '',
+                                isMailingAddress: enriched.isMailingAddress === 'Y',
                                 pendingAddressJson: JSON.stringify(enriched)
                             }).then(() => {
                                 const pk = this._pendingJsonFieldKey(sfAddressType);
@@ -1808,6 +1770,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                 street: primaryInfo.street,
                 district: primaryInfo.district,
                 city: primaryInfo.city,
+                isMailingAddress: isMailingForSave === 'Y',
                 pendingAddressJson: JSON.stringify(primaryInfo)
             });
             await this._persistLastEditedAddressSelection(
@@ -1835,27 +1798,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                 composedAddress,
                 selectedRow
             );
-            if (isMailingForSave === 'Y') {
-                const mailingMasterId =
-                    this._parentAddressIdForSfType(primarySfAddressType) ||
-                    pendingRowId;
-                if (mailingMasterId) {
-                    this.mainInfoData = {
-                        ...(this.mainInfoData || {}),
-                        selectedMailingAddressId: mailingMasterId
-                    };
-                }
-            } else if (
-                String(this.mainInfoData?.selectedMailingAddressId || '') ===
-                String(
-                    this._parentAddressIdForSfType(primarySfAddressType) || ''
-                )
-            ) {
-                this.mainInfoData = {
-                    ...(this.mainInfoData || {}),
-                    selectedMailingAddressId: null
-                };
-            }
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
             this.mailingEditRow = undefined;
             this.resetMailingForm();
@@ -2133,6 +2075,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                 street: primaryInfo.street,
                 district: primaryInfo.district,
                 city: primaryInfo.city,
+                isMailingAddress: primaryInfo.isMailingAddress === 'Y',
                 pendingAddressJson: JSON.stringify(primaryInfo)
             });
             await this._persistLastEditedAddressSelection(

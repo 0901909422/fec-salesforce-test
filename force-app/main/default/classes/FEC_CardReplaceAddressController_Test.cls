@@ -53,7 +53,7 @@ private class FEC_CardReplaceAddressController_Test {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
-            res.setBody('{"Sys2":{"Code":"1","Description":"Success","TransID":"TXN-REP"}}');
+            res.setBody('{"Sys":{"Code":"1","Description":"Success","TransID":"TXN-REP"}}');
             return res;
         }
     }
@@ -62,7 +62,7 @@ private class FEC_CardReplaceAddressController_Test {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
-            res.setBody('{"Sys2":{"Code":"99","Description":"Failed"}}');
+            res.setBody('{"Sys":{"Code":"99","Description":"Failed"}}');
             return res;
         }
     }
@@ -85,6 +85,18 @@ private class FEC_CardReplaceAddressController_Test {
             }
             if (body.contains('M_CMS_EMEA_ACCOUNT_INQ')) {
                 return new EmeaAccountMock(blkCd1).respond(req);
+            }
+            if (body.contains('VMX_NONMON_UPD') || body.contains('NONMON')) {
+                HttpResponse res = new HttpResponse();
+                res.setStatusCode(200);
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
+                    '<soapenv:Body><WSResponse>' +
+                    '<Sys><Code>1</Code></Sys>' +
+                    '<VMX_NONMON_UPD><VMX_ROOT><VMX_MSGOUT><SVC_RETURN>P</SVC_RETURN></VMX_MSGOUT></VMX_ROOT></VMX_NONMON_UPD>' +
+                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
             }
             if (replaceSuccess) {
                 return new ReplaceCardSuccessMock().respond(req);
@@ -280,7 +292,7 @@ private class FEC_CardReplaceAddressController_Test {
     static void testCardReplacement_Success() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
-            Test.setMock(HttpCalloutMock.class, new ReplaceCardSuccessMock());
+            Test.setMock(HttpCalloutMock.class, new CompositeCalloutMock('O', ' ', true));
 
             Test.startTest();
             FEC_CardReplacementAddressController.UpdateResult result =

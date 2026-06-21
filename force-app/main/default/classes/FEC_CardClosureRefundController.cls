@@ -452,6 +452,7 @@ public without sharing class FEC_CardClosureRefundController {
             return dto;
         }
 
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
@@ -462,13 +463,20 @@ public without sharing class FEC_CardClosureRefundController {
                 ctx.accountNumber,
                 ctx.caseRecord.FEC_Is_Test_API__c
             );
-            FEC_CardLockUnLockCallout.logApiResponse();
 
             applyCardLockApiResponse(dto, response, transId, true);
+            if (dto.success == true) {
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    ctx.caseId,
+                    FEC_CmsVmxIntegrationService.OP_BLOCK_CARD
+                );
+            }
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
         } finally {
+            FEC_CardLockUnLockCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
             logBlockCardProcessActionHistory(ctx, PROCESS_ACTION_CARD_LOCK, dto.success == true);
         }
 
@@ -541,6 +549,7 @@ public without sharing class FEC_CardClosureRefundController {
             return dto;
         }
 
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
@@ -551,12 +560,20 @@ public without sharing class FEC_CardClosureRefundController {
                 ctx.accountNumber,
                 ctx.caseRecord.FEC_Is_Test_API__c
             );
-            FEC_CardLockUnLockCallout.logApiResponse();
 
             applyCardLockApiResponse(dto, response, transId, false);
+            if (dto.success == true) {
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    ctx.caseId,
+                    FEC_CmsVmxIntegrationService.OP_UNBLOCK_CARD
+                );
+            }
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Unlock_Failed;
+        } finally {
+            FEC_CardLockUnLockCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
         return dto;

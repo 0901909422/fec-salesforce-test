@@ -3,6 +3,7 @@ public with sharing class FEC_PinReplacementController {
     public static UpdateResult pinReplacement(String recordId, String method) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             objCasse = [
                 SELECT Id,
@@ -22,11 +23,14 @@ public with sharing class FEC_PinReplacementController {
                 objCasse.FEC_Case_Phone_Number__c,
                 objCasse.FEC_Is_Test_API__c
             );
-            FEC_PINReissueServiceCallout.logApiResponse();
             
             if (response.isSuccess) {
                 result.success = true;
                 objCasse.FEC_Process_Action_Count__c = -1;
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    objCasse.Id,
+                    FEC_CmsVmxIntegrationService.OP_PIN_REPLACEMENT
+                );
             } else {
                 result.success = false;
                 if (objCasse.FEC_Process_Action_Count__c == null) {
@@ -47,6 +51,8 @@ public with sharing class FEC_PinReplacementController {
                 ex.getStackTraceString()
             );
         } finally {
+            FEC_PINReissueServiceCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
             FEC_CommonUltils.createProcessActionHistory(
                 method,
                 objCasse,

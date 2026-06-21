@@ -533,6 +533,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CmsVmxIntegrationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CofGsrAssignmentService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1157,6 +1161,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_PinResetCounterCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_PinResetHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1390,6 +1398,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_VmxAcctBlkcdUpdEmeaCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_VmxNonmonUpdCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
