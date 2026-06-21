@@ -164,7 +164,8 @@ private class FEC_UpdateCustomerAddress_Test {
                 '',
                 'Yes',
                 'No',
-                'Yes'
+                'Yes',
+                null
             );
             Test.stopTest();
             System.assertEquals(true, res.success);
@@ -309,6 +310,7 @@ private class FEC_UpdateCustomerAddress_Test {
                 null,
                 null,
                 null,
+                null,
                 null
             );
         Test.stopTest();
@@ -431,6 +433,19 @@ private class FEC_UpdateCustomerAddress_Test {
             FEC_Address__c = pendingJson,
             FEC_Mailing_Address__c = false
         );
+        Id pendingId = [
+            SELECT Id
+            FROM FEC_Address_Info__c
+            WHERE FEC_Case__c = :c.Id AND FEC_Address_Type__c = 'Current Address'
+            LIMIT 1
+        ].Id;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_Selected_Address_Info__c = pendingId);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
 
         Test.setMock(HttpCalloutMock.class, new SoapFailMock());
         System.runAs(adminUser()) {
@@ -469,6 +484,19 @@ private class FEC_UpdateCustomerAddress_Test {
             FEC_Address__c = legacyMeta,
             FEC_Mailing_Address__c = false
         );
+        Id pendingId = [
+            SELECT Id
+            FROM FEC_Address_Info__c
+            WHERE FEC_Case__c = :c.Id AND FEC_Address_Type__c = 'Office Address'
+            LIMIT 1
+        ].Id;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_Selected_Address_Info__c = pendingId);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
 
         Test.setMock(HttpCalloutMock.class, new SoapMock());
         System.runAs(adminUser()) {
@@ -513,6 +541,19 @@ private class FEC_UpdateCustomerAddress_Test {
             FEC_Address__c = pendingJson,
             FEC_Mailing_Address__c = true
         );
+        Id pendingId = [
+            SELECT Id
+            FROM FEC_Address_Info__c
+            WHERE FEC_Case__c = :c.Id AND FEC_Address_Type__c = 'Permanent Address'
+            LIMIT 1
+        ].Id;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_Selected_Address_Info__c = pendingId);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
 
         Test.setMock(HttpCalloutMock.class, new SoapMock());
         System.runAs(adminUser()) {

@@ -419,16 +419,10 @@ public without sharing class FEC_TransactionsController {
 
         if (cardTxList != null) {
             for (FEC_GetCardBasicInfo.TransactionInfo cardTx : cardTxList) {
-                if (cardTx == null || cardTx.PostingDate == null || cardTx.Amount == null) {
+                if (cardTx == null || cardTx.Amount == null) {
                     continue;
                 }
-                String key = buildUnbilledKey(
-                    cardTx.PostingDate,
-                    cardTx.Amount,
-                    cardTx.CreditDebitFlag,
-                    resolveUnbilledTransactionCode(cardTx, null),
-                    UNBILLED_SOURCE_BASICINFO
-                );
+                String key = buildBasicInfoUnbilledKey(cardTx);
                 result.add(
                     buildUnbilledDto(
                         cardTx,
@@ -474,8 +468,9 @@ public without sharing class FEC_TransactionsController {
         dto.helpTexts = helpTexts;
 
         String biTransactionDate = formatCardBasicEffDateTime(cardTx);
-        String biPostingDate = cardTx != null && cardTx.PostingDate != null
-            ? formatDateDdMmYyyy(cardTx.PostingDate)
+        Date biPostResolved = cardTx != null ? resolveBasicInfoPostDate(cardTx) : null;
+        String biPostingDate = biPostResolved != null
+            ? formatDateDdMmYyyy(biPostResolved)
             : null;
         String biAmount = formatAmountForDual(cardTx != null ? cardTx.Amount : null);
         String biAuthCode = cardTx != null ? cardTx.AuthCode : null;
@@ -511,7 +506,7 @@ public without sharing class FEC_TransactionsController {
         if (dto.effectiveDate == null && auth != null) {
             dto.effectiveDate = FEC_CommonUltils.parseDate(auth.EFF_DATE);
         }
-        dto.postingDate = cardTx != null ? cardTx.PostingDate : null;
+        dto.postingDate = cardTx != null ? resolveBasicInfoPostDate(cardTx) : null;
         if (dto.postingDate == null && auth != null) {
             dto.postingDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
         }
@@ -592,10 +587,11 @@ public without sharing class FEC_TransactionsController {
         TransactionDTO dto,
         FEC_VMXAUTHDETAILINQ.AuthTableRow auth
     ) {
-        String mfasEff = auth.EFF_DATE;
-        String vmxEff = String.isNotBlank(auth.EFF_DATE_AUTH_DETAIL)
+        String mfasEff = formatPendingEffDisplay(auth.EFF_DATE, auth.TRANS_TIME);
+        String vmxEffRaw = String.isNotBlank(auth.EFF_DATE_AUTH_DETAIL)
             ? auth.EFF_DATE_AUTH_DETAIL
             : auth.EFF_DATE;
+        String vmxEff = formatPendingEffDisplay(vmxEffRaw, auth.TRANS_TIME);
 
         dto.effectiveDateDualDisplay = dualDisplay(mfasEff, vmxEff);
         dto.transactionAmountDualDisplay = dualDisplay(
@@ -798,7 +794,7 @@ public without sharing class FEC_TransactionsController {
         if (String.isBlank(datePart)) {
             return null;
         }
-        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart;
+        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart + ' 00:00:00';
     }
 
     private static String formatOutstandingAuthPostDate(
@@ -811,6 +807,22 @@ public without sharing class FEC_TransactionsController {
         return postDate != null
             ? formatDateDdMmYyyy(postDate)
             : auth.POSTING_DATE;
+    }
+
+    /** Pending VMX: EFF_DATE (yyyyMMdd) + optional TIME (HHmmss); date-only → 00:00:00 */
+    private static String formatPendingEffDisplay(String effRaw, String transTimeRaw) {
+        if (String.isBlank(effRaw)) {
+            return null;
+        }
+        Date effDate = FEC_CommonUltils.parseDate(effRaw.trim());
+        String datePart = effDate != null
+            ? formatDateDdMmYyyy(effDate)
+            : effRaw.trim();
+        String timePart = formatHostTime(transTimeRaw);
+        if (String.isBlank(datePart)) {
+            return null;
+        }
+        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart + ' 00:00:00';
     }
 
     private static String formatDateDdMmYyyy(Date d) {
@@ -894,17 +906,14 @@ public without sharing class FEC_TransactionsController {
 
         if (cardTxList != null) {
             for (FEC_GetCardBasicInfo.TransactionInfo cardTx : cardTxList) {
-                if (cardTx == null || cardTx.PostingDate == null || cardTx.Amount == null) {
+                if (cardTx == null || cardTx.Amount == null) {
                     continue;
                 }
 
-                String key = buildUnbilledKey(
-                    cardTx.PostingDate,
-                    cardTx.Amount,
-                    cardTx.CreditDebitFlag,
-                    resolveUnbilledTransactionCode(cardTx, null),
-                    UNBILLED_SOURCE_BASICINFO
-                );
+                String key = buildBasicInfoUnbilledKey(cardTx);
+                if (key == null) {
+                    continue;
+                }
 
                 FEC_Transaction__c rec = working.containsKey(key)
                     ? working.get(key)
@@ -914,8 +923,8 @@ public without sharing class FEC_TransactionsController {
 
                 rec.FEC_Effective_Date__c = cardTx.TRNXDateTime != null
                     ? cardTx.TRNXDateTime.date()
-                    : cardTx.PostingDate;
-                rec.FEC_Post_Date__c = cardTx.PostingDate;
+                    : resolveBasicInfoPostDate(cardTx);
+                rec.FEC_Post_Date__c = resolveBasicInfoPostDate(cardTx);
                 rec.FEC_Transaction_Amount__c = cardTx.Amount;
                 rec.FEC_Credit_Debit_Flag__c = cardTx.CreditDebitFlag;
                 rec.FEC_Merchant_Description__c = String.isBlank(cardTx.MerchantName)
@@ -1162,6 +1171,58 @@ public without sharing class FEC_TransactionsController {
             amount.setScale(2) + '_' +
             normDebitCredit(creditDebit) + '_' +
             code;
+    }
+
+    /** PostingDate, else TRNXDateTime date, else SettlementDate. */
+    @TestVisible
+    private static Date resolveBasicInfoPostDate(
+        FEC_GetCardBasicInfo.TransactionInfo cardTx
+    ) {
+        if (cardTx == null) {
+            return null;
+        }
+        if (cardTx.PostingDate != null) {
+            return cardTx.PostingDate;
+        }
+        if (cardTx.TRNXDateTime != null) {
+            return cardTx.TRNXDateTime.date();
+        }
+        return cardTx.SettlementDate;
+    }
+
+    @TestVisible
+    private static String buildBasicInfoUnbilledKey(
+        FEC_GetCardBasicInfo.TransactionInfo cardTx
+    ) {
+        if (cardTx == null || cardTx.Amount == null) {
+            return null;
+        }
+        String txCode = resolveUnbilledTransactionCode(cardTx, null);
+        Date keyDate = resolveBasicInfoPostDate(cardTx);
+        if (keyDate != null) {
+            return buildUnbilledKey(
+                keyDate,
+                cardTx.Amount,
+                cardTx.CreditDebitFlag,
+                txCode,
+                UNBILLED_SOURCE_BASICINFO
+            );
+        }
+        String merchant = String.isBlank(cardTx.MerchantName)
+            ? cardTx.Description
+            : cardTx.MerchantName;
+        String auth = String.isBlank(cardTx.AuthCode)
+            ? ''
+            : cardTx.AuthCode.trim().toUpperCase();
+        String rrn = String.isBlank(cardTx.RRN) ? '' : cardTx.RRN.trim().toUpperCase();
+        String merchKey = String.isBlank(merchant)
+            ? ''
+            : merchant.trim().toUpperCase().left(60);
+        return UNBILLED_SOURCE_BASICINFO + '|ND|' +
+            cardTx.Amount.setScale(2) + '_' +
+            normDebitCredit(cardTx.CreditDebitFlag) + '_' +
+            (String.isBlank(txCode) ? '' : txCode.trim().toUpperCase()) + '_' +
+            auth + '_' + rrn + '_' + merchKey;
     }
 
     private static String normDebitCredit(String s) {

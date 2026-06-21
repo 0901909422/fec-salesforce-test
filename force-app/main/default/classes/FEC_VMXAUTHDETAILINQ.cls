@@ -60,6 +60,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
     public class AuthTableRow {
         public String EFF_DATE;
         public String EFF_DATE_AUTH_DETAIL;
+        public String TRANS_TIME;
         public String POSTING_DATE;
         public String AUTH_AMOUNT;
         public String Description;
@@ -428,6 +429,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
             pickXmlField(n, 'EFF_DATE'),
             pickXmlField(n, 'EffDate')
         );
+        ar.TRANS_TIME           = pickXmlField(n, 'TIME');
         ar.POSTING_DATE         = pickXmlField(n, 'POSTING_DATE');
         ar.AUTH_AMOUNT          = amtRaw;
         ar.Description          = merchDesc;
@@ -464,7 +466,6 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         // NEW fields per spec — must exist in AuthTableRow
         // ar.CARD_NBR             = pickXmlField(n, 'CARD_NBR');
         // ar.CARD_SEQ             = pickXmlField(n, 'CARD_SEQ');
-        // ar.TRANS_TIME           = pickXmlField(n, 'TIME');        // TIME is reserved in Apex
         // ar.REQ_TYPE             = pickXmlField(n, 'REQ_TYPE');
         // ar.ACTN_RSN             = pickXmlField(n, 'ACTN_RSN');
         // ar.MEMO_ACTN            = pickXmlField(n, 'MEMO_ACTN');

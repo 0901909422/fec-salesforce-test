@@ -2,7 +2,8 @@
  * File Name    : FEC_UpdateCustomerAddress
  * Author       : Toannd61
  * Date         : 2026-03-11
- * Description  : SOAP API callout to insert/update customer address (UpdateCustomerAddress)
+ * Description  : SOAP API callout update/insert địa chỉ trên CIF (UpdateCustomerAddress).
+ *                Add New: gọi CIF (insert, không AddressId) nhưng không sync master SF — Original/C360 giữ nguyên.
  * ===============================================================
  * Ver    Date         Author            Modification
  * ===============================================================
@@ -33,9 +34,12 @@ public with sharing class FEC_UpdateCustomerAddress {
     @AuraEnabled public String propertyStatus;
     @AuraEnabled public String years;
     @AuraEnabled public String months;
+    @AuraEnabled public String isMailingAddress;
     @AuraEnabled public String isPrimary;
     @AuraEnabled public String receiveStatement;
     @AuraEnabled public String cardDelivery;
+    /** Add New: CIF chưa có AddressId — gửi AddressType + địa chỉ, bỏ qua bắt buộc AddressId. */
+    @AuraEnabled public Boolean allowNewAddressInsert;
   }
 
   public class UpdateResult {
@@ -149,9 +153,52 @@ public with sharing class FEC_UpdateCustomerAddress {
     String propertyStatus,
     String years,
     String months,
+    String isMailingAddress,
     String isPrimary,
     String receiveStatement,
     String cardDelivery
+  ) {
+    return updateCustomerAddressParams(
+      caseId,
+      sfAddressType,
+      cifNumber,
+      addressId,
+      addressType,
+      number_x,
+      building,
+      street,
+      district,
+      city,
+      propertyStatus,
+      years,
+      months,
+      isMailingAddress,
+      isPrimary,
+      receiveStatement,
+      cardDelivery,
+      false
+    );
+  }
+
+  public static UpdateResult updateCustomerAddressParams(
+    String caseId,
+    String sfAddressType,
+    String cifNumber,
+    String addressId,
+    String addressType,
+    String number_x,
+    String building,
+    String street,
+    String district,
+    String city,
+    String propertyStatus,
+    String years,
+    String months,
+    String isMailingAddress,
+    String isPrimary,
+    String receiveStatement,
+    String cardDelivery,
+    Boolean allowNewAddressInsert
   ) {
     String cif = cifNumber;
     String addrId = addressId;
@@ -182,6 +229,9 @@ public with sharing class FEC_UpdateCustomerAddress {
         }
       }
     }
+    if (String.isBlank(addrType) && String.isNotBlank(sfAddressType)) {
+      addrType = mapSfAddressTypeToApiCode(sfAddressType);
+    }
     CustomerAddressInfo info = new CustomerAddressInfo();
     info.cifNumber = cif;
     info.addressId = addrId;
@@ -194,31 +244,88 @@ public with sharing class FEC_UpdateCustomerAddress {
     info.propertyStatus = propertyStatus;
     info.years = years;
     info.months = months;
+    info.isMailingAddress = isMailingAddress;
     info.isPrimary = isPrimary;
     info.receiveStatement = receiveStatement;
     info.cardDelivery = cardDelivery;
+    info.allowNewAddressInsert = allowNewAddressInsert == true;
     return updateCustomerAddress(info);
   }
 
-  private static List<FEC_Address_Info__c> sortPendingCaseAddresses(
-    List<FEC_Address_Info__c> rows
+  /** Chỉ gọi API cho pending khớp Case.FEC_Selected_Address_Info__c (master parent hoặc Id pending Add New). */
+  private static FEC_Address_Info__c resolvePendingRowForSelectedAddress(
+    Id selectedAddressInfoId,
+    List<FEC_Address_Info__c> pendingRows
   ) {
-    List<FEC_Address_Info__c> out = new List<FEC_Address_Info__c>();
-    if (rows == null || rows.isEmpty()) {
-      return out;
+    if (selectedAddressInfoId == null || pendingRows == null || pendingRows.isEmpty()) {
+      return null;
     }
-    for (String t : new List<String>{
-      'Permanent Address',
-      'Office Address',
-      'Current Address'
-    }) {
-      for (FEC_Address_Info__c r : rows) {
-        if (r != null && r.FEC_Address_Type__c == t) {
-          out.add(r);
-        }
+    for (FEC_Address_Info__c row : pendingRows) {
+      if (row != null && row.Id == selectedAddressInfoId) {
+        return row;
       }
     }
-    return out;
+    for (FEC_Address_Info__c row : pendingRows) {
+      if (row != null && row.FEC_Parent_Address__c == selectedAddressInfoId) {
+        return row;
+      }
+    }
+    return null;
+  }
+
+  private static String mapSfAddressTypeToApiCode(String sfType) {
+    if (sfType == FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT) {
+      return FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT;
+    }
+    if (sfType == FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE) {
+      return FEC_ConstantCommon.ADDRESS_TYPE_OFFICE;
+    }
+    if (sfType == FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT) {
+      return FEC_ConstantCommon.ADDRESS_TYPE_CURRES;
+    }
+    return null;
+  }
+
+  private static Map<String, Object> enrichPendingJsonForApi(FEC_Address_Info__c pending) {
+    Map<String, Object> data = new Map<String, Object>();
+    if (pending == null) {
+      return data;
+    }
+    if (String.isNotBlank(pending.FEC_Address__c) && pending.FEC_Address__c.trim().startsWith('{')) {
+      try {
+        data = (Map<String, Object>) JSON.deserializeUntyped(pending.FEC_Address__c.trim());
+      } catch (Exception e) {
+        data = new Map<String, Object>();
+      }
+    }
+    if (data == null) {
+      data = new Map<String, Object>();
+    }
+    if (String.isBlank(stringFromJsonField(data, 'addressType'))
+        && String.isNotBlank(pending.FEC_Address_Type__c)) {
+      data.put('addressType', mapSfAddressTypeToApiCode(pending.FEC_Address_Type__c));
+    }
+    return data;
+  }
+
+  /**
+   * Add New: loại chưa có master trên CIF (FEC_Parent_Address__c = null) — insert API, không sync master SF.
+   */
+  private static Boolean isAddNewPendingRow(FEC_Address_Info__c pending) {
+    return pending != null && pending.FEC_Parent_Address__c == null;
+  }
+
+  private static void finalizeSuccessfulAddressSubmit(
+    Case selectedCase,
+    FEC_Address_Info__c selectedPending
+  ) {
+    selectedCase.FEC_Process_Action_Count__c = -1;
+    FEC_MainInfoController.syncCaseUpdatedInfoFromPendingRow(
+      selectedCase.Id,
+      selectedPending.Id
+    );
+    // Không sync master / không GetAddressesList — CIF đã cập nhật nhưng C360 Original trên Case giữ snapshot.
+    FEC_MainInfoController.clearCasePendingAddressRows(selectedCase.Id);
   }
 
   public static UpdateResult updateValue(
@@ -244,6 +351,35 @@ public with sharing class FEC_UpdateCustomerAddress {
     }
 
     Case selectedCase = caselst[0];
+    Id selectedMasterAddressId = [
+      SELECT FEC_Selected_Address_Info__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ].FEC_Selected_Address_Info__c;
+
+    UpdateResult result = new UpdateResult();
+    if (selectedMasterAddressId == null) {
+      result.success = false;
+      result.errorMessage = String.format(
+        System.Label.FEC_MSG_Param_Required,
+        new List<String>{ 'FEC_Selected_Address_Info__c' }
+      );
+      if (selectedCase.FEC_Process_Action_Count__c == null) {
+        selectedCase.FEC_Process_Action_Count__c = 0;
+      }
+      selectedCase.FEC_Process_Action_Count__c += 1;
+      FEC_CaseTriggerHandler.isExecuting = true;
+      update selectedCase;
+      result.actionCount = selectedCase.FEC_Process_Action_Count__c;
+      FEC_CommonUltils.createProcessActionHistory(
+        String.isNotBlank(method) ? method : API_NAME,
+        selectedCase,
+        false
+      );
+      return result;
+    }
+
     List<FEC_Address_Info__c> pendingRows = [
       SELECT
         Id,
@@ -255,84 +391,104 @@ public with sharing class FEC_UpdateCustomerAddress {
         FEC_Property_Status__c,
         FEC_Years__c,
         FEC_Months__c,
+        FEC_Mailing_Address__c,
+        FEC_Parent_Address__c,
         FEC_District__r.FEC_Code__c,
         FEC_Province__r.FEC_Code__c
       FROM FEC_Address_Info__c
       WHERE FEC_Case__c = :selectedCase.Id
     ];
-    List<FEC_Address_Info__c> sortedPending = sortPendingCaseAddresses(pendingRows);
+    FEC_Address_Info__c selectedPending = resolvePendingRowForSelectedAddress(
+      selectedMasterAddressId,
+      pendingRows
+    );
 
-    UpdateResult result;
+    if (selectedPending == null) {
+      result.success = false;
+      result.errorMessage = String.format(
+        System.Label.FEC_MSG_Not_Found,
+        new List<String>{ 'Pending Address for FEC_Selected_Address_Info__c' }
+      );
+      if (selectedCase.FEC_Process_Action_Count__c == null) {
+        selectedCase.FEC_Process_Action_Count__c = 0;
+      }
+      selectedCase.FEC_Process_Action_Count__c += 1;
+      FEC_CaseTriggerHandler.isExecuting = true;
+      update selectedCase;
+      result.actionCount = selectedCase.FEC_Process_Action_Count__c;
+      FEC_CommonUltils.createProcessActionHistory(
+        String.isNotBlank(method) ? method : API_NAME,
+        selectedCase,
+        false
+      );
+      return result;
+    }
+
+    Boolean addNewInsert = isAddNewPendingRow(selectedPending);
     FEC_CommonUltils.beginDeferredApiLogging();
     try {
-      for (FEC_Address_Info__c row : sortedPending) {
-        if (row == null || String.isBlank(row.FEC_Address_Type__c)) {
-          continue;
+      String addrStored = selectedPending.FEC_Address__c;
+      try {
+        if (String.isNotBlank(addrStored) && addrStored.trim().startsWith('{')) {
+          Map<String, Object> data = enrichPendingJsonForApi(selectedPending);
+          result = updateCustomerAddressParams(
+            caseId,
+            selectedPending.FEC_Address_Type__c,
+            (String) data.get('cifNumber'),
+            (String) data.get('addressId'),
+            (String) data.get('addressType'),
+            (String) data.get('number_x'),
+            (String) data.get('building'),
+            (String) data.get('street'),
+            (String) data.get('district'),
+            (String) data.get('city'),
+            resolvePropertyStatus(selectedPending, data),
+            resolveYears(selectedPending, data),
+            resolveMonths(selectedPending, data),
+            null,
+            (String) data.get('isPrimary'),
+            (String) data.get('receiveStatement'),
+            (String) data.get('cardDelivery'),
+            addNewInsert
+          );
+        } else {
+          List<String> meta = FEC_MainInfoController.unpackPendingAddressApiMeta(addrStored);
+          String districtCode = (selectedPending.FEC_District__r != null)
+            ? selectedPending.FEC_District__r.FEC_Code__c
+            : null;
+          String provinceCode = (selectedPending.FEC_Province__r != null)
+            ? selectedPending.FEC_Province__r.FEC_Code__c
+            : null;
+          result = updateCustomerAddressParams(
+            caseId,
+            selectedPending.FEC_Address_Type__c,
+            meta[0],
+            meta[1],
+            meta[2],
+            selectedPending.FEC_Number__c,
+            selectedPending.FEC_Building__c,
+            selectedPending.FEC_Street__c,
+            districtCode,
+            provinceCode,
+            selectedPending.FEC_Property_Status__c,
+            blankToNullText(selectedPending.FEC_Years__c),
+            blankToNullText(selectedPending.FEC_Months__c),
+            null,
+            '',
+            '',
+            '',
+            addNewInsert
+          );
         }
-        String addrStored = row.FEC_Address__c;
-        try {
-          if (String.isNotBlank(addrStored) && addrStored.trim().startsWith('{')) {
-            Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(addrStored);
-            result = updateCustomerAddressParams(
-              caseId,
-              row.FEC_Address_Type__c,
-              (String) data.get('cifNumber'),
-              (String) data.get('addressId'),
-              (String) data.get('addressType'),
-              (String) data.get('number_x'),
-              (String) data.get('building'),
-              (String) data.get('street'),
-              (String) data.get('district'),
-              (String) data.get('city'),
-              resolvePropertyStatus(row, data),
-              resolveYears(row, data),
-              resolveMonths(row, data),
-              (String) data.get('isPrimary'),
-              (String) data.get('receiveStatement'),
-              (String) data.get('cardDelivery')
-            );
-          } else {
-            List<String> meta = FEC_MainInfoController.unpackPendingAddressApiMeta(addrStored);
-            String districtCode = (row.FEC_District__r != null)
-              ? row.FEC_District__r.FEC_Code__c
-              : null;
-            String provinceCode = (row.FEC_Province__r != null)
-              ? row.FEC_Province__r.FEC_Code__c
-              : null;
-            result = updateCustomerAddressParams(
-              caseId,
-              row.FEC_Address_Type__c,
-              meta[0],
-              meta[1],
-              meta[2],
-              row.FEC_Number__c,
-              row.FEC_Building__c,
-              row.FEC_Street__c,
-              districtCode,
-              provinceCode,
-              row.FEC_Property_Status__c,
-              blankToNullText(row.FEC_Years__c),
-              blankToNullText(row.FEC_Months__c),
-              '',
-              '',
-              ''
-            );
-          }
-        } finally {
-          logApiResponse();
-        }
-        if (result == null || result.success != true) {
-          break;
-        }
+      } finally {
+        logApiResponse();
       }
     } finally {
       FEC_CommonUltils.flushDeferredApiLogs();
     }
 
     if (result != null && result.success == true) {
-      selectedCase.FEC_Process_Action_Count__c = -1;
-
-      FEC_MainInfoController.clearCasePendingAddressRows(selectedCase.Id);
+      finalizeSuccessfulAddressSubmit(selectedCase, selectedPending);
     } else {
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;
@@ -467,10 +623,17 @@ public with sharing class FEC_UpdateCustomerAddress {
       );
     }
     requireNonBlank(info.cifNumber, 'CIFNumber');
-    requireNonBlank(info.addressId, 'AddressId');
+    Boolean newInsert = info.allowNewAddressInsert == true
+      && String.isBlank(info.addressId)
+      && String.isNotBlank(info.addressType);
+    if (!newInsert) {
+      requireNonBlank(info.addressId, 'AddressId');
+    }
     requireNonBlank(info.addressType, 'AddressType');
     FEC_CommonUltils.checkLength('CIFNumber', info.cifNumber, 255);
-    FEC_CommonUltils.checkLength('AddressId', info.addressId, 255);
+    if (String.isNotBlank(info.addressId)) {
+      FEC_CommonUltils.checkLength('AddressId', info.addressId, 255);
+    }
     FEC_CommonUltils.checkLength('AddressType', info.addressType, 255);
     if (String.isNotBlank(info.number_x)) {
       FEC_CommonUltils.checkLength('Number', info.number_x, 255);
@@ -517,7 +680,9 @@ public with sharing class FEC_UpdateCustomerAddress {
 
     FEC_CommonUltils.addTextNodeSafe(requestNode, 'CIFNumber', info.cifNumber);
     Dom.XmlNode addrNode = requestNode.addChildElement('Address', null, null);
-    FEC_CommonUltils.addTextNodeSafe(addrNode, 'AddressId', info.addressId);
+    if (String.isNotBlank(info.addressId)) {
+      FEC_CommonUltils.addTextNodeSafe(addrNode, 'AddressId', info.addressId);
+    }
     FEC_CommonUltils.addTextNodeSafe(addrNode, 'AddressType', info.addressType);
     addIfPresent(addrNode, 'Number', info.number_x);
     addIfPresent(addrNode, 'Building', info.building);
@@ -527,6 +692,7 @@ public with sharing class FEC_UpdateCustomerAddress {
     addIfPresent(addrNode, 'PropertyStatus', info.propertyStatus);
     addIfPresent(addrNode, 'Years', info.years);
     addIfPresent(addrNode, 'Months', info.months);
+    // IsMailingAddress: lưu trên FEC_Address_Info__c.FEC_Mailing_Address__c (SF), không gửi qua UpdateCustomerAddress API.
     addYIfPresent(addrNode, 'IsPrimary', info.isPrimary);
     addYIfPresent(addrNode, 'ReceiveStatement', info.receiveStatement);
     addYIfPresent(addrNode, 'CardDelivery', info.cardDelivery);
