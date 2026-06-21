@@ -182,12 +182,18 @@
             System.debug('HTTP Error: ' + res.getBody());
             throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
 
+        } catch (CalloutException e) {
+            if (responseLog != null) {
+                responseLog.errorMessage = e.getMessage();
+            }
+            System.debug('Exception in callAccountInquiry: ' + e.getMessage());
+            throw e;
         } catch (Exception e) {
             if (responseLog != null) {
                 responseLog.errorMessage = e.getMessage();
             }
             System.debug('Exception in callAccountInquiry: ' + e.getMessage());
-            throw new AuraHandledException(e.getMessage());
+            throw new CalloutException(e.getMessage());
         } finally {
             logApiResponse();
         }

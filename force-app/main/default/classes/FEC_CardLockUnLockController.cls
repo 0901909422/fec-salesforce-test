@@ -151,6 +151,7 @@ public with sharing class FEC_CardLockUnLockController {
                 result.currentCardStatus = objCasse.FEC_Current_Card_Status__c;
             }
         } catch (Exception ex) {
+            result.errorMessage = ex.getMessage();
             // Log Api
             FEC_CommonUltils.logApiResponse(FEC_MCMSCARDTOCARDINQEMEA.responseLog);
             // Log exception
@@ -211,6 +212,8 @@ public with sharing class FEC_CardLockUnLockController {
         public String currentCardStatus { get; set; }
         @AuraEnabled
         public String currentBlockCode { get; set; }
+        @AuraEnabled
+        public String errorMessage { get; set; }
     }
 
     public class LockCardResult {

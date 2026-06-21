@@ -6973,6 +6973,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   handleCheckProcessAction() {
     this.showProcessAction = false;
     this.isProcessActionInfo = false;
+    this.isProcessActionFailed = false;
     this.processActionMsg = '';
     checkProcessAction({ caseId: this.recordId })
       .then((result) => {
@@ -6981,6 +6982,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           result.blockCode1,
           result.localStorageKey,
         );
+        if (result.hasApiError) {
+          this.isProcessActionFailed = true;
+          this.processActionMsg =
+            result.strMsg || result.apiErrorMessage || STR_EMPTY;
+          return;
+        }
         if (result.isShowAction) {
           this.showProcessAction = true;
         } else {
@@ -6993,7 +7000,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
       })
       .catch((error) => {
-        console.log(error);
+        this.isProcessActionFailed = true;
+        this.processActionMsg =
+          error?.body?.message || error?.message || STR_EMPTY;
+        console.error('[checkProcessAction]', error);
       });
   }
 
