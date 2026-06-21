@@ -3,6 +3,7 @@ public with sharing class FEC_CardLockUnLockController {
     public static UpdateResult lockUnblockCard(String recordId, String funcCode, String blockCode, String method) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             objCasse = [
                 SELECT Id,
@@ -43,8 +44,6 @@ public with sharing class FEC_CardLockUnLockController {
                 objCasse.FEC_Account_Number__c,
                 objCasse.FEC_Is_Test_API__c
             );
-            // Log API response
-            FEC_CardLockUnLockCallout.logApiResponse();
 
             if (String.isNotBlank(response.errorCode) || !FEC_CardLockUnLockCallout.isSuccess(response)) {
                 result.success = false;
@@ -72,6 +71,8 @@ public with sharing class FEC_CardLockUnLockController {
                 ex.getStackTraceString()
             );
         } finally {
+            FEC_CardLockUnLockCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
             FEC_CommonUltils.createProcessActionHistory(
                 method,
                 objCasse,
