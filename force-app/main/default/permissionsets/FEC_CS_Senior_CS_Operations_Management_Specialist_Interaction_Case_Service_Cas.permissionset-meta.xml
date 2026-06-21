@@ -4400,10 +4400,6 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>FEC_Customer_Search</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
         <tab>FEC_KYC__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
