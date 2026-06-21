@@ -11,13 +11,18 @@ public without sharing class FEC_AssignmentTriggerHandler {
         }
 
         Set<Id> caseIds = new Set<Id>();
+        Map<Id, Id> caseIdToNewOwnerUserId = new Map<Id, Id>();
         for (FEC_Assignment__c assignment : newList) {
             if (assignment.FEC_Case__c != null) {
                 caseIds.add(assignment.FEC_Case__c);
+                if (assignment.FEC_Assignment_Owner__c != null) {
+                    caseIdToNewOwnerUserId.put(assignment.FEC_Case__c, assignment.FEC_Assignment_Owner__c);
+                }
             }
         }
 
         syncCaseAssignmentData(caseIds);
+        syncCaseParticipants(caseIdToNewOwnerUserId);
     }
 
     public static void handleAfterUpdate(List<FEC_Assignment__c> newList, Map<Id, FEC_Assignment__c> oldMap) {
@@ -26,6 +31,7 @@ public without sharing class FEC_AssignmentTriggerHandler {
         }
 
         Set<Id> caseIds = new Set<Id>();
+        Map<Id, Id> caseIdToNewOwnerUserId = new Map<Id, Id>();
         for (FEC_Assignment__c assignment : newList) {
             FEC_Assignment__c oldAssignment = oldMap.get(assignment.Id);
             if (oldAssignment == null) {
@@ -48,9 +54,15 @@ public without sharing class FEC_AssignmentTriggerHandler {
                 && assignment.FEC_Case__c != null) {
                 caseIds.add(assignment.FEC_Case__c);
             }
+            if (assignment.FEC_Assignment_Owner__c != oldAssignment.FEC_Assignment_Owner__c
+                    && assignment.FEC_Assignment_Owner__c != null
+                    && assignment.FEC_Case__c != null) {
+                caseIdToNewOwnerUserId.put(assignment.FEC_Case__c, assignment.FEC_Assignment_Owner__c);
+            }
         }
 
         syncCaseAssignmentData(caseIds);
+        syncCaseParticipants(caseIdToNewOwnerUserId);
     }
 
     //tungnm37 sync thêm assignment manager list lên case nhưng giữ nguyên logic cũ của assignment users
@@ -115,5 +127,62 @@ public without sharing class FEC_AssignmentTriggerHandler {
         if (!casesToUpdate.isEmpty()) {
             Database.update(casesToUpdate, AccessLevel.SYSTEM_MODE);
         }
+    }
+
+    /**
+     * Cập nhật FEC_Case_Participants__c trên Case khi Assignment Owner đổi sang User mới.
+     * Chỉ áp dụng cho Record Type Customer Case và Internal Case.
+     */
+    private static void syncCaseParticipants(Map<Id, Id> caseIdToNewOwnerUserId) {
+        if (caseIdToNewOwnerUserId == null || caseIdToNewOwnerUserId.isEmpty()) {
+            return;
+        }
+
+        Set<String> allowedRecordTypes = new Set<String>{
+            FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME,
+            FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+        };
+
+        List<Case> casesToUpdate = new List<Case>();
+        for (Case c : [
+            SELECT Id, RecordType.DeveloperName, FEC_Case_Participants__c
+            FROM Case
+            WHERE Id IN :caseIdToNewOwnerUserId.keySet()
+        ]) {
+            if (!allowedRecordTypes.contains(c.RecordType.DeveloperName)) {
+                continue;
+            }
+            Id newUserId = caseIdToNewOwnerUserId.get(c.Id);
+            String updatedParticipants = addParticipant(c.FEC_Case_Participants__c, newUserId);
+            if (updatedParticipants != c.FEC_Case_Participants__c) {
+                casesToUpdate.add(new Case(Id = c.Id, FEC_Case_Participants__c = updatedParticipants));
+            }
+        }
+
+        if (!casesToUpdate.isEmpty()) {
+            Database.update(casesToUpdate, AccessLevel.SYSTEM_MODE);
+        }
+    }
+
+    private static String addParticipant(String currentParticipants, Id newUserId) {
+        if (newUserId == null) {
+            return currentParticipants;
+        }
+
+        String userIdStr = String.valueOf(newUserId);
+        if (String.isBlank(currentParticipants)) {
+            return userIdStr;
+        }
+
+        Set<String> trimmedIds = new Set<String>();
+        for (String id : currentParticipants.split(',')) {
+            trimmedIds.add(id.trim());
+        }
+
+        if (trimmedIds.contains(userIdStr)) {
+            return currentParticipants;
+        }
+
+        return currentParticipants + ',' + userIdStr;
     }
 }
