@@ -1989,6 +1989,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>standard-Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_ApplicationList</tab>
         <visibility>Visible</visibility>
     </tabSettings>
