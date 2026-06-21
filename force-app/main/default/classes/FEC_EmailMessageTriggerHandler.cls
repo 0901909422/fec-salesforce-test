@@ -68,12 +68,37 @@ public without sharing class FEC_EmailMessageTriggerHandler {
             WHERE Id IN :parentCaseIds
         ]);
 
+        Set<Id> interactionParentIds = new Set<Id>();
+        for (Case parentCase : parentCaseMap.values()) {
+            if (parentCase.ParentId != null) {
+                interactionParentIds.add(parentCase.ParentId);
+            }
+        }
+
+        Map<Id, Integer> interactionParentOutgoingCount = new Map<Id, Integer>();
+        if (!interactionParentIds.isEmpty()) {
+            for (AggregateResult ar : [
+                SELECT ParentId parentId, COUNT(Id) outboundCount
+                FROM EmailMessage
+                WHERE ParentId IN :interactionParentIds AND Incoming = false
+                GROUP BY ParentId
+            ]) {
+                interactionParentOutgoingCount.put((Id) ar.get('parentId'), (Integer) ar.get('outboundCount'));
+            }
+        }
+
         Map<Id, Case> emailIdToNewCase = new Map<Id, Case>();
         List<Case> casesToInsert = new List<Case>();
         for (EmailMessage em : replyMsgs) {
             Case oldInteraction = parentCaseMap.get(em.ParentId);
             if (oldInteraction == null) continue;
             if (oldInteraction.RecordType == null || oldInteraction.RecordType.DeveloperName != 'Interaction') continue;
+            if (oldInteraction.ParentId != null
+                && interactionParentOutgoingCount.containsKey(oldInteraction.ParentId)
+                && interactionParentOutgoingCount.get(oldInteraction.ParentId) > 0) {
+                handledEmailIds.add(em.Id);
+                continue;
+            }
 
             Case newInteraction = new Case();
             newInteraction.RecordTypeId = oldInteraction.RecordTypeId;
@@ -95,8 +120,9 @@ public without sharing class FEC_EmailMessageTriggerHandler {
 
         insert casesToInsert;
 
+        List<Case> parentPatches = new List<Case>();
         List<EmailMessage> emailsToInsert = new List<EmailMessage>();
-        List<EmailMessage> originalEmailsToDelete = new List<EmailMessage>();
+        List<Id> originalEmailIdsToDelete = new List<Id>();
         for (EmailMessage em : replyMsgs) {
             Case newInteraction = emailIdToNewCase.get(em.Id);
             if (newInteraction == null || newInteraction.Id == null) continue;
@@ -116,19 +142,24 @@ public without sharing class FEC_EmailMessageTriggerHandler {
             newEm.ThreadIdentifier = em.ThreadIdentifier;
             newEm.MessageIdentifier = em.MessageIdentifier;
             emailsToInsert.add(newEm);
+            originalEmailIdsToDelete.add(em.Id);
 
             handledEmailIds.add(em.Id);
-            originalEmailsToDelete.add(new EmailMessage(Id = em.Id));
         }
 
         if (!emailsToInsert.isEmpty()) {
             insert emailsToInsert;
         }
-        if (!originalEmailsToDelete.isEmpty()) {
+
+        if (!parentPatches.isEmpty()) {
+            update parentPatches;
+        }
+
+        if (!originalEmailIdsToDelete.isEmpty()) {
             try {
-                delete originalEmailsToDelete;
+                delete [SELECT Id FROM EmailMessage WHERE Id IN :originalEmailIdsToDelete];
             } catch (Exception e) {
-                System.debug('delete original Interaction reply EmailMessage failed: ' + e.getMessage());
+                System.debug('delete original interaction reply EmailMessage failed: ' + e.getMessage());
             }
         }
 
