@@ -218,6 +218,7 @@ export default class Fec_UpdateAddress extends LightningElement {
         this.resetMailingForm();
         this.newAddressModalOpen = false;
         this.resetNewAddressForm();
+        const preservedMailingRow = this.mailingSelectedRow;
         this.clearPendingAddressPayloads();
 
         const preservedSnapshot = this.originalAddressesSnapshot;
@@ -238,7 +239,12 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this.originalSnapshotInitialized = true;
                 }
                 this._applyCaseUpdatedInfoTextsToDisplay(data);
+                this._applySelectedMailingAddressToDisplay(data);
                 this.syncMailingSelectionFromData();
+                if (!this.mailingSelectedRow && preservedMailingRow) {
+                    this._applyMailingRowToAddresses(preservedMailingRow);
+                    this.syncMailingSelectionFromData();
+                }
             })
             .catch((err) => {
                 this.loadError =
@@ -413,6 +419,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                 this.mainInfoData = data;
                 this.loadError = undefined;
 
+                /* Snapshot Original = addresses thuần từ CIF/master (trước khi merge Updated lên mainInfoData). */
                 if (!this.originalSnapshotInitialized) {
                     this.originalAddressesSnapshot = cloneAddressesSnapshot(
                         data?.addresses
@@ -430,6 +437,9 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this._applyPendingAddressTextsToDisplay(data);
                 }
                 this._applyCaseUpdatedInfoTextsToDisplay(data);
+                if (!this._hasPendingDbDraft) {
+                    this._applySelectedMailingAddressToDisplay(data);
+                }
 
                 this.syncMailingSelectionFromData();
                 this.preloadProvinceOptions();
@@ -543,6 +553,61 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (dirty) {
             this.mainInfoData = { ...(this.mainInfoData || {}), addresses };
         }
+    }
+
+    /**
+     * Khôi phục checkbox Mailing từ Case.FEC_Selected_Address__c sau Address Update API
+     * (pending đã xóa, isMailingAddress không còn trong JSON).
+     */
+    _applySelectedMailingAddressToDisplay(data) {
+        const selectedId = data?.selectedMailingAddressId;
+        if (!selectedId || String(selectedId).trim() === '') {
+            return;
+        }
+        this._applyMailingToAddressByMasterId(String(selectedId).trim());
+    }
+
+    _applyMailingToAddressByMasterId(masterId) {
+        if (!masterId) {
+            return;
+        }
+        const addresses = Array.isArray(this.mainInfoData?.addresses)
+            ? this.mainInfoData.addresses.map((a) => {
+                if (!a || !a.addressInfoId) {
+                    return a;
+                }
+                const isSelected =
+                    String(a.addressInfoId).trim() === masterId;
+                return {
+                    ...a,
+                    mailingAddress: isSelected ? 'Y' : ''
+                };
+            })
+            : [];
+        this.mainInfoData = {
+            ...(this.mainInfoData || {}),
+            addresses,
+            selectedMailingAddressId: masterId
+        };
+    }
+
+    _applyMailingRowToAddresses(mailingRow) {
+        if (!MAILING_ROW_ORDER.includes(mailingRow)) {
+            return;
+        }
+        const addresses = Array.isArray(this.mainInfoData?.addresses)
+            ? this.mainInfoData.addresses.map((a) => {
+                if (!a || !a.addressType) {
+                    return a;
+                }
+                const row = this.rowFromSfAddressType(a.addressType);
+                return {
+                    ...a,
+                    mailingAddress: row === mailingRow ? 'Y' : ''
+                };
+            })
+            : [];
+        this.mainInfoData = { ...(this.mainInfoData || {}), addresses };
     }
 
     get isLoaded() {
@@ -1770,6 +1835,27 @@ export default class Fec_UpdateAddress extends LightningElement {
                 composedAddress,
                 selectedRow
             );
+            if (isMailingForSave === 'Y') {
+                const mailingMasterId =
+                    this._parentAddressIdForSfType(primarySfAddressType) ||
+                    pendingRowId;
+                if (mailingMasterId) {
+                    this.mainInfoData = {
+                        ...(this.mainInfoData || {}),
+                        selectedMailingAddressId: mailingMasterId
+                    };
+                }
+            } else if (
+                String(this.mainInfoData?.selectedMailingAddressId || '') ===
+                String(
+                    this._parentAddressIdForSfType(primarySfAddressType) || ''
+                )
+            ) {
+                this.mainInfoData = {
+                    ...(this.mainInfoData || {}),
+                    selectedMailingAddressId: null
+                };
+            }
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
             this.mailingEditRow = undefined;
             this.resetMailingForm();
