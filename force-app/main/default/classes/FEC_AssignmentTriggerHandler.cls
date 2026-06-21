@@ -3,19 +3,72 @@
 // tungnm37 fix: để null cho General assignment (thủ công) và khi submit ở stage 1
 public without sharing class FEC_AssignmentTriggerHandler {
 
+    private static Boolean isSyncingAssignmentManagerList = false;
+
+    public static void handleAfterInsert(List<FEC_Assignment__c> newList) {
+        if (isSyncingAssignmentManagerList || newList == null || newList.isEmpty()) {
+            return;
+        }
+
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_Assignment__c assignment : newList) {
+            if (assignment.FEC_Case__c != null) {
+                caseIds.add(assignment.FEC_Case__c);
+            }
+        }
+
+        syncCaseAssignmentData(caseIds);
+    }
+
     public static void handleAfterUpdate(List<FEC_Assignment__c> newList, Map<Id, FEC_Assignment__c> oldMap) {
+        if (isSyncingAssignmentManagerList || newList == null || newList.isEmpty() || oldMap == null) {
+            return;
+        }
+
         Set<Id> caseIds = new Set<Id>();
         for (FEC_Assignment__c assignment : newList) {
             FEC_Assignment__c oldAssignment = oldMap.get(assignment.Id);
+            if (oldAssignment == null) {
+                continue;
+            }
+            //tungnm37 recalc thêm khi đổi status, type hoặc chuyển case
+            if (assignment.FEC_Case__c != oldAssignment.FEC_Case__c) {
+                if (oldAssignment.FEC_Case__c != null) {
+                    caseIds.add(oldAssignment.FEC_Case__c);
+                }
+                if (assignment.FEC_Case__c != null) {
+                    caseIds.add(assignment.FEC_Case__c);
+                }
+                continue;
+            }
             // tungnm37 fix: trigger khi Assignment Owner thay đổi (cả auto và manual)
-            if (assignment.FEC_Assignment_Owner__c != oldAssignment.FEC_Assignment_Owner__c 
+            if ((assignment.FEC_Assignment_Owner__c != oldAssignment.FEC_Assignment_Owner__c 
+                || assignment.FEC_Assignment_Status__c != oldAssignment.FEC_Assignment_Status__c
+                || assignment.FEC_Assignment_Type__c != oldAssignment.FEC_Assignment_Type__c)
                 && assignment.FEC_Case__c != null) {
                 caseIds.add(assignment.FEC_Case__c);
             }
         }
 
-        if (caseIds.isEmpty()) return;
+        syncCaseAssignmentData(caseIds);
+    }
 
+    //tungnm37 sync thêm assignment manager list lên case nhưng giữ nguyên logic cũ của assignment users
+    private static void syncCaseAssignmentData(Set<Id> caseIds) {
+        if (caseIds == null || caseIds.isEmpty()) {
+            return;
+        }
+
+        isSyncingAssignmentManagerList = true;
+        try {
+            syncAssignmentUsers(caseIds);
+            FEC_CaseManagerListService.syncAssignmentManagerListByCaseIds(caseIds);
+        } finally {
+            isSyncingAssignmentManagerList = false;
+        }
+    }
+
+    private static void syncAssignmentUsers(Set<Id> caseIds) {
         // tungnm37 fix: query thêm FEC_Assignment_Owner_Text__c để lấy tên owner
         Map<Id, List<FEC_Assignment__c>> caseToAssignments = new Map<Id, List<FEC_Assignment__c>>();
         

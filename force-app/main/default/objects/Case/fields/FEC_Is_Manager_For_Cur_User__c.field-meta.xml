@@ -3,19 +3,38 @@
     <fullName>FEC_Is_Manager_For_Cur_User__c</fullName>
     <description>True khi user đang xem có Id nằm trong FEC_Manager_ID_List__c hoặc FEC_Manager_ID_List_2__c (chuỗi cấp trên của Owner). Dùng cho list view My Team — không dùng checkbox tĩnh FEC_Is_Manager__c.</description>
     <externalId>false</externalId>
-    <formula>OR(
-    AND(
-        NOT(ISBLANK(FEC_Manager_ID_List__c)),
-        OR(
-            CONTAINS(FEC_Manager_ID_List__c, $User.Id),
-            CONTAINS(FEC_Manager_ID_List__c, LEFT($User.Id, 15))
+    <formula>IF(
+    FEC_Assignment_Count__c &gt; 0,
+    OR(
+        AND(
+            NOT(ISBLANK(FEC_Assignment_Manager_ID_List__c)),
+            OR(
+                CONTAINS(FEC_Assignment_Manager_ID_List__c, $User.Id),
+                CONTAINS(FEC_Assignment_Manager_ID_List__c, LEFT($User.Id, 15))
+            )
+        ),
+        AND(
+            NOT(ISBLANK(FEC_Assignment_Manager_ID_List_2__c)),
+            OR(
+                CONTAINS(FEC_Assignment_Manager_ID_List_2__c, $User.Id),
+                CONTAINS(FEC_Assignment_Manager_ID_List_2__c, LEFT($User.Id, 15))
+            )
         )
     ),
-    AND(
-        NOT(ISBLANK(FEC_Manager_ID_List_2__c)),
-        OR(
-            CONTAINS(FEC_Manager_ID_List_2__c, $User.Id),
-            CONTAINS(FEC_Manager_ID_List_2__c, LEFT($User.Id, 15))
+    OR(
+        AND(
+            NOT(ISBLANK(FEC_Manager_ID_List__c)),
+            OR(
+                CONTAINS(FEC_Manager_ID_List__c, $User.Id),
+                CONTAINS(FEC_Manager_ID_List__c, LEFT($User.Id, 15))
+            )
+        ),
+        AND(
+            NOT(ISBLANK(FEC_Manager_ID_List_2__c)),
+            OR(
+                CONTAINS(FEC_Manager_ID_List_2__c, $User.Id),
+                CONTAINS(FEC_Manager_ID_List_2__c, LEFT($User.Id, 15))
+            )
         )
     )
 )</formula>
