@@ -108,6 +108,53 @@ private class FEC_CardPaymentController_Test {
         }
     }
 
+    private class ZeroBalanceApisMock implements HttpCalloutMock {
+        private Integer callSeq = 0;
+
+        public HttpResponse respond(HttpRequest req) {
+            callSeq++;
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            if (callSeq == 1) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
+                    '<soapenv:Body>' +
+                    '<cif:GetCardBasicInfoResponse xmlns:cif="' + CIF_NS + '">' +
+                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<CardBasicInfo><MainCard><LoanBalance>0</LoanBalance></MainCard></CardBasicInfo>' +
+                    '</cif:GetCardBasicInfoResponse>' +
+                    '</soapenv:Body></soapenv:Envelope>'
+                );
+            } else if (callSeq == 2) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
+                    '<soapenv:Body>' +
+                    '<WSResponse xmlns:v2="http://fecredit.com.vn/cms/ws/v2">' +
+                    '<Sys><Code>1</Code></Sys>' +
+                    '<M_CMS_EMEA_ACCOUNT_INQ><VMX_ROOT><VMX_MSGOUT>' +
+                    '<ACCT_BS_OUTPUT>' +
+                    '<CURR_BAL>0</CURR_BAL>' +
+                    '<AMT_MEMO_DB>0</AMT_MEMO_DB><AMT_MEMO_CR>0</AMT_MEMO_CR>' +
+                    '</ACCT_BS_OUTPUT></VMX_MSGOUT></VMX_ROOT></M_CMS_EMEA_ACCOUNT_INQ>' +
+                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+            } else {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
+                    '<soapenv:Body><cif:GetCardPlanInfoResponse xmlns:cif="' + CIF_NS + '">' +
+                    '<Sys><Code>1</Code></Sys><CardPlanInfo><CardPlans>' +
+                    '<CardPlan><RecordNumber>001</RecordNumber><PlanNumber>60008</PlanNumber>' +
+                    '<PlanCurrentBalance>0</PlanCurrentBalance>' +
+                    '</CardPlan><CardPlan><RecordNumber>002</RecordNumber><PlanNumber>60001</PlanNumber>' +
+                    '<PlanCurrentBalance>0</PlanCurrentBalance>' +
+                    '</CardPlan></CardPlans></CardPlanInfo>' +
+                    '</cif:GetCardPlanInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+            }
+            return res;
+        }
+    }
+
     @TestSetup
     static void setupData() {
         insert new FEC_API_Setting__c(
@@ -562,5 +609,80 @@ private class FEC_CardPaymentController_Test {
             System.assertEquals(51181817.32, totals.totalPlanPaymentAmount);
             System.assertEquals(968617, totals.totalIPPAccruedInterest);
         }
+    }
+
+    @IsTest
+    static void testLoadCardPaymentTotals_AllZeroWithRecords_ReturnsSummary() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            FEC_Customer_History__c customer = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE FEC_Case__c = :c.Id
+                LIMIT 1
+            ];
+
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            insert new List<FEC_Card_Payment__c>{
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '002',
+                    FEC_Plan__c = '60001',
+                    FEC_Current_Balance__c = 0,
+                    FEC_Plan_Payment_Amount__c = 0
+                ),
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '001',
+                    FEC_Plan__c = '60008',
+                    FEC_Current_Balance__c = 0,
+                    FEC_Plan_Payment_Amount__c = 0
+                )
+            };
+
+            Test.setMock(HttpCalloutMock.class, new ZeroBalanceApisMock());
+
+            Test.startTest();
+            FEC_CardPaymentController.CardPaymentTotalsDTO totals =
+                FEC_CardPaymentController.loadCardPaymentTotals(c.Id);
+            Test.stopTest();
+
+            System.assertNotEquals(null, totals);
+            System.assertEquals(0, totals.fullPaymentAmount);
+            System.assertEquals(0, totals.loanBalance);
+            System.assertEquals(0, totals.totalCurrentBalance);
+            System.assertEquals(0, totals.totalPlanPaymentAmount);
+        }
+    }
+
+    @IsTest
+    static void testLoadCardPaymentTotals_AllZeroWithoutRecords_Throws() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            Test.setMock(HttpCalloutMock.class, new ZeroBalanceApisMock());
+
+            Test.startTest();
+            try {
+                FEC_CardPaymentController.loadCardPaymentTotals(c.Id);
+                System.assert(false, 'Expected AuraHandledException when all-zero and no card payment records.');
+            } catch (AuraHandledException e) {
+                System.assertNotEquals(null, e.getMessage());
+            }
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void testShouldTreatAllZeroTotalsAsApiFailure() {
+        FEC_CardPaymentController.CardPaymentTotalsDTO zeroDto = new FEC_CardPaymentController.CardPaymentTotalsDTO();
+        System.assertEquals(true, FEC_CardPaymentController.isAllCardPaymentTotalsZero(zeroDto));
+
+        FEC_Customer_History__c customer = [SELECT Id FROM FEC_Customer_History__c LIMIT 1];
+        System.assertEquals(true, FEC_CardPaymentController.hasCardPaymentRecords(customer.Id));
+        System.assertEquals(
+            false,
+            FEC_CardPaymentController.shouldTreatAllZeroTotalsAsApiFailure(customer.Id, zeroDto)
+        );
     }
 }
