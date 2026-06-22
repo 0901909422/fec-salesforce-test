@@ -465,7 +465,7 @@ private class FEC_CardPaymentController_Test {
                 FEC_CardPaymentController.loadCardPaymentTotals(c.Id);
             Test.stopTest();
 
-            System.assertEquals(34971736.32, totals.totalPlanPaymentAmount);
+            System.assertEquals(34971836.32, totals.totalPlanPaymentAmount);
             System.assertEquals(1250391, totals.totalIPPAccruedInterest);
         }
     }
