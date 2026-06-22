@@ -313,10 +313,10 @@ public with sharing class FEC_MobileAppNotificationCallout {
         Map<String, Object> body =
             (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 
-        result.code = (String) body.get('Code');
-        result.dateTimeValue = (String) body.get('DateTime');
-        result.description = (String) body.get('Description');
-        result.transId = (String) body.get('TransID');
+        result.code = getStringValue(body, 'Code');
+        result.dateTimeValue = getStringValue(body, 'DateTime');
+        result.description = getStringValue(body, 'Description');
+        result.transId = getStringValue(body, 'TransID');
 
         result.isCustomerExist =
             result.success
@@ -343,10 +343,10 @@ public with sharing class FEC_MobileAppNotificationCallout {
         Map<String, Object> body =
             (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 
-        result.code = (String) body.get('Code');
-        result.dateTimeValue = (String) body.get('DateTime');
-        result.description = (String) body.get('Description');
-        result.transId = (String) body.get('TransID');
+        result.code = getStringValue(body, 'Code');
+        result.dateTimeValue = getStringValue(body, 'DateTime');
+        result.description = getStringValue(body, 'Description');
+        result.transId = getStringValue(body, 'TransID');
 
         result.isSentSuccess =
             result.success
@@ -354,6 +354,20 @@ public with sharing class FEC_MobileAppNotificationCallout {
             && result.description == 'SUCCESS';
 
         return result;
+    }
+
+    private static String getStringValue(Map<String, Object> data, String key) {
+        if (data == null || String.isBlank(key) || !data.containsKey(key)) {
+            return null;
+        }
+
+        Object value = data.get(key);
+
+        if (value == null) {
+            return null;
+        }
+
+        return String.valueOf(value);
     }
 
     // =========================================================================

@@ -394,7 +394,7 @@ public with sharing class FEC_NotificationConfigController {
         }
 
         // ── Duplicate check (belt-and-suspenders; Trigger also validates) ──
-        Integer dupCount = [
+        /*Integer dupCount = [
             SELECT COUNT() FROM FEC_Notification__c
             WHERE Name = :notif.Name
             AND Id != :notif.Id
@@ -402,7 +402,7 @@ public with sharing class FEC_NotificationConfigController {
         if (dupCount > 0) {
             throw new AuraHandledException(
                 'A Notification with Type "' + notif.Name + '" already exists.');
-        }
+        }*/
 
         upsert notif;
 
