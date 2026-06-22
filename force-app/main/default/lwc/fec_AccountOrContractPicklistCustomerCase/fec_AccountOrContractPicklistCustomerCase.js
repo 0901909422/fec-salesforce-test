@@ -309,7 +309,7 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
   }
 
   get showPicklist() {
-    return true;
+    return !this.isNonExistingCustomer
   }
 
   /* =======================

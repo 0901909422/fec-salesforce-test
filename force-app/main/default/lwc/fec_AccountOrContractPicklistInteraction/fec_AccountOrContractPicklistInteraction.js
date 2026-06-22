@@ -292,7 +292,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   get showPicklist() {
-    return this.hasAccountOrContact && this.isEditMode;
+    return this.hasAccountOrContact && this.isEditMode && !this.isNonExistingCustomer;
   }
 
   get isNonExistingCustomer() {
