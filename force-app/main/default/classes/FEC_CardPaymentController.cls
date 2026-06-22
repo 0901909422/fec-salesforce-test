@@ -132,7 +132,7 @@ public with sharing class FEC_CardPaymentController {
         record.put('FEC_IPP_Accrued_Interest__c', showIppAccruedInterest ? p.FEC_IPP_Accrued_Interest__c : null);
         record.put('FEC_Close_Fee__c', p.FEC_Close_Fee__c);
         record.put('FEC_Close_Fee_Amount__c', p.FEC_Close_Fee_Amount__c);
-        record.put('FEC_Plan_Payment_Amount__c', p.FEC_Plan_Payment_Amount__c);
+        record.put('FEC_Plan_Payment_Amount__c', calculatePlanPaymentAmountFromRecord(p, showIppAccruedInterest));
         return record;
     }
     
@@ -192,9 +192,13 @@ public with sharing class FEC_CardPaymentController {
                 dto.totalCloseFeeAmount = hist.FEC_Total_Close_Fee_Amount__c != null ? hist.FEC_Total_Close_Fee_Amount__c : 0;
                 dto.totalPlanPaymentAmount = hist.FEC_Total_Plan_Payment_Amount__c != null ? hist.FEC_Total_Plan_Payment_Amount__c : 0;
                 dto.totalAccruedInterest = hist.FEC_Total_Accrued_Interest__c != null ? hist.FEC_Total_Accrued_Interest__c : 0;
-                dto.totalIPPAccruedInterest = hist.FEC_Total_IPP_Accrued_Interest__c != null ? hist.FEC_Total_IPP_Accrued_Interest__c : 0;
                 dto.totalPerDiem = hist.FEC_Total_Per_Diem__c != null ? hist.FEC_Total_Per_Diem__c : 0;
                 dto.totalDeferredInterest = hist.FEC_Total_Deferred_Interest__c != null ? hist.FEC_Total_Deferred_Interest__c : 0;
+                dto.totalIPPAccruedInterest = applyIppAccruedInterestTotalRule(
+                    hist.FEC_Total_IPP_Accrued_Interest__c != null ? hist.FEC_Total_IPP_Accrued_Interest__c : 0,
+                    customerHistoryId
+                );
+                applyRuntimePlanPaymentAmountTotalOnDto(dto, customerHistoryId);
                 Boolean hasAllSeven = hist.FEC_Total_Current_Balance__c != null && hist.FEC_Total_Close_Fee_Amount__c != null && hist.FEC_Total_Plan_Payment_Amount__c != null
                     && hist.FEC_Total_Accrued_Interest__c != null && hist.FEC_Total_IPP_Accrued_Interest__c != null && hist.FEC_Total_Per_Diem__c != null && hist.FEC_Total_Deferred_Interest__c != null;
                 if (!hasAllSeven) {
@@ -205,34 +209,17 @@ public with sharing class FEC_CardPaymentController {
             }
         } catch (Exception e) { }
         if (needOnlyAggregateAndSaveSeven) {
-            Decimal totalCurrentBalance = 0;
-            Decimal totalCloseFeeAmount = 0;
-            Decimal totalPlanPaymentAmount = 0;
-            Decimal totalAccruedInterest = 0;
-            Decimal totalIPPAccruedInterest = 0;
-            Decimal totalPerDiem = 0;
-            Decimal totalDeferredInterest = 0;
-            try {
-                List<AggregateResult> agg = [
-                    SELECT SUM(FEC_Current_Balance__c) s1, SUM(FEC_Close_Fee_Amount__c) s2, SUM(FEC_Plan_Payment_Amount__c) s3,
-                           SUM(FEC_Accrued_Interest__c) s4, SUM(FEC_IPP_Accrued_Interest__c) s5, SUM(FEC_Per_Diem__c) s6, SUM(FEC_Deferred_Interest__c) s7
-                    FROM FEC_Card_Payment__c
-                    WHERE FEC_Customer_History__c = :customerHistoryId
-                ];
-                if (!agg.isEmpty()) {
-                    totalCurrentBalance = agg[0].get('s1') != null ? (Decimal) agg[0].get('s1') : 0;
-                    totalCloseFeeAmount = agg[0].get('s2') != null ? (Decimal) agg[0].get('s2') : 0;
-                    totalPlanPaymentAmount = agg[0].get('s3') != null ? (Decimal) agg[0].get('s3') : 0;
-                    totalAccruedInterest = agg[0].get('s4') != null ? (Decimal) agg[0].get('s4') : 0;
-                    totalIPPAccruedInterest = agg[0].get('s5') != null ? (Decimal) agg[0].get('s5') : 0;
-                    totalPerDiem = agg[0].get('s6') != null ? (Decimal) agg[0].get('s6') : 0;
-                    totalDeferredInterest = agg[0].get('s7') != null ? (Decimal) agg[0].get('s7') : 0;
-                }
-            } catch (Exception e) {
-                System.debug('Aggregate 7 totals error: ' + e.getMessage());
-            }
-            totalIPPAccruedInterest = applyIppAccruedInterestTotalRule(totalIPPAccruedInterest, customerHistoryId);
-            setAggregateTotalsOnDto(dto, totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
+            CardPaymentAggregateTotals aggregateTotals = computeAggregateTotalsFromCardPayments(customerHistoryId);
+            setAggregateTotalsOnDto(
+                dto,
+                aggregateTotals.totalCurrentBalance,
+                aggregateTotals.totalCloseFeeAmount,
+                aggregateTotals.totalPlanPaymentAmount,
+                aggregateTotals.totalAccruedInterest,
+                aggregateTotals.totalIPPAccruedInterest,
+                aggregateTotals.totalPerDiem,
+                aggregateTotals.totalDeferredInterest
+            );
             if (String.isBlank(accountNumber)) {
                 saveCardPaymentTotalsToDatabase(customerHistoryId, dto.fullPaymentAmount, dto.loanBalance, dto.fullPaymentWithoutIPP, dto.fullIPPPaymentAmount);
                 return dto;
@@ -241,7 +228,10 @@ public with sharing class FEC_CardPaymentController {
         }
 
         // Gọi 3 API mỗi lần load: GetCardBasicInfo, EmeaAccountInq, GetCardPlanInfo
-        if (String.isBlank(accountNumber)) return dto;
+        if (String.isBlank(accountNumber)) {
+            applyRuntimePlanPaymentAmountTotalOnDto(dto, customerHistoryId);
+            return dto;
+        }
 
         try {
             Decimal fullPaymentAmount = 0;
@@ -310,34 +300,14 @@ public with sharing class FEC_CardPaymentController {
             }
 
         Decimal fullIPPPaymentAmount = 0;
-        Decimal totalCurrentBalance = 0;
-        Decimal totalCloseFeeAmount = 0;
-        Decimal totalPlanPaymentAmount = 0;
-        Decimal totalAccruedInterest = 0;
-        Decimal totalIPPAccruedInterest = 0;
-        Decimal totalPerDiem = 0;
-        Decimal totalDeferredInterest = 0;
-        try {
-            List<AggregateResult> agg = [
-                SELECT SUM(FEC_Current_Balance__c) s1, SUM(FEC_Close_Fee_Amount__c) s2, SUM(FEC_Plan_Payment_Amount__c) s3,
-                       SUM(FEC_Accrued_Interest__c) s4, SUM(FEC_IPP_Accrued_Interest__c) s5, SUM(FEC_Per_Diem__c) s6, SUM(FEC_Deferred_Interest__c) s7
-                FROM FEC_Card_Payment__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-            ];
-            if (!agg.isEmpty()) {
-                totalCurrentBalance = agg[0].get('s1') != null ? (Decimal) agg[0].get('s1') : 0;
-                totalCloseFeeAmount = agg[0].get('s2') != null ? (Decimal) agg[0].get('s2') : 0;
-                totalPlanPaymentAmount = agg[0].get('s3') != null ? (Decimal) agg[0].get('s3') : 0;
-                totalAccruedInterest = agg[0].get('s4') != null ? (Decimal) agg[0].get('s4') : 0;
-                totalIPPAccruedInterest = agg[0].get('s5') != null ? (Decimal) agg[0].get('s5') : 0;
-                totalPerDiem = agg[0].get('s6') != null ? (Decimal) agg[0].get('s6') : 0;
-                totalDeferredInterest = agg[0].get('s7') != null ? (Decimal) agg[0].get('s7') : 0;
-            }
-        } catch (Exception e) {
-            System.debug('Aggregate 7 totals error: ' + e.getMessage());
-        }
-
-        totalIPPAccruedInterest = applyIppAccruedInterestTotalRule(totalIPPAccruedInterest, customerHistoryId);
+        CardPaymentAggregateTotals aggregateTotals = computeAggregateTotalsFromCardPayments(customerHistoryId);
+        Decimal totalCurrentBalance = aggregateTotals.totalCurrentBalance;
+        Decimal totalCloseFeeAmount = aggregateTotals.totalCloseFeeAmount;
+        Decimal totalPlanPaymentAmount = aggregateTotals.totalPlanPaymentAmount;
+        Decimal totalAccruedInterest = aggregateTotals.totalAccruedInterest;
+        Decimal totalIPPAccruedInterest = aggregateTotals.totalIPPAccruedInterest;
+        Decimal totalPerDiem = aggregateTotals.totalPerDiem;
+        Decimal totalDeferredInterest = aggregateTotals.totalDeferredInterest;
 
         // Full Payment Amount = OnlineTotalBalance + Sum(AccruedInterest + DeferredInterest + PerDiem + IPPAccruedInterest + CloseFeeAmount)
         fullPaymentAmount = onlineTotalBalance + totalAccruedInterest + totalDeferredInterest
@@ -564,22 +534,109 @@ public with sharing class FEC_CardPaymentController {
         return aggregatedIppAccrued != null ? aggregatedIppAccrued : 0;
     }
 
-    /**
+  /**
      * PlanPaymentAmount = PlanCurrentBalance + AccruedInterest/100 + PerDiem/100
      *   + DeferredInterest + IPPAccruedInterest + CloseFeeAmount
      * IPPAccruedInterest chỉ cộng khi (NextStatementDate - today) ≤ 4 ngày.
      */
     public static Decimal calculatePlanPaymentAmount(FEC_GetCardPlanInfo.CardPlan p, Boolean showIppAccruedInterest) {
-        Decimal currentBalance = p.currentBalance != null ? p.currentBalance : 0;
-        Decimal accruedInterest = p.accruedInterest != null ? p.accruedInterest / 100 : 0;
-        Decimal perDiem = p.perDiem != null ? p.perDiem / 100 : 0;
-        Decimal deferredInterest = p.deferredInterest != null ? p.deferredInterest : 0;
-        Decimal ippAccruedInterest = 0;
-        if (showIppAccruedInterest && p.additionalAccruedInt != null) {
-            ippAccruedInterest = p.additionalAccruedInt;
+        return sumPlanPaymentComponents(
+            p.currentBalance,
+            p.accruedInterest != null ? p.accruedInterest / 100 : 0,
+            p.perDiem != null ? p.perDiem / 100 : 0,
+            p.deferredInterest,
+            p.additionalAccruedInt,
+            p.closeFeeAmount,
+            showIppAccruedInterest
+        );
+    }
+
+    /**
+     * Tính Plan Payment Amount từ FEC_Card_Payment__c đã lưu, áp dụng rule IPP theo ngày hiện tại.
+     * Dùng khi hiển thị để tránh giá trị FEC_Plan_Payment_Amount__c bị stale sau khi sync.
+     */
+    @TestVisible
+    public static Decimal calculatePlanPaymentAmountFromRecord(FEC_Card_Payment__c p, Boolean showIppAccruedInterest) {
+        return sumPlanPaymentComponents(
+            p.FEC_Current_Balance__c,
+            p.FEC_Accrued_Interest__c,
+            p.FEC_Per_Diem__c,
+            p.FEC_Deferred_Interest__c,
+            p.FEC_IPP_Accrued_Interest__c,
+            p.FEC_Close_Fee_Amount__c,
+            showIppAccruedInterest
+        );
+    }
+
+    @TestVisible
+    private static Decimal sumPlanPaymentComponents(
+        Decimal currentBalance,
+        Decimal accruedInterest,
+        Decimal perDiem,
+        Decimal deferredInterest,
+        Decimal ippAccruedInterest,
+        Decimal closeFeeAmount,
+        Boolean showIppAccruedInterest
+    ) {
+        Decimal ippComponent = 0;
+        if (showIppAccruedInterest && ippAccruedInterest != null) {
+            ippComponent = ippAccruedInterest;
         }
-        Decimal closeFeeAmount = p.closeFeeAmount != null ? p.closeFeeAmount : 0;
-        return currentBalance + accruedInterest + perDiem + deferredInterest + ippAccruedInterest + closeFeeAmount;
+        return (currentBalance != null ? currentBalance : 0)
+            + (accruedInterest != null ? accruedInterest : 0)
+            + (perDiem != null ? perDiem : 0)
+            + (deferredInterest != null ? deferredInterest : 0)
+            + ippComponent
+            + (closeFeeAmount != null ? closeFeeAmount : 0);
+    }
+
+    private class CardPaymentAggregateTotals {
+        public Decimal totalCurrentBalance = 0;
+        public Decimal totalCloseFeeAmount = 0;
+        public Decimal totalPlanPaymentAmount = 0;
+        public Decimal totalAccruedInterest = 0;
+        public Decimal totalIPPAccruedInterest = 0;
+        public Decimal totalPerDiem = 0;
+        public Decimal totalDeferredInterest = 0;
+    }
+
+    @TestVisible
+    private static CardPaymentAggregateTotals computeAggregateTotalsFromCardPayments(Id customerHistoryId) {
+        CardPaymentAggregateTotals totals = new CardPaymentAggregateTotals();
+        if (customerHistoryId == null) {
+            return totals;
+        }
+
+        Boolean showIppAccruedInterest = resolveShowIppAccruedInterest(customerHistoryId);
+        Decimal rawIppAccruedInterest = 0;
+        try {
+            for (FEC_Card_Payment__c payment : [
+                SELECT FEC_Current_Balance__c, FEC_Close_Fee_Amount__c, FEC_Accrued_Interest__c,
+                       FEC_IPP_Accrued_Interest__c, FEC_Per_Diem__c, FEC_Deferred_Interest__c
+                FROM FEC_Card_Payment__c
+                WHERE FEC_Customer_History__c = :customerHistoryId
+            ]) {
+                totals.totalCurrentBalance += payment.FEC_Current_Balance__c != null ? payment.FEC_Current_Balance__c : 0;
+                totals.totalCloseFeeAmount += payment.FEC_Close_Fee_Amount__c != null ? payment.FEC_Close_Fee_Amount__c : 0;
+                totals.totalPlanPaymentAmount += calculatePlanPaymentAmountFromRecord(payment, showIppAccruedInterest);
+                totals.totalAccruedInterest += payment.FEC_Accrued_Interest__c != null ? payment.FEC_Accrued_Interest__c : 0;
+                rawIppAccruedInterest += payment.FEC_IPP_Accrued_Interest__c != null ? payment.FEC_IPP_Accrued_Interest__c : 0;
+                totals.totalPerDiem += payment.FEC_Per_Diem__c != null ? payment.FEC_Per_Diem__c : 0;
+                totals.totalDeferredInterest += payment.FEC_Deferred_Interest__c != null ? payment.FEC_Deferred_Interest__c : 0;
+            }
+        } catch (Exception e) {
+            System.debug('Aggregate card payment totals error: ' + e.getMessage());
+        }
+
+        totals.totalIPPAccruedInterest = applyIppAccruedInterestTotalRule(rawIppAccruedInterest, customerHistoryId);
+        return totals;
+    }
+
+    private static void applyRuntimePlanPaymentAmountTotalOnDto(CardPaymentTotalsDTO dto, Id customerHistoryId) {
+        if (dto == null || customerHistoryId == null) {
+            return;
+        }
+        dto.totalPlanPaymentAmount = computeAggregateTotalsFromCardPayments(customerHistoryId).totalPlanPaymentAmount;
     }
 
     /** Map CardPlan API → FEC_Card_Payment__c field values. */
