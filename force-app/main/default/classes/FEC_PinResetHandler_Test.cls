@@ -1,14 +1,18 @@
 @IsTest
 private class FEC_PinResetHandler_Test {
 
-    private static final String PIN_SUCCESS_JSON =
-        '{"RespCode":"0","TransID":"12345","RespDesc":"Success"}';
-    private static final String PIN_FAIL_JSON =
-        '{"RespCode":"1","TransID":"12345","RespDesc":"Failed"}';
+    private static final String PIN_RESET_SUCCESS_JSON =
+        '{"AccountNumber":"ACC123","CardNumber":"4111111111115432","Sys":{"Code":"1","Description":"Success","TransID":"12345"}}';
+    private static final String PIN_RESET_FAIL_JSON =
+        '{"AccountNumber":"ACC123","CardNumber":"4111111111115432","Sys":{"Code":"99","Description":"Failed","TransID":"12345"}}';
 
     @TestSetup
     static void setupData() {
         String suffix = String.valueOf(System.currentTimeMillis()).right(6);
+
+        insert new FEC_API_Setting__c(
+            FEC_Endpoint__c = 'https://api-gateway.fecredit.com.vn'
+        );
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
@@ -16,6 +20,7 @@ private class FEC_PinResetHandler_Test {
                 FEC_Process_Action_Count__c = 3,
                 FEC_Is_PIN_Reset_Success__c = false,
                 FEC_Is_Test_API__c = true,
+                FEC_Account_Number__c = 'ACC123',
                 Status = 'New'
             );
             insert c;
@@ -24,7 +29,8 @@ private class FEC_PinResetHandler_Test {
                 FEC_Case__c = c.Id,
                 Name = 'CH-' + suffix,
                 FEC_National_ID_Passport_ID__c = '123456789',
-                FEC_Primary_Phone__c = '0901234567'
+                FEC_Primary_Phone__c = '0901234567',
+                FEC_Card_Number__c = '4111111111115432'
             );
             insert ch;
 
@@ -51,7 +57,7 @@ private class FEC_PinResetHandler_Test {
     @IsTest
     static void testResetPin_Success() {
         Case c = [SELECT Id FROM Case LIMIT 1];
-        Test.setMock(HttpCalloutMock.class, new PinReissueHttpMock(200, PIN_SUCCESS_JSON));
+        Test.setMock(HttpCalloutMock.class, new PinResetCounterHttpMock(200, PIN_RESET_SUCCESS_JSON));
 
         Test.startTest();
         FEC_PINReissueServiceCallout.PINResponse resp = FEC_PinResetHandler.resetPin(
@@ -63,7 +69,7 @@ private class FEC_PinResetHandler_Test {
         Test.stopTest();
 
         System.assertNotEquals(null, resp);
-        System.assertNotEquals('1', resp.RespCode);
+        System.assertEquals('0', resp.RespCode);
 
         Case updatedCase = [
             SELECT FEC_Is_PIN_Reset_Success__c, FEC_Process_Action_Count__c
@@ -77,7 +83,7 @@ private class FEC_PinResetHandler_Test {
     @IsTest
     static void testResetPin_Failure() {
         Case c = [SELECT Id FROM Case LIMIT 1];
-        Test.setMock(HttpCalloutMock.class, new PinReissueHttpMock(200, PIN_FAIL_JSON));
+        Test.setMock(HttpCalloutMock.class, new PinResetCounterHttpMock(200, PIN_RESET_FAIL_JSON));
 
         Test.startTest();
         FEC_PINReissueServiceCallout.PINResponse resp = FEC_PinResetHandler.resetPin(
@@ -88,6 +94,7 @@ private class FEC_PinResetHandler_Test {
         );
         Test.stopTest();
 
+        System.assertNotEquals(null, resp);
         System.assertEquals('1', resp.RespCode);
 
         Case updatedCase = [SELECT FEC_Process_Action_Count__c FROM Case WHERE Id = :c.Id];
@@ -106,11 +113,11 @@ private class FEC_PinResetHandler_Test {
         Test.stopTest();
     }
 
-    private class PinReissueHttpMock implements HttpCalloutMock {
+    private class PinResetCounterHttpMock implements HttpCalloutMock {
         private final Integer statusCode;
         private final String body;
 
-        PinReissueHttpMock(Integer statusCode, String body) {
+        PinResetCounterHttpMock(Integer statusCode, String body) {
             this.statusCode = statusCode;
             this.body = body;
         }
