@@ -63,6 +63,10 @@ export default class Fec_DoNotBotherInformationView extends LightningElement {
       : "Do Not Bother";
   }
 
+  get showBody() {
+    return !this.errorMessage;
+  }
+
   get showTable() {
     return this.pagedData && this.pagedData.length > 0;
   }
@@ -169,13 +173,8 @@ export default class Fec_DoNotBotherInformationView extends LightningElement {
 
   @track isOpen = true;
 
-  get isDisabled() {
-    return this.errorMessage || this.noData;
-  }
 
   toggleSection() {
-    if (this.isDisabled) return;
-
     this.isOpen = !this.isOpen;
   }
 
