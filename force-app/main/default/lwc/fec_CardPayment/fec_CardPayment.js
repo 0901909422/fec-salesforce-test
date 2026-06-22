@@ -228,8 +228,18 @@ export default class Fec_CardPayment extends LightningElement {
         this.totalCloseFeeAmount = this.cardPaymentData.reduce((sum, record) => 
             sum + (Number(record.FEC_Close_Fee_Amount__c) || 0), 0);
             
-        this.totalPlanPaymentAmount = this.cardPaymentData.reduce((sum, record) => 
-            sum + (Number(record.FEC_Plan_Payment_Amount__c) || 0), 0);
+        this.totalPlanPaymentAmount = this.cardPaymentData.reduce((sum, record) => {
+            const ippAccrued = record.FEC_IPP_Accrued_Interest__c != null
+                ? (Number(record.FEC_IPP_Accrued_Interest__c) || 0)
+                : 0;
+            return sum
+                + (Number(record.FEC_Current_Balance__c) || 0)
+                + (Number(record.FEC_Accrued_Interest__c) || 0)
+                + (Number(record.FEC_Per_Diem__c) || 0)
+                + (Number(record.FEC_Deferred_Interest__c) || 0)
+                + ippAccrued
+                + (Number(record.FEC_Close_Fee_Amount__c) || 0);
+        }, 0);
     }
     
     cardPaymentData = [];
@@ -308,9 +318,11 @@ export default class Fec_CardPayment extends LightningElement {
         return !this.isLoading && !this.hasAnyError && !this.hasCardPaymentTableData;
     }
     
-    // Hiển thị Payment Summary
+    // Hiển thị Payment Summary — vẫn show khi có dòng bảng dù totals API lỗi (fallback totals từ bảng)
     get showPaymentSummary() {
-        return !this.hasAnyError && !this.isTotalsLoading;
+        return !this.isTotalsLoading
+            && !this.hasError
+            && (!this.hasTotalsError || this.hasCardPaymentTableData);
     }
 
     // Getters for template properties

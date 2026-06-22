@@ -324,9 +324,11 @@ public with sharing class FEC_CardPaymentController {
         try {
             populateSummaryTotalsOnDto(dto, customerHistoryId);
             setAggregateTotalsOnDto(dto, totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
-            if (dto.fullPaymentAmount == 0 && dto.loanBalance == 0 && dto.fullPaymentWithoutIPP == 0 && dto.fullIPPPaymentAmount == 0
-                    && dto.totalCurrentBalance == 0 && dto.totalCloseFeeAmount == 0 && dto.totalPlanPaymentAmount == 0
-                    && dto.totalAccruedInterest == 0 && dto.totalIPPAccruedInterest == 0 && dto.totalPerDiem == 0 && dto.totalDeferredInterest == 0) {
+            dto.fullPaymentAmount = fullPaymentAmount;
+            dto.loanBalance = loanBalance;
+            dto.fullPaymentWithoutIPP = fullPaymentWithoutIPP;
+            dto.fullIPPPaymentAmount = fullIPPPaymentAmount;
+            if (shouldTreatAllZeroTotalsAsApiFailure(customerHistoryId, dto)) {
                 throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
             }
         } catch (AuraHandledException e) {
@@ -337,6 +339,21 @@ public with sharing class FEC_CardPaymentController {
 
         return dto;
         } catch (Exception e) {
+            if (hasCardPaymentRecords(customerHistoryId)) {
+                CardPaymentAggregateTotals aggregateTotals = computeAggregateTotalsFromCardPayments(customerHistoryId);
+                setAggregateTotalsOnDto(
+                    dto,
+                    aggregateTotals.totalCurrentBalance,
+                    aggregateTotals.totalCloseFeeAmount,
+                    aggregateTotals.totalPlanPaymentAmount,
+                    aggregateTotals.totalAccruedInterest,
+                    aggregateTotals.totalIPPAccruedInterest,
+                    aggregateTotals.totalPerDiem,
+                    aggregateTotals.totalDeferredInterest
+                );
+                applyRuntimePlanPaymentAmountTotalOnDto(dto, customerHistoryId);
+                return dto;
+            }
             throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
     }
@@ -637,6 +654,37 @@ public with sharing class FEC_CardPaymentController {
             return;
         }
         dto.totalPlanPaymentAmount = computeAggregateTotalsFromCardPayments(customerHistoryId).totalPlanPaymentAmount;
+    }
+
+    @TestVisible
+    private static Boolean hasCardPaymentRecords(Id customerHistoryId) {
+        if (customerHistoryId == null) {
+            return false;
+        }
+        return [SELECT COUNT() FROM FEC_Card_Payment__c WHERE FEC_Customer_History__c = :customerHistoryId] > 0;
+    }
+
+    private static Boolean isDecimalZeroOrNull(Decimal value) {
+        return value == null || value == 0;
+    }
+
+    @TestVisible
+    private static Boolean isAllCardPaymentTotalsZero(CardPaymentTotalsDTO dto) {
+        if (dto == null) {
+            return true;
+        }
+        return isDecimalZeroOrNull(dto.fullPaymentAmount) && isDecimalZeroOrNull(dto.loanBalance)
+            && isDecimalZeroOrNull(dto.fullPaymentWithoutIPP) && isDecimalZeroOrNull(dto.fullIPPPaymentAmount)
+            && isDecimalZeroOrNull(dto.totalCurrentBalance) && isDecimalZeroOrNull(dto.totalCloseFeeAmount)
+            && isDecimalZeroOrNull(dto.totalPlanPaymentAmount) && isDecimalZeroOrNull(dto.totalAccruedInterest)
+            && isDecimalZeroOrNull(dto.totalIPPAccruedInterest) && isDecimalZeroOrNull(dto.totalPerDiem)
+            && isDecimalZeroOrNull(dto.totalDeferredInterest);
+    }
+
+    /** Chỉ coi all-zero là lỗi API khi chưa có bản ghi plan nào trong DB. */
+    @TestVisible
+    private static Boolean shouldTreatAllZeroTotalsAsApiFailure(Id customerHistoryId, CardPaymentTotalsDTO dto) {
+        return isAllCardPaymentTotalsZero(dto) && !hasCardPaymentRecords(customerHistoryId);
     }
 
     /** Map CardPlan API → FEC_Card_Payment__c field values. */
