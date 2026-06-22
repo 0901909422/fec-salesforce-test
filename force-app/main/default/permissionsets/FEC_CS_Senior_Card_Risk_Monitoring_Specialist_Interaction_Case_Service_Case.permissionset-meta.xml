@@ -622,6 +622,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Interaction_Subchannel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Interaction_View_Mode__c</field>
         <readable>true</readable>
     </fieldPermissions>
