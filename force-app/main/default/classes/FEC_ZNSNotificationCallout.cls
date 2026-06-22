@@ -754,27 +754,101 @@ public with sharing class FEC_ZNSNotificationCallout {
             !String.isBlank(paramType) &&
             paramType.trim().equalsIgnoreCase(PARAM_TYPE_DATE)
         ) {
-            Date dateValue;
+            Date dateValue = parseDateValue(rawValue);
 
-            if (rawValue instanceof Date) {
-                dateValue = (Date) rawValue;
-            } else if (rawValue instanceof Datetime) {
-                dateValue = ((Datetime) rawValue).date();
-            } else {
+            if (dateValue == null) {
                 return String.valueOf(rawValue);
             }
 
-            String dayValue = dateValue.day() < 10
-                ? '0' + String.valueOf(dateValue.day())
-                : String.valueOf(dateValue.day());
-
-            String monthValue = dateValue.month() < 10
-                ? '0' + String.valueOf(dateValue.month())
-                : String.valueOf(dateValue.month());
-
-            return dayValue + '/' + monthValue + '/' + String.valueOf(dateValue.year());
+            return formatDateDdMmYyyy(dateValue);
         }
 
         return String.valueOf(rawValue);
+    }
+
+    private static Date parseDateValue(Object rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+
+        if (rawValue instanceof Date) {
+            return (Date) rawValue;
+        }
+
+        if (rawValue instanceof Datetime) {
+            return ((Datetime) rawValue).date();
+        }
+
+        String rawText = String.valueOf(rawValue).trim();
+
+        if (String.isBlank(rawText)) {
+            return null;
+        }
+
+        // Case: yyyy-MM-dd HH:mm:ss
+        // Example: 2026-06-20 09:37:57
+        if (rawText.length() >= 10 && rawText.substring(4, 5) == '-' && rawText.substring(7, 8) == '-') {
+            try {
+                return Date.valueOf(rawText.substring(0, 10));
+            } catch (Exception ex) {
+                // continue fallback
+            }
+        }
+
+        // Case: ISO datetime
+        // Example: 2026-06-20T18:20:28.280Z
+        if (rawText.contains('T') && rawText.length() >= 10) {
+            try {
+                return Date.valueOf(rawText.substring(0, 10));
+            } catch (Exception ex) {
+                // continue fallback
+            }
+        }
+
+        // Case: dd/MM/yyyy
+        // Example: 20/06/2026
+        if (rawText.length() == 10 && rawText.substring(2, 3) == '/' && rawText.substring(5, 6) == '/') {
+            try {
+                Integer dayValue = Integer.valueOf(rawText.substring(0, 2));
+                Integer monthValue = Integer.valueOf(rawText.substring(3, 5));
+                Integer yearValue = Integer.valueOf(rawText.substring(6, 10));
+
+                return Date.newInstance(yearValue, monthValue, dayValue);
+            } catch (Exception ex) {
+                // continue fallback
+            }
+        }
+
+        // Case: yyyy/MM/dd
+        // Example: 2026/06/20
+        if (rawText.length() == 10 && rawText.substring(4, 5) == '/' && rawText.substring(7, 8) == '/') {
+            try {
+                Integer yearValue = Integer.valueOf(rawText.substring(0, 4));
+                Integer monthValue = Integer.valueOf(rawText.substring(5, 7));
+                Integer dayValue = Integer.valueOf(rawText.substring(8, 10));
+
+                return Date.newInstance(yearValue, monthValue, dayValue);
+            } catch (Exception ex) {
+                // continue fallback
+            }
+        }
+
+        return null;
+    }
+
+    private static String formatDateDdMmYyyy(Date dateValue) {
+        if (dateValue == null) {
+            return '';
+        }
+
+        String dayValue = dateValue.day() < 10
+            ? '0' + String.valueOf(dateValue.day())
+            : String.valueOf(dateValue.day());
+
+        String monthValue = dateValue.month() < 10
+            ? '0' + String.valueOf(dateValue.month())
+            : String.valueOf(dateValue.month());
+
+        return dayValue + '/' + monthValue + '/' + String.valueOf(dateValue.year());
     }
 }
