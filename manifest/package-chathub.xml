@@ -104,11 +104,13 @@
         <members>FEC_CS_CS_Operations_Manager_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Outbound_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Team_Leader_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Quality_Control_Manager_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Support_Manager_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Support_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Center_Director_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Customer_Care_Manager_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Customer_Experience_Manager_1_Interaction_Case_Service_Case</members>
