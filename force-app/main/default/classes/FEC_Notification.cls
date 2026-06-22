@@ -292,11 +292,13 @@ public without sharing class FEC_Notification {
         // 2. Use helper method to calculate Target Email
         String targetEmail = getTargetEmailFromCase(currentCase);
         String caseCustomerType = currentCase.FEC_Customer_Type__c;
+        String manualRecordTypeDevName = 'Manual_Notification';
         
         String query = 'SELECT Id, Name, FEC_Customer_Type__c, FEC_Target_Group__c, ' +
                        'FEC_Case_Stage__c, FEC_SubCategory__c, FEC_SubCode__c ' +
                        'FROM FEC_Notification__c ' +
-                       'WHERE FEC_Notification_Status__c = true ';
+                       'WHERE FEC_Notification_Status__c = true ' +
+                       'AND RecordType.DeveloperName = :manualRecordTypeDevName ';
         
         String stageName = stageId;
         if (String.isNotBlank(stageId)) {
