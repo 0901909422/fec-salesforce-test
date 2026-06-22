@@ -214,60 +214,92 @@ public without sharing class FEC_CardReplacementAddressController {
         ReplaceCardResult result = new ReplaceCardResult();
         String blockCode;
         String blockCode1;
+        List<String> apiErrors = new List<String>();
+
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             List<String> inValidBlockCode = new List<String>{'F', 'S', 'G', 'N'};
             List<String> inValidBlockCode1 = new List<String>{'F', 'G', 'N'};
             Case objCase = [
-                SELECT Id, 
+                SELECT Id,
                     FEC_Interaction__c,
                     FEC_Account_Number__c
-                FROM Case 
+                FROM Case
                 WHERE Id = :caseId
             ];
-            FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
-            blockCode = cardStatus?.currentBlockCode;
 
-            FEC_EmeaAccountInqService.EmeaInput input = new FEC_EmeaAccountInqService.EmeaInput();
-            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
-            input.name       = UserInfo.getUserId();
-            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
-            input.account    = objCase.FEC_Account_Number__c;
-            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
-            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+            try {
+                FEC_CardLockUnLockController.ResponseResult cardStatus =
+                    FEC_CardLockUnLockController.getCardStatus(caseId);
+                blockCode = cardStatus?.currentBlockCode;
+                if (String.isNotBlank(cardStatus?.errorMessage)) {
+                    apiErrors.add('Card Inquiry: ' + cardStatus.errorMessage);
+                }
+            } catch (Exception e) {
+                String msg = resolveCheckProcessActionErrorMessage(e);
+                apiErrors.add('Card Inquiry: ' + msg);
+                FEC_CommonUltils.logException(
+                    'FEC_CardReplacementAddressController',
+                    'checkProcessAction.getCardStatus',
+                    msg,
+                    e.getStackTraceString()
+                );
+            }
 
-            FEC_EmeaAccountInqService.EmeaResult emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
-            blockCode1 = emeaRes?.blkCd1;
+            try {
+                FEC_EmeaAccountInqService.EmeaInput input =
+                    buildEmeaAccountInqInput(objCase.FEC_Account_Number__c);
+                FEC_EmeaAccountInqService.EmeaResult emeaRes =
+                    FEC_EmeaAccountInqService.callAccountInquiry(input);
+                blockCode1 = emeaRes?.blkCd1;
+            } catch (Exception e) {
+                String msg = resolveCheckProcessActionErrorMessage(e);
+                apiErrors.add('Account Inquiry: ' + msg);
+                FEC_CommonUltils.logException(
+                    'FEC_CardReplacementAddressController',
+                    'checkProcessAction.callAccountInquiry',
+                    msg,
+                    e.getStackTraceString()
+                );
+            }
 
-            String bc = normalizeBlockCodeValue(blockCode);
-            String bc1 = normalizeBlockCodeValue(blockCode1);
-
-            if ((String.isNotBlank(bc) && inValidBlockCode.contains(bc))|| (String.isNotBlank(bc1) && inValidBlockCode1.contains(bc1))) {
-                result.isShowAction = false;
-                result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
+            if (!apiErrors.isEmpty()) {
+                applyCheckProcessActionApiError(result, apiErrors);
             } else {
-                List<Case> cases = [
-                    SELECT Id 
-                    FROM Case 
-                    WHERE FEC_Interaction__c = :objCase.FEC_Interaction__c
-                        AND (FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_MOBILE
-                        OR FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_ADDRESS)
-                ];
-                if (!cases.isEmpty()) {
+                String bc = normalizeBlockCodeValue(blockCode);
+                String bc1 = normalizeBlockCodeValue(blockCode1);
+
+                if ((String.isNotBlank(bc) && inValidBlockCode.contains(bc))|| (String.isNotBlank(bc1) && inValidBlockCode1.contains(bc1))) {
                     result.isShowAction = false;
-                    result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT;
+                    result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
+                } else {
+                    List<Case> cases = [
+                        SELECT Id
+                        FROM Case
+                        WHERE FEC_Interaction__c = :objCase.FEC_Interaction__c
+                            AND (FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_MOBILE
+                            OR FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_ADDRESS)
+                    ];
+                    if (!cases.isEmpty()) {
+                        result.isShowAction = false;
+                        result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT;
+                    }
+                }
+                if (String.isBlank(result.strMsg)) {
+                    result.isShowAction = true;
                 }
             }
-            if (String.isBlank(result.strMsg)) {
-                result.isShowAction = true;
-            }
         } catch (Exception e) {
+            String msg = resolveCheckProcessActionErrorMessage(e);
+            applyCheckProcessActionApiError(result, new List<String>{ msg });
             FEC_CommonUltils.logException(
-                'FEC_CardReplacementAddressController', 
-                'checkProcessAction', 
-                e.getMessage(),
+                'FEC_CardReplacementAddressController',
+                'checkProcessAction',
+                msg,
                 e.getStackTraceString()
             );
         } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
             result.blockCode = normalizeBlockCodeValue(blockCode);
             result.blockCode1 = normalizeBlockCodeValue(blockCode1);
             result.localStorageKey = buildBlockCodeLocalStorageKey(caseId);
@@ -275,9 +307,52 @@ public without sharing class FEC_CardReplacementAddressController {
         return result;
     }
 
+    private static FEC_EmeaAccountInqService.EmeaInput buildEmeaAccountInqInput(
+        String accountNumber
+    ) {
+        FEC_EmeaAccountInqService.EmeaInput input =
+            new FEC_EmeaAccountInqService.EmeaInput();
+        input.context = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+        input.name = UserInfo.getUserId();
+        input.org = FEC_ConstantCommon.REQUESTOR_ORG;
+        input.account = accountNumber;
+        input.dualInd = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+        input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+        return input;
+    }
+
+    private static void applyCheckProcessActionApiError(
+        ReplaceCardResult result,
+        List<String> apiErrors
+    ) {
+        result.hasApiError = true;
+        result.isShowAction = false;
+        result.apiErrorMessage = String.join(apiErrors, ' | ');
+        result.strMsg = String.format(
+            System.Label.FEC_MSG_API_Error,
+            new List<String>{ result.apiErrorMessage }
+        );
+    }
+
+    @TestVisible
+    private static String resolveCheckProcessActionErrorMessage(Exception e) {
+        if (e == null) {
+            return System.Label.FEC_MSG_ERROR;
+        }
+        if (String.isNotBlank(e.getMessage())
+            && e.getMessage() != 'Script-thrown exception') {
+            return e.getMessage();
+        }
+        if (e.getCause() != null && String.isNotBlank(e.getCause().getMessage())) {
+            return e.getCause().getMessage();
+        }
+        return String.isNotBlank(e.getTypeName()) ? e.getTypeName() : System.Label.FEC_MSG_ERROR;
+    }
+
     public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, String replacementFee) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
             objCasse = [
                 SELECT Id,
@@ -301,11 +376,16 @@ public without sharing class FEC_CardReplacementAddressController {
                 replacementFeeFlag,
                 objCasse.FEC_Account_Number__c
             );
-            FEC_ReplacementCardCallout.logApiResponse();
-            
+
             if (FEC_ReplacementCardCallout.isSuccess(response)) {
                 result.success = true;
                 objCasse.FEC_Process_Action_Count__c = -1;
+                FEC_CmsVmxIntegrationService.onCmsOperationSuccess(
+                    objCasse.Id,
+                    FEC_CmsVmxIntegrationService.OP_CARD_REPLACEMENT,
+                    null,
+                    cardBlockCode
+                );
             } else {
                 result.success = false;
                 if (objCasse.FEC_Process_Action_Count__c == null) {
@@ -326,6 +406,8 @@ public without sharing class FEC_CardReplacementAddressController {
                 ex.getStackTraceString()
             );
         } finally {
+            FEC_ReplacementCardCallout.logApiResponse();
+            FEC_CommonUltils.flushDeferredApiLogs();
             FEC_CommonUltils.createProcessActionHistory(
                 method,
                 objCasse,
@@ -340,6 +422,11 @@ public without sharing class FEC_CardReplacementAddressController {
         public Boolean isShowAction { get; set; }
         @AuraEnabled
         public String strMsg { get; set; }
+        /** true khi ít nhất một API inquiry lỗi — LWC hiển thị processActionMsg dạng error. */
+        @AuraEnabled
+        public Boolean hasApiError { get; set; }
+        @AuraEnabled
+        public String apiErrorMessage { get; set; }
         /** Block code thẻ (MCMS) — LWC lưu localStorage cùng blockCode1. */
         @AuraEnabled
         public String blockCode { get; set; }

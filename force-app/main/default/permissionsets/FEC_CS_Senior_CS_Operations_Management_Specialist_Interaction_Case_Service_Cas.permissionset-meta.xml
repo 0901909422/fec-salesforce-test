@@ -1019,11 +1019,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case.FEC_Selected_Address_Info__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Case.FEC_Selected_Contract_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -4397,10 +4392,6 @@
     </recordTypeVisibilities>
     <tabSettings>
         <tab>FEC_Clear_Session__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>FEC_Customer_Search</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

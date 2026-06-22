@@ -1742,11 +1742,11 @@ private class FEC_MainInfoController_Test {
         Test.stopTest();
 
         Case updated = [
-            SELECT FEC_Selected_Address_Info__c
+            SELECT FEC_Selected_Address__c
             FROM Case
             WHERE Id = :c.Id
         ];
-        System.assertEquals(null, updated.FEC_Selected_Address_Info__c);
+        System.assertEquals(null, updated.FEC_Selected_Address__c);
 
         Boolean nullCaseThrown = false;
         Boolean invalidMasterThrown = false;
@@ -1903,7 +1903,7 @@ private class FEC_MainInfoController_Test {
         update new Case(
             Id = c.Id,
             FEC_Updated_Info_Permanent_Address__c = 'Case Updated Perm',
-            FEC_Selected_Address_Info__c = [
+            FEC_Selected_Address__c = [
                 SELECT Id FROM FEC_Address_Info__c WHERE FEC_Case__c = :c.Id LIMIT 1
             ].Id
         );

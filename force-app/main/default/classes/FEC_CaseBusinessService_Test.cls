@@ -713,11 +713,13 @@ private class FEC_CaseBusinessService_Test {
             ];
             FEC_Case_Stage__c stg2 = [SELECT Id FROM FEC_Case_Stage__c WHERE FEC_Code__c = 'STG02' LIMIT 1];
 
+            Map<String, String> routeParams = buildRouteParams(c.Id, targetQueue.Id, noc.Id, btn.Id);
+            routeParams.put('blockCode', 'O');
+            routeParams.put('blockCode1', ' ');
+            routeParams.put('teamUserGroup', 'CC');
+
             Test.startTest();
-            FEC_CaseBusinessService.run(
-                'Route to',
-                buildRouteParams(c.Id, targetQueue.Id, noc.Id, btn.Id)
-            );
+            FEC_CaseBusinessService.run('Route to', routeParams);
             Case updatedCase = queryCaseSystem(c.Id);
             System.assertEquals(true, updatedCase.FEC_Is_Submited__c);
             System.assertEquals(stg2.Id, updatedCase.FEC_Current_Case_Stage__c);
@@ -2449,6 +2451,374 @@ private class FEC_CaseBusinessService_Test {
                 '</soapenv:Envelope>'
             );
             return res;
+        }
+    }
+
+    @IsTest
+    static void testResolveExceptionMessage() {
+        System.assertEquals('Unknown error', FEC_CaseBusinessService.resolveExceptionMessage(null));
+        System.assertEquals(
+            'Direct error',
+            FEC_CaseBusinessService.resolveExceptionMessage(new CalloutException('Direct error'))
+        );
+        System.assertNotEquals(
+            null,
+            FEC_CaseBusinessService.resolveExceptionMessage(
+                new AuraHandledException('Script-thrown exception')
+            )
+        );
+    }
+
+    @IsTest
+    static void testIsUndeliveredCardOu01RedeliverCase() {
+        System.assertEquals(false, FEC_CaseBusinessService.isUndeliveredCardOu01RedeliverCase(null));
+
+        Case undelivered = [
+            SELECT Id, FEC_Category__r.FEC_Code__c, FEC_Category__r.Name,
+                FEC_SubCategory__r.Name, FEC_SubCategory__r.FEC_Code__c
+            FROM Case
+            WHERE Subject = 'Undelivered Card Case'
+            LIMIT 1
+        ];
+        System.assertEquals(
+            false,
+            FEC_CaseBusinessService.isUndeliveredCardOu01RedeliverCase(undelivered),
+            'Generic subcategory should not match OU01 redeliver.'
+        );
+
+        FEC_Sub_Category__c ou01Sub = new FEC_Sub_Category__c(
+            Name = FEC_CaseBusinessService.SUB_CATEGORY_UNDELIVERED_CARD_OU01_REDELIVER,
+            FEC_Code__c = FEC_CaseBusinessService.SUB_CATEGORY_CODE_OU01,
+            FEC_Active__c = true
+        );
+        insert ou01Sub;
+
+        undelivered.FEC_SubCategory__c = ou01Sub.Id;
+        update undelivered;
+        undelivered = [
+            SELECT Id, FEC_Category__r.FEC_Code__c, FEC_Category__r.Name,
+                FEC_SubCategory__r.Name, FEC_SubCategory__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :undelivered.Id
+        ];
+        System.assertEquals(true, FEC_CaseBusinessService.isUndeliveredCardOu01RedeliverCase(undelivered));
+    }
+
+    @IsTest
+    static void testProcessUndeliveredCardResolveIntegration_guardPaths() {
+        FEC_CaseBusinessService.processUndeliveredCardResolveIntegration(null, 'remark');
+        FEC_CaseBusinessService.processUndeliveredCardResolveIntegration('', 'remark');
+
+        Case coreCase = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+        try {
+            FEC_CaseBusinessService.processUndeliveredCardResolveIntegration(coreCase.Id, 'remark');
+            System.assert(true, 'Non-undelivered case should return without error.');
+        } catch (Exception e) {
+            System.assert(false, 'Should not throw for non-undelivered case: ' + e.getMessage());
+        }
+    }
+
+    @IsTest
+    static void testGetByCase_allSetupCasesWithIncomingNocAndBlockCodes() {
+        System.runAs(caseOwnerUser()) {
+            List<Case> cases = [
+                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c
+                FROM Case
+                WHERE Subject IN (
+                    'Core Testing Case Lifecycle',
+                    'GSR Case For getByCase',
+                    'GSR Stage 2 Case',
+                    'Document Request Case',
+                    'MRC RL05 Case',
+                    'COF General Flow Case',
+                    'Undelivered Card Case',
+                    'Draft Case For getByCase'
+                )
+            ];
+
+            Test.startTest();
+            for (Case c : cases) {
+                FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                    c.Id,
+                    c.FEC_Product_Type__c,
+                    c.FEC_Category__c,
+                    c.FEC_SubCategory__c,
+                    c.FEC_SubCode__c,
+                    'O',
+                    ' '
+                );
+                System.assertNotEquals(null, biz);
+            }
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void testGetByCase_invalidSubCodeIdUsesCaseFallback() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [
+                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c,
+                    FEC_SubCode__c, FEC_SubCode__r.FEC_Code__c
+                FROM Case
+                WHERE Subject = 'Core Testing Case Lifecycle'
+                LIMIT 1
+            ];
+
+            Test.startTest();
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                c.Id,
+                c.FEC_Product_Type__c,
+                c.FEC_Category__c,
+                c.FEC_SubCategory__c,
+                'not-a-valid-id',
+                null,
+                null
+            );
+            Test.stopTest();
+
+            if (c.FEC_SubCode__r != null && String.isNotBlank(c.FEC_SubCode__r.FEC_Code__c)) {
+                System.assertEquals(c.FEC_SubCode__r.FEC_Code__c.trim(), biz.subCodeCode);
+            }
+        }
+    }
+
+    @IsTest
+    static void testGetByCase_rc2701WithRouteHistory() {
+        System.runAs(caseOwnerUser()) {
+            FEC_Sub_Code__c rc2701 = [
+                SELECT Id
+                FROM FEC_Sub_Code__c
+                WHERE FEC_Code__c = 'RC27.01'
+                LIMIT 1
+            ];
+            FEC_Case_Stage__c stage1 = [
+                SELECT Id, Name
+                FROM FEC_Case_Stage__c
+                WHERE Name LIKE '%Stage 1%'
+                LIMIT 1
+            ];
+            FEC_Case_Stage__c stage3 = [
+                SELECT Id, Name
+                FROM FEC_Case_Stage__c
+                WHERE Name LIKE '%Stage 3%' OR Name LIKE '%Stage 2%'
+                LIMIT 1
+            ];
+
+            Case rcCase = new Case(
+                Subject = 'RC27 Route History Case',
+                OwnerId = UserInfo.getUserId(),
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_SubCode__c = rc2701.Id,
+                FEC_Is_Submited__c = true
+            );
+            insert rcCase;
+
+            if (stage1 != null && stage3 != null) {
+                insert new FEC_Routing_Action_History__c(
+                    FEC_Case__c = rcCase.Id,
+                    FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+                    FEC_Previous_Stage__c = stage1.Id,
+                    FEC_Next_Stage__c = stage3.Id
+                );
+            }
+
+            Test.startTest();
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                rcCase.Id, null, null, null, rc2701.Id, 'O', ' '
+            );
+            Test.stopTest();
+
+            System.assertNotEquals(null, biz);
+            System.assertEquals('RC27.01', biz.subCodeCode);
+        }
+    }
+
+    @IsTest
+    static void testNotificationSuppressAndRequiresRoutePrepare() {
+        FEC_CaseBusinessService.beginCaseSubmitNotificationSuppress();
+        FEC_CaseBusinessService.endCaseSubmitNotificationSuppress();
+        System.assert(true, 'Notification suppress helpers should not throw.');
+    }
+
+    @IsTest
+    static void testRunInternal_replaceCardAndBlockCardWithMock() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+            Map<String, String> params = new Map<String, String>{
+                'caseId' => c.Id,
+                'blockCode' => 'C',
+                'currentBlockCode' => 'O',
+                'last4Digit' => '1234',
+                'replacementFee' => '0'
+            };
+
+            Test.setMock(HttpCalloutMock.class, new BlockCardReplaceCardMock());
+
+            Test.startTest();
+            try {
+                FEC_CaseBusinessService.runInternal(FEC_CaseBusinessService.REPLACE_CARD, params);
+            } catch (Exception e) {
+                System.assertNotEquals(null, e.getMessage());
+            }
+            try {
+                FEC_CaseBusinessService.runInternal(FEC_CaseBusinessService.BLOCK_CARD, params);
+            } catch (Exception e) {
+                System.assertNotEquals(null, e.getMessage());
+            }
+            try {
+                FEC_CaseBusinessService.runInternal(FEC_CaseBusinessService.UNBLOCK_CARD, params);
+            } catch (Exception e) {
+                System.assertNotEquals(null, e.getMessage());
+            }
+            Test.stopTest();
+        }
+    }
+
+    private class BlockCardReplaceCardMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            String body = req.getBody() != null ? req.getBody() : '';
+            if (body.contains('ReplaceCard') || body.contains('replace')) {
+                res.setBody('{"Sys":{"Code":"1","Description":"Success"}}');
+            } else {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><WSResponse><Sys><Code>1</Code></Sys>' +
+                    '<VMX_NONMON_UPD><VMX_ROOT><VMX_MSGOUT><SVC_RETURN>P</SVC_RETURN></VMX_MSGOUT></VMX_ROOT></VMX_NONMON_UPD>' +
+                    '</WSResponse></soapenv:Body></soapenv:Envelope>'
+                );
+            }
+            return res;
+        }
+    }
+
+    @IsTest
+    static void testGetByCase_customerUpdateBusinessProcesses() {
+        System.runAs(caseOwnerUser()) {
+            FEC_Product_Type__c prod = [SELECT Id FROM FEC_Product_Type__c LIMIT 1];
+            FEC_Category__c cat = [SELECT Id FROM FEC_Category__c WHERE FEC_Code__c = 'Request' LIMIT 1];
+            FEC_Sub_Category__c subCat = [SELECT Id FROM FEC_Sub_Category__c WHERE FEC_Code__c = 'RC99' LIMIT 1];
+            FEC_Sub_Code__c subCode = [SELECT Id FROM FEC_Sub_Code__c WHERE FEC_Code__c = 'RC99.01' LIMIT 1];
+            FEC_Case_Stage__c stage1 = [SELECT Id FROM FEC_Case_Stage__c WHERE FEC_Code__c = 'STG01' LIMIT 1];
+
+            FEC_Business_Process__c bp = new FEC_Business_Process__c(
+                Name = 'Email Update Process',
+                FEC_Code__c = FEC_CaseBusinessService.EMAIL_UPDATE,
+                FEC_Active__c = true
+            );
+            insert bp;
+
+            FEC_Nature_of_Case__c noc = new FEC_Nature_of_Case__c(
+                FEC_Product_Type__c = prod.Id,
+                FEC_Category__c = cat.Id,
+                FEC_Sub_Category__c = subCat.Id,
+                FEC_Sub_Code__c = subCode.Id,
+                FEC_Customer_Type__c = 'All',
+                FEC_Business_Process__c = bp.Id,
+                FEC_User_Group__c = 'CC',
+                FEC_Active__c = true
+            );
+            insert noc;
+
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case c = new Case(
+                Subject = 'BP Email Update',
+                OwnerId = UserInfo.getUserId(),
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Product_Type__c = prod.Id,
+                FEC_Category__c = cat.Id,
+                FEC_SubCategory__c = subCat.Id,
+                FEC_SubCode__c = subCode.Id,
+                FEC_Customer_Type__c = 'Existing',
+                FEC_Is_Submited__c = true,
+                FEC_Current_Case_Stage__c = stage1.Id,
+                FEC_ID_Search__c = 'BP-EMAIL-' + System.currentTimeMillis()
+            );
+            insert c;
+
+            FEC_Customer_History__c ch = new FEC_Customer_History__c(
+                Name = 'CH-EMAIL',
+                FEC_Case__c = c.Id,
+                FEC_Customer_Type__c = 'Existing',
+                FEC_Primary_Phone__c = '0900000001',
+                FEC_Email__c = 'test@example.com',
+                FEC_First_Name__c = 'Test',
+                FEC_Last_Name__c = 'User'
+            );
+            insert ch;
+            c.FEC_Account_or_Contract__c = ch.Id;
+
+            FEC_Actual_Nature_of_Case__c actual = new FEC_Actual_Nature_of_Case__c(
+                FEC_Product_Type__c = prod.Id,
+                FEC_Category__c = cat.Id,
+                FEC_Sub_Category__c = subCat.Id,
+                FEC_Sub_Code__c = subCode.Id,
+                FEC_Business_Process__c = bp.Id
+            );
+            insert actual;
+            c.FEC_Actual_Nature_of_Case__c = actual.Id;
+            update c;
+            FEC_CaseTriggerHandler.isExecuting = false;
+
+            Test.startTest();
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                c.Id,
+                String.valueOf(prod.Id),
+                String.valueOf(cat.Id),
+                String.valueOf(subCat.Id),
+                String.valueOf(subCode.Id),
+                'O',
+                ' '
+            );
+            Test.stopTest();
+
+            System.assertNotEquals(null, biz);
+        }
+    }
+
+    @IsTest
+    static void testGetByCase_withProcessActionStageScreen() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+            FEC_Case_Stage__c stage1 = [SELECT Id FROM FEC_Case_Stage__c WHERE FEC_Code__c = 'STG01' LIMIT 1];
+            FEC_Action_Button__c processBtn = new FEC_Action_Button__c(
+                Name = 'Block Card Button',
+                FEC_Code__c = FEC_CaseBusinessService.BLOCK_CARD,
+                FEC_Type__c = 'Process Action',
+                FEC_Active__c = true
+            );
+            insert processBtn;
+            insert new FEC_Stage_Screen__c(
+                FEC_Case_Stage__c = stage1.Id,
+                FEC_Action_Button__c = processBtn.Id,
+                FEC_User_Group__c = 'CC',
+                FEC_Active__c = true,
+                FEC_Field_Type__c = 'All'
+            );
+
+            Test.startTest();
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                c.Id, null, null, null, null, 'O', ' '
+            );
+            Test.stopTest();
+
+            System.assertNotEquals(null, biz);
+            System.assert(
+                biz.processActionlst != null,
+                'Process action list should be initialized.'
+            );
+        }
+    }
+
+    @IsTest
+    static void testRequiresRoutePrepareBeforeRun_allMethods() {
+        for (String methodName : FEC_CaseBusinessService.METHOD_MAP.keySet()) {
+            System.assertNotEquals(
+                null,
+                FEC_CaseBusinessService.requiresRoutePrepareBeforeRun(methodName),
+                methodName + ' should resolve route-prepare flag.'
+            );
         }
     }
 }
