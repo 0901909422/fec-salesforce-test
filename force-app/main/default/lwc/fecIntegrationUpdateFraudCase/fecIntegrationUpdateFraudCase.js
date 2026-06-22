@@ -64,6 +64,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     @api actionMode;
     @api serviceCaseId;
     @api caseDataId;
+    @api natureOfCaseId;
+    @api mappingId;
+
     @track caseId;
     @track loading = true;
     @track showPreview = false;
@@ -83,6 +86,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     fraudIntSubCategory = '';
     fraudIntSubCode = '';
     intCaseId = '';
+    fraudIntNatureOfCaseId = '';
     fieldTypes = {};
     actionModes = {};
     createActionType = 'create';
@@ -176,9 +180,11 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             this.loading = false;
             return;
         }        
-        console.log('this.caseId: ', this.caseId);
+        console.log('this.caseId-fecIntegrationUpdateFraudCase: ', this.caseId);
          // Load case data
          this.loadIntegrationCaseInfo(this.caseId);
+         console.log('fecIntegrationUpdateFraudCase-natureOfCaseId: ', this.natureOfCaseId);
+         console.log('fecIntegrationUpdateFraudCase-mappingId: ', this.mappingId);
     }
     
     
@@ -186,7 +192,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         try {
             this.fieldTypes = await getIntegrationFieldTypes();    
             const caseData = await getFraudCaseById({ fraudCaseId: recordId });   
-            console.log('caseData: ', JSON.stringify(caseData));
+            console.log('caseData-fecIntegrationUpdateFraudCase: ', JSON.stringify(caseData));
             const infoList = caseData.propertyValues || [];
     
             this.fraudIntChannel = caseData.intChannel;
@@ -203,6 +209,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             this.subCategory = caseData.intSubCategory;
             this.subCode = caseData.intSubCode;
             this.intCaseId = caseData.intCaseId;
+            this.fraudIntNatureOfCaseId = caseData.natureOfCaseId;
+            console.log('this.fraudIntNatureOfCaseId: ', this.fraudIntNatureOfCaseId);
+            console.log('Paramrequest-natureOfCaseId: ', this.natureOfCaseId);
     
             const resultData = await loadCategoryMapping({
                 channelCode: this.fraudIntChannel
@@ -247,6 +256,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 }));
          
             this.loadAdditionalProps(infoList);
+            console.log('Reload-mappingId: ', this.mappingId);
+            console.log('Reload-fraudIntNatureOfCaseId:', this.fraudIntNatureOfCaseId, '| natureOfCaseId:', this.natureOfCaseId, '| differ:', this.fraudIntNatureOfCaseId !== this.natureOfCaseId);
+            if (this.fraudIntNatureOfCaseId !== this.natureOfCaseId && this.mappingId) {
+                console.log('Reload-loadMasterDataIntegrationMapping(this.mappingId)');
+                this.loadMasterDataIntegrationMapping(this.mappingId);
+            }
     
         } catch (error) {
             console.error('[ERROR] loadIntegrationCaseInfo', error);
@@ -257,7 +272,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     }
 
     loadMasterDataIntegrationMapping(mappingId) {
-        console.log('[CALL] loadMasterDataIntegrationMapping:', mappingId);
+        console.log('[CALL] fecIntegrationUpdateFraudCase-loadMasterDataIntegrationMapping:', mappingId);
         loadMasterDataIntegrationMappingById({
             integrationMappingId: mappingId
         })
@@ -269,8 +284,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             this.fraudIntServiceType = data.intServiceType;
             this.fraudIntCategory = data.intCategory;
             this.fraudIntSubCategory = data.intSubCategory;
-            this.fraudIntSubCode = data.intSubCode;            
+            this.fraudIntSubCode = data.intSubCode;       
+            this.category = data.intCategory;
+            this.subCategory = data.intSubCategory;
+            this.subCode = data.intSubCode;     
             this.loadAdditionalProps(data.propertyValues);
+            
         })
         .catch(err => {
             console.error('[ERROR] loadMasterDataIntegrationMapping:', err);

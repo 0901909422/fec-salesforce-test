@@ -668,6 +668,8 @@ global with sharing class FEC_IntegrationFraudService {
                 response = http.send(request);        
                 statusCode = response.getStatusCode();
                 responseBody = response.getBody();
+                log('XML RESPONSE BODY: ' + responseBody);
+                log('RESPONSE STATUS CODE: ' + statusCode);
         
             } else {
                 //For Mockup data

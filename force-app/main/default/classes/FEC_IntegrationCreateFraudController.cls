@@ -40,7 +40,7 @@ public with sharing class FEC_IntegrationCreateFraudController{
      * DTO for Additional Property mapping table
      */
     public class PropertyDTO {
-        @AuraEnabled public Id id;                    // Record Id
+        @AuraEnabled public String id;                // Row identifier: FEC_Integration_Case_Info__c.Id when persisted, FEC_Source_Id__c for master-only rows
         @AuraEnabled public String property;          // Integrating Property code
         @AuraEnabled public String displayName;       // Vietnamese/English display name
         @AuraEnabled public String value;            // Value record
@@ -61,6 +61,7 @@ public with sharing class FEC_IntegrationCreateFraudController{
         @AuraEnabled public String csRemarks;
         @AuraEnabled public String serviceCaseId;
         @AuraEnabled public String fraudCaseId;
+        @AuraEnabled public String natureOfCaseId;
         @AuraEnabled public List<PropertyDTO> propertyValues;
         @AuraEnabled public Map<String, String> propertyMappingValues;
     }
@@ -332,6 +333,7 @@ public static FraudPropertyDTO getFraudCaseById(String fraudCaseId) {
             FEC_Creator_Email__c,
             FEC_Case_Type__c,
             FEC_Product_Type__c,
+            FEC_Nature_Of_Case_Id__c,
             FEC_Category__c,
             FEC_Sub_Category__c,
             FEC_Sub_Code__c,
@@ -345,6 +347,7 @@ public static FraudPropertyDTO getFraudCaseById(String fraudCaseId) {
 
         FEC_Integration_Case__c rec = existing[0];
         resultData.intCaseId = rec.Id;
+        resultData.natureOfCaseId = rec.FEC_Nature_Of_Case_Id__c;
 		resultData.intChannel      = rec.FEC_Sys_Channel__c;
         resultData.intUserType     = rec.FEC_Customer_User_Type__c;
         resultData.intProductLine  = rec.FEC_Product_Type__c;
@@ -360,7 +363,15 @@ public static FraudPropertyDTO getFraudCaseById(String fraudCaseId) {
 		resultData.csRemarks = rec.FEC_CS_Remark__c;
 		
         // Load additional dynamic properties based on mapping configuration
-        resultData.propertyValues =  loadAdditionalPropertiesByParentId(rec.Id);
+        resultData.propertyValues = loadAdditionalPropertiesByParentId(
+            rec.Id,
+            rec.FEC_Sys_Channel__c,
+            rec.FEC_Category__c,
+            rec.FEC_Sub_Category__c,
+            rec.FEC_Sub_Code__c,
+            rec.FEC_Case_Type__c,
+            rec.FEC_Product_Type__c
+        );
         
         //Need get Auto mapping property from FEC_Data_Integration_Mapping__c
 
@@ -529,25 +540,14 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
 
         //Query AdditionalProperty
-        List<FEC_Master_Data_Integration__c> props = [
-            SELECT Id,
-                FEC_Source_Id__c,
-                FEC_Source_NameVN__c,
-                FEC_Source_Field_Type__c,
-                FEC_Source_Name__c,
-                FEC_Source_Is_Mandatory__c
-            FROM FEC_Master_Data_Integration__c
-            WHERE FEC_Source_Type__c = :FEC_FraudConstantCommon.KEY_ADDITIONAL_PROPERTY
-            AND FEC_Channel__c = :channelCode
-            AND (
-                FEC_Source_Parent_Id__c = :subCode
-                OR FEC_Source_Parent_Id__c = :category
-                OR FEC_Source_Parent_Id__c = :subCategory
-                OR FEC_Source_Parent_Id__c = :serviceType
-                OR FEC_Source_Parent_Id__c = :productLine
-            )
-            ORDER BY FEC_Source_Id__c
-        ];
+        List<FEC_Master_Data_Integration__c> props = getMasterDataIntegrationBySourceParent(
+            channelCode,
+            category,
+            subCategory,
+            subCode,
+            serviceType,
+            productLine
+        );
 
         log('[QUERY] AdditionalProperty count=' + props.size());
 
@@ -631,44 +631,114 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         return result;
     }
 
-    private static List<PropertyDTO> loadAdditionalPropertiesByParentId(String parentCaseId) {
+    private static List<PropertyDTO> loadAdditionalPropertiesByParentId(
+        String parentCaseId,
+        String channelCode,
+        String category,
+        String subCategory,
+        String subCode,
+        String serviceType,
+        String productLine
+    ) {
 
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
 
         List<FEC_Integration_Case_Info__c> infoList = queryIntegrationCaseInfo(parentCaseId);
-
         log('[QUERY] AdditionalProperty count=' + infoList.size());
 
-        Set<String> propKeys = new Set<String>();
+        List<FEC_Master_Data_Integration__c> masterRecords = getMasterDataIntegrationBySourceParent(
+            channelCode,
+            category,
+            subCategory,
+            subCode,
+            serviceType,
+            productLine
+        );
+        log('[QUERY] Master records count=' + masterRecords.size());
+
+        // Index existing case-info records by their property key
+        Map<String, FEC_Integration_Case_Info__c> infoByKey = new Map<String, FEC_Integration_Case_Info__c>();
         for (FEC_Integration_Case_Info__c rec : infoList) {
-            propKeys.add(rec.FEC_Info_ID__c);
+            if (rec.FEC_Info_ID__c != null) {
+                infoByKey.put(rec.FEC_Info_ID__c, rec);
+            }
+        }
+
+        // Collect property keys from BOTH sources so available values cover the union
+        Set<String> propKeys = new Set<String>(infoByKey.keySet());
+        for (FEC_Master_Data_Integration__c m : masterRecords) {
+            if (m.FEC_Source_Id__c != null) {
+                propKeys.add(m.FEC_Source_Id__c);
+            }
         }
 
         Map<String, List<AvailableValueDTO>> availableValueMap =
             queryAvailableValues(propKeys, isVietnamese);
 
-        // Query display names from master data
+        // Build display-name and mandatory maps from master data
         Map<String, String> displayNameMap = new Map<String, String>();
-        List<FEC_Master_Data_Integration__c> masterRecords = [
-            SELECT FEC_Source_Id__c, FEC_Source_Name__c, FEC_Source_NameVN__c
-            FROM FEC_Master_Data_Integration__c
-            WHERE FEC_Source_Id__c IN :propKeys
-            AND FEC_Source_Type__c != :FEC_FraudConstantCommon.KEY_AVAILABLE_VALUE
-        ];
+        Map<String, Boolean> mandatoryMap = new Map<String, Boolean>();
         for (FEC_Master_Data_Integration__c m : masterRecords) {
             displayNameMap.put(m.FEC_Source_Id__c, isVietnamese
                 ? m.FEC_Source_NameVN__c
                 : m.FEC_Source_Name__c);
+            mandatoryMap.put(m.FEC_Source_Id__c, m.FEC_Source_Is_Mandatory__c);
         }
 
         List<PropertyDTO> result = new List<PropertyDTO>();
+        Set<String> handledKeys = new Set<String>();
 
+        // 1) Iterate master records first to preserve master-defined order.
+        //    If a matching case-info exists, its Id/value/type are carried over;
+        //    otherwise emit a master-only DTO so the UI shows the empty field.
+        for (FEC_Master_Data_Integration__c m : masterRecords) {
+            String key = m.FEC_Source_Id__c;
+            if (key == null || handledKeys.contains(key)) continue;
+
+            if (infoByKey.containsKey(key)) {
+                result.add(buildPropertyDTO(infoByKey.get(key), availableValueMap, displayNameMap, mandatoryMap));
+            } else {
+                result.add(buildPropertyDTOFromMaster(m, availableValueMap, isVietnamese));
+            }
+            handledKeys.add(key);
+        }
+
+        // 2) Append any case-infos that have no matching master record so we
+        //    don't lose data already saved on the case.
         for (FEC_Integration_Case_Info__c rec : infoList) {
-            result.add(buildPropertyDTO(rec, availableValueMap, displayNameMap));
+            if (rec.FEC_Info_ID__c != null && !handledKeys.contains(rec.FEC_Info_ID__c)) {
+                result.add(buildPropertyDTO(rec, availableValueMap, displayNameMap, mandatoryMap));
+                handledKeys.add(rec.FEC_Info_ID__c);
+            }
         }
 
         log('[END] loadAdditionalProperties | result size=' + result.size());
         return result;
+    }
+
+    /**
+     * Builds a PropertyDTO from a master record alone (no case-info exists yet
+     * for this property). Used to render fields that are configured in master
+     * data but haven't been filled in on the case.
+     */
+    private static PropertyDTO buildPropertyDTOFromMaster(
+        FEC_Master_Data_Integration__c m,
+        Map<String, List<AvailableValueDTO>> availableValueMap,
+        Boolean isVietnamese
+    ) {
+        PropertyDTO dto = new PropertyDTO();
+        // Use the source id as the row identifier so the UI can distinguish
+        // master-only rows (no FEC_Integration_Case_Info__c record yet).
+        dto.id = m.FEC_Source_Id__c;
+        dto.property = m.FEC_Source_Id__c;
+        dto.displayName = isVietnamese ? m.FEC_Source_NameVN__c : m.FEC_Source_Name__c;
+        dto.value = null;
+        dto.type = m.FEC_Source_Field_Type__c;
+        dto.mandatory = m.FEC_Source_Is_Mandatory__c;
+        dto.availableValues = availableValueMap.containsKey(m.FEC_Source_Id__c)
+            ? availableValueMap.get(m.FEC_Source_Id__c)
+            : new List<AvailableValueDTO>();
+        return dto;
     }
 
     private static List<FEC_Integration_Case_Info__c> queryIntegrationCaseInfo(String parentCaseId) {
@@ -682,6 +752,46 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             FEC_Source_Is_Mandatory__c
         FROM FEC_Integration_Case_Info__c
         WHERE FEC_Parent_Case__c = :parentCaseId
+        ];
+    }
+
+    /**
+     * Loads ADDITIONAL_PROPERTY master data scoped to a case's hierarchy
+     * (channel + any of category / sub-category / sub-code / service type /
+     * product line).
+     *
+     * Used by both:
+     *  - loadAdditionalProperties (mapping-based form rendering)
+     *  - loadAdditionalPropertiesByParentId (existing case rendering)
+     *
+     * @return Master records ordered by FEC_Source_Id__c.
+     */
+    private static List<FEC_Master_Data_Integration__c> getMasterDataIntegrationBySourceParent(
+        String channelCode,
+        String category,
+        String subCategory,
+        String subCode,
+        String serviceType,
+        String productLine
+    ) {
+        return [
+            SELECT Id,
+                   FEC_Source_Id__c,
+                   FEC_Source_NameVN__c,
+                   FEC_Source_Field_Type__c,
+                   FEC_Source_Name__c,
+                   FEC_Source_Is_Mandatory__c
+            FROM FEC_Master_Data_Integration__c
+            WHERE FEC_Source_Type__c = :FEC_FraudConstantCommon.KEY_ADDITIONAL_PROPERTY
+            AND FEC_Channel__c = :channelCode
+            AND (
+                FEC_Source_Parent_Id__c = :subCode
+                OR FEC_Source_Parent_Id__c = :category
+                OR FEC_Source_Parent_Id__c = :subCategory
+                OR FEC_Source_Parent_Id__c = :serviceType
+                OR FEC_Source_Parent_Id__c = :productLine
+            )
+            ORDER BY FEC_Source_Id__c
         ];
     }
 
@@ -729,7 +839,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
     private static PropertyDTO buildPropertyDTO(
         FEC_Integration_Case_Info__c rec,
         Map<String, List<AvailableValueDTO>> availableValueMap,
-        Map<String, String> displayNameMap
+        Map<String, String> displayNameMap,
+        Map<String, Boolean> mandatoryMap
     ) {
 
         PropertyDTO dto = new PropertyDTO();
@@ -741,7 +852,12 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             : rec.FEC_Info_ID__c;
         dto.value = rec.FEC_Info_Value__c;
         dto.type = rec.FEC_Property_Type__c;
-        dto.mandatory = rec.FEC_Source_Is_Mandatory__c;
+        // Source the mandatory flag from FEC_Master_Data_Integration__c so the UI
+        // always reflects the latest configuration; fall back to the case-info
+        // value if the master record is unavailable.
+        dto.mandatory = mandatoryMap.containsKey(rec.FEC_Info_ID__c)
+            ? mandatoryMap.get(rec.FEC_Info_ID__c)
+            : rec.FEC_Source_Is_Mandatory__c;
 
         dto.availableValues = availableValueMap.containsKey(rec.FEC_Info_ID__c)
             ? availableValueMap.get(rec.FEC_Info_ID__c)
@@ -1428,7 +1544,9 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         log('LOG-upsertFraudCaseService CASEID: '+ caseId);
         log('LOG-upsertFraudCaseService integrationCaseId: '+ integrationCaseId);
         String serviceCaseDataId = caseDataId;
+        String fraudCaseId = caseId;
         FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         //Savepoint sp = Database.setSavepoint();
         try {
 
@@ -1438,7 +1556,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             List<FEC_Integration_Case__c> existing;
             if (String.isBlank(integrationCaseId)) {
                 existing = [
-                    SELECT Id
+                    SELECT Id, FEC_CaseID__c
                     FROM FEC_Integration_Case__c
                     WHERE FEC_CaseID__c = :caseId
                     AND FEC_Sys_Channel__c = :channelCode
@@ -1446,12 +1564,13 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 ];
             } else {
                 existing = [
-                    SELECT Id,FEC_Integrate_Case_ID__c
+                    SELECT Id,FEC_Integrate_Case_ID__c, FEC_CaseID__c
                     FROM FEC_Integration_Case__c
                     WHERE Id = :integrationCaseId
                     LIMIT 1
                 ];
                 serviceCaseDataId = existing.isEmpty() ? caseDataId : existing[0].FEC_Integrate_Case_ID__c;
+                fraudCaseId = existing.isEmpty() ? caseId : existing[0].FEC_CaseID__c;
             }
            
 
@@ -1469,7 +1588,13 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             rec.FEC_Service_Case_ID__c = serviceCaseId;
             rec.FEC_Parent_CaseID__c = parentCaseId;
             rec.FEC_Case_Status__c = caseStatus;
-            rec.FEC_Created_Time__c = Datetime.now();
+            // Stamp the business "Created Time" while the case has not yet been
+            // promoted to a real fraud case (FH-). Once it is FH-, the original
+            // creation time is preserved across upserts.
+            if (String.isNotBlank(fraudCaseId) && !fraudCaseId.startsWith(caseField.CASEFH)) {
+                rec.FEC_Created_Time__c = Datetime.now();
+            }           
+            
             // ----- SYS -----
             if (sys != null) {
                 rec.FEC_Sys_Transaction_Id__c = sys.TransactionID;
