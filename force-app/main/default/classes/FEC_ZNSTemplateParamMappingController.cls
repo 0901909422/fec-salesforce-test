@@ -39,12 +39,21 @@ public without sharing class FEC_ZNSTemplateParamMappingController {
         @AuraEnabled public String newValue;
     }
 
-    public class Option {
+    public class Option implements Comparable {
         @AuraEnabled public String label;
         @AuraEnabled public String value;
         public Option(String label, String value) {
             this.label = label;
             this.value = value;
+        }
+
+        public Integer compareTo(Object obj) {
+            Option other = (Option) obj;
+
+            String thisLabel = String.isBlank(this.label) ? '' : this.label.toLowerCase();
+            String otherLabel = String.isBlank(other.label) ? '' : other.label.toLowerCase();
+
+            return thisLabel.compareTo(otherLabel);
         }
     }
 
@@ -99,16 +108,26 @@ public without sharing class FEC_ZNSTemplateParamMappingController {
     @AuraEnabled(cacheable=true)
     public static List<Option> getFieldOptions(String objectApiName) {
         List<Option> opts = new List<Option>();
+
         try {
             Schema.SObjectType sot = Schema.getGlobalDescribe().get(objectApiName);
             if (sot == null) return opts;
+
             for (Schema.SObjectField field : sot.getDescribe().fields.getMap().values()) {
                 Schema.DescribeFieldResult f = field.getDescribe();
-                opts.add(new Option(f.getLabel() + ' (' + f.getName() + ')', f.getName()));
+
+                opts.add(new Option(
+                    f.getLabel() + ' (' + f.getName() + ')',
+                    f.getName()
+                ));
             }
+
+            opts.sort(); // Sort ASC theo label
+
         } catch (Exception ex) {
             System.debug('[ZNSParamMappingController] getFieldOptions error: ' + ex.getMessage());
         }
+
         return opts;
     }
 

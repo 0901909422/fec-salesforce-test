@@ -214,7 +214,7 @@ public with sharing class FEC_ConstantCommon {
         UPLOADED_STATUS, REUPLOADED_STATUS
     };
     public static final Set<String> DELETABLE_STATUSES = new Set<String>{
-        UPLOADED_STATUS, REUPLOADED_STATUS, FAILURE_STATUS
+        UPLOADED_STATUS, FAILURE_STATUS
     };
     
     // === Customer Additional Data — Composite Key ===

@@ -79,6 +79,9 @@ export default class FecCustomerUpsertModal extends LightningElement {
     base64Data;
     currentUserName;
     currentSelectedFile;
+    // Snapshot dữ liệu ban đầu để so sánh khi save (detect "no change")
+    originalSnapshot = null;
+    originalFileIds = [];
 
     get tomorrowDate() {
         return getTomorrowDate();
@@ -123,6 +126,47 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
         this.pendingFiles = [];
         this.resetFileState();
+        // Snapshot sau khi đã fetch xong existing files để detect thay đổi khi save
+        this.originalSnapshot = this.snapshotFormData();
+        this.originalFileIds = this.existingFiles.map(f => f.id);
+    }
+
+    /**
+     * Tạo snapshot các field cần track để so sánh khi save
+     */
+    snapshotFormData() {
+        return {
+            FEC_KeyIdentifier__c: this.localData.FEC_KeyIdentifier__c || '',
+            FEC_FieldID__c: this.localData.FEC_FieldID__c || '',
+            FEC_FieldName__c: this.localData.FEC_FieldName__c || '',
+            FEC_IsActive__c: !!this.localData.FEC_IsActive__c,
+            FEC_StartDate__c: this.localData.FEC_StartDate__c || '',
+            FEC_EndDate__c: this.localData.FEC_EndDate__c || ''
+        };
+    }
+
+    /**
+     * Detect xem có thay đổi nào so với trạng thái ban đầu không
+     * — Form fields, danh sách file đã đính kèm (xoá), hoặc có file mới upload
+     */
+    hasChanges() {
+        // File mới upload (pendingFiles có entry)
+        if (this.pendingFiles && this.pendingFiles.length > 0) return true;
+
+        // File cũ bị xoá so với danh sách ban đầu
+        const currentNonPendingIds = this.existingFiles
+            .filter(f => !String(f.id).startsWith('temp-'))
+            .map(f => f.id);
+        if (currentNonPendingIds.length !== this.originalFileIds.length) return true;
+        const currentSet = new Set(currentNonPendingIds);
+        for (const id of this.originalFileIds) {
+            if (!currentSet.has(id)) return true;
+        }
+
+        // So sánh từng field trong snapshot
+        if (!this.originalSnapshot) return true;
+        const current = this.snapshotFormData();
+        return Object.keys(current).some(k => current[k] !== this.originalSnapshot[k]);
     }
 
     /**
@@ -340,6 +384,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
             return;
         }
         
+        // Edit mode: nếu không có thay đổi nào thì không gọi backend (giữ nguyên status)
+        if (this.localData.Id && !this.hasChanges()) {
+            this.handleClose();
+            return;
+        }
+
         this.isLoading = true;
 
         try {

@@ -668,6 +668,8 @@ global with sharing class FEC_IntegrationFraudService {
                 response = http.send(request);        
                 statusCode = response.getStatusCode();
                 responseBody = response.getBody();
+                log('XML RESPONSE BODY: ' + responseBody);
+                log('RESPONSE STATUS CODE: ' + statusCode);
         
             } else {
                 //For Mockup data
@@ -846,6 +848,11 @@ global with sharing class FEC_IntegrationFraudService {
         HttpRequest request = new HttpRequest();
     
         try {
+            String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
+             //Check caseID existing for update
+             if (String.isNotBlank(req.CaseID)) {     
+                serviceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
+           }
     
             // ---------------------------------------------------------
             // Configure HTTP request
@@ -900,17 +907,17 @@ global with sharing class FEC_IntegrationFraudService {
                 log('LOG-callUpdateFraudCaseService MOCKUP: ');
             }
             FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData;
+            
             try {
                 resultData = parseCreateFraudCaseResponse(responseBody);
             } catch (Exception parseEx) {
                 log('ERROR parsing update response: ' + parseEx.getMessage());
-                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
-                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
                 throw parseEx;
             }
 
             //Central integration logging
-            String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
+            
             description =  String.valueOf(statusCode);
             messageStatus = (resultData != null && resultData.Sys != null) ? resultData.Sys.Description : null;
             writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
