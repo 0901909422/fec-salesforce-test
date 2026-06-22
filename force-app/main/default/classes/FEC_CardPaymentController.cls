@@ -664,14 +664,21 @@ public with sharing class FEC_CardPaymentController {
         return [SELECT COUNT() FROM FEC_Card_Payment__c WHERE FEC_Customer_History__c = :customerHistoryId] > 0;
     }
 
+    private static Boolean isDecimalZeroOrNull(Decimal value) {
+        return value == null || value == 0;
+    }
+
     @TestVisible
     private static Boolean isAllCardPaymentTotalsZero(CardPaymentTotalsDTO dto) {
         if (dto == null) {
             return true;
         }
-        return dto.fullPaymentAmount == 0 && dto.loanBalance == 0 && dto.fullPaymentWithoutIPP == 0 && dto.fullIPPPaymentAmount == 0
-            && dto.totalCurrentBalance == 0 && dto.totalCloseFeeAmount == 0 && dto.totalPlanPaymentAmount == 0
-            && dto.totalAccruedInterest == 0 && dto.totalIPPAccruedInterest == 0 && dto.totalPerDiem == 0 && dto.totalDeferredInterest == 0;
+        return isDecimalZeroOrNull(dto.fullPaymentAmount) && isDecimalZeroOrNull(dto.loanBalance)
+            && isDecimalZeroOrNull(dto.fullPaymentWithoutIPP) && isDecimalZeroOrNull(dto.fullIPPPaymentAmount)
+            && isDecimalZeroOrNull(dto.totalCurrentBalance) && isDecimalZeroOrNull(dto.totalCloseFeeAmount)
+            && isDecimalZeroOrNull(dto.totalPlanPaymentAmount) && isDecimalZeroOrNull(dto.totalAccruedInterest)
+            && isDecimalZeroOrNull(dto.totalIPPAccruedInterest) && isDecimalZeroOrNull(dto.totalPerDiem)
+            && isDecimalZeroOrNull(dto.totalDeferredInterest);
     }
 
     /** Chỉ coi all-zero là lỗi API khi chưa có bản ghi plan nào trong DB. */
