@@ -222,6 +222,8 @@ private class FEC_CardPaymentController_Test {
             System.assertEquals(3000000, totals.loanBalance);
             System.assertEquals(1000000, totals.totalCurrentBalance);
             System.assertEquals(50000, totals.totalCloseFeeAmount);
+            // Runtime: 1,000,000 + 15,000 + 1,000 + 50,000 (IPP = 0 khi chưa vào cửa sổ 4 ngày)
+            System.assertEquals(1066000, totals.totalPlanPaymentAmount);
             System.assertNotEquals(null, totalsWrapper);
         }
     }
@@ -305,5 +307,260 @@ private class FEC_CardPaymentController_Test {
         Test.stopTest();
         System.assertEquals(10, dto.fullPaymentAmount);
         System.assertEquals(110, dto.totalDeferredInterest);
+    }
+
+    @IsTest
+    static void testCalculatePlanPaymentAmountFromRecord_ShowIppAccruedInterest() {
+        FEC_Card_Payment__c payment = new FEC_Card_Payment__c(
+            FEC_Current_Balance__c = 27281279,
+            FEC_Accrued_Interest__c = 0,
+            FEC_Per_Diem__c = 0,
+            FEC_Deferred_Interest__c = 0,
+            FEC_IPP_Accrued_Interest__c = 1250391,
+            FEC_Close_Fee_Amount__c = 2182502.32,
+            FEC_Plan_Payment_Amount__c = 29463781.32
+        );
+
+        Decimal withoutIpp = FEC_CardPaymentController.calculatePlanPaymentAmountFromRecord(payment, false);
+        Decimal withIpp = FEC_CardPaymentController.calculatePlanPaymentAmountFromRecord(payment, true);
+
+        System.assertEquals(29463781.32, withoutIpp, 'Ngoài cửa sổ 4 ngày không cộng IPP Accrued Interest.');
+        System.assertEquals(30714172.32, withIpp, 'Trong cửa sổ 4 ngày phải cộng IPP Accrued Interest.');
+    }
+
+    @IsTest
+    static void testCalculatePlanPaymentAmount_FromCardPlan() {
+        FEC_GetCardPlanInfo.CardPlan plan = new FEC_GetCardPlanInfo.CardPlan();
+        plan.currentBalance = 27281279;
+        plan.accruedInterest = 0;
+        plan.perDiem = 0;
+        plan.deferredInterest = 0;
+        plan.additionalAccruedInt = 1250391;
+        plan.closeFeeAmount = 2182502.32;
+
+        Decimal withoutIpp = FEC_CardPaymentController.calculatePlanPaymentAmount(plan, false);
+        Decimal withIpp = FEC_CardPaymentController.calculatePlanPaymentAmount(plan, true);
+
+        System.assertEquals(29463781.32, withoutIpp);
+        System.assertEquals(30714172.32, withIpp);
+    }
+
+    @IsTest
+    static void testLoadCardPaymentInfo_RuntimePlanPaymentAmount() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            FEC_Customer_History__c customer = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE FEC_Case__c = :c.Id
+                LIMIT 1
+            ];
+            customer.FEC_Next_Statement_Date__c = Date.today().addDays(1);
+            update customer;
+
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            insert new FEC_Card_Payment__c(
+                FEC_Customer_History__c = customer.Id,
+                FEC_Rec__c = '001',
+                FEC_Plan__c = '95103',
+                FEC_Current_Balance__c = 27281279,
+                FEC_IPP_Accrued_Interest__c = 1250391,
+                FEC_Close_Fee_Amount__c = 2182502.32,
+                FEC_Plan_Payment_Amount__c = 29463781.32
+            );
+
+            Test.startTest();
+            List<Map<String, Object>> records = FEC_CardPaymentController.loadCardPaymentInfo(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(1, records.size());
+            System.assertEquals(
+                30714172.32,
+                (Decimal) records[0].get('FEC_Plan_Payment_Amount__c'),
+                'UI phải dùng Plan Payment Amount tính runtime, không dùng giá trị stale trong DB.'
+            );
+            System.assertEquals(
+                1250391,
+                (Decimal) records[0].get('FEC_IPP_Accrued_Interest__c'),
+                'IPP Accrued Interest phải hiển thị khi trong cửa sổ 4 ngày.'
+            );
+        }
+    }
+
+    @IsTest
+    static void testLoadCardPaymentInfo_RuntimePlanPaymentAmount_OutsideIppWindow() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            FEC_Customer_History__c customer = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE FEC_Case__c = :c.Id
+                LIMIT 1
+            ];
+            customer.FEC_Next_Statement_Date__c = Date.today().addDays(10);
+            update customer;
+
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            insert new FEC_Card_Payment__c(
+                FEC_Customer_History__c = customer.Id,
+                FEC_Rec__c = '001',
+                FEC_Plan__c = '95103',
+                FEC_Current_Balance__c = 27281279,
+                FEC_IPP_Accrued_Interest__c = 1250391,
+                FEC_Close_Fee_Amount__c = 2182502.32,
+                FEC_Plan_Payment_Amount__c = 29463781.32
+            );
+
+            Test.startTest();
+            List<Map<String, Object>> records = FEC_CardPaymentController.loadCardPaymentInfo(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(1, records.size());
+            System.assertEquals(
+                29463781.32,
+                (Decimal) records[0].get('FEC_Plan_Payment_Amount__c'),
+                'Ngoài cửa sổ 4 ngày không cộng IPP vào Plan Payment Amount.'
+            );
+            System.assertEquals(null, records[0].get('FEC_IPP_Accrued_Interest__c'));
+        }
+    }
+
+    @IsTest
+    static void testLoadCardPaymentTotals_RuntimePlanPaymentAmount() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            FEC_Customer_History__c customer = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE FEC_Case__c = :c.Id
+                LIMIT 1
+            ];
+            customer.FEC_Next_Statement_Date__c = Date.today().addDays(1);
+            update customer;
+
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            insert new List<FEC_Card_Payment__c>{
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '001',
+                    FEC_Plan__c = '95103',
+                    FEC_Current_Balance__c = 27281279,
+                    FEC_IPP_Accrued_Interest__c = 1250391,
+                    FEC_Close_Fee_Amount__c = 2182502.32,
+                    FEC_Plan_Payment_Amount__c = 29463781.32
+                ),
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '002',
+                    FEC_Plan__c = '85103',
+                    FEC_Current_Balance__c = 4257664,
+                    FEC_Plan_Payment_Amount__c = 4257664
+                )
+            };
+
+            Test.setMock(HttpCalloutMock.class, new TotalsThreeApisMock());
+
+            Test.startTest();
+            FEC_CardPaymentController.CardPaymentTotalsDTO totals =
+                FEC_CardPaymentController.loadCardPaymentTotals(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(34971736.32, totals.totalPlanPaymentAmount);
+            System.assertEquals(1250391, totals.totalIPPAccruedInterest);
+        }
+    }
+
+    @IsTest
+    static void testLoadCardPaymentInfo_Acc0001500100007890040_RuntimeTotal() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            FEC_Customer_History__c customer = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE FEC_Case__c = :c.Id
+                LIMIT 1
+            ];
+            customer.FEC_Next_Statement_Date__c = Date.today().addDays(4);
+            update customer;
+
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            insert new List<FEC_Card_Payment__c>{
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '003',
+                    FEC_Plan__c = '60001',
+                    FEC_Plan_Payment_Amount__c = 0
+                ),
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '002',
+                    FEC_Plan__c = '85103',
+                    FEC_Plan_Payment_Amount__c = 0
+                ),
+                new FEC_Card_Payment__c(
+                    FEC_Customer_History__c = customer.Id,
+                    FEC_Rec__c = '001',
+                    FEC_Plan__c = '95103',
+                    FEC_Current_Balance__c = 46493704,
+                    FEC_IPP_Accrued_Interest__c = 968617,
+                    FEC_Close_Fee_Amount__c = 3719496.32,
+                    FEC_Plan_Payment_Amount__c = 50213200.32
+                )
+            };
+
+            Test.setMock(HttpCalloutMock.class, new CardPlanEmptyMock());
+
+            Test.startTest();
+            List<Map<String, Object>> records = FEC_CardPaymentController.loadCardPaymentInfo(c.Id);
+            Test.stopTest();
+
+            Decimal ippPlanAmount = null;
+            Decimal ippAccruedInterest = null;
+            for (Map<String, Object> row : records) {
+                if (row.get('FEC_Rec__c') == '001') {
+                    ippPlanAmount = (Decimal) row.get('FEC_Plan_Payment_Amount__c');
+                    ippAccruedInterest = (Decimal) row.get('FEC_IPP_Accrued_Interest__c');
+                }
+            }
+
+            System.assertEquals(51181817.32, ippPlanAmount);
+            System.assertEquals(968617, ippAccruedInterest);
+        }
+    }
+
+    @IsTest
+    static void testLoadCardPaymentTotals_Acc0001500100007890040_RuntimeTotal() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            FEC_Customer_History__c customer = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE FEC_Case__c = :c.Id
+                LIMIT 1
+            ];
+            customer.FEC_Next_Statement_Date__c = Date.today().addDays(4);
+            update customer;
+
+            delete [SELECT Id FROM FEC_Card_Payment__c];
+            insert new FEC_Card_Payment__c(
+                FEC_Customer_History__c = customer.Id,
+                FEC_Rec__c = '001',
+                FEC_Plan__c = '95103',
+                FEC_Current_Balance__c = 46493704,
+                FEC_IPP_Accrued_Interest__c = 968617,
+                FEC_Close_Fee_Amount__c = 3719496.32,
+                FEC_Plan_Payment_Amount__c = 50213200.32
+            );
+
+            Test.setMock(HttpCalloutMock.class, new TotalsThreeApisMock());
+
+            Test.startTest();
+            FEC_CardPaymentController.CardPaymentTotalsDTO totals =
+                FEC_CardPaymentController.loadCardPaymentTotals(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(51181817.32, totals.totalPlanPaymentAmount);
+            System.assertEquals(968617, totals.totalIPPAccruedInterest);
+        }
     }
 }
