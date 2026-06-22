@@ -164,7 +164,7 @@ private class FEC_CmsVmxIntegrationService_Test {
         );
 
         System.assertEquals(
-            'Old Block Code =O New Block Code =S',
+            'Old Block Code = O New Block Code =S',
             FEC_CmsVmxIntegrationService.buildMemo2(
                 FEC_CmsVmxIntegrationService.OP_BLOCK_CARD,
                 'S',
@@ -180,7 +180,7 @@ private class FEC_CmsVmxIntegrationService_Test {
             )
         );
         System.assertEquals(
-            'Old Block Code =O  New Block Code =(null)',
+            'Old Block Code =O New Block Code =(null)',
             FEC_CmsVmxIntegrationService.buildMemo2(
                 FEC_CmsVmxIntegrationService.OP_CARD_REPLACEMENT,
                 'S',

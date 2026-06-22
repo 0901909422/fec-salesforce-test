@@ -359,7 +359,7 @@ private class FEC_CardReplaceAddressController_Test {
 
             FEC_CardReplacementAddressController.ReplaceCardResult resActionError =
                 FEC_CardReplacementAddressController.checkProcessAction('500000000000001AAA');
-            System.assertEquals(null, resActionError.isShowAction);
+            System.assertEquals(false, resActionError.isShowAction);
 
             try {
                 FEC_CardReplacementAddressController.UpdateResult resReplaceError =
@@ -380,5 +380,198 @@ private class FEC_CardReplaceAddressController_Test {
         new FEC_CardReplacementAddressController.PicklistOptionDTO();
         Test.stopTest();
         System.assert(true);
+    }
+
+    @IsTest
+    static void testAddressCrudAndCaseSelection() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
+            FEC_Country__c country = [SELECT Id FROM FEC_Country__c LIMIT 1];
+            FEC_Province__c province = [SELECT Id FROM FEC_Province__c LIMIT 1];
+            FEC_District__c district = [SELECT Id FROM FEC_District__c LIMIT 1];
+
+            FEC_CardReplacementAddressController.AddressInfoInput input =
+                new FEC_CardReplacementAddressController.AddressInfoInput();
+            input.caseId = c.Id;
+            input.addressType = 'Temporary Address';
+            input.address = '123 Test Street';
+            input.countryId = country.Id;
+            input.provinceId = province.Id;
+            input.districtId = district.Id;
+            input.building = 'Tower A';
+            input.numberValue = '10';
+            input.street = 'Nguyen Trai';
+
+            Test.startTest();
+            Id newAddrId = FEC_CardReplacementAddressController.createAddressInfo(input);
+            input.addressInfoId = newAddrId;
+            input.address = '456 Updated Street';
+            FEC_CardReplacementAddressController.updateAddressInfo(input);
+            FEC_CardReplacementAddressController.updateCaseSelectedAddress(c.Id, newAddrId);
+
+            Case updatedCase = [
+                SELECT FEC_Selected_Address__c
+                FROM Case
+                WHERE Id = :c.Id
+            ];
+            System.assertEquals(newAddrId, updatedCase.FEC_Selected_Address__c);
+
+            FEC_CardReplacementAddressController.deleteAddressInfo(newAddrId);
+            Test.stopTest();
+
+            System.assertEquals(0, [SELECT COUNT() FROM FEC_Address_Info__c WHERE Id = :newAddrId]);
+        }
+    }
+
+    @IsTest
+    static void testCreateAddressInfo_WithCustomerHistoryId() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
+            FEC_Country__c country = [SELECT Id FROM FEC_Country__c LIMIT 1];
+
+            FEC_CardReplacementAddressController.AddressInfoInput input =
+                new FEC_CardReplacementAddressController.AddressInfoInput();
+            input.customerHistoryId = c.FEC_Account_or_Contract__c;
+            input.addressType = 'Current Address';
+            input.address = 'Via customer history id';
+            input.countryId = country.Id;
+
+            Test.startTest();
+            Id addrId = FEC_CardReplacementAddressController.createAddressInfo(input);
+            Test.stopTest();
+
+            System.assertNotEquals(null, addrId);
+        }
+    }
+
+    @IsTest
+    static void testGetCaseTemporaryAddressInfo() {
+        System.runAs(testRunAsUser()) {
+            System.assertEquals(null, FEC_CardReplacementAddressController.getCaseTemporaryAddressInfo(null));
+            System.assertEquals(null, FEC_CardReplacementAddressController.getCaseTemporaryAddressInfo(''));
+
+            Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
+            FEC_Country__c country = [SELECT Id FROM FEC_Country__c LIMIT 1];
+            insert new FEC_Address_Info__c(
+                FEC_Customer_History__c = c.FEC_Account_or_Contract__c,
+                FEC_Case__c = c.Id,
+                FEC_Address_Type__c = 'Temporary Address',
+                FEC_Address__c = 'Temp addr for case',
+                FEC_Country__c = country.Id
+            );
+
+            Test.startTest();
+            FEC_Address_Info__c temp = FEC_CardReplacementAddressController.getCaseTemporaryAddressInfo(c.Id);
+            Test.stopTest();
+
+            System.assertNotEquals(null, temp);
+            System.assertEquals('Temporary Address', temp.FEC_Address_Type__c);
+        }
+    }
+
+    @IsTest
+    static void testGetBlockCodeLocalStorageKey() {
+        Test.startTest();
+        System.assertEquals(
+            'fec_card_replacement_block_codes',
+            FEC_CardReplacementAddressController.getBlockCodeLocalStorageKey(null)
+        );
+        System.assertEquals(
+            'fec_card_replacement_block_codes_001xx',
+            FEC_CardReplacementAddressController.getBlockCodeLocalStorageKey('001xx')
+        );
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testResolveCheckProcessActionErrorMessage() {
+        Test.startTest();
+        System.assertNotEquals(
+            null,
+            FEC_CardReplacementAddressController.resolveCheckProcessActionErrorMessage(null)
+        );
+        System.assertEquals(
+            'Direct message',
+            FEC_CardReplacementAddressController.resolveCheckProcessActionErrorMessage(
+                new CalloutException('Direct message')
+            )
+        );
+        System.assertNotEquals(
+            null,
+            FEC_CardReplacementAddressController.resolveCheckProcessActionErrorMessage(
+                new AuraHandledException('Script-thrown exception')
+            )
+        );
+        Test.stopTest();
+    }
+
+    private class FailingCardStatusMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            throw new CalloutException('Card inquiry failed');
+        }
+    }
+
+    @IsTest
+    static void testCheckProcessAction_InvalidBlockCode1() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new OrderedCheckProcessActionMock('O', 'G'));
+
+            Test.startTest();
+            FEC_CardReplacementAddressController.ReplaceCardResult result =
+                FEC_CardReplacementAddressController.checkProcessAction(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(false, result.isShowAction);
+            System.assertNotEquals(null, result.strMsg);
+        }
+    }
+
+    @IsTest
+    static void testCheckProcessAction_ApiErrors() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
+
+            Test.setMock(HttpCalloutMock.class, new FailingCardStatusMock());
+            Test.startTest();
+            FEC_CardReplacementAddressController.ReplaceCardResult failResult =
+                FEC_CardReplacementAddressController.checkProcessAction(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(true, failResult.hasApiError);
+            System.assertEquals(false, failResult.isShowAction);
+            System.assertNotEquals(null, failResult.localStorageKey);
+        }
+    }
+
+    @IsTest
+    static void testCheckProcessAction_SiblingUpdateAddressCase() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id, FEC_Interaction__c FROM Case WHERE Subject = 'Case For Card Replacement Normal' LIMIT 1];
+
+            FEC_Sub_Code__c subCodeAddress = new FEC_Sub_Code__c(
+                Name = 'Cập nhật địa chỉ',
+                FEC_Code__c = FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_ADDRESS,
+                FEC_Active__c = true
+            );
+            insert subCodeAddress;
+
+            insert new Case(
+                Subject = 'Sibling Update Address Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                Origin = 'Phone',
+                FEC_Interaction__c = c.FEC_Interaction__c,
+                FEC_SubCode__c = subCodeAddress.Id
+            );
+
+            Test.setMock(HttpCalloutMock.class, new OrderedCheckProcessActionMock('O', ' '));
+
+            Test.startTest();
+            FEC_CardReplacementAddressController.ReplaceCardResult result =
+                FEC_CardReplacementAddressController.checkProcessAction(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(false, result.isShowAction);
+        }
     }
 }

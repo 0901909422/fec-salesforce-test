@@ -132,8 +132,8 @@ private class FEC_EmeaAccountInqService_Test {
         Test.startTest();
         try {
             FEC_EmeaAccountInqService.callAccountInquiry(buildValidInput());
-            System.assert(false, 'Phải ném AuraHandledException khi HTTP != 200.');
-        } catch (AuraHandledException e) {
+            System.assert(false, 'Phải ném exception khi HTTP != 200.');
+        } catch (CalloutException e) {
             System.assertNotEquals(null, e.getMessage());
         }
         Test.stopTest();
@@ -146,8 +146,8 @@ private class FEC_EmeaAccountInqService_Test {
         Test.startTest();
         try {
             FEC_EmeaAccountInqService.callAccountInquiry(buildValidInput());
-            System.assert(false, 'Phải ném AuraHandledException khi body rỗng.');
-        } catch (AuraHandledException e) {
+            System.assert(false, 'Phải ném exception khi body rỗng.');
+        } catch (CalloutException e) {
             System.assertNotEquals(null, e.getMessage());
         }
         Test.stopTest();
@@ -161,7 +161,7 @@ private class FEC_EmeaAccountInqService_Test {
         try {
             FEC_EmeaAccountInqService.callAccountInquiry(input);
             System.assert(false, 'Phải ném Exception khi thiếu input bắt buộc.');
-        } catch (AuraHandledException e) {
+        } catch (CalloutException e) {
             System.assertNotEquals(null, e.getMessage());
         }
         Test.stopTest();

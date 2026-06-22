@@ -87,6 +87,7 @@ public without sharing class FEC_PinResetHandler {
             // ============================================================
             FEC_PinResetCounterCallout.PinResetCounterResponse newResponse = FEC_PinResetCounterCallout.callPinResetCounter(last4Card, transactionId, accountNumber, selectedCase.FEC_Is_Test_API__c);
             isSuccess = FEC_PinResetCounterCallout.isSuccess(newResponse);
+            response = mapPinResetCounterResponse(newResponse, isSuccess);
             
             Integer count =
                 selectedCase.FEC_Process_Action_Count__c == null
@@ -134,6 +135,26 @@ public without sharing class FEC_PinResetHandler {
                 );
             }
         }
+    }
+    
+    
+    private static FEC_PINReissueServiceCallout.PINResponse mapPinResetCounterResponse(
+        FEC_PinResetCounterCallout.PinResetCounterResponse newResponse,
+        Boolean success
+    ) {
+        FEC_PINReissueServiceCallout.PINResponse pinResponse =
+            new FEC_PINReissueServiceCallout.PINResponse();
+        pinResponse.isSuccess = success == true;
+        pinResponse.RespCode = success == true ? '0' : '1';
+        if (newResponse != null) {
+            pinResponse.errorCode = newResponse.errorCode;
+            pinResponse.errorMessage = newResponse.errorMessage;
+            if (newResponse.Sys != null) {
+                pinResponse.RespDesc = newResponse.Sys.Description;
+                pinResponse.TransID = newResponse.Sys.TransID;
+            }
+        }
+        return pinResponse;
     }
     
     

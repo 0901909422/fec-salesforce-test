@@ -153,7 +153,7 @@ private class FEC_CardLockUnLockController_Test {
 
             Test.startTest();
             FEC_CardLockUnLockController.UpdateResult result =
-                FEC_CardLockUnLockController.lockUnblockCard(c.Id, 'B', 'Q', 'Button_Click');
+                FEC_CardLockUnLockController.lockUnblockCard(c.Id, 'B', 'Q', 'O', FEC_CaseBusinessService.BLOCK_CARD);
             Test.stopTest();
 
             System.assertNotEquals(null, result);
@@ -170,7 +170,7 @@ private class FEC_CardLockUnLockController_Test {
 
             Test.startTest();
             FEC_CardLockUnLockController.UpdateResult result =
-                FEC_CardLockUnLockController.lockUnblockCard(c.Id, 'B', 'Q', 'Button_Click');
+                FEC_CardLockUnLockController.lockUnblockCard(c.Id, 'B', 'Q', 'O', FEC_CaseBusinessService.BLOCK_CARD);
             Test.stopTest();
 
             System.assertNotEquals(null, result);
@@ -184,7 +184,7 @@ private class FEC_CardLockUnLockController_Test {
         System.runAs(testRunAsUser()) {
             Test.startTest();
             try {
-                FEC_CardLockUnLockController.lockUnblockCard('500000000000001AAA', 'B', 'Q', 'Method');
+                FEC_CardLockUnLockController.lockUnblockCard('500000000000001AAA', 'B', 'Q', 'O', FEC_CaseBusinessService.BLOCK_CARD);
                 System.assert(false, 'Expected exception for invalid Case Id');
             } catch (Exception e) {
                 System.assertNotEquals(null, e.getMessage());
