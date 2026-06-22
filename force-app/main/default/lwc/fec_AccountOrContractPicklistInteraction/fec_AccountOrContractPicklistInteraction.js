@@ -105,6 +105,11 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   handleModeMessage(message) {
     console.log("[LMS] Mode received:", message);
 
+    // Không phải record hiện tại => bỏ qua
+    if (message?.interactionCaseId !== this.recordId) {
+      return;
+    }
+
     if (message?.isModeEdit !== undefined) {
       setMode(message.isModeEdit);
     }
@@ -292,7 +297,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   get showPicklist() {
-    return this.hasAccountOrContact && this.isEditMode;
+    return this.hasAccountOrContact && this.isEditMode && !this.isNonExistingCustomer;
   }
 
   get isNonExistingCustomer() {
