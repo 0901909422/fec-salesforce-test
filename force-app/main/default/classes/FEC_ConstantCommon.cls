@@ -1091,5 +1091,5 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String DNB_TYPE_INTERACTION_PHONE = 'Interaction Phone';
     public static final String DNB_TYPE_INTERACTION_EMAIL = 'Interaction Email';
-    public static final String DNB_TYPE_RETURN_FROM_DB = 'Return form DB';
+    public static final String DNB_TYPE_RETURN_FROM_DB = 'Returned from DB';
 }
