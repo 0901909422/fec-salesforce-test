@@ -32,7 +32,9 @@
                         <c-fec-integration-update-fraud-case
                             service-case-id={serviceCaseId}
                             fraud-handling-case-id={fraudCaseId}
+                            mapping-id={integrateMappingId}
                             case-data-id={caseDataId}
+                            nature-of-case-id={natureOfCaseId}
                             action-mode="EditMode"
                             onfraudcasesuccess={handleFraudCaseSuccess}>
                         </c-fec-integration-update-fraud-case>
@@ -42,6 +44,8 @@
                             service-case-id={serviceCaseId}
                             fraud-handling-case-id={fraudCaseId}
                             case-data-id={caseDataId}
+                            mapping-id={integrateMappingId}
+                            nature-of-case-id={natureOfCaseId}
                             action-mode="SubmitMode"
                             onfraudcasesuccess={handleFraudCaseSuccess}>
                         </c-fec-integration-update-fraud-case>

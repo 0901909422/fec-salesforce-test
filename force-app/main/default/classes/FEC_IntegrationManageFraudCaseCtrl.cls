@@ -36,7 +36,7 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
      */
     @AuraEnabled
     public static ManageFraudCaseDTO initManageFraudCase(String serviceCaseId, String natureOfCaseId) {
-        //log('[getAllValueCaseInfoByCaseId] serviceCaseId=' + serviceCaseId + ' | natureOfCaseId=' + natureOfCaseId);
+        log('[getAllValueCaseInfoByCaseId] serviceCaseId=' + serviceCaseId + ' | natureOfCaseId=' + natureOfCaseId);
         FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         ManageFraudCaseDTO dto = new ManageFraudCaseDTO();        
         dto.natureOfCaseId = natureOfCaseId;
@@ -54,10 +54,12 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
 
         // Step 2: Query fraud case
         String canceledStatus = FEC_FraudConstantCommon.CANCELED;
+        String fraudNatureOfCaseId = null;
         List<FEC_Integration_Case__c> existing = [
             SELECT Id,
                    FEC_CaseID__c,
                    FEC_Case_Status__c,
+                   FEC_Nature_Of_Case_Id__c,
                    FEC_Service_Case_ID__c
             FROM FEC_Integration_Case__c
             WHERE FEC_Service_Case_ID__c = :cs.FEC_ID_Search__c
@@ -72,19 +74,30 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
             log('[initManageFraudCase] No fraud case found → CreateMode');
         } else {
             FEC_Integration_Case__c fraudCase = existing[0];
+            fraudNatureOfCaseId = fraudCase.FEC_Nature_Of_Case_Id__c;
+            log('[initManageFraudCase] fraudNatureOfCaseId=' + fraudNatureOfCaseId);
             isConfigFraudIntegrate = true;
             dto.fraudCaseId = fraudCase.FEC_CaseID__c;
             dto.caseStatus = fraudCase.FEC_Case_Status__c;
-            Boolean isNotAllow = (fraudCase.FEC_CaseID__c != null && fraudCase.FEC_CaseID__c.startsWith(caseField.CASEFH))
-            ? true: false;
 
-            if (!isNotAllow) {
-                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_SUBMIT_MODE;
-            }else if(isNotAllow && (fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.CS_UPDATING
-                || fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.PROVIDE_INFORMATION)) {
-                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_EDIT_MODE;
-            } else {
-                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_VIEW_MODE;
+            Boolean isNotAllow = fraudCase.FEC_CaseID__c != null
+                && fraudCase.FEC_CaseID__c.startsWith(caseField.CASEFH);
+
+            // Resolve action mode based on the case prefix and current status.
+            dto.actionMode = resolveExistingFraudActionMode(fraudCase, isNotAllow);
+
+            // If there is no Actual Master Data Setting for the chosen nature-of-case
+            // and the user has picked a different nature-of-case from the one stored
+            // on the fraud case, reset the integration flag so the form reloads
+            // properties from the new mapping. Action mode stays as resolved above.
+            List<FEC_Actual_Master_Data_Setting__c> actualMasterDataSetting =
+                geActualMasterDataSettingByNatureOfCase(natureOfCaseId);
+            Boolean hasActualSetting = actualMasterDataSetting != null && !actualMasterDataSetting.isEmpty();
+
+            if (!hasActualSetting && fraudNatureOfCaseId != natureOfCaseId) {
+                isConfigFraudIntegrate = false;
+                log('[initManageFraudCase] natureOfCaseId changed (' + fraudNatureOfCaseId
+                    + ' -> ' + natureOfCaseId + ') → reload mapping');
             }
 
             log('[initManageFraudCase] Fraud case found → ' + dto.actionMode
@@ -107,7 +120,7 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
 
         return dto;
     }
-
+   
     @AuraEnabled
     public static Map<String, String> getCaseToFraudFieldMap(String natureOfCaseId, String serviceCaseId) {
         Map<String, String> result = new Map<String, String>();
@@ -225,6 +238,45 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
         if (DEBUG_LOG) {
             System.debug(LoggingLevel.INFO, msg);
         }
+    }
+
+    /**
+     * Resolves the action mode for an existing fraud case based on case prefix
+     * and current case status. Centralizes the SUBMIT / EDIT / VIEW decision
+     * so it isn't duplicated across branches.
+     *
+     * @param fraudCase  Existing FEC_Integration_Case__c record
+     * @param isNotAllow True when the case has already been promoted to FH-
+     * @return INTEGRATING_FRAUD_SUBMIT_MODE / INTEGRATING_FRAUD_EDIT_MODE / INTEGRATING_FRAUD_VIEW_MODE
+     */
+    private static String resolveExistingFraudActionMode(FEC_Integration_Case__c fraudCase, Boolean isNotAllow) {
+        if (!isNotAllow) {
+            return FEC_FraudConstantCommon.INTEGRATING_FRAUD_SUBMIT_MODE;
+        }
+        if (fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.CS_UPDATING
+            || fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.PROVIDE_INFORMATION) {
+            return FEC_FraudConstantCommon.INTEGRATING_FRAUD_EDIT_MODE;
+        }
+        return FEC_FraudConstantCommon.INTEGRATING_FRAUD_VIEW_MODE;
+    }
+
+    private static List<FEC_Actual_Master_Data_Setting__c> geActualMasterDataSettingByNatureOfCase(String natureOfCaseId) {
+        log('geActualMasterDataSettingByNatureOfCase-natureOfCaseId: ' + natureOfCaseId);
+    
+        if (String.isBlank(natureOfCaseId)) {
+            return null;
+        }
+    
+        List<FEC_Actual_Master_Data_Setting__c> mappings = [
+            SELECT Id, FEC_Actual_Nature_of_Case__c
+            FROM FEC_Actual_Master_Data_Setting__c
+            WHERE FEC_Actual_Nature_of_Case__c = :natureOfCaseId
+              AND FEC_Field_Status__c = true
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+    
+        return mappings;
     }
 
     /**
