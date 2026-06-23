@@ -66,6 +66,11 @@
         <field>Case.FEC_ID_Search__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sequence__c.FEC_Prefix_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Archive Case Read (Diag)</label>
 </PermissionSet>
