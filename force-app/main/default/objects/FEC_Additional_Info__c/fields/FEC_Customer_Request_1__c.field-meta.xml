@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Contract_Type_1__c</fullName>
-    <description>Loại hợp đồng / xử lý (1)</description>
-    <label>Contract Type 1</label>
+    <fullName>FEC_Customer_Request_1__c</fullName>
+    <label>Customer Request 1</label>
     <required>false</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
@@ -12,24 +11,24 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Thanh lý đặc biệt</fullName>
+                <fullName>Installment Amount</fullName>
                 <default>false</default>
-                <label>Thanh lý đặc biệt</label>
+                <label>Installment Amount</label>
             </value>
             <value>
-                <fullName>Bán nợ toàn phần</fullName>
+                <fullName>Overdue Amount</fullName>
                 <default>false</default>
-                <label>Bán nợ toàn phần</label>
+                <label>Overdue Amount</label>
             </value>
             <value>
-                <fullName>Bán nợ một phần</fullName>
+                <fullName>Contract Settlement Amount</fullName>
                 <default>false</default>
-                <label>Bán nợ một phần</label>
+                <label>Contract Settlement Amount</label>
             </value>
             <value>
-                <fullName>Khác (charge-off, field, late call…)</fullName>
+                <fullName>Other (Specify Details)</fullName>
                 <default>false</default>
-                <label>Khác (charge-off, field, late call…)</label>
+                <label>Other (Specify Details)</label>
             </value>
         </valueSetDefinition>
     </valueSet>

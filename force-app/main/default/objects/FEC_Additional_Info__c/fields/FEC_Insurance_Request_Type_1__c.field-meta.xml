@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Insurance_Request_Type_1__c</fullName>
+    <label>Insurance Request Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>&quot;Check Additional Amount Required</fullName>
+                <default>false</default>
+                <label>&quot;Check Additional Amount Required</label>
+            </value>
+            <value>
+                <fullName>Customer Has Made Payment&quot;</fullName>
+                <default>false</default>
+                <label>Customer Has Made Payment&quot;</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
