@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <types>
+    <members>FEC_Batch_Log__c.FEC_Mismatch_Detail__c</members>
+    <members>FEC_Master_Data_Setting__c.FEC_Sync_Hash__c</members>
+    <members>FEC_MDM_Master_Data_Setting__c.FEC_Sync_Hash__c</members>
+    <name>CustomField</name>
+  </types>
+  <version>67.0</version>
+</Package>
+ 
+ 
