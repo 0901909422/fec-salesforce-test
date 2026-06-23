@@ -141,7 +141,7 @@ public with sharing class FEC_CampaignBatchService {
      */
     public static String buildExistingRecordsPushQuery(DateTime dtStart) {
         String dtStartStr = dtStart.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-        String dtStartDateStr = dtStart.dateGmt().format();
+        String dtStartDateStr = String.valueOf(dtStart.dateGmt());
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
@@ -170,8 +170,8 @@ public with sharing class FEC_CampaignBatchService {
      * @return Complete SOQL query string for callback records push (no bind variables)
      */
     public static String buildCallbackRecordsPushQuery(DateTime dtStart, DateTime dtEnd) {
-        String dtStartDateStr = dtStart.dateGmt().format();
-        String dtEndDateStr = dtEnd.dateGmt().format();
+        String dtStartDateStr = String.valueOf(dtStart.dateGmt());
+        String dtEndDateStr = String.valueOf(dtEnd.dateGmt());
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
