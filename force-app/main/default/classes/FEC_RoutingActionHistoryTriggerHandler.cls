@@ -58,7 +58,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
       FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
       FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
-      sendNotificationEmails(newRecords);
+      //sendNotificationEmails(newRecords);
       // Moved from trigger body into handler (separation of concerns)
       FEC_AssignmentController.handle(newRecords);
     } catch (Exception e) {
