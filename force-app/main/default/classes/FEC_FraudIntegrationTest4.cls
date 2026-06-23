@@ -483,7 +483,7 @@ private class FEC_FraudIntegrationTest4 {
     static void testCreateFraud_loadAdditionalProperties() {
         Test.startTest();
         List<FEC_IntegrationCreateFraudController.PropertyDTO> props =
-            FEC_IntegrationCreateFraudController.loadAdditionalProperties('CAT', 'SUBCAT', 'SC', 'FIMA', 'CT');
+            FEC_IntegrationCreateFraudController.loadAdditionalProperties('CAT', 'SUBCAT', 'SC', 'FIMA', 'CT', null);
         Test.stopTest();
 
         Assert.isNotNull(props, 'Should not be null');

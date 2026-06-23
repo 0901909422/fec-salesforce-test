@@ -580,7 +580,7 @@ private class FEC_FraudIntegrationTest3 {
         Test.startTest();
         List<FEC_IntegrationMappingController.PropertyDTO> result =
             FEC_IntegrationMappingController.loadAdditionalProperties(
-                'CAT-01', 'SUBCAT-01', 'SC-01', 'FIMA', 'CT-01', ut.Id
+                'CAT-01', 'SUBCAT-01', 'SC-01', 'FIMA', 'CT-01', ut.Id, null
             );
         Test.stopTest();
 

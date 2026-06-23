@@ -845,13 +845,12 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
         try {
             List<AthenaCases__x> archives = ArchiveCaseController.queryArchiveCases(null, caseId);
-            if (archives.isEmpty()) {
+            if (archives == null || archives.isEmpty()) {
                 response.put('error', System.Label.TECH_CASE_ARCHIVE_NOT_FOUND);
                 return response;
             }
 
-            AthenaCases__x archive = archives[0];
-            ApexPages.StandardController std = new ApexPages.StandardController(archive);
+            ApexPages.StandardController std = new ApexPages.StandardController(archives[0]);
             ArchiveCaseController ctrl = new ArchiveCaseController(std);
             PageReference pageRef = ctrl.fetchAndRedirect();
 

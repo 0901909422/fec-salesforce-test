@@ -386,7 +386,7 @@ private class FEC_IntCreateFraudController_Test {
         Test.startTest();
         List<FEC_IntegrationCreateFraudController.PropertyDTO> result = 
             FEC_IntegrationCreateFraudController.loadAdditionalProperties(
-                'NOTEXIST_CAT', 'NOTEXIST_SUB', 'NOTEXIST_CODE', 'NOTEXIST_CH', 'NOTEXIST_SVC'
+                'NOTEXIST_CAT', 'NOTEXIST_SUB', 'NOTEXIST_CODE', 'NOTEXIST_CH', 'NOTEXIST_SVC', null
             );
         Test.stopTest();
 
@@ -668,7 +668,7 @@ private class FEC_IntCreateFraudController_Test {
         Test.startTest();
         List<FEC_IntegrationCreateFraudController.PropertyDTO> result = 
             FEC_IntegrationCreateFraudController.loadAdditionalProperties(
-                'CAT001', 'SUBCAT001', 'CODE001', 'CH001', 'FRAUD'
+                'CAT001', 'SUBCAT001', 'CODE001', 'CH001', 'FRAUD', null
             );
         Test.stopTest();
 

@@ -1001,7 +1001,7 @@ private class FEC_FraudIntegrationTest {
         Test.startTest();
         List<FEC_IntegrationCreateFraudController.PropertyDTO> props =
             FEC_IntegrationCreateFraudController.loadAdditionalProperties(
-                'CAT-001', 'SUBCAT-001', 'SC-001', 'FIMA', 'CT-001'
+                'CAT-001', 'SUBCAT-001', 'SC-001', 'FIMA', 'CT-001', null
             );
         Test.stopTest();
 
@@ -1144,7 +1144,7 @@ private class FEC_FraudIntegrationTest {
 
         List<FEC_IntegrationMappingController.PropertyDTO> props =
             FEC_IntegrationMappingController.loadAdditionalProperties(
-                'CAT-001', 'SUBCAT-001', 'SC-001', 'FIMA', 'CT-001', null
+                'CAT-001', 'SUBCAT-001', 'SC-001', 'FIMA', 'CT-001', null, null
             );
         Assert.isNotNull(props, 'Should return properties');
 
