@@ -98,5 +98,9 @@
 		<members>Upload_Campaign_Data</members>
 		<name>CustomTab</name>
 	</types>
+    <types>
+		<members>FECredit_External_Cred</members>
+		<name>ExternalCredential</name>
+	</types>
     <version>65.0</version>
 </Package>
