@@ -136,6 +136,20 @@ public without sharing class FEC_RepaySchedPayHistController {
         return (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) ? null : cases[0].FEC_Account_or_Contract__c;
     }
 
+    /** Serialize payment-history delete+insert per Customer History (race: getSectionData + RL04.03 sync). */
+    private static Boolean lockCustomerHistoryForPaymentSync(Id customerHistoryId) {
+        if (customerHistoryId == null) {
+            return false;
+        }
+        List<FEC_Customer_History__c> lockedHistories = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
+            FOR UPDATE
+        ];
+        return !lockedHistories.isEmpty();
+    }
+
     private static void fillRepaymentScheduleFromBasic(
         SectionDataResult result,
         FEC_GetLoanBasicInfo.ResponseWrapper basicRes
@@ -345,6 +359,10 @@ public without sharing class FEC_RepaySchedPayHistController {
         FEC_GetLoanSecInfo.ResponseWrapper secRes
     ) {
         if (customerHistoryId == null) return;
+        if (!lockCustomerHistoryForPaymentSync(customerHistoryId)) {
+            return;
+        }
+
         List<FEC_Payment_History__c> existing = [
             SELECT Id FROM FEC_Payment_History__c WHERE FEC_Customer_History__c = :customerHistoryId
         ];
@@ -455,6 +473,9 @@ public without sharing class FEC_RepaySchedPayHistController {
             return result;
         }
 
+        Id customerHistoryId = getCustomerHistoryId(caseId);
+        lockCustomerHistoryForPaymentSync(customerHistoryId);
+
         String transId = FEC_CommonUltils.generateTransactionUUID();
         String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
@@ -492,7 +513,7 @@ public without sharing class FEC_RepaySchedPayHistController {
         }
         fillPaymentHistoryFromSecInfo(result, secRes);
         try {
-            savePaymentHistoryToObject(getCustomerHistoryId(caseId), secRes);
+            savePaymentHistoryToObject(customerHistoryId, secRes);
         } catch (Exception e) {
             System.debug('### savePaymentHistoryToObject failed, case=' + caseId + ': ' + e.getMessage());
         }
