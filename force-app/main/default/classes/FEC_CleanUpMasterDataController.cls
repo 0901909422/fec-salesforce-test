@@ -13,7 +13,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c, FEC_Channel__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
             
             masterDataMap.put(FEC_ObjectConstants.KEY_CHANNEL, [SELECT Id, Name, FEC_Code__c FROM FEC_Channel__c ORDER BY Name]);
             
@@ -139,8 +139,8 @@ public with sharing class FEC_CleanUpMasterDataController {
     @AuraEnabled
     public static void pushMDMToLive() {
         try {
-            // Chạy Batch với scope 1 để đảm bảo an toàn CPU cho từng Object
-            Database.executeBatch(new FEC_PushMDMToLiveBatch(), 1);
+            // Push record-level QueryLocator scope 200 (heap-safe)
+            Database.executeBatch(new FEC_PushMDMToLiveBatch(), 200);
         } catch (Exception e) {
             throw new AuraHandledException(FEC_UIConstants.ERROR_CANNOT_START_PUSH + ' ' + e.getMessage());
         }
@@ -157,7 +157,7 @@ public with sharing class FEC_CleanUpMasterDataController {
         return [
             SELECT Id, FEC_Batch_Name__c, FEC_Job_ID__c, FEC_Status__c,
                    FEC_Total_Job_Items__c, FEC_Processed_Items__c, FEC_Error_Count__c,
-                   FEC_Error_Details__c, CreatedDate
+                   FEC_Error_Details__c, FEC_Mismatch_Detail__c, CreatedDate
             FROM FEC_Batch_Log__c
             WHERE FEC_Batch_Name__c IN ('FEC_PushMDMToLiveBatch', 'FEC_SyncMasterDataBatch')
             ORDER BY CreatedDate DESC

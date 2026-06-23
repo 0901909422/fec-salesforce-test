@@ -207,4 +207,75 @@ private class FEC_MasterDataSettingServiceDeepTest {
             Assert.isNotNull(e.getMessage());
         }
     }
+
+    // ════════════════════════════════════════════════════════
+    // checkParentDuplicateProperty — full path coverage
+    // ════════════════════════════════════════════════════════
+
+    @IsTest
+    static void testCheckParentDuplicate_BlankInput() {
+        Test.startTest();
+        // Blank nocId / additionalFieldId → trả null sớm
+        String r1 = FEC_MasterDataSettingService.checkParentDuplicateProperty(null, null, null, null, null);
+        String r2 = FEC_MasterDataSettingService.checkParentDuplicateProperty('', null, '', null, null);
+        Test.stopTest();
+        Assert.isNull(r1);
+        Assert.isNull(r2);
+    }
+
+    @IsTest
+    static void testCheckParentDuplicate_FullDuplicatePath() {
+        // Child NOC hiện có ở setup là level-2 (PT + BP)
+        FEC_MDM_Nature_Of_Case__c childNoc = [
+            SELECT Id, FEC_Product_Type__c, FEC_Business_Process__c
+            FROM FEC_MDM_Nature_Of_Case__c WHERE FEC_Code__c = 'NOC_MDS_S1' LIMIT 1
+        ];
+        // Tạo parent NOC level-1 (cùng Product Type, Business Process = null)
+        FEC_MDM_Nature_Of_Case__c parentNoc = new FEC_MDM_Nature_Of_Case__c(
+            FEC_Product_Type__c = childNoc.FEC_Product_Type__c,
+            FEC_Code__c = 'NOC_MDS_PARENT'
+        );
+        insert parentNoc;
+
+        FEC_MDM_Additional_Field__c addField = new FEC_MDM_Additional_Field__c(
+            Name = 'AF Test', FEC_Code__c = 'AF_MDS_1', FEC_Unique_ID__c = 'AF_UID_1'
+        );
+        insert addField;
+
+        // MDS trùng nằm trên parent NOC, cùng additional field, không có integration mapping
+        insert new FEC_MDM_Master_Data_Setting__c(
+            FEC_Code__c = 'MDS_PARENT_DUP',
+            FEC_Nature_Of_Case__c = parentNoc.Id,
+            FEC_Additional_Field__c = addField.Id,
+            FEC_Field_Status__c = true
+        );
+
+        Test.startTest();
+        String parentName = FEC_MasterDataSettingService.checkParentDuplicateProperty(
+            String.valueOf(childNoc.Id), null, String.valueOf(addField.Id), null, null
+        );
+        Test.stopTest();
+        // Có duplicate trên parent → trả về tên parent (Product Type name hoặc '')
+        Assert.isNotNull(parentName);
+    }
+
+    @IsTest
+    static void testCheckParentDuplicate_NoParent() {
+        // NOC level-1 (chỉ Product Type) → currentLevel <= 1 → trả null
+        FEC_MDM_Product_Type__c pt = new FEC_MDM_Product_Type__c(FEC_Code__c = 'PT_MDS_L1');
+        insert pt;
+        FEC_MDM_Nature_Of_Case__c lvl1 = new FEC_MDM_Nature_Of_Case__c(
+            FEC_Product_Type__c = pt.Id, FEC_Code__c = 'NOC_MDS_L1'
+        );
+        insert lvl1;
+        FEC_MDM_Additional_Field__c af = new FEC_MDM_Additional_Field__c(Name = 'AF L1', FEC_Code__c = 'AF_MDS_L1', FEC_Unique_ID__c = 'AF_UID_L1');
+        insert af;
+
+        Test.startTest();
+        String r = FEC_MasterDataSettingService.checkParentDuplicateProperty(
+            String.valueOf(lvl1.Id), null, String.valueOf(af.Id), null, null
+        );
+        Test.stopTest();
+        Assert.isNull(r);
+    }
 }

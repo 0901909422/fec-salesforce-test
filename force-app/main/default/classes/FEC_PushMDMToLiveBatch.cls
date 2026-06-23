@@ -1,75 +1,111 @@
-public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Database.Stateful {
+public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<SObject>, Database.Stateful {
     
     // Push-only: email notification
     private static final String SYNC_ADMIN_EMAILS = System.Label.FEC_MDM_Sync_Admin_Emails;
 
     private Set<String> uniqueErrors = new Set<String>();
-    
-    public Iterable<String> start(Database.BatchableContext bc) {
-        // In test context, return only 1 element to satisfy "iterable size matches batch size"
-        // (tránh "No more than one executeBatch can be called from within a test method")
-        if (Test.isRunningTest()) {
-            return new List<String>{ FEC_MDMBatchConfig.EXECUTION_ORDER[0] };
-        }
-        return FEC_MDMBatchConfig.EXECUTION_ORDER;
+
+    // ── Record-level chaining: xử lý 1 object/lần qua QueryLocator scope 200 (heap-safe) ──
+    // Mỗi object là 1 batch instance; finish() chain sang object kế tiếp.
+    private List<String> objectQueue;
+    private String currentMdmObj;
+    private List<String> accumulatedErrors;
+
+    public FEC_PushMDMToLiveBatch() {
+        this(FEC_MDMBatchConfig.EXECUTION_ORDER.clone(), new List<String>());
     }
-    
-    public void execute(Database.BatchableContext bc, List<String> scope) {
-        String mdmObjName = scope[0];
-        String targetObjName = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmObjName);
-        
+    public FEC_PushMDMToLiveBatch(List<String> queue) {
+        this(queue, new List<String>());
+    }
+    public FEC_PushMDMToLiveBatch(List<String> queue, List<String> priorErrors) {
+        this.objectQueue = (queue == null) ? new List<String>() : queue;
+        this.accumulatedErrors = (priorErrors == null) ? new List<String>() : priorErrors;
+        // Trong test: chỉ xử lý 1 object để tránh chain nhiều executeBatch
+        if (Test.isRunningTest() && this.objectQueue.size() > 1) {
+            this.objectQueue = new List<String>{ this.objectQueue[0] };
+        }
+    }
+
+    /**
+     * Chọn object đầu hàng đợi CÓ record cần push; build QueryLocator (scope sẽ chia 200/execute).
+     * Nếu object hiện tại không có record → bỏ qua, thử object kế (đệ quy trong cùng start).
+     */
+    public Database.QueryLocator start(Database.BatchableContext bc) {
         Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
-        if (!gd.containsKey(mdmObjName) || !gd.containsKey(targetObjName)) return;
-        
+        while (!objectQueue.isEmpty()) {
+            String mdmObjName = objectQueue[0];
+            String targetObjName = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmObjName);
+            if (!gd.containsKey(mdmObjName) || targetObjName == null || !gd.containsKey(targetObjName)) {
+                objectQueue.remove(0);
+                continue;
+            }
+            currentMdmObj = mdmObjName;
+            String query = buildSelectFields(mdmObjName, targetObjName, gd)
+                + ' FROM ' + mdmObjName
+                + ' WHERE ' + FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS + ' != \'' + FEC_MDMBatchConfig.PROCESS_STATUS_SYNCED + '\'';
+            return Database.getQueryLocator(query);
+        }
+        // Hàng đợi rỗng → trả locator rỗng (execute sẽ không chạy)
+        currentMdmObj = null;
+        return Database.getQueryLocator('SELECT Id FROM FEC_Batch_Log__c WHERE Id = null');
+    }
+
+    /** Build 'SELECT field1, field2, ...' cho object (dùng chung start). */
+    private String buildSelectFields(String mdmObjName, String targetObjName, Map<String, Schema.SObjectType> gd) {
+        Map<String, Schema.SObjectField> targetFields = gd.get(targetObjName).getDescribe().fields.getMap();
+        Map<String, Schema.SObjectField> mdmFieldsMap = gd.get(mdmObjName).getDescribe().fields.getMap();
+        Set<String> validQueryFields = new Set<String>();
+        validQueryFields.add('Id');
+        validQueryFields.add(FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS);
+        validQueryFields.add(FEC_MDMBatchConfig.FIELD_CODE);
+        validQueryFields.add(FEC_MDMBatchConfig.FIELD_NAME);
+        for (String liveField : FEC_MDMBatchConfig.COMMON_FIELD_MAP.keySet()) {
+            String mdmField = FEC_MDMBatchConfig.COMMON_FIELD_MAP.get(liveField);
+            if (targetFields.containsKey(liveField) && mdmFieldsMap.containsKey(mdmField)) {
+                Schema.DescribeFieldResult targetFieldDesc = targetFields.get(liveField).getDescribe();
+                if (!targetFieldDesc.isUpdateable() && !targetFieldDesc.isCreateable()) continue;
+                validQueryFields.add(mdmField);
+            }
+        }
+        if (FEC_MDMBatchConfig.OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
+            List<String> objLookupFields = FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.get(mdmObjName);
+            if (objLookupFields != null) {
+                for (String srcLookupField : objLookupFields) {
+                    if (targetFields.containsKey(srcLookupField)) {
+                        String mdmLookupField = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_FIELD_KEY);
+                        if (mdmFieldsMap.containsKey(mdmLookupField)) validQueryFields.add(mdmLookupField);
+                    }
+                }
+            }
+        }
+        Set<String> normalizedFields = new Set<String>();
+        for (String f : validQueryFields) normalizedFields.add(f.toLowerCase());
+        return 'SELECT ' + String.join(new List<String>(normalizedFields), ', ');
+    }
+
+    /** execute nhận 1 lô (≤200) record MDM của object hiện tại — heap-safe. */
+    public void execute(Database.BatchableContext bc, List<SObject> mdmRecords) {
+        if (mdmRecords == null || mdmRecords.isEmpty()) return;
+        // Suy object từ chính record (bền vững, không phụ thuộc state từ start)
+        String mdmObjName = mdmRecords[0].getSObjectType().getDescribe().getName();
+        String targetObjName = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmObjName);
+
+        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+        if (targetObjName == null || !gd.containsKey(mdmObjName) || !gd.containsKey(targetObjName)) return;
+
         try {
-            // STEP 1: Build query fields - only fields that exist on both source and MDM
             Map<String, Schema.SObjectField> targetFields = gd.get(targetObjName).getDescribe().fields.getMap();
             Map<String, Schema.SObjectField> mdmFieldsMap = gd.get(mdmObjName).getDescribe().fields.getMap();
-            Set<String> validQueryFields = new Set<String>();
-            validQueryFields.add('Id');
-            validQueryFields.add(FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS);
-            validQueryFields.add(FEC_MDMBatchConfig.FIELD_CODE);
-            validQueryFields.add(FEC_MDMBatchConfig.FIELD_NAME);
-            
-            // Build filtered field map - only fields that exist on both objects
-            // and are updateable on the target (skip formula/calculated fields)
             Map<String, String> filteredFieldMap = new Map<String, String>();
             for (String liveField : FEC_MDMBatchConfig.COMMON_FIELD_MAP.keySet()) {
                 String mdmField = FEC_MDMBatchConfig.COMMON_FIELD_MAP.get(liveField);
                 if (targetFields.containsKey(liveField) && mdmFieldsMap.containsKey(mdmField)) {
-                    validQueryFields.add(mdmField);
-                    filteredFieldMap.put(mdmField, liveField); // Reverse mapping: MDM -> Live
+                    Schema.DescribeFieldResult targetFieldDesc = targetFields.get(liveField).getDescribe();
+                    if (!targetFieldDesc.isUpdateable() && !targetFieldDesc.isCreateable()) continue;
+                    filteredFieldMap.put(mdmField, liveField);
                 }
             }
-            
-            // Also query MDM lookup fields so we can remap them
-            if (FEC_MDMBatchConfig.OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
-                List<String> objLookupFields = FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.get(mdmObjName);
-                if (objLookupFields != null) {
-                    for (String srcLookupField : objLookupFields) {
-                        if (targetFields.containsKey(srcLookupField)) {
-                            String mdmLookupField = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_FIELD_KEY);
-                            if (mdmFieldsMap.containsKey(mdmLookupField)) {
-                                validQueryFields.add(mdmLookupField);
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // STEP 2: Query MDM records
-            // Normalize field names to lowercase to prevent SOQL duplicate field errors
-            // (Apex Set<String> is case-sensitive but SOQL field names are case-insensitive)
-            Set<String> normalizedFields = new Set<String>();
-            for (String f : validQueryFields) {
-                normalizedFields.add(f.toLowerCase());
-            }
-            String query = 'SELECT ' + String.join(new List<String>(normalizedFields), ', ')
-                + ' FROM ' + mdmObjName
-                + ' WHERE ' + FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS + ' != \'' + FEC_MDMBatchConfig.PROCESS_STATUS_SYNCED + '\'';
-            List<SObject> mdmRecords = Database.query(query);
-            if (mdmRecords.isEmpty()) return;
-            
+
             populateMissingCodes(mdmRecords, mdmObjName);
             
             // STEP 3: Build lookup remap maps (MDM -> Live)
@@ -264,7 +300,30 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
      */
     public void finish(Database.BatchableContext bc) {
         System.debug('[finish] START');
-        
+
+        // Gộp lỗi của lô object này vào tích luỹ toàn chuỗi
+        if (accumulatedErrors == null) accumulatedErrors = new List<String>();
+        accumulatedErrors.addAll(uniqueErrors);
+
+        // Đã xử lý xong object hiện tại → bỏ khỏi hàng đợi
+        if (!objectQueue.isEmpty()) objectQueue.remove(0);
+
+        // Còn object → chain sang object kế tiếp (scope 200, heap-safe). KHÔNG log/email giữa chừng.
+        if (!objectQueue.isEmpty() && !Test.isRunningTest()) {
+            try {
+                Id nextJob = Database.executeBatch(new FEC_PushMDMToLiveBatch(objectQueue, accumulatedErrors), 200);
+                System.debug('[finish] Chained next Push object jobId=' + nextJob + ', remaining=' + objectQueue.size());
+            } catch (Exception ex) {
+                System.debug('[finish] Lỗi chain Push object kế: ' + ex.getMessage());
+            }
+            return;
+        }
+
+        // ── ĐÃ HẾT object → tổng kết: log + email + chain Sync ──
+        finalizeRun(bc);
+    }
+
+    private void finalizeRun(Database.BatchableContext bc) {
         // 1. Lấy thông tin Batch Job từ hệ thống
         AsyncApexJob job = [
             SELECT Id, Status, NumberOfErrors, JobItemsProcessed, TotalJobItems, CreatedById, CreatedBy.Email
@@ -272,14 +331,15 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             WHERE Id = :bc.getJobId()
         ];
         
-        // 2. Tổng hợp dữ liệu lỗi
+        // 2. Tổng hợp dữ liệu lỗi (toàn chuỗi)
+        Set<String> allErrors = new Set<String>(accumulatedErrors);
         String errorDetails = '';
         Integer totalErrors = job.NumberOfErrors;
         String batchStatus = 'Success';
         
-        if (!uniqueErrors.isEmpty()) {
-            errorDetails = String.join(new List<String>(uniqueErrors), '\n\n');
-            totalErrors += uniqueErrors.size(); // Cộng dồn lỗi logic và lỗi Job
+        if (!allErrors.isEmpty()) {
+            errorDetails = String.join(new List<String>(allErrors), '\n\n');
+            totalErrors += allErrors.size(); // Cộng dồn lỗi logic và lỗi Job
             batchStatus = 'Completed with Errors';
         } else if (job.NumberOfErrors > 0 || job.Status == 'Failed') {
             batchStatus = 'Failed';

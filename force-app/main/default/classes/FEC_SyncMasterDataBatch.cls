@@ -1,9 +1,49 @@
 public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Database.Stateful {
-    
+
+    // ── Incremental / reconcile control ──────────────────────────────
+    // mode = 'DELTA'     → chỉ sync record Live đổi từ lần sync thành công gần nhất (LastModifiedDate watermark)
+    // mode = 'RECONCILE' → diff theo FEC_Code__c (heap-safe) cho các object count lệch, chạy lại tối đa 3 lần
+    private String mode;
+    private List<String> objectsToProcess;     // RECONCILE: chỉ các object lệch; null/empty = full EXECUTION_ORDER
+    private Integer retryCount;                 // số lần reconcile đã thử
+    private Datetime lastSyncTime;              // watermark (null = chưa từng sync thành công → reconcile)
+    private static final Integer MAX_RECONCILE_RETRY = 3;
+
+    /** Default — incremental delta sync toàn bộ object. */
+    public FEC_SyncMasterDataBatch() {
+        this('DELTA', null, 0);
+    }
+
+    /** Internal — dùng cho auto-reconcile object count lệch. */
+    public FEC_SyncMasterDataBatch(String mode, List<String> objectsToProcess, Integer retryCount) {
+        this.mode = (mode == null ? 'DELTA' : mode);
+        this.objectsToProcess = objectsToProcess;
+        this.retryCount = (retryCount == null ? 0 : retryCount);
+        this.lastSyncTime = getLastSuccessfulSyncTime();
+    }
+
+    /** Watermark: thời điểm sync 'Success' gần nhất từ Batch Log. */
+    private Datetime getLastSuccessfulSyncTime() {
+        List<FEC_Batch_Log__c> logs = [
+            SELECT CreatedDate FROM FEC_Batch_Log__c
+            WHERE FEC_Batch_Name__c = 'FEC_SyncMasterDataBatch' AND FEC_Status__c = 'Success'
+            ORDER BY CreatedDate DESC LIMIT 1
+        ];
+        return logs.isEmpty() ? null : logs[0].CreatedDate;
+    }
+
+    /** RECONCILE/DELTA mode đều coi là delta (heap-safe) trừ khi chưa từng sync (watermark null). */
+    private Boolean isReconcile() {
+        return mode == 'RECONCILE' || lastSyncTime == null;
+    }
+
     public Iterable<String> start(Database.BatchableContext bc) {
         // In test context, return only 1 element (xem ghi chú ở FEC_PushMDMToLiveBatch.start)
         if (Test.isRunningTest()) {
             return new List<String>{ FEC_MDMBatchConfig.EXECUTION_ORDER[0] };
+        }
+        if (objectsToProcess != null && !objectsToProcess.isEmpty()) {
+            return objectsToProcess;
         }
         return FEC_MDMBatchConfig.EXECUTION_ORDER;
     }
@@ -24,7 +64,8 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
             Map<String, Schema.SObjectField> mdmFieldsMap = gd.get(mdmObjName).getDescribe().fields.getMap();
 
             // Ensure FEC_Code__c is populated on existing MDM records if they came from Name
-            if (mdmFieldsMap.containsKey(FEC_MDMBatchConfig.FIELD_CODE)) {
+            // (Bỏ qua ở RECONCILE mode — nhánh đó đã đọc toàn bộ code MDM, tiết kiệm 1 SOQL/object)
+            if (!isReconcile() && mdmFieldsMap.containsKey(FEC_MDMBatchConfig.FIELD_CODE)) {
                 List<SObject> emptyMdmCodes = Database.query('SELECT Id, Name FROM ' + mdmObjName + ' WHERE ' + FEC_MDMBatchConfig.FIELD_CODE + ' = null');
                 if (!emptyMdmCodes.isEmpty()) {
                     for(SObject m : emptyMdmCodes) m.put(FEC_MDMBatchConfig.FIELD_CODE, m.get('Id'));
@@ -67,24 +108,46 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
             for (String f : validQueryFields) {
                 normalizedFields.add(f.toLowerCase());
             }
-            String sourceQuery = 'SELECT ' + String.join(new List<String>(normalizedFields), ', ') + ' FROM ' + targetObjName;
-            List<SObject> sourceRecords = Database.query(sourceQuery);
-            
-            // Build sourceCodes
-            Set<String> sourceCodes = new Set<String>();
-            for (SObject source : sourceRecords) {
-                String codeValue = (String)source.get(FEC_MDMBatchConfig.FIELD_CODE);
-                if (String.isNotBlank(codeValue)) sourceCodes.add(codeValue);
+            // STEP 2: Determine source records by mode
+            //  - DELTA: chỉ record Live đổi từ watermark (heap-safe, không full reload)
+            //  - RECONCILE: diff theo FEC_Code__c → lấy record Live thiếu trên MDM + xóa record MDM thừa
+            String baseSelect = 'SELECT ' + String.join(new List<String>(normalizedFields), ', ') + ' FROM ' + targetObjName;
+            List<SObject> sourceRecords;
+
+            if (isReconcile()) {
+                // ── RECONCILE (diff theo code, heap-safe) ──
+                Set<String> liveCodes = new Set<String>();
+                for (SObject l : Database.query('SELECT ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + targetObjName + ' WHERE ' + FEC_MDMBatchConfig.FIELD_CODE + ' != null')) {
+                    liveCodes.add((String) l.get(FEC_MDMBatchConfig.FIELD_CODE));
+                }
+                Map<String, Id> mdmCodeToId = new Map<String, Id>();
+                for (SObject m : Database.query('SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + mdmObjName)) {
+                    String c = (String) m.get(FEC_MDMBatchConfig.FIELD_CODE);
+                    if (String.isNotBlank(c)) mdmCodeToId.put(c, m.Id);
+                }
+                // Xóa record MDM thừa (code không còn trên Live)
+                List<SObject> toDelete = new List<SObject>();
+                for (String c : mdmCodeToId.keySet()) {
+                    if (!liveCodes.contains(c)) {
+                        SObject d = gd.get(mdmObjName).newSObject();
+                        d.put('Id', mdmCodeToId.get(c));
+                        toDelete.add(d);
+                    }
+                }
+                if (!toDelete.isEmpty()) delete toDelete;
+                // Chỉ lấy record Live thiếu trên MDM để upsert
+                Set<String> missingCodes = new Set<String>();
+                for (String c : liveCodes) {
+                    if (!mdmCodeToId.containsKey(c)) missingCodes.add(c);
+                }
+                if (missingCodes.isEmpty()) return;
+                sourceRecords = Database.query(baseSelect + ' WHERE ' + FEC_MDMBatchConfig.FIELD_CODE + ' IN :missingCodes');
+            } else {
+                // ── DELTA (chỉ record Live đổi từ watermark) ──
+                sourceRecords = Database.query(baseSelect + ' WHERE LastModifiedDate >= :lastSyncTime');
+                if (sourceRecords.isEmpty()) return;
             }
-            
-            // STEP 3: Query MDM records
-            List<SObject> existingMdmRecords = Database.query('SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + mdmObjName);
-            Map<String, Id> mdmCodeToIdMap = new Map<String, Id>();
-            for (SObject mdmRecord : existingMdmRecords) {
-                String mdmCode = (String)mdmRecord.get(FEC_MDMBatchConfig.FIELD_CODE);
-                if (String.isNotBlank(mdmCode)) mdmCodeToIdMap.put(mdmCode, mdmRecord.Id);
-            }
-            
+
             // STEP 3b: Build lookup remap maps
             Map<String, Map<Id, Id>> lookupRemapMaps = new Map<String, Map<Id, Id>>();
             if (FEC_MDMBatchConfig.OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
@@ -95,23 +158,6 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
             Map<String, Map<Id, Id>> textIdRemapMaps = new Map<String, Map<Id, Id>>();
             if (FEC_MDMBatchConfig.OBJECTS_WITH_TEXT_ID_REMAPPING.contains(mdmObjName)) {
                 textIdRemapMaps = buildTextIdRemapMapsLiveToMdm(mdmObjName, sourceRecords, gd);
-            }
-            
-            // STEP 4: DELETE obsolete MDM records
-            Set<Id> mdmIdsToKeep = new Set<Id>();
-            for (String mdmCode : mdmCodeToIdMap.keySet()) {
-                if (sourceCodes.contains(mdmCode)) {
-                    mdmIdsToKeep.add(mdmCodeToIdMap.get(mdmCode));
-                }
-            }
-            List<SObject> recordsToDelete = new List<SObject>();
-            for (SObject mdmRecord : existingMdmRecords) {
-                if (!mdmIdsToKeep.contains(mdmRecord.Id)) {
-                    recordsToDelete.add(mdmRecord);
-                }
-            }
-            if (!recordsToDelete.isEmpty()) {
-                delete recordsToDelete;
             }
             
             // STEP 5: Prepare records for UPSERT
@@ -136,6 +182,10 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
                         Schema.DescribeFieldResult mdmFieldDescribe = gd.get(mdmObjName).getDescribe().fields.getMap()
                             .get(mdmField.toLowerCase())?.getDescribe();
                         Schema.DisplayType mdmFieldType = mdmFieldDescribe?.getType();
+                        // Guard: field đích là lookup (REFERENCE) nhưng value không phải Id hợp lệ → bỏ qua (tránh "Invalid id")
+                        if (mdmFieldType == Schema.DisplayType.REFERENCE && !isValidId(String.valueOf(sourceValue))) {
+                            continue;
+                        }
                         if (sourceValue instanceof Boolean && mdmFieldType != Schema.DisplayType.Boolean) {
                             // For restricted picklists, skip Boolean→String mapping (incompatible values)
                             if (mdmFieldDescribe != null && mdmFieldDescribe.isRestrictedPicklist()) {
@@ -202,7 +252,49 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
                 FROM AsyncApexJob WHERE Id = :bc.getJobId()
             ];
 
-            String batchStatus = (job.NumberOfErrors > 0 || job.Status == 'Failed') ? 'Failed' : 'Success';
+            Boolean hasRealError = (job.NumberOfErrors > 0 || job.Status == 'Failed');
+
+            // ── Count reconcile: compare Live vs MDM cho các object vừa xử lý ──
+            List<String> objs = (objectsToProcess != null && !objectsToProcess.isEmpty())
+                ? objectsToProcess : FEC_MDMBatchConfig.EXECUTION_ORDER;
+            Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+            List<String> mismatched = new List<String>();       // object cần reconcile
+            List<String> mismatchDetails = new List<String>();  // mô tả "ở đâu / cái nào"
+            for (String mdmObj : objs) {
+                String liveObj = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmObj);
+                if (liveObj == null || !gd.containsKey(mdmObj) || !gd.containsKey(liveObj)) continue;
+                Integer liveCount = Database.countQuery('SELECT COUNT() FROM ' + liveObj);
+                Integer mdmCount  = Database.countQuery('SELECT COUNT() FROM ' + mdmObj);
+                if (liveCount != mdmCount) {
+                    mismatched.add(mdmObj);
+                    Integer diff = Math.abs(liveCount - mdmCount);
+                    String side = (liveCount > mdmCount)
+                        ? ('Live thừa ' + diff + ' record (MDM thiếu, sẽ bù)')
+                        : ('MDM thừa ' + diff + ' record (sẽ xoá khi reconcile)');
+                    mismatchDetails.add(mdmObj + ': Live=' + liveCount + ' / MDM=' + mdmCount + ' → ' + side);
+                }
+            }
+
+            // ── Status semantics ──
+            //  - Có lỗi DML thật → Failed
+            //  - Lệch count NHƯNG còn lượt reconcile → Reconciling (tự chạy lại, KHÔNG phải lỗi)
+            //  - Lệch count và đã hết lượt retry → Failed (không tự cân bằng được, cần người xem)
+            //  - Khớp hoàn toàn → Success
+            Boolean willReconcile = !mismatched.isEmpty() && retryCount < MAX_RECONCILE_RETRY && !Test.isRunningTest();
+            String batchStatus;
+            if (hasRealError) {
+                batchStatus = 'Failed';
+            } else if (mismatched.isEmpty()) {
+                batchStatus = 'Success';
+            } else if (willReconcile) {
+                batchStatus = 'Reconciling';
+            } else {
+                batchStatus = 'Failed';
+            }
+
+            String mismatchText = mismatchDetails.isEmpty() ? null
+                : ('[retry ' + retryCount + '/' + MAX_RECONCILE_RETRY + '] '
+                   + String.join(mismatchDetails, ' | '));
 
             FEC_Batch_Log__c batchLog = new FEC_Batch_Log__c(
                 FEC_Batch_Name__c      = 'FEC_SyncMasterDataBatch',
@@ -210,16 +302,21 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
                 FEC_Status__c          = batchStatus,
                 FEC_Total_Job_Items__c = job.TotalJobItems,
                 FEC_Processed_Items__c = job.JobItemsProcessed,
-                FEC_Error_Count__c     = job.NumberOfErrors
+                FEC_Error_Count__c     = job.NumberOfErrors,
+                FEC_Mismatch_Detail__c = mismatchText
             );
             insert batchLog;
+
+            // Auto-reconcile: chỉ object count lệch, tối đa MAX_RECONCILE_RETRY lần
+            if (willReconcile) {
+                Database.executeBatch(new FEC_SyncMasterDataBatch('RECONCILE', mismatched, retryCount + 1), 1);
+            }
         } catch (Exception ex) {
             System.debug('[FEC_SyncMasterDataBatch.finish] Error logging batch: ' + ex.getMessage());
         }
     }
     
-    private void populateMissingCodes(String objectName) {
-        try {
+    private void populateMissingCodes(String objectName) {        try {
             // Check if FEC_Code__c field exists on this object before querying
             Map<String, Schema.SObjectField> fieldsMap = Schema.getGlobalDescribe().get(objectName).getDescribe().fields.getMap();
             if (!fieldsMap.containsKey(FEC_MDMBatchConfig.FIELD_CODE)) return;
@@ -239,6 +336,12 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
         }
     }
     
+    /** True nếu chuỗi là Salesforce Id hợp lệ (15/18 ký tự). */
+    private static Boolean isValidId(String val) {
+        if (String.isBlank(val)) return false;
+        try { Id.valueOf(val); return true; } catch (Exception e) { return false; }
+    }
+
     private void buildLookupRemapMaps(String mdmObjName, List<SObject> sourceRecords,
     Map<String, Schema.SObjectField> targetFields,
     Map<String, Map<Id, Id>> lookupRemapMaps,
@@ -264,8 +367,10 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
             if (srcObjName != null && gd.containsKey(srcObjName)) {
                 Set<Id> usedSourceIds = new Set<Id>();
                 for (SObject source : sourceRecords) {
-                    Id lookupId = (Id)source.get(srcLookupField);
-                    if (lookupId != null) usedSourceIds.add(lookupId);
+                    // Guard: field có thể là Text (vd FEC_Channel__c Live) chứa list → bỏ qua nếu không phải Id
+                    Object rawVal = source.get(srcLookupField);
+                    if (rawVal == null || !isValidId(String.valueOf(rawVal))) continue;
+                    usedSourceIds.add((Id) rawVal);
                 }
                 if (!usedSourceIds.isEmpty()) {
                     Map<Id, String> srcIdToCode = new Map<Id, String>();
@@ -276,11 +381,15 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
                         if (String.isNotBlank(code)) srcIdToCode.put(srcLookupRecord.Id, code);
                     }
                     Map<String, Id> mdmCodeToId = new Map<String, Id>();
-                    for (SObject mdmLookupRecord : Database.query(
-                        'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + mdmLookupObj
-                    )) {
-                        String code = (String)mdmLookupRecord.get(FEC_MDMBatchConfig.FIELD_CODE);
-                        if (String.isNotBlank(code)) mdmCodeToId.put(code, mdmLookupRecord.Id);
+                    Set<String> neededCodes = new Set<String>(srcIdToCode.values());
+                    if (!neededCodes.isEmpty()) {
+                        for (SObject mdmLookupRecord : Database.query(
+                            'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + mdmLookupObj
+                            + ' WHERE ' + FEC_MDMBatchConfig.FIELD_CODE + ' IN :neededCodes'
+                        )) {
+                            String code = (String)mdmLookupRecord.get(FEC_MDMBatchConfig.FIELD_CODE);
+                            if (String.isNotBlank(code)) mdmCodeToId.put(code, mdmLookupRecord.Id);
+                        }
                     }
                     for (Id srcId : srcIdToCode.keySet()) {
                         String code = srcIdToCode.get(srcId);
@@ -306,8 +415,9 @@ public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<
             if (!targetFields.containsKey(srcLookupField)) continue;
             String mdmLookupField = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_FIELD_KEY);
             if (!mdmFieldsMap.containsKey(mdmLookupField)) continue;
-            Id sourceId = (Id)source.get(srcLookupField);
-            if (sourceId == null) continue;
+            Object rawVal = source.get(srcLookupField);
+            if (rawVal == null || !isValidId(String.valueOf(rawVal))) continue;
+            Id sourceId = (Id) rawVal;
             Map<Id, Id> remapMap = lookupRemapMaps.get(srcLookupField);
             if (remapMap != null && remapMap.containsKey(sourceId)) {
                 target.put(mdmLookupField, remapMap.get(sourceId));
