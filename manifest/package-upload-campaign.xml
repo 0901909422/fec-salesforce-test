@@ -11,6 +11,7 @@
     <types>
         <!-- Existing classes -->
         <members>FEC_ScheduledPushCampaignDataBatch</members>
+        <members>FEC_ScheduledPushCampaignDataScheduler</members>
         <members>FEC_PushCampaignDataBatch</members>
         <members>FEC_DataCampaign</members>
         <members>FEC_Constants</members>

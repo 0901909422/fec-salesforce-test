@@ -96,6 +96,7 @@ public with sharing class FEC_CampaignBatchService {
         } else if (dayOfWeek == 'Sunday') {
             query += ' AND FEC_CS_Campaign__r.FEC_SundaySchedule__c = true';
         }
+        query += ' ORDER BY CreatedDate ASC, Id ASC';
         return query;
     }
 
@@ -135,13 +136,12 @@ public with sharing class FEC_CampaignBatchService {
 
     /**
      * Builds the SOQL query for existing records push batch (FEC_PushExistingRecordsBatch).
-     * Selects all DTO-mapping fields from buildInstantPushQuery() plus FEC_InsertionDate__c
-     * and FEC_IsWithinLifetime__c.
-     * Filters: created before today, not resolved, not pending-callback, within lifetime,
-     * no callback requested, PushInstant enabled, InsertionDate null or before today.
-     * @return Complete SOQL query string for existing records push
+     * @param dtStart  Start of today (records created BEFORE this are eligible)
+     * @return Complete SOQL query string for existing records push (no bind variables)
      */
-    public static String buildExistingRecordsPushQuery() {
+    public static String buildExistingRecordsPushQuery(DateTime dtStart) {
+        String dtStartStr = dtStart.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
+        String dtStartDateStr = dtStart.dateGmt().format();
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
@@ -153,25 +153,25 @@ public with sharing class FEC_CampaignBatchService {
             'FEC_CS_Campaign__r.FEC_PushInstant__c, ' +
             'FEC_InsertionDate__c, FEC_IsWithinLifetime__c ' +
             'FROM FEC_DataCampaign__c ' +
-            'WHERE CreatedDate < :dtStart ' +
+            'WHERE CreatedDate < ' + dtStartStr + ' ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
             'AND FEC_RecordStatus__c != \'Pending-callback\' ' +
             'AND FEC_IsWithinLifetime__c = true ' +
             'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null) ' +
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
-            'AND (FEC_InsertionDate__c = null OR FEC_InsertionDate__c < :dtStart)';
+            'AND (FEC_InsertionDate__c = null OR FEC_InsertionDate__c < ' + dtStartDateStr + ') ' +
+            'ORDER BY CreatedDate ASC, Id ASC';
     }
 
     /**
      * Builds the SOQL query for callback records push batch (FEC_PushCallbackRecordsBatch).
-     * Selects all DTO-mapping fields from buildInstantPushQuery() plus FEC_InsertionDate__c,
-     * FEC_CallbackRequested__c, FEC_RecordCurrentLifetime__c, and FEC_RecordLifetime__c.
-     * Implements Pega filter (F2 OR F3) AND F4 AND F1 AND F6:
-     * InsertionDate today, (status not Resolved-Completed/Cancelled OR CallbackRequested = true),
-     * RecordCurrentLifetime <= RecordLifetime, PushInstant = true.
-     * @return Complete SOQL query string for callback records push
+     * @param dtStart  Start of today filter for FEC_InsertionDate__c
+     * @param dtEnd    End of today filter for FEC_InsertionDate__c
+     * @return Complete SOQL query string for callback records push (no bind variables)
      */
-    public static String buildCallbackRecordsPushQuery() {
+    public static String buildCallbackRecordsPushQuery(DateTime dtStart, DateTime dtEnd) {
+        String dtStartDateStr = dtStart.dateGmt().format();
+        String dtEndDateStr = dtEnd.dateGmt().format();
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
@@ -183,13 +183,14 @@ public with sharing class FEC_CampaignBatchService {
             'FEC_CS_Campaign__r.FEC_PushInstant__c, ' +
             'FEC_InsertionDate__c, FEC_CallbackRequested__c ' +
             'FROM FEC_DataCampaign__c ' +
-            'WHERE FEC_InsertionDate__c >= :dtStart AND FEC_InsertionDate__c <= :dtEnd ' +
+            'WHERE FEC_InsertionDate__c >= ' + dtStartDateStr + ' AND FEC_InsertionDate__c <= ' + dtEndDateStr + ' ' +
             'AND (' +
                 '(FEC_RecordStatus__c != \'Resolved-Completed\' ' +
                 'AND FEC_RecordStatus__c != \'Resolved-Cancelled\') ' +
                 'OR FEC_CallbackRequested__c = \'true\'' +
             ') ' +
             'AND FEC_IsAtOrWithinLifetime__c = true ' +
-            'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true';
+            'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
+            'ORDER BY CreatedDate ASC, Id ASC';
     }
 }
