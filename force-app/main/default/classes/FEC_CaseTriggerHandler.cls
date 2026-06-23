@@ -463,8 +463,9 @@ public without sharing class FEC_CaseTriggerHandler {
     private void generateFECIdSearch(List<Case> newCases) {
         // BƯỚC 1: LẤY PREFIX CONFIG TỪ CUSTOM METADATA TYPE
         Map<String, String> prefixConfigMap = new Map<String, String>();
+        Map<String, Long> prefixInitNumberMap = new Map<String, Long>();
         
-        for (FEC_CaseID_Prefix__mdt config : [SELECT FEC_Record_Type__c, FEC_Channel__c, FEC_Prefix__c 
+        for (FEC_CaseID_Prefix__mdt config : [SELECT FEC_Record_Type__c, FEC_Channel__c, FEC_Prefix__c, FEC_Init_Number__c
                                                FROM FEC_CaseID_Prefix__mdt]) {
             // Tạo key để tra cứu: RecordType|Channel hoặc RecordType|
             String recordType = FEC_CommonUltils.defaultToEmpty(config.FEC_Record_Type__c);
@@ -472,6 +473,14 @@ public without sharing class FEC_CaseTriggerHandler {
             String key = recordType + FEC_ConstantCommon.KEY_DELIMITER_PIPE + channel;
             
             prefixConfigMap.put(key, config.FEC_Prefix__c);
+
+            if (config.FEC_Init_Number__c != null && config.FEC_Init_Number__c > 0) {
+                Long initNumber = config.FEC_Init_Number__c.longValue();
+                String configPrefix = config.FEC_Prefix__c;
+                if (!prefixInitNumberMap.containsKey(configPrefix) || initNumber > prefixInitNumberMap.get(configPrefix)) {
+                    prefixInitNumberMap.put(configPrefix, initNumber);
+                }
+            }
         }
 
         // BƯỚC 2: LẤY RECORD TYPE INFO
@@ -507,16 +516,15 @@ public without sharing class FEC_CaseTriggerHandler {
         }
         
         // BƯỚC 4: LẤY MAX NUMBER CHO TẤT CẢ PREFIXES (SINGLE BULK QUERY)
-        Map<String, Integer> maxNumberByPrefix = getMaxNumberForPrefixes(casesByPrefix.keySet());
+        Map<String, Long> maxNumberByPrefix = getMaxNumberForPrefixes(casesByPrefix.keySet(), prefixInitNumberMap);
         
         // BƯỚC 5: GENERATE ID CHO TỪNG CASE
         for (String prefix : casesByPrefix.keySet()) {
-            Integer currentNum = maxNumberByPrefix.get(prefix);
+            Long currentNum = maxNumberByPrefix.get(prefix);
             
             for (Case c : casesByPrefix.get(prefix)) {
                 currentNum++;
-                String seqStr = String.valueOf(currentNum).leftPad(4, '0');
-                c.FEC_ID_Search__c = prefix + FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER + seqStr;
+                c.FEC_ID_Search__c = prefix + FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER + String.valueOf(currentNum);
             }
         }
     }
@@ -564,16 +572,16 @@ public without sharing class FEC_CaseTriggerHandler {
      * Tránh SOQL-in-loop bằng cách query tất cả Cases có FEC_ID_Search__c bắt đầu bằng bất kỳ prefix nào,
      * rồi parse và tìm max cho từng prefix trong memory.
      * @param prefixes Set các prefix cần tìm (ví dụ: {'S', 'I', 'C'})
-     * @return Map<String, Integer> Map prefix -> số lớn nhất hiện có (0 nếu chưa có)
+     * @param prefixInitNumberMap Map prefix -> FEC_Init_Number__c từ Custom Metadata
+     * @return Map<String, Long> Map prefix -> số dùng làm base trước khi +1 (max DB hoặc Init Number nếu max DB nhỏ hơn)
      * @created: 2026/01/07
      * @modified: 2026/06/04 - Refactor từ single-prefix sang bulk để tránh SOQL 101
      */
-    private Map<String, Integer> getMaxNumberForPrefixes(Set<String> prefixes) {
-        Map<String, Integer> maxNumberByPrefix = new Map<String, Integer>();
+    private Map<String, Long> getMaxNumberForPrefixes(Set<String> prefixes, Map<String, Long> prefixInitNumberMap) {
+        Map<String, Long> maxNumberByPrefix = new Map<String, Long>();
         
-        // Initialize all prefixes with 0
         for (String prefix : prefixes) {
-            maxNumberByPrefix.put(prefix, 0);
+            maxNumberByPrefix.put(prefix, 0L);
         }
         
         if (prefixes.isEmpty()) {
@@ -608,7 +616,7 @@ public without sharing class FEC_CaseTriggerHandler {
                     String numberPart = idSearch.substring(delimIdx + delimiter.length());
                     
                     if (maxNumberByPrefix.containsKey(casePrefix) && numberPart.isNumeric()) {
-                        Integer num = Integer.valueOf(numberPart);
+                        Long num = Long.valueOf(numberPart);
                         if (num > maxNumberByPrefix.get(casePrefix)) {
                             maxNumberByPrefix.put(casePrefix, num);
                         }
@@ -619,6 +627,15 @@ public without sharing class FEC_CaseTriggerHandler {
             }
         } catch (Exception e) {
             System.debug('Lỗi query max number cho prefixes: ' + e.getMessage());
+        }
+
+        // Nếu Max(ID) trong DB < FEC_Init_Number thì base = Init Number (ID tiếp theo = Init Number + 1)
+        for (String prefix : prefixes) {
+            Long maxInDb = maxNumberByPrefix.get(prefix);
+            Long initNumber = (prefixInitNumberMap != null) ? prefixInitNumberMap.get(prefix) : null;
+            if (initNumber != null && maxInDb < initNumber) {
+                maxNumberByPrefix.put(prefix, initNumber);
+            }
         }
         
         return maxNumberByPrefix;

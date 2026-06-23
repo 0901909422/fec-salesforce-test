@@ -11,6 +11,10 @@
         <value xsi:type="xsd:string">O</value>
     </values>
     <values>
+        <field>FEC_Init_Number__c</field>
+        <value xsi:type="xsd:double">34775826</value>
+    </values>
+    <values>
         <field>FEC_Record_Type__c</field>
         <value xsi:type="xsd:string">Interaction</value>
     </values>
