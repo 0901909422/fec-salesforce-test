@@ -246,6 +246,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             AND FEC_Parent_Address__c != NULL
             ORDER BY LastModifiedDate DESC
         ];
+        Map<Id, Id> caseIdByAddressId = new Map<Id, Id>();
+        for (FEC_Address_Info__c addrRow : caseAddresses) {
+            caseIdByAddressId.put(addrRow.Id, addrRow.FEC_Case__c);
+        }
         SObjectAccessDecision caseAddrDecision = Security.stripInaccessible(
             AccessType.READABLE,
             caseAddresses
@@ -254,11 +258,12 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         Map<Id, FEC_Address_Info__c> updatedByCaseId = new Map<Id, FEC_Address_Info__c>();
         Set<Id> parentIds = new Set<Id>();
         for (FEC_Address_Info__c addr : caseAddresses) {
-            if (addr == null || addr.FEC_Case__c == null || addr.FEC_Parent_Address__c == null) {
+            Id caseId = caseIdByAddressId.get(addr.Id);
+            if (addr == null || caseId == null || addr.FEC_Parent_Address__c == null) {
                 continue;
             }
-            if (!updatedByCaseId.containsKey(addr.FEC_Case__c)) {
-                updatedByCaseId.put(addr.FEC_Case__c, addr);
+            if (!updatedByCaseId.containsKey(caseId)) {
+                updatedByCaseId.put(caseId, addr);
                 parentIds.add(addr.FEC_Parent_Address__c);
             }
         }

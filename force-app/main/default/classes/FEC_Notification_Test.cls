@@ -168,7 +168,8 @@ private class FEC_Notification_Test {
         RecordType rt = [
             SELECT Id
             FROM RecordType
-            WHERE SobjectType = 'FEC_Notification__c' AND DeveloperName = 'Manual_Notification'
+            WHERE SobjectType = 'FEC_Notification__c'
+            AND DeveloperName = 'Manual_Notification'
             LIMIT 1
         ];
 

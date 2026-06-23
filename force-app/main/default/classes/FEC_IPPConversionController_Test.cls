@@ -15,6 +15,18 @@ private class FEC_IPPConversionController_Test {
         ];
     }
 
+    /**
+     * System Administrator profile may lack FLS on IPP Case / Customer History fields.
+     * Assign perm sets so Security.stripInaccessible in the controller keeps queried fields.
+     */
+    private static void ensureAdminIppFieldAccess() {
+        User admin = runAsAdmin();
+        FEC_TestDataFactory.assignPermissionSets(admin.Id, new List<String>{
+            'RD_IT_User_Interaction_Case_Service_Case',
+            'RD_IT_User_Customer_360'
+        });
+    }
+
     @TestSetup
     static void setupData() {
         String suffix = String.valueOf(System.currentTimeMillis());
@@ -69,6 +81,8 @@ private class FEC_IPPConversionController_Test {
             FEC_Call_Mock__c = true,
             FEC_Endpoint__c = 'https://test-api.fecredit.com.vn'
         );
+
+        ensureAdminIppFieldAccess();
     }
 
     @IsTest

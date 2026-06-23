@@ -2233,12 +2233,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     private static void ensureRunUserGroup(String userGroup) {
-        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
-        if (!userFields.containsKey('FEC_User_Group__c')) {
-            return;
-        }
-        User runUser = new User(Id = UserInfo.getUserId(), FEC_User_Group__c = userGroup);
-        update runUser;
+        FEC_TestDataFactory.ensureRunUserGroupAndMainQueue(userGroup);
     }
 
     private static void validateImportFieldProfileScenario(

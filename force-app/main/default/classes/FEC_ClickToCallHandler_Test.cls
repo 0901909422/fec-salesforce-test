@@ -19,8 +19,7 @@ private class FEC_ClickToCallHandler_Test {
             Case c = new Case(
                 Subject = 'Test Phone Fields',
                 Status = 'New',
-                SuppliedPhone = '0901234567',
-                FEC_Phone_Number__c = '0901234567',
+                FEC_Case_Phone_Number__c = '0901234567',
                 FEC_ID_Search__c = 'CTC-' + String.valueOf(System.currentTimeMillis())
             );
             FEC_CaseTriggerHandler.isExecuting = true;

@@ -357,4 +357,62 @@ public class FEC_TestDataFactory {
     private static String generateUniqueCode(String prefix) {
         return prefix + '_TEST_' + System.currentTimeMillis() + '_' + Math.round(Math.random() * 9999);
     }
+
+    /**
+     * Gán FEC_Main_Queue__c cho user đang chạy test (required field trên User ở một số org).
+     */
+    public static void ensureRunUserMainQueue() {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        if (!userFields.containsKey('FEC_Main_Queue__c')) {
+            return;
+        }
+        String queueDevName = resolveOrCreateTestQueueDeveloperName();
+        if (String.isNotBlank(queueDevName)) {
+            update new User(Id = UserInfo.getUserId(), FEC_Main_Queue__c = queueDevName);
+        }
+    }
+
+    /**
+     * Gán FEC_User_Group__c + FEC_Main_Queue__c cho user đang chạy test.
+     */
+    public static void ensureRunUserGroupAndMainQueue(String userGroup) {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        User runUser = new User(Id = UserInfo.getUserId());
+        Boolean needsUpdate = false;
+
+        if (String.isNotBlank(userGroup) && userFields.containsKey('FEC_User_Group__c')) {
+            runUser.FEC_User_Group__c = userGroup;
+            needsUpdate = true;
+        }
+        if (userFields.containsKey('FEC_Main_Queue__c')) {
+            String queueDevName = resolveOrCreateTestQueueDeveloperName();
+            if (String.isNotBlank(queueDevName)) {
+                runUser.FEC_Main_Queue__c = queueDevName;
+                needsUpdate = true;
+            }
+        }
+        if (needsUpdate) {
+            update runUser;
+        }
+    }
+
+    private static String resolveOrCreateTestQueueDeveloperName() {
+        List<Group> queues = [
+            SELECT DeveloperName
+            FROM Group
+            WHERE Type = 'Queue'
+            ORDER BY CreatedDate ASC
+            LIMIT 1
+        ];
+        if (!queues.isEmpty()) {
+            return queues[0].DeveloperName;
+        }
+        Group q = new Group(
+            Name = 'FEC Test Queue',
+            DeveloperName = 'FEC_Test_Queue',
+            Type = 'Queue'
+        );
+        insert q;
+        return q.DeveloperName;
+    }
 }

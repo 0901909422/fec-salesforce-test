@@ -271,7 +271,13 @@ private class FEC_BatchCaseHandlingController_Test {
      */
     @IsTest
     static void testExportRowUsesMasterDataNameNotCode() {
-        User privileged = privilegedUserForBulkCaseRead();
+        Case seeded = [
+            SELECT OwnerId
+            FROM Case
+            WHERE FEC_ID_Search__c = 'SRCH-001'
+            LIMIT 1
+        ];
+        User privileged = [SELECT Id FROM User WHERE Id = :seeded.OwnerId LIMIT 1];
         System.runAs(privileged) {
             Test.startTest();
             FEC_BatchCaseHandlingController.BulkCaseSearchResult gridResult =

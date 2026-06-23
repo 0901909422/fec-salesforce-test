@@ -396,8 +396,12 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             rec.Name = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
             rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
         }
-        rec.FEC_Customer_Name__c = cases[0].FEC_Account_or_Contract__r.FEC_Customer_Name__c;
-        rec.FEC_National_ID_Passport_ID__c = cases[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
+        rec.FEC_Customer_Name__c = cases[0].FEC_Account_or_Contract__r != null
+            ? cases[0].FEC_Account_or_Contract__r.FEC_Customer_Name__c
+            : null;
+        rec.FEC_National_ID_Passport_ID__c = cases[0].FEC_Account_or_Contract__r != null
+            ? cases[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            : null;
         rec.FEC_Case__c = caseId;
         rec.FEC_Product_Code__c = selectedType;
         rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;

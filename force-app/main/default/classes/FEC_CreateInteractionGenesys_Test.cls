@@ -3,6 +3,7 @@ private class FEC_CreateInteractionGenesys_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_TestDataFactory.ensureRunUserMainQueue();
         System.runAs(new User(Id = UserInfo.getUserId())) {
             update new User(
                 Id = UserInfo.getUserId(),

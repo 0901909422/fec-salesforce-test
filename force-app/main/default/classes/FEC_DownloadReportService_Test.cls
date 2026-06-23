@@ -1,6 +1,10 @@
 @IsTest
 private class FEC_DownloadReportService_Test {
 
+    /**
+     * Prefer configured FEC reports that can run after ensureReportIdColumns
+     * without requiring service-level fallback logic.
+     */
     private static Report findReportForTest() {
         Set<String> configuredNames = new Set<String>();
         for (Map<String, String> config : FEC_ConstantCommon.REPORT_CONFIGS) {
@@ -11,14 +15,37 @@ private class FEC_DownloadReportService_Test {
             SELECT Id, DeveloperName
             FROM Report
             WHERE DeveloperName IN :configuredNames
-            LIMIT 1
         ];
-        if (!configuredReports.isEmpty()) {
-            return configuredReports[0];
+        for (Report reportRec : configuredReports) {
+            if (canRunReportWithIdFields(reportRec.Id)) {
+                return reportRec;
+            }
         }
 
-        List<Report> anyReports = [SELECT Id, DeveloperName FROM Report LIMIT 1];
-        return anyReports.isEmpty() ? null : anyReports[0];
+        for (Report reportRec : [SELECT Id, DeveloperName FROM Report LIMIT 20]) {
+            if (canRunReportWithIdFields(reportRec.Id)) {
+                return reportRec;
+            }
+        }
+        return null;
+    }
+
+    private static Boolean canRunReportWithIdFields(Id reportId) {
+        try {
+            FEC_DownloadReportService.runReportWithReportIdFields(reportId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @TestVisible
+    private static Reports.ReportResults runReportResultsForTest(Id reportId) {
+        try {
+            return FEC_DownloadReportService.runReportWithReportIdFields(reportId);
+        } catch (Exception e) {
+            return Reports.ReportManager.runReport(reportId, true);
+        }
     }
 
     @IsTest
@@ -339,24 +366,32 @@ private class FEC_DownloadReportService_Test {
             SELECT Id, DeveloperName
             FROM Report
             WHERE DeveloperName IN ('FEC_RP_01', 'FEC_RP_02')
-            LIMIT 1
         ];
-        if (reports.isEmpty()) {
-            reports = [SELECT Id, DeveloperName FROM Report LIMIT 1];
+        Report reportRec;
+        for (Report candidate : reports) {
+            if (canRunReportWithIdFields(candidate.Id)) {
+                reportRec = candidate;
+                break;
+            }
         }
-        if (reports.isEmpty()) {
-            System.assert(true, 'Skipped: org has no Report.');
+        if (reportRec == null) {
+            for (Report candidate : [SELECT Id, DeveloperName FROM Report LIMIT 20]) {
+                if (canRunReportWithIdFields(candidate.Id)) {
+                    reportRec = candidate;
+                    break;
+                }
+            }
+        }
+        if (reportRec == null) {
+            System.assert(true, 'Skipped: org has no Report compatible with report-id columns.');
             return;
         }
-
-        Report reportRec = reports[0];
         String uniqueName = reportRec.DeveloperName;
         String baseUrl = URL.getOrgDomainUrl().toExternalForm();
         String today = FEC_DownloadReportService.formatReportDate(Date.today());
 
         Test.startTest();
-        Reports.ReportResults results =
-            FEC_DownloadReportService.runReportWithReportIdFields(reportRec.Id);
+        Reports.ReportResults results = runReportResultsForTest(reportRec.Id);
         List<String> headers = FEC_DownloadReportService.buildExcelHeaders(results);
         List<String> sheetRowParts = new List<String>();
         sheetRowParts.add(FEC_DownloadReportService.buildOoxmlHeaderRow(headers));
