@@ -13,7 +13,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String RESULT_COL_STATUS = '__Status';
     private static final String RESULT_COL_ERRORS = '__Errors';
     private static final String IMPORT_ERROR_SEPARATOR = ',\n';
-    private static final String ERR_NOT_OWNER = 'Người dùng không phải chủ sở hữu Case';
     private static final String QUEUE_OWNER_ID_PREFIX = '00G';
     private static final String ERR_FIELD_NOT_CONFIGURED = 'Trường dữ liệu chưa được thiết lập trong Master Data Setting';
     private static final String ERR_MISSING_CS_D2C_ASSESSMENT = 'Thiếu giá trị CS D2C đánh giá yêu cầu';
@@ -2123,8 +2122,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found);
             } else if (matched != null && matched.IsClosed) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Closed);
-            } else if (matched != null && !canImportCaseForCurrentUser(matched, ctx.currentUserId, ctx.currentUserQueueIds)) {
-                errs.add(ERR_NOT_OWNER);
             }
             if (!remarkOverMax) {
             if (String.isNotBlank(rr.caseIdSearch)) {
@@ -3494,34 +3491,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return methodKey == FEC_CaseBusinessService.RESOLVE
             || methodKey == FEC_CaseBusinessService.REJECT
             || methodKey == FEC_CaseBusinessService.UPDATEACTION;
-    }
-
-    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF: cho phép Case owner Queue mà login user là member
-    private static Boolean canImportCaseForCurrentUser(Case matched, Id currentUserId) {
-        return canImportCaseForCurrentUser(matched, currentUserId, null);
-    }
-
-    private static Boolean canImportCaseForCurrentUser(
-        Case matched,
-        Id currentUserId,
-        Set<Id> preloadedUserQueueIds
-    ) {
-        if (matched == null || currentUserId == null) {
-            return false;
-        }
-        if (matched.OwnerId == currentUserId) {
-            return true;
-        }
-        if (isCofOrGsrBusinessProcess(matched)) {
-            return false;
-        }
-        if (!isQueueCaseOwnerId(matched.OwnerId)) {
-            return false;
-        }
-        Set<Id> userQueueIds = preloadedUserQueueIds == null
-            ? FEC_AssignmentListHandler.getCurrentUserQueueIds(currentUserId)
-            : preloadedUserQueueIds;
-        return userQueueIds != null && userQueueIds.contains(matched.OwnerId);
     }
 
     // 05/06/2026 14:00 linhdev - quy trình không GSR/COF Resolve/Reject/Update: owner Queue → chuyển OwnerId sang Login User
