@@ -162,4 +162,23 @@ private class FEC_RoutingActionHistoryTrigHandler_Test {
         Test.stopTest();
         System.assert(true, 'Guard clauses should not throw.');
     }
+
+    @IsTest
+    // 23/06/2026 linhdev - regression: sync path (queueable context) không enqueue FEC_SendNotificationEmailsQueueable.
+    static void testSendNotificationEmails_syncOverrideSkipsEnqueue() {
+        Test.startTest();
+        Integer jobsBefore = [SELECT COUNT() FROM AsyncApexJob WHERE JobType = 'Queueable'];
+        FEC_RoutingActionHistoryTriggerHandler.syncNotificationEmailsOverride = true;
+        FEC_RoutingActionHistoryTriggerHandler.sendNotificationEmails(
+            new List<FEC_Routing_Action_History__c>{ new FEC_Routing_Action_History__c() }
+        );
+        Test.stopTest();
+        FEC_RoutingActionHistoryTriggerHandler.syncNotificationEmailsOverride = false;
+        Integer jobsAfter = [SELECT COUNT() FROM AsyncApexJob WHERE JobType = 'Queueable'];
+        System.assertEquals(
+            jobsBefore,
+            jobsAfter,
+            'Sync path phải xử lý inline, không enqueue FEC_SendNotificationEmailsQueueable.'
+        );
+    }
 }
