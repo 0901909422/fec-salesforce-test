@@ -409,9 +409,9 @@ public without sharing class FEC_IncorrectPaymentController {
         if (billAmount != null && billAmount != 0 && !validAdjs.isEmpty()) {
             Decimal sumAdjusted = 0;
             for (AdjustmentDTO adj : validAdjs) {
-                sumAdjusted += adj.adjustedAmount;
+                sumAdjusted += adj.adjustedAmount != null ? adj.adjustedAmount : 0;
             }
-            if (Math.abs(sumAdjusted - billAmount) > 0.01) {
+            if (!adjustedSumMatchesBillAmount(sumAdjusted, billAmount)) {
                 throw new AuraHandledException(Label.FEC_MSG_Adjusted_Amount_Must_Equal_Payment);
             }
         }
@@ -536,5 +536,15 @@ public without sharing class FEC_IncorrectPaymentController {
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         }
+    }
+
+    @TestVisible
+    private static Boolean adjustedSumMatchesBillAmount(Decimal sumAdjusted, Decimal billAmount) {
+        if (billAmount == null || billAmount == 0) {
+            return true;
+        }
+        Decimal roundedSum = (sumAdjusted != null ? sumAdjusted : 0).setScale(2, RoundingMode.HALF_UP);
+        Decimal roundedBill = billAmount.setScale(2, RoundingMode.HALF_UP);
+        return roundedSum == roundedBill;
     }
 }

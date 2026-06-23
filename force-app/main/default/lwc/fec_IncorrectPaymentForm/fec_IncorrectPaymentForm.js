@@ -646,6 +646,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     if (matched) {
                         this.selectedPaymentId = pendingId;
                         this.selectedRowIds = [pendingId];
+                        this._applySelectedPaymentBillAmounts(matched);
                         this._ensureSelectedPaymentPageVisible();
                     }
                     this._pendingSelectedPaymentId = null;
@@ -677,6 +678,82 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         return n.toLocaleString(CONST.LOCALE_EN_US);
     }
 
+    _parseMoney(val) {
+        if (val == null || val === STR_EMPTY) {
+            return null;
+        }
+        const n = Number(val);
+        return isNaN(n) ? null : n;
+    }
+
+    _roundMoney(val) {
+        const n = this._parseMoney(val);
+        if (n == null) {
+            return 0;
+        }
+        return Math.round(n * 100) / 100;
+    }
+
+    _amountsEqual(left, right) {
+        return Math.abs(this._roundMoney(left) - this._roundMoney(right)) <= 0.01;
+    }
+
+    /** Submit có thể xảy ra trước khi lightning-input blur — đọc giá trị DOM mới nhất. */
+    _syncBillAndAdjustmentInputsFromDom() {
+        const manualBillEl = this.template.querySelector('lightning-input[data-id="manual-bill-amount"]');
+        if (manualBillEl && manualBillEl.value !== undefined && manualBillEl.value !== STR_EMPTY && manualBillEl.value !== null) {
+            this.manualBillAmount = this._parseMoney(manualBillEl.value);
+        }
+
+        const excessEl = this.template.querySelector('lightning-input[data-id="excess-amount"]');
+        if (excessEl && excessEl.value !== undefined && excessEl.value !== STR_EMPTY && excessEl.value !== null) {
+            this.excessAmount = this._parseMoney(excessEl.value);
+        }
+
+        const rows = this.adjustments || [];
+        let changed = false;
+        const next = rows.map((row) => {
+            const input = this.template.querySelector('lightning-input[data-id-value="' + row.id + '"]');
+            if (!input) {
+                return row;
+            }
+            const raw = input.value;
+            if (raw === undefined || raw === null || raw === STR_EMPTY) {
+                if (row.adjustedAmount != null) {
+                    changed = true;
+                    return { ...row, adjustedAmount: null };
+                }
+                return row;
+            }
+            const parsed = this._parseMoney(raw);
+            if (parsed !== row.adjustedAmount) {
+                changed = true;
+                return { ...row, adjustedAmount: parsed };
+            }
+            return row;
+        });
+        if (changed) {
+            this.adjustments = next;
+        }
+    }
+
+    _applySelectedPaymentBillAmounts(row) {
+        if (!row || !this.effectiveSubCode) {
+            return;
+        }
+        if (this.th1Codes.includes(this.effectiveSubCode)) {
+            this.th1EditableBillAmount = row.paymentAmount ?? null;
+            this.excessAmount = null;
+            return;
+        }
+        if (this.th2Codes.includes(this.effectiveSubCode)) {
+            this.paymentDate = row.paymentDate || null;
+            if (this.excessAmount == null) {
+                this.excessAmount = row.paymentAmount ?? null;
+            }
+        }
+    }
+
     handlePaymentRowSelect(event) {
         const config = event.detail.config || {};
         const action = config.action;
@@ -695,16 +772,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.selectedPaymentId) {
             const id = String(this.selectedPaymentId);
             const row = this.paymentHistory.find(p => String(p.id) === id);
-            if (row && this.effectiveSubCode) {
-                if (this.th2Codes.includes(this.effectiveSubCode)) {
-                    this.paymentDate = row.paymentDate || null;
-                    this.excessAmount = row.paymentAmount;
-                    this.th1EditableBillAmount = null;
-                } else if (this.th1Codes.includes(this.effectiveSubCode)) {
-                    this.th1EditableBillAmount = row.paymentAmount;
-                    this.paymentDate = null;
-                    this.excessAmount = null;
-                }
+            if (row) {
+                this._applySelectedPaymentBillAmounts(row);
             }
         }
         if (newId == null) {
@@ -851,10 +920,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
         let amount = null;
         if (v !== STR_EMPTY && v != null && v !== '') {
-            const n = Number(v);
-            if (!isNaN(n)) {
-                amount = n;
-            }
+            amount = this._parseMoney(v);
         }
         const next = [...this.adjustments];
         next[idx] = { ...next[idx], adjustedAmount: amount };
@@ -864,6 +930,10 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             cmp.setCustomValidity(STR_EMPTY);
             cmp.reportValidity();
         }
+    }
+
+    handleAdjustmentAmountBlur(event) {
+        this.handleAdjustmentAmountChange(event);
     }
 
     validateFields(selectors) {
@@ -989,6 +1059,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
      * Trả về false khi fail; object khi pass (skipApex: không gọi Apex, vẫn coi là hợp lệ).
      */
     _performClientSaveValidation() {
+        this._syncBillAndAdjustmentInputsFromDom();
+
         if (!this.validateFields(['lightning-combobox[name="paymentMethod"]'])) {
             this.dispatchEvent(new ShowToastEvent({
                 title: FEC_Toast_Validation_Title,
@@ -1103,10 +1175,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
             return { skipApex: true, valid, billDate, billAmount };
         }
-        const sumAdjusted = valid.reduce((sum, a) => sum + Number(a.adjustedAmount), 0);
-        const tolerance = 0.01;
+        const sumAdjusted = valid.reduce(
+            (sum, a) => sum + this._roundMoney(a.adjustedAmount),
+            0,
+        );
 
-        if (Math.abs(sumAdjusted - Number(billAmount)) > tolerance) {
+        if (!this._amountsEqual(sumAdjusted, billAmount)) {
             const sumMsg = this.isTh2
                 ? this.customLabel.adjustedAmountMustEqualExcessAmount
                 : this.customLabel.adjustedAmountMustEqualPayment;

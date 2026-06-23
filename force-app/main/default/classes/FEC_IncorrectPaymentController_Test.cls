@@ -382,6 +382,28 @@ private class FEC_IncorrectPaymentController_Test {
     }
 
     @IsTest
+    static void testAdjustedSumMatchesBillAmount() {
+        System.assertEquals(
+            true,
+            FEC_IncorrectPaymentController.adjustedSumMatchesBillAmount(
+                5000000 + 5000000,
+                10000000
+            )
+        );
+        System.assertEquals(
+            true,
+            FEC_IncorrectPaymentController.adjustedSumMatchesBillAmount(
+                3333333.33 + 3333333.33 + 3333333.34,
+                10000000
+            )
+        );
+        System.assertEquals(
+            false,
+            FEC_IncorrectPaymentController.adjustedSumMatchesBillAmount(500, 1000)
+        );
+    }
+
+    @IsTest
     static void testSaveAdjustment_AmountMismatch() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         List<FEC_IncorrectPaymentController.AdjustmentDTO> adjs =
