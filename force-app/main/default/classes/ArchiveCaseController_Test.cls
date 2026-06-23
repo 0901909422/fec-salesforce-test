@@ -594,6 +594,8 @@ global with sharing class ArchiveCaseController_Test {
             '    "FEC_Is_PIN_Reset_Success__c" : false,' +
             '    "FEC_Is_Owner_Or_Assigned__c" : false,' +
             '    "FEC_Owner_In_Assignment_Users__c" : false,' +
+            '    "FEC_Card_Replacement_Reason__c" : "Chưa nhận được thẻ",' +
+            '    "FEC_New_Block_Code_Card_Replace__c" : "L",' +
             '    "MilestoneStatus" : ""' +
             '  },' +
             '  "FEC_Case_Attachments": [{' +
