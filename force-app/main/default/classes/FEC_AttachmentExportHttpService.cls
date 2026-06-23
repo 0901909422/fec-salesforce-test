@@ -36,13 +36,26 @@ public class FEC_AttachmentExportHttpService {
      */
     public static String postAttachmentFiles(String caseId, List<Map<String, Object>> attachments) {
         String boundary = '----------------------------' + String.valueOf(DateTime.now().getTime());
-        String footer = '--' + boundary + '--';
 
         // ── Build multipart body (binary-safe base64 merge) ───────────────
         // Kỹ thuật: pad header text cho đến khi base64 encode KHÔNG có '='
         // → đảm bảo align 3-byte boundary trước khi nối binary data.
+        //
+        // Heap-safe: gom các phần base64 (đã align 3-byte) vào 1 String rồi
+        // decode DUY NHẤT 1 lần ở cuối.
+        //
+        // QUAN TRỌNG (fix multi-file): TUYỆT ĐỐI không được encode phần phân
+        // cách (\r\n) thành 1 base64 segment riêng rồi nối vào giữa chuỗi —
+        // vì base64('\r\n')='DQo=' / base64('\n')='Cg==' có ký tự '=' nằm
+        // GIỮA chuỗi → base64Decode 1 lần ở cuối sẽ hỏng → body multipart sai
+        // → Java báo "Failed to parse multipart servlet request".
+        //
+        // Giải pháp: phần phân cách cần thiết được đẩy vào HEADER của part kế
+        // tiếp (header luôn được pad space → 3-byte aligned). Trick 0K/N chỉ
+        // lo việc nhúng CRLF ngay sau binary để giữ alignment.
 
-        Blob bodyBlob = null;
+        String bodyEncodedAll = '';
+        String pendingPrefix  = '';  // phân cách phải đứng trước header part kế tiếp
 
         for (Integer i = 0; i < attachments.size(); i++) {
             Map<String, Object> att = attachments[i];
@@ -50,8 +63,8 @@ public class FEC_AttachmentExportHttpService {
             String contentType = String.valueOf(att.get('contentType'));
             Blob   fileBlob    = (Blob) att.get('blobData');
 
-            // ── Header: caseId part (chỉ lần đầu) + file part header ──
-            String header = '';
+            // ── Header: pendingPrefix + caseId part (chỉ lần đầu) + file part header ──
+            String header = pendingPrefix;
             if (i == 0) {
                 header += '--' + boundary + '\r\n'
                     + 'Content-Disposition: form-data; name="caseId"\r\n\r\n'
@@ -61,7 +74,7 @@ public class FEC_AttachmentExportHttpService {
                 + 'Content-Disposition: form-data; name="files"; filename="' + filename + '"\r\n'
                 + 'Content-Type: ' + contentType;
 
-            // Pad header cho đến khi base64 không có '=' padding
+            // Pad header cho đến khi base64 không có '=' padding (3-byte aligned)
             String headerEncoded = EncodingUtil.base64Encode(Blob.valueOf(header + '\r\n\r\n'));
             while (headerEncoded.endsWith('=')) {
                 header += ' ';
@@ -71,33 +84,45 @@ public class FEC_AttachmentExportHttpService {
             // Encode file binary
             String bodyEncoded = EncodingUtil.base64Encode(fileBlob);
 
-            // ── Xử lý base64 padding của file body để merge với phần tiếp theo ──
+            // ── Trick 0K/N: nhúng CRLF sau binary + giữ alignment; phần phân
+            //    cách còn thiếu được giao cho header part kế tiếp (pendingPrefix) ──
             String last4Bytes = bodyEncoded.substring(bodyEncoded.length() - 4, bodyEncoded.length());
-            Boolean isLastFile = (i == attachments.size() - 1);
-            String tailText = isLastFile ? footer : '';  // file cuối → đóng boundary
-
             if (last4Bytes.endsWith('==')) {
-                last4Bytes = last4Bytes.substring(0, 2) + '0K';
-                bodyEncoded = bodyEncoded.substring(0, bodyEncoded.length() - 4) + last4Bytes;
-                String tailEncoded = EncodingUtil.base64Encode(Blob.valueOf(tailText));
-                Blob partBlob = EncodingUtil.base64Decode(headerEncoded + bodyEncoded + tailEncoded);
-                bodyBlob = combineBlobs(bodyBlob, partBlob);
+                // last group 1 byte: '0K' nhúng nguyên '\r\n' → không cần thêm
+                bodyEncoded = bodyEncoded.substring(0, bodyEncoded.length() - 4)
+                    + last4Bytes.substring(0, 2) + '0K';
+                pendingPrefix = '';
             } else if (last4Bytes.endsWith('=')) {
-                last4Bytes = last4Bytes.substring(0, 3) + 'N';
-                bodyEncoded = bodyEncoded.substring(0, bodyEncoded.length() - 4) + last4Bytes;
-                tailText = '\n' + tailText;
-                String tailEncoded = EncodingUtil.base64Encode(Blob.valueOf(tailText));
-                Blob partBlob = EncodingUtil.base64Decode(headerEncoded + bodyEncoded + tailEncoded);
-                bodyBlob = combineBlobs(bodyBlob, partBlob);
+                // last group 2 byte: 'N' nhúng '\r' → còn thiếu '\n'
+                bodyEncoded = bodyEncoded.substring(0, bodyEncoded.length() - 4)
+                    + last4Bytes.substring(0, 3) + 'N';
+                pendingPrefix = '\n';
             } else {
-                tailText = '\r\n' + tailText;
-                String tailEncoded = EncodingUtil.base64Encode(Blob.valueOf(tailText));
-                Blob partBlob = EncodingUtil.base64Decode(headerEncoded + bodyEncoded + tailEncoded);
-                bodyBlob = combineBlobs(bodyBlob, partBlob);
+                // last group đủ 3 byte: không nhúng gì → cần cả '\r\n'
+                pendingPrefix = '\r\n';
             }
+
+            bodyEncodedAll += headerEncoded + bodyEncoded;
         }
 
+        // Đóng body: pendingPrefix (phần CRLF còn thiếu của file cuối) + boundary kết thúc.
+        // Đoạn này nằm ở CUỐI chuỗi nên '=' padding (nếu có) là hợp lệ.
+        String footer = pendingPrefix + '--' + boundary + '--';
+        bodyEncodedAll += EncodingUtil.base64Encode(Blob.valueOf(footer));
+
+        // Decode toàn bộ base64 đã gom (đã align 3-byte) thành body 1 lần duy nhất
+        Blob bodyBlob = EncodingUtil.base64Decode(bodyEncodedAll);
+
         // ── Send request với retry ────────────────────────────────────────
+        String endpoint = FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_UPLOAD;
+
+        // Gom thông tin file đã gửi để log khi lỗi (filename + size)
+        List<String> fileInfoForLog = new List<String>();
+        for (Map<String, Object> att : attachments) {
+            fileInfoForLog.add(String.valueOf(att.get('filename'))
+                + ' (' + String.valueOf(att.get('fileSize')) + ' bytes)');
+        }
+
         Integer attempt = 0;
         Integer lastStatus;
         String  lastBody;
@@ -105,7 +130,7 @@ public class FEC_AttachmentExportHttpService {
             attempt++;
             try {
                 HttpRequest req = new HttpRequest();
-                req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_UPLOAD);
+                req.setEndpoint(endpoint);
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantArchive.API_CONTENT_TYPE_MULTIPART + boundary);
                 req.setTimeout(TIMEOUT_MS);
@@ -120,6 +145,19 @@ public class FEC_AttachmentExportHttpService {
                 }
                 if (lastStatus >= 500) {
                     System.debug(LoggingLevel.WARN, '[FEC_AttachmentExportHttpService] Server error ' + lastStatus);
+                    System.debug(LoggingLevel.WARN, '── Thông tin API đã gọi (postAttachmentFiles) ──');
+                    System.debug(LoggingLevel.WARN, '  Endpoint    : ' + FEC_ConstantCommon.API_METHOD_POST + ' ' + endpoint);
+                    System.debug(LoggingLevel.WARN, '  Content-Type: ' + FEC_ConstantArchive.API_CONTENT_TYPE_MULTIPART + boundary);
+                    System.debug(LoggingLevel.WARN, '  Timeout(ms) : ' + TIMEOUT_MS);
+                    System.debug(LoggingLevel.WARN, '  Attempt     : ' + attempt + '/' + (MAX_RETRY + 1));
+                    System.debug(LoggingLevel.WARN, '  caseId      : ' + caseId);
+                    System.debug(LoggingLevel.WARN, '  So file     : ' + attachments.size());
+                    System.debug(LoggingLevel.WARN, '  Body size   : ' + bodyBlob.size() + ' bytes');
+                    System.debug(LoggingLevel.WARN, '  HTTP status : ' + lastStatus);
+                    debugLongText('  Response', lastBody);
+                    for (String fi : fileInfoForLog) {
+                        System.debug(LoggingLevel.WARN, '  File        : ' + fi);
+                    }
                 } else {
                     throw new AttachmentCalloutException('HTTP ' + lastStatus + ': ' + lastBody);
                 }
@@ -127,18 +165,8 @@ public class FEC_AttachmentExportHttpService {
                 if (attempt > MAX_RETRY) throw ex;
             }
         }
-        throw new AttachmentCalloutException('Thất bại sau ' + MAX_RETRY + ' retry. HTTP ' + lastStatus);
-    }
-
-    /**
-     * Nối 2 Blob lại với nhau. Nếu existing == null thì trả về newPart.
-     */
-    private static Blob combineBlobs(Blob existing, Blob newPart) {
-        if (existing == null) return newPart;
-        // Nối qua hex string — an toàn cho binary
-        String hexExisting = EncodingUtil.convertToHex(existing);
-        String hexNew      = EncodingUtil.convertToHex(newPart);
-        return EncodingUtil.convertFromHex(hexExisting + hexNew);
+        throw new AttachmentCalloutException('Thất bại sau ' + MAX_RETRY + ' retry. HTTP ' + lastStatus
+            + ', endpoint=' + endpoint + ', caseId=' + caseId + ', response=' + lastBody);
     }
 
     /**
@@ -159,6 +187,7 @@ public class FEC_AttachmentExportHttpService {
     public static void postAttachments(List<Map<String, Object>> batchPayload) {
 
         String jsonPayload = JSON.serialize(batchPayload);
+        String endpoint = FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_BATCH;
         Integer attempt = 0;
         Integer lastStatus;
         String  lastBody;
@@ -167,7 +196,7 @@ public class FEC_AttachmentExportHttpService {
             attempt++;
             try {
                 HttpRequest req = new HttpRequest();
-                req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_BATCH);
+                req.setEndpoint(endpoint);
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
                 req.setBody(jsonPayload);
@@ -184,6 +213,17 @@ public class FEC_AttachmentExportHttpService {
                 // (Phần catch/retry giữ nguyên như cũ của bạn)
                 if (lastStatus >= 500) {
                     System.debug(LoggingLevel.WARN, '[FEC_AttachmentExportHttpService] Server error ' + lastStatus);
+                    System.debug(LoggingLevel.WARN, '── Thông tin API đã gọi (postAttachments /batch) ──');
+                    System.debug(LoggingLevel.WARN, '  Endpoint    : ' + FEC_ConstantCommon.API_METHOD_POST + ' ' + endpoint);
+                    System.debug(LoggingLevel.WARN, '  Content-Type: ' + FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
+                    System.debug(LoggingLevel.WARN, '  Timeout(ms) : ' + TIMEOUT_MS);
+                    System.debug(LoggingLevel.WARN, '  Attempt     : ' + attempt + '/' + (MAX_RETRY + 1));
+                    System.debug(LoggingLevel.WARN, '  So case     : ' + batchPayload.size());
+                    System.debug(LoggingLevel.WARN, '  Payload size: ' + jsonPayload.length() + ' chars');
+                    System.debug(LoggingLevel.WARN, '  HTTP status : ' + lastStatus);
+                    debugLongText('  Response', lastBody);
+                    // Payload có thể dài → tách thành nhiều dòng để Dev Console hiển thị đủ
+                    debugLongText('  Payload', jsonPayload);
                 } else {
                     throw new AttachmentCalloutException('HTTP ' + lastStatus + ': ' + lastBody);
                 }
@@ -192,12 +232,17 @@ public class FEC_AttachmentExportHttpService {
                 if (attempt > MAX_RETRY) throw ex;
             }
         }
-        throw new AttachmentCalloutException('Thất bại sau ' + MAX_RETRY + ' retry. HTTP ' + lastStatus);
+        throw new AttachmentCalloutException('Thất bại sau ' + MAX_RETRY + ' retry. HTTP ' + lastStatus
+            + ', endpoint=' + endpoint + ', response=' + lastBody);
     }
 
     /**
-     * Lấy danh sách file của Case, đẩy lên S3 và trả về Metadata
-     * QUAN TRỌNG: Tuyệt đối KHÔNG chứa bất kỳ lệnh DML (insert, update, delete) nào trong hàm này.
+     * Lấy DANH SÁCH METADATA file của Case (KHÔNG load VersionData/blob).
+     * Trả về mỗi item gồm: cvId, filename, contentType, fileSize.
+     * Blob sẽ được load riêng theo từng chunk qua loadBlobs() để tránh giữ
+     * toàn bộ file của case trong heap cùng lúc.
+     *
+     * QUAN TRỌNG: Tuyệt đối KHÔNG chứa bất kỳ lệnh DML nào trong hàm này.
      */
     public static List<Map<String, Object>> processAttachments(Id caseId) {
         List<Map<String, Object>> attachmentsMetadata = new List<Map<String, Object>>();
@@ -219,10 +264,9 @@ public class FEC_AttachmentExportHttpService {
             docIds.add(cdl.ContentDocumentId);
         }
 
-        // 2. Lấy nội dung file (VersionData) và thông tin cơ bản
-        // Lưu ý: VersionData chính là Blob data của file để bắn lên S3
+        // 2. Chỉ lấy metadata (KHÔNG SELECT VersionData) để heap nhẹ
         List<ContentVersion> versions = [
-            SELECT Id, Title, FileExtension, VersionData, ContentSize, CreatedDate, CreatedBy.Email 
+            SELECT Id, Title, FileExtension, ContentSize, CreatedDate, CreatedBy.Email 
             FROM ContentVersion 
             WHERE ContentDocumentId IN :docIds AND IsLatest = true
         ];
@@ -231,15 +275,43 @@ public class FEC_AttachmentExportHttpService {
             String ext = String.isNotBlank(cv.FileExtension) ? cv.FileExtension.toLowerCase() : '';
             String fileName = cv.Title + (String.isNotBlank(ext) ? '.' + ext : '');
             
-            Map<String, Object> fileMeta = new Map<String, Object>{
+            attachmentsMetadata.add(new Map<String, Object>{
+                'cvId'        => cv.Id,
                 'filename'    => fileName,
                 'contentType' => getContentType(ext),
-                'fileSize'    => cv.ContentSize,
-                'blobData'    => cv.VersionData // Lưu trực tiếp Blob ở đây
-            };
-            attachmentsMetadata.add(fileMeta);
+                'fileSize'    => cv.ContentSize
+            });
         }
         return attachmentsMetadata;
+    }
+
+    /**
+     * Load VersionData (blob) cho 1 chunk file nhỏ và gắn key 'blobData' vào
+     * từng metadata map. Chỉ query đúng các cvId trong chunk → heap chỉ giữ
+     * blob của vài file tại một thời điểm.
+     *
+     * @param chunk List metadata (mỗi item có 'cvId') của 1 lần gửi
+     * @return Cùng list, mỗi item được bổ sung 'blobData'
+     */
+    public static List<Map<String, Object>> loadBlobs(List<Map<String, Object>> chunk) {
+        Set<Id> cvIds = new Set<Id>();
+        for (Map<String, Object> m : chunk) {
+            cvIds.add((Id) m.get('cvId'));
+        }
+
+        Map<Id, Blob> blobById = new Map<Id, Blob>();
+        for (ContentVersion cv : [
+            SELECT Id, VersionData
+            FROM ContentVersion
+            WHERE Id IN :cvIds
+        ]) {
+            blobById.put(cv.Id, cv.VersionData);
+        }
+
+        for (Map<String, Object> m : chunk) {
+            m.put('blobData', blobById.get((Id) m.get('cvId')));
+        }
+        return chunk;
     }
 
     /**
@@ -260,6 +332,25 @@ public class FEC_AttachmentExportHttpService {
             when 'csv'  { return 'text/csv'; }
             when 'txt'  { return 'text/plain'; }
             when else   { return 'application/octet-stream'; }
+        }
+    }
+
+    /**
+     * Helper: in chuỗi dài thành nhiều dòng (~500 ký tự/dòng) kèm số thứ tự
+     * để Developer Console hiển thị đầy đủ, tránh bị cắt ở các dòng quá dài.
+     */
+    private static void debugLongText(String label, String text) {
+        if (String.isBlank(text)) {
+            System.debug(LoggingLevel.WARN, label + ' : (empty)');
+            return;
+        }
+        Integer chunkLen = 500;
+        Integer total = (text.length() + chunkLen - 1) / chunkLen;
+        for (Integer i = 0; i < text.length(); i += chunkLen) {
+            Integer endIdx = Math.min(i + chunkLen, text.length());
+            Integer part = (i / chunkLen) + 1;
+            System.debug(LoggingLevel.WARN,
+                label + ' [' + part + '/' + total + '] : ' + text.substring(i, endIdx));
         }
     }
 
