@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Customer Request 1 --></label>
+    <name>FEC_Customer_Request_1__c</name>
+    <picklistValues>
+        <masterLabel>Contract Settlement Amount</masterLabel>
+        <translation>Số tiền thanh lý HĐ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Installment Amount</masterLabel>
+        <translation>Tiền kỳ góp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (Specify Details)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Overdue Amount</masterLabel>
+        <translation>Số tiền nợ quá hạn</translation>
+    </picklistValues>
+</CustomFieldTranslation>
