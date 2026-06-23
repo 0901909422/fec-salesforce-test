@@ -2357,11 +2357,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Case_ID_Counter__c.FEC_Prefix__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Transfer_Status__c</field>
         <readable>true</readable>
