@@ -473,4 +473,56 @@ private class FEC_SyncMasterDataBatchTest {
         Assert.areEqual(mdmMds[0].Id, scc.FEC_Master_Data_Setting__c,
             'MDM SCC Master Data Setting lookup should point to MDM MDS (remapped)');
     }
+
+    /**
+     * Test 5: DELTA mode — watermark có sẵn → chỉ sync record Live đổi sau watermark.
+     */
+    @isTest
+    static void testDeltaModeSync() {
+        // Tạo watermark = 2 giờ trước (Success log) → delta query record đổi từ đó
+        FEC_Batch_Log__c log = new FEC_Batch_Log__c(
+            FEC_Batch_Name__c = 'FEC_SyncMasterDataBatch', FEC_Status__c = 'Success'
+        );
+        insert log;
+        Test.setCreatedDate(log.Id, Datetime.now().addHours(-2));
+
+        Test.startTest();
+        FEC_SyncMasterDataBatch batch = new FEC_SyncMasterDataBatch(); // DELTA, watermark = 2h ago
+        executeAllObjects(batch);
+        Test.stopTest();
+
+        // Record Live (LastModifiedDate ~ now) >= watermark → được sync sang MDM
+        Assert.isTrue([SELECT COUNT() FROM FEC_MDM_Business_Process__c WHERE FEC_Code__c = 'BP-001'] > 0,
+            'DELTA mode should sync recently modified Live records to MDM');
+    }
+
+    /**
+     * Test 6: finish() — count compare + tạo Batch Log (qua batch framework).
+     */
+    @isTest
+    static void testFinishCountCompare() {
+        Test.startTest();
+        Database.executeBatch(new FEC_SyncMasterDataBatch(), 1);
+        Test.stopTest();
+
+        // finish() phải tạo ít nhất 1 FEC_Batch_Log__c cho lần chạy
+        Assert.isTrue([SELECT COUNT() FROM FEC_Batch_Log__c WHERE FEC_Batch_Name__c = 'FEC_SyncMasterDataBatch'] > 0,
+            'finish() should insert a batch log with count-compare result');
+    }
+
+    /**
+     * Test 7: RECONCILE constructor — diff theo code cho object chỉ định.
+     */
+    @isTest
+    static void testReconcileConstructor() {
+        Test.startTest();
+        FEC_SyncMasterDataBatch batch = new FEC_SyncMasterDataBatch(
+            'RECONCILE', new List<String>{ FEC_ObjectConstants.OBJ_MDM_BUSINESS_PROCESS }, 1
+        );
+        batch.execute(null, new List<String>{ FEC_ObjectConstants.OBJ_MDM_BUSINESS_PROCESS });
+        Test.stopTest();
+
+        Assert.isTrue([SELECT COUNT() FROM FEC_MDM_Business_Process__c WHERE FEC_Code__c = 'BP-001'] > 0,
+            'RECONCILE mode should create missing MDM records by code diff');
+    }
 }

@@ -493,7 +493,7 @@ public with sharing class FEC_MasterDataSettingService {
 
     public static Id executePushToLive() {
         try {
-            return Database.executeBatch(new FEC_PushMDMToLiveBatch(), 1);
+            return Database.executeBatch(new FEC_PushMDMToLiveBatch(), 200);
         } catch (Exception e) {
             throw new AuraHandledException(FEC_UIConstants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }

@@ -110,19 +110,15 @@ public without sharing class ArchiveCaseAttachmentController {
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
         String migrationSource = caseIns.ArchiveMigrationSource__c;
 
-        String endpoint = label.TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP 
-                            + s3Key + '&source=' + migrationSource;
+        String endpoint = label.TECH_S3_NAMED_CREDENTIAL_DOMAIN + label.TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP 
+                            + EncodingUtil.urlEncode(s3Key, 'UTF-8');
         if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
             endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
                         : (apiSetting?.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) 
-                            + s3Key + '&source=' + migrationSource;
+                            + EncodingUtil.urlEncode(s3Key, 'UTF-8');
         }
 
-        Map<String, String> headers = new Map<String, String>{
-            'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
-        };
-
-        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, headers, null);
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, null, null);
         statusCode = resp.getStatusCode();
         String resStatusCode = String.valueOf(statusCode);
         // Log

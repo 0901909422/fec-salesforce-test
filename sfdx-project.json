@@ -2,7 +2,7 @@
   "packageDirectories": [
     {
       "versionName": "ver 0.3",
-      "versionNumber": "0.2.0.NEXT",
+      "versionNumber": "1.0.0.NEXT",
       "path": "force-app",
       "package": "GitLabPipelinesPkg",
       "versionDescription": "",

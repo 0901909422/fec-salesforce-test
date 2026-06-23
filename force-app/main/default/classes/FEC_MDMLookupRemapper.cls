@@ -152,7 +152,8 @@ public with sharing class FEC_MDMLookupRemapper {
         if (usedMdmIds.isEmpty()) return mdmToSrcIdMap;
 
         Map<Id, String> mdmIdToCode = queryIdToCode(mdmLookupObj, usedMdmIds);
-        Map<String, Id> srcCodeToId = queryCodeToId(srcObjName);
+        // Heap-safe: chỉ load Live record có code đang dùng, thay vì toàn bộ object
+        Map<String, Id> srcCodeToId = queryCodeToId(srcObjName, new Set<String>(mdmIdToCode.values()));
 
         for (Id mdmId : mdmIdToCode.keySet()) {
             String code = mdmIdToCode.get(mdmId);
@@ -197,9 +198,12 @@ public with sharing class FEC_MDMLookupRemapper {
         return codeMap;
     }
 
-    private static Map<String, Id> queryCodeToId(String objName) {
+    private static Map<String, Id> queryCodeToId(String objName, Set<String> codes) {
         Map<String, Id> codeMap = new Map<String, Id>();
-        String soql = 'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + objName;
+        if (codes == null || codes.isEmpty()) return codeMap;
+        String soql = 'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE
+                    + ' FROM ' + objName
+                    + ' WHERE ' + FEC_MDMBatchConfig.FIELD_CODE + ' IN :codes';
         for (SObject rec : Database.query(soql)) {
             String code = (String) rec.get(FEC_MDMBatchConfig.FIELD_CODE);
             if (String.isNotBlank(code)) codeMap.put(code, rec.Id);
@@ -213,7 +217,8 @@ public with sharing class FEC_MDMLookupRemapper {
         Set<Id> referencedIds
     ) {
         Map<Id, String> mdmIdToCode = queryIdToCode(mdmRefObj, referencedIds);
-        Map<String, Id> codeToLiveId = queryCodeToId(liveRefObj);
+        // Heap-safe: chỉ load Live record có code đang dùng, thay vì toàn bộ object
+        Map<String, Id> codeToLiveId = queryCodeToId(liveRefObj, new Set<String>(mdmIdToCode.values()));
 
         Map<Id, Id> idMap = new Map<Id, Id>();
         for (Id mdmId : mdmIdToCode.keySet()) {

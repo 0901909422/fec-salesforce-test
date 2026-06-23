@@ -162,10 +162,20 @@ private class FEC_AssignmentExecuteService_Test {
         Id ownerId,
         String ownerRef
     ) {
+        return insertOpenAssignment(caseId, ownerId, ownerRef, FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING);
+    }
+
+    private static FEC_Assignment__c insertOpenAssignment(
+        Id caseId,
+        Id ownerId,
+        String ownerRef,
+        String assignmentType
+    ) {
         FEC_Assignment__c a = new FEC_Assignment__c(
             FEC_Case__c = caseId,
             FEC_Assignment_Name__c = 'Execute Test ' + String.valueOf(Math.abs(Crypto.getRandomInteger())),
             FEC_Assignment_Status__c = activeAssignmentStatus(),
+            FEC_Assignment_Type__c = assignmentType,
             FEC_OwnerID__c = ownerRef,
             FEC_Assignment_Owner__c = ownerId
         );
@@ -210,7 +220,7 @@ private class FEC_AssignmentExecuteService_Test {
                 LIMIT 1
             ];
             Case c = insertCaseWithAssignmentUsers(String.valueOf(other.Id));
-            insertOpenAssignment(c.Id, UserInfo.getUserId(), null);
+            insertOpenAssignment(c.Id, UserInfo.getUserId(), null, 'General');
 
             FEC_AssignmentExecuteService.ExecuteVisibilityResult result =
                 FEC_AssignmentExecuteService.canExecuteAssignment(c.Id);

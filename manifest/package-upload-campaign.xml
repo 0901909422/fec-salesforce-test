@@ -11,6 +11,7 @@
     <types>
         <!-- Existing classes -->
         <members>FEC_ScheduledPushCampaignDataBatch</members>
+        <members>FEC_ScheduledPushCampaignDataScheduler</members>
         <members>FEC_PushCampaignDataBatch</members>
         <members>FEC_DataCampaign</members>
         <members>FEC_Constants</members>
@@ -89,5 +90,17 @@
         <members>PSG_RD_IT_User</members>
         <name>PermissionSetGroup</name>
     </types>
+    <types>
+		<members>Upload_Campaign_Data</members>
+		<name>FlexiPage</name>
+	</types>
+    <types>
+		<members>Upload_Campaign_Data</members>
+		<name>CustomTab</name>
+	</types>
+    <types>
+		<members>FECredit_External_Cred</members>
+		<name>ExternalCredential</name>
+	</types>
     <version>65.0</version>
 </Package>

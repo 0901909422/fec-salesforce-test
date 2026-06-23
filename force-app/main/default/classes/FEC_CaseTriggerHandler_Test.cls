@@ -621,22 +621,28 @@ private class FEC_CaseTriggerHandler_Test {
 
     @IsTest
     static void testEmail2Case_threadTokenSetsParentAndStripsSubject() {
+        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)?.getRecordTypeId();
+
         Case parent = new Case(
             Subject = 'Parent Case',
             Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
             FEC_Send_To__c = 'test@fecredit.com.vn',
             FEC_ID_Search__c = 'PAR-' + String.valueOf(System.currentTimeMillis())
         );
+        if (interactionRtId != null) {
+            parent.RecordTypeId = interactionRtId;
+        }
         insert parent;
 
         String token = '[ ref:ORG.' + String.valueOf(parent.Id).substring(0, 15) + ':ref ]';
-        Test.startTest();
         Case reply = new Case(
             Subject = 'Re: Question ' + token,
             Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
             Origin = 'Email2Case',
             FEC_ID_Search__c = 'REPL-' + String.valueOf(System.currentTimeMillis())
         );
+        Test.startTest();
         insert reply;
         Test.stopTest();
 

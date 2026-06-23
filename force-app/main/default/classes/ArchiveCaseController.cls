@@ -348,7 +348,7 @@ public without sharing class ArchiveCaseController {
                 castAndSetFieldValue(tempRec, key, val, fd, new Map<String, UserRecordAccess>{});
             }
 
-            insert tempRec;
+            Database.insert(tempRec, AccessLevel.SYSTEM_MODE);
             return tempRec.Id;
         } catch (Exception ex) {
             System.debug('insertTempRecord failed for ' + sObjectApiName + ': ' + ex.getMessage());
@@ -426,7 +426,7 @@ public without sharing class ArchiveCaseController {
                 if (String.isNotBlank(userGroup)) tempNoc.FEC_User_Group__c = userGroup;
             }
 
-            insert tempNoc;
+            Database.insert(tempNoc, AccessLevel.SYSTEM_MODE);
             mapOfFieldAndValue.put('fec_actual_nature_of_case__c', tempNoc.Id);
 
         } catch (Exception ex) {
@@ -678,7 +678,7 @@ public without sharing class ArchiveCaseController {
             System.debug('try-InsertcaseIns ' + caseIns);
 
             FEC_CaseTriggerHandler.isExecuting = true;
-            insert caseIns;
+            Database.insert(caseIns, AccessLevel.SYSTEM_MODE);
             caseId = caseIns.Id;
             isSuccess = true;
         }
@@ -738,7 +738,7 @@ public without sharing class ArchiveCaseController {
                                                                     caseId, childDataList, 
                                                                     listSpecialArchiveObject);
                 if (!recordsToInsert.isEmpty()) {
-                    insert recordsToInsert;
+                    Database.insert(recordsToInsert, AccessLevel.SYSTEM_MODE);
                     System.debug('insertChildRecords: Inserted ' + recordsToInsert.size() + ' records for ' + sObjectApiName);
 
                     // Build oldId → newId mapping if this is a known parent
@@ -847,7 +847,7 @@ public without sharing class ArchiveCaseController {
                                                                      parentId, 
                                                                      groupedByParent.get(parentId),
                                                                      listSpecialArchiveObject);
-                    if (!childRecords.isEmpty()) insert childRecords;
+                    if (!childRecords.isEmpty()) Database.insert(childRecords, AccessLevel.SYSTEM_MODE);
                 } catch (Exception ex) {
                     System.debug('insertNestedChildren failed for ' + childObjName + ' on parent ' + parentId + ': ' + ex.getMessage());
                 }
@@ -1006,6 +1006,8 @@ public without sharing class ArchiveCaseController {
         caseIns.FEC_IsImported__c = true;
         caseIns.FEC_Is_Submited__c = true;
         caseIns.FEC_Is_Call_API_Success__c = true;
+
+        checkAndSetPicklistDependency(caseIns);
     }
 
     /*------------------------------------------------------------
@@ -1146,7 +1148,7 @@ public without sharing class ArchiveCaseController {
         }
 
         System.debug('listCaseUpdated ' + listCaseUpdated);
-        if (!listCaseUpdated.isEmpty()) update listCaseUpdated;
+        if (!listCaseUpdated.isEmpty()) Database.update(listCaseUpdated, AccessLevel.SYSTEM_MODE);
     }
 
     /*------------------------------------------------------------
@@ -1459,21 +1461,17 @@ public without sharing class ArchiveCaseController {
         String serviceName = label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
-        String endpoint = label.TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
+        String endpoint = label.TECH_S3_NAMED_CREDENTIAL_DOMAIN + label.TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
                         + s3Patch + '&source=' + migrationSource;
         if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
             endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
                         : (apiSetting?.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) 
                             + s3Patch + '&source=' + migrationSource;
         }
-
-        Map<String,String> headers = new Map<String,String>{
-            'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
-        };
         
         HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 
                                                     FEC_ConstantCommon.API_METHOD_GET, 
-                                                    headers, null);
+                                                    null, null);
 
         FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', 
                                                             endpoint, resp.getBody(), 
@@ -1569,5 +1567,113 @@ public without sharing class ArchiveCaseController {
         System.debug('nonChildOfCase-mapObjAndDataNonChild ' + mapObjAndDataNonChild);
 
         insertChildRecords(null, mapObjAndDataNonChild, mapSpecialArchiveField.values(), false, parentChildConfig);
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Check And Set Picklist Dependency
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void checkAndSetPicklistDependency(Case caseIns) {
+        String objectName = 'Case';
+        List<String> listFieldDependency = Label.TECH_LIST_FIELD_DEPENDENCY.split(',');
+        Map<String, String> mapFieldDependency = new Map<String, String>();
+        Map<String, Map<String, List<String>>> mapFieldControlledAndData = new Map<String, Map<String, List<String>>>();
+
+        for (String fieldControlled : listFieldDependency) {
+            if (caseIns.get(fieldControlled) != null) {
+                
+                Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(objectName);
+                Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
+                Schema.SObjectField dependToken = fieldMap.get(fieldControlled);
+
+                Schema.DescribeFieldResult depend = dependToken.getDescribe();
+                Schema.sObjectField controlToken = depend.getController();
+                Schema.DescribeFieldResult control = controlToken.getDescribe();
+                mapFieldDependency.put(fieldControlled, control.getName());
+
+                List<Schema.PicklistEntry> controlEntries = (control.getType() == Schema.DisplayType.Boolean
+                    ? null
+                    : control.getPicklistValues()
+                );
+
+                String base64map = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+                Map<String, List<String>> mapOfDataControlling = new Map<String, List<String>>();
+
+                for (Schema.PicklistEntry entry : depend.getPicklistValues()) {
+                    if (entry.isActive()) {
+                        String depValue = entry.getValue(); // e.g., 'L' or 'S'
+                        List<String> controllingValuesForThisDep = new List<String>();
+
+                        Object validForObj = ((Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(entry))).get('validFor');
+                        if (validForObj == null) continue;
+                        
+                        List<String> base64chars = String.valueOf(validForObj).split('');
+
+                        for (Integer index = 0; index < (controlEntries != null ? controlEntries.size() : 2); index++) {
+                            String controlValue = (controlEntries == null
+                                ? String.valueOf(index == 1)
+                                : (controlEntries[index].isActive() ? controlEntries[index].getLabel() : null)
+                            );
+
+                            Integer bitIndex = index / 6;
+                            Integer bitShift = 5 - Math.mod(index, 6);
+
+                            if (controlValue == null || bitIndex >= base64chars.size() || 
+                            (base64map.indexOf(base64chars[bitIndex]) & (1 << bitShift)) == 0) {
+                                continue;
+                            }
+                            
+                            controllingValuesForThisDep.add(controlValue);
+                        }
+
+                        if (!controllingValuesForThisDep.isEmpty()) {
+                            mapOfDataControlling.put(depValue, controllingValuesForThisDep);
+                        }
+                    }
+                }
+
+                mapFieldControlledAndData.put(fieldControlled, mapOfDataControlling);
+            }
+        }
+
+        // {FEC_New_Block_Code_Card_Replace__c={
+        // L=(Bị hư hỏng, Bị mất/ đánh cắp, Bị nuốt tại ATM, Chưa nhận được thẻ, Không còn nguyên vẹn, Sai tên in nổi, Thay thế lần đầu thẻ Money Tab), 
+        // S=(Liên quan gian lận)}}
+        System.debug('mapFieldControlledAndData ' + mapFieldControlledAndData);
+
+        for (String fieldControlled : mapFieldDependency.keySet()) {
+            Boolean isValid = false;
+            String fieldControlling = mapFieldDependency.get(fieldControlled);
+
+            String valueOfFieldControlled = (String) caseIns.get(fieldControlled);
+            String valueOfFieldControlling = (String) caseIns.get(fieldControlling);
+            Map<String, List<String>> mapOfValueControlled = new Map<String, List<String>>();
+            List<String> listValidValue = new List<String>();
+
+            if (String.isNotBlank(valueOfFieldControlled)) {
+                System.debug('fieldControlled ' + fieldControlled);
+                System.debug('valueOfFieldControlled ' + valueOfFieldControlled);
+
+                System.debug('fieldControlling ' + fieldControlling);
+                System.debug('valueOfFieldControlling ' + valueOfFieldControlling);
+
+                mapOfValueControlled = mapFieldControlledAndData.get(fieldControlled);
+                if (mapOfValueControlled != null) {
+                    listValidValue = mapOfValueControlled.get(valueOfFieldControlled);
+
+                    if (listValidValue.size() > 0 && listValidValue.contains(valueOfFieldControlling)) {
+                        isValid = true;
+                    }
+                }
+            }
+
+            if (!isValid) caseIns.put(fieldControlled, null);
+        }
     }
 }

@@ -25,16 +25,20 @@ public without sharing class FEC_ClickToCallHandler {
         if (caseId == null) {
             return phoneList;
         }
-        
-        Case caseRecord = [
-        SELECT Id,
-               FEC_Case_Phone_Number__c,
-               FEC_Interaction__r.FEC_Phone_Number__c,
-               FEC_Account_or_Contract__c
-        FROM Case
-        WHERE Id = :caseId
-        LIMIT 1
-    ];
+
+        List<Case> caseRecords = [
+            SELECT Id,
+                   FEC_Case_Phone_Number__c,
+                   FEC_Interaction__r.FEC_Phone_Number__c,
+                   FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (caseRecords.isEmpty()) {
+            return phoneList;
+        }
+        Case caseRecord = caseRecords[0];
         
         // Interaction Phone
         if (String.isNotBlank(caseRecord.FEC_Interaction__r?.FEC_Phone_Number__c)) {

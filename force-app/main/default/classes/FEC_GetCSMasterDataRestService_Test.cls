@@ -18,6 +18,9 @@ private class FEC_GetCSMasterDataRestService_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_UnitTestMyCaseChannelUtil.ensureInboundMyCaseChannel();
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
+
         String suffix = String.valueOf(Math.mod(Math.abs(Crypto.getRandomInteger()), 1000));
 
         FEC_Product_Type__c prod = new FEC_Product_Type__c(

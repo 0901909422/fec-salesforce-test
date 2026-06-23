@@ -3,6 +3,7 @@ private class FEC_CreateCaseHandler_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_TestDataFactory.ensureRunUserMainQueue();
         insert new List<FEC_Category__c>{
             new FEC_Category__c(
                 Name = FEC_ConstantCommon.FEC_CATEGORY_REQUEST,

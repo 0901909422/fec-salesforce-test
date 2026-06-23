@@ -281,6 +281,7 @@ public class FEC_Constants {
     // === Campaign API Configuration ===
     public static final Integer CAMPAIGN_MAX_JSON_SIZE = 1000000;
     public static final String CAMPAIGN_API_CONFIG_NAME = 'FEC_Campaign_Ingest';
+    public static final Integer CAMPAIGN_PUSH_CHUNK_SIZE = 200;
 
     // === HTTP Constants ===
     public static final Integer HTTP_STATUS_OK = 200;

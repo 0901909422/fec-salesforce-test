@@ -1,7 +1,6 @@
 /**
  * FEC_PushCallbackRecordsBatchTest
- * Tests for FEC_PushCallbackRecordsBatch.
- * Validates batch lifecycle (start/execute/finish) and FEC_Batch_Log__c creation.
+ * Tests for FEC_PushCallbackRecordsBatch (Queueable + Cursor).
  */
 @isTest
 private class FEC_PushCallbackRecordsBatchTest {
@@ -41,17 +40,18 @@ private class FEC_PushCallbackRecordsBatchTest {
                 FEC_RecordLifetime__c = 5,
                 FEC_CurrentCallAttempt__c = 0,
                 FEC_RecordCurrentLifetime__c = 0,
-                FEC_CallbackRequested__c = 'true'
+                FEC_CallbackRequested__c = 'true',
+                FEC_InsertionDate__c = DateTime.now()
             ));
         }
         insert records;
     }
 
     @isTest
-    static void testBatchExecution_DefaultConstructor() {
+    static void testQueueableExecution_DefaultConstructor() {
         Test.startTest();
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         List<FEC_Batch_Log__c> logs = [
@@ -64,50 +64,36 @@ private class FEC_PushCallbackRecordsBatchTest {
     }
 
     @isTest
-    static void testBatchExecution_WithMappingId() {
+    static void testQueueableExecution_WithMappingId() {
         FEC_CS_Campaign__c csMapping = [SELECT Id FROM FEC_CS_Campaign__c LIMIT 1];
 
         Test.startTest();
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch(csMapping.Id);
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         List<FEC_Batch_Log__c> logs = [
-            SELECT FEC_Batch_Name__c FROM FEC_Batch_Log__c
+            SELECT FEC_Batch_Name__c, FEC_Status__c
+            FROM FEC_Batch_Log__c
             WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
         ];
         Assert.isFalse(logs.isEmpty(), 'Batch log should be created');
     }
 
     @isTest
-    static void testExecute_ProcessesScopeAndIncrementsCounters() {
-        List<FEC_DataCampaign__c> scope = [
-            SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c,
-                   FEC_Number1__c, FEC_String1__c, FEC_RecordStatus__c,
-                   FEC_RecordLifetime__c, FEC_RecordCurrentLifetime__c,
-                   FEC_MaxCallAttempt__c, FEC_CurrentCallAttempt__c,
-                   FEC_CampaignCallingList__c, FEC_CallbackRequested__c,
-                   CreatedDate, LastModifiedDate,
-                   CreatedBy.Name, LastModifiedBy.Name,
-                   FEC_CS_Campaign__r.FEC_Campaign__r.FEC_CampaignId__c
-            FROM FEC_DataCampaign__c
+    static void testQueueableExecution_NoMatchingRecords() {
+        delete [SELECT Id FROM FEC_DataCampaign__c];
+
+        Test.startTest();
+        FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
+        System.enqueueJob(batch);
+        Test.stopTest();
+
+        List<FEC_Batch_Log__c> logs = [
+            SELECT FEC_Batch_Name__c, FEC_Status__c
+            FROM FEC_Batch_Log__c
+            WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
         ];
-        Assert.isFalse(scope.isEmpty(), 'Test setup must produce records');
-
-        Test.startTest();
-        FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
-        batch.execute(null, scope);
-        batch.finish(null);
-        Test.stopTest();
-        Assert.isTrue(true, 'execute() and finish() should complete without exception');
-    }
-
-    @isTest
-    static void testFinish_HandlesNullBatchableContext() {
-        Test.startTest();
-        FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
-        batch.finish(null);
-        Test.stopTest();
-        Assert.isTrue(true, 'finish() with null context should not throw');
+        Assert.isFalse(logs.isEmpty(), 'Batch log should be created even with no records');
     }
 }

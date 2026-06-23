@@ -79,5 +79,19 @@
         <name>PermissionSetGroup</name>
     </types>
  
+    <types>
+		<members>Customer_Data_Management</members>
+		<name>FlexiPage</name>
+	</types>
+
+    <types>
+		<members>Customer_Data_Management</members>
+		<name>CustomTab</name>
+	</types>
+
+    <types>
+		<members>FECredit_External_Cred</members>
+		<name>ExternalCredential</name>
+	</types>
     <version>65.0</version>
 </Package>

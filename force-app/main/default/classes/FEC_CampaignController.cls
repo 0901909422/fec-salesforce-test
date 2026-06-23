@@ -190,7 +190,7 @@ public with sharing class FEC_CampaignController {
         );
         update mappingRecord;
         FEC_PushCampaignDataBatch batch = new FEC_PushCampaignDataBatch(mappingId);
-        Id jobId = Database.executeBatch(batch, 2000);
+        Id jobId = System.enqueueJob(batch);
         return jobId;
     }
 
@@ -205,7 +205,7 @@ public with sharing class FEC_CampaignController {
         );
         update mappingRecord;
         FEC_PushExistingRecordsBatch batch = new FEC_PushExistingRecordsBatch(mappingId);
-        Id jobId = Database.executeBatch(batch, 2000);
+        Id jobId = System.enqueueJob(batch);
         return jobId;
     }
 
@@ -220,7 +220,7 @@ public with sharing class FEC_CampaignController {
         );
         update mappingRecord;
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch(mappingId);
-        Id jobId = Database.executeBatch(batch, 2000);
+        Id jobId = System.enqueueJob(batch);
         return jobId;
     }
 

@@ -1,7 +1,6 @@
 /**
  * FEC_ScheduledPushCampaignDataBatchTest
- * Tests for FEC_ScheduledPushCampaignDataBatch.
- * Validates: Requirements 9.1, 9.4, 9.5, 10.2, 10.3
+ * Tests for FEC_ScheduledPushCampaignDataBatch (Queueable + Schedulable).
  */
 @isTest
 private class FEC_ScheduledPushCampaignDataBatchTest {
@@ -49,10 +48,10 @@ private class FEC_ScheduledPushCampaignDataBatchTest {
     }
 
     @isTest
-    static void testBatchExecution_HappyPath() {
+    static void testQueueableExecution_HappyPath() {
         Test.startTest();
         FEC_ScheduledPushCampaignDataBatch batch = new FEC_ScheduledPushCampaignDataBatch();
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         List<FEC_Batch_Log__c> logs = [
@@ -66,7 +65,7 @@ private class FEC_ScheduledPushCampaignDataBatchTest {
     @isTest
     static void testSchedulableExecute() {
         Test.startTest();
-        FEC_ScheduledPushCampaignDataBatch schedulable = new FEC_ScheduledPushCampaignDataBatch();
+        FEC_ScheduledPushCampaignDataScheduler schedulable = new FEC_ScheduledPushCampaignDataScheduler();
         String cronExpr = '0 0 0 1 1 ? 2099';
         String jobId = System.schedule('TestScheduledPush', cronExpr, schedulable);
         Test.stopTest();
@@ -78,7 +77,7 @@ private class FEC_ScheduledPushCampaignDataBatchTest {
     static void testBatchLog_Verification() {
         Test.startTest();
         FEC_ScheduledPushCampaignDataBatch batch = new FEC_ScheduledPushCampaignDataBatch();
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         List<FEC_Batch_Log__c> logs = [

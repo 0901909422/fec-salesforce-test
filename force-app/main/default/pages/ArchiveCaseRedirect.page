@@ -36,7 +36,7 @@
         </apex:outputPanel>
     </div>
 
-    <apex:form>
+    <apex:form >
         <apex:actionFunction name="runFetchAndRedirect" 
                              action="{!fetchAndRedirect}" 
                              reRender="errorPanel, loadingPanel" />

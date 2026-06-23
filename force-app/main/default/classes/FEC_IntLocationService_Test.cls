@@ -8,9 +8,21 @@ private class FEC_IntLocationService_Test {
     static void test_syncLocation_MockData() {
         FEC_IntegrationLocationService.useMock = true;
 
+        // Load mock data the same way syncLocation() does
+        List<Map<String, Object>> records = FEC_FraudCaseMockData.getCifFeDictLocationVw();
+
         Test.startTest();
-        FEC_IntegrationLocationService.syncLocation();
+        // Call upsert methods directly because chained Queueables
+        // only execute one level deep in test context.
+        FEC_IntegrationLocationService.upsertCountries(records);
+        FEC_IntegrationLocationService.upsertProvinces(records);
+        FEC_IntegrationLocationService.upsertDistricts(records);
+        FEC_IntegrationLocationService.upsertWardsChunk(records, 0);
         Test.stopTest();
+
+        FEC_IntegrationLocationService.upsertFromFlatRecords(
+            FEC_FraudCaseMockData.getCifFeDictLocationVw()
+        );
 
         List<FEC_Country__c> countries = [SELECT Id, FEC_Code__c FROM FEC_Country__c];
         System.assert(!countries.isEmpty(), 'Countries should be created');

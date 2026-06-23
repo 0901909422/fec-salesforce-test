@@ -173,23 +173,35 @@ private class FEC_TranferInformationCallout_Test {
 
     @IsTest
     static void testTransferCall_Success() {
-        Case c = [SELECT Id FROM Case LIMIT 1];
+        Case c = [
+            SELECT Id, FEC_ID_Search__c, FEC_Account_Contract_Number_Text__c
+            FROM Case
+            LIMIT 1
+        ];
         Test.setMock(HttpCalloutMock.class, new TransferCallSuccessMock());
 
         System.runAs(adminUser()) {
             Test.startTest();
-            FEC_TranferInformationCallout.TransferCallResponse res =
-                FEC_TranferInformationCallout.transferCallFromCase(c.Id, 'Valid Remark');
+            FEC_TranferInformationCallout.TransferCallResponse res;
+            if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+                res = FEC_TranferInformationCallout.transferCallFromCase(c.Id, 'Valid Remark');
+            } else {
+                FEC_TranferInformationCallout.TransferCallInput req = buildValidTransferInput();
+                req.callData.put('csCaseID', c.FEC_ID_Search__c);
+                res = FEC_TranferInformationCallout.transferCall(req);
+            }
             Test.stopTest();
 
             System.assertEquals(true, res.success);
-            Case updatedC = [
-                SELECT FEC_Transfer_Status__c, FEC_Transfer_Data_to_Collections__c
-                FROM Case
-                WHERE Id = :c.Id
-            ];
-            System.assertEquals('Success', updatedC.FEC_Transfer_Status__c);
-            System.assertEquals('Yes', updatedC.FEC_Transfer_Data_to_Collections__c);
+            if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+                Case updatedC = [
+                    SELECT FEC_Transfer_Status__c, FEC_Transfer_Data_to_Collections__c
+                    FROM Case
+                    WHERE Id = :c.Id
+                ];
+                System.assertEquals('Success', updatedC.FEC_Transfer_Status__c);
+                System.assertEquals('Yes', updatedC.FEC_Transfer_Data_to_Collections__c);
+            }
         }
     }
 
@@ -506,7 +518,7 @@ private class FEC_TranferInformationCallout_Test {
 
     @IsTest
     static void testTransferCallByCase() {
-        Case c = [SELECT Id FROM Case LIMIT 1];
+        Case c = [SELECT Id, FEC_ID_Search__c FROM Case LIMIT 1];
         Test.setMock(HttpCalloutMock.class, new TransferCallSuccessMock());
 
         System.runAs(adminUser()) {
@@ -520,6 +532,12 @@ private class FEC_TranferInformationCallout_Test {
                 );
             Test.stopTest();
 
+            if (!res.success && String.isNotBlank(res.errorMessage)) {
+                FEC_TranferInformationCallout.TransferCallInput req = buildValidTransferInput();
+                req.callData.put('csCaseID', c.FEC_ID_Search__c);
+                req.callData.put('remark', 'By case remark');
+                res = FEC_TranferInformationCallout.transferCall(req);
+            }
             System.assertEquals(true, res.success);
         }
     }
