@@ -44,7 +44,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
 
     // 05/06/2026 10:00 linhdev - OwnerId=$User.Id OR CONTAINS(FEC_Assignment_Users__c) OR OwnerId=Queue user là thành viên
     // 18/06/2026 10:30 linhdev - bổ sung FEC_Assignment_Users__c chứa tên Queue user là thành viên (qua Role)
-    // 18/06/2026 linhdev - điều kiện 2/3/4 spec OR: Owner/UserId assignment OR OwnerId queue OR assignment chứa tên queue
+    // 18/06/2026 linhdev - điều kiện 2/3/4 spec OR: Owner/UserId assignment OR OwnerId queue OR assignment exact match tên queue
     // 19/06/2026 linhdev - OwnerId=$User.Id hoặc OwnerId=Queue member chỉ khi FEC_Assignment_Count__c = 0
     private static String buildDefaultUserVisibilityClause() {
         List<String> visibilityParts = new List<String>();
@@ -59,7 +59,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             );
         }
         Set<String> userQueueNames = FEC_AssignmentListHandler.getCurrentUserQueues(UserInfo.getUserId());
-        String assignmentQueueClause = buildAssignmentUsersContainsQueueNamesClause(userQueueNames);
+        String assignmentQueueClause = buildAssignmentUsersExactQueueNamesClause(userQueueNames);
         if (String.isNotBlank(assignmentQueueClause)) {
             visibilityParts.add(assignmentQueueClause);
         }
@@ -105,29 +105,46 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         return '(' + String.join(parts, ' OR ') + ')';
     }
 
-    // 18/06/2026 10:30 linhdev - FEC_Assignment_Users__c LIKE tên Queue (Name) user là thành viên
-    private static String buildAssignmentUsersContainsQueueNamesClause(Set<String> queueNames) {
+    // 22/06/2026 linhdev - FEC_Assignment_Users__c exact match tên Queue (phân tách bằng ',')
+    private static String buildAssignmentUsersExactQueueNameClause(String queueName) {
+        if (String.isBlank(queueName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String escaped = String.escapeSingleQuotes(queueName.trim());
+        List<String> exactParts = new List<String>();
+        exactParts.add('FEC_Assignment_Users__c = \'' + escaped + '\'');
+        exactParts.add('FEC_Assignment_Users__c LIKE \'' + escaped + ',%\'');
+        exactParts.add('FEC_Assignment_Users__c LIKE \'%,' + escaped + ',%\'');
+        exactParts.add('FEC_Assignment_Users__c LIKE \'%,' + escaped + '\'');
+        return '(' + String.join(exactParts, ' OR ') + ')';
+    }
+
+    private static String buildAssignmentUsersNotExactQueueNameClause(String queueName) {
+        String exactClause = buildAssignmentUsersExactQueueNameClause(queueName);
+        if (String.isBlank(exactClause)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return '(NOT ' + exactClause + ')';
+    }
+
+    private static String buildAssignmentUsersExactQueueNamesClause(Set<String> queueNames) {
         if (queueNames == null || queueNames.isEmpty()) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        List<String> likeParts = new List<String>();
+        List<String> exactParts = new List<String>();
         for (String queueName : queueNames) {
-            if (String.isBlank(queueName)) {
-                continue;
+            String queueClause = buildAssignmentUsersExactQueueNameClause(queueName);
+            if (String.isNotBlank(queueClause)) {
+                exactParts.add(queueClause);
             }
-            likeParts.add(
-                'FEC_Assignment_Users__c LIKE \'%' +
-                String.escapeSingleQuotes(queueName.trim()) +
-                '%\''
-            );
         }
-        if (likeParts.isEmpty()) {
+        if (exactParts.isEmpty()) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        if (likeParts.size() == 1) {
-            return likeParts[0];
+        if (exactParts.size() == 1) {
+            return exactParts[0];
         }
-        return '(' + String.join(likeParts, ' OR ') + ')';
+        return '(' + String.join(exactParts, ' OR ') + ')';
     }
 
     // 19/06/2026 linhdev - Case chưa có Routing assignment (rollup FEC_Assignment_Count__c)
@@ -409,7 +426,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
                     ownerQueueClause = 'OwnerId NOT IN ' + inList;
                 }
             }
-            String assignmentQueueClause = buildAssignmentUsersContainsQueueNamesClause(new Set<String>(queueNames));
+            String assignmentQueueClause = buildAssignmentUsersExactQueueNamesClause(new Set<String>(queueNames));
             if (op == 'equals') {
                 List<String> queueMatchParts = new List<String>();
                 if (String.isNotBlank(ownerQueueClause)) {
@@ -431,14 +448,10 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
                     queueExcludeParts.add(ownerQueueClause);
                 }
                 for (String queueName : queueNames) {
-                    if (String.isBlank(queueName)) {
-                        continue;
+                    String notExactClause = buildAssignmentUsersNotExactQueueNameClause(queueName);
+                    if (String.isNotBlank(notExactClause)) {
+                        queueExcludeParts.add(notExactClause);
                     }
-                    queueExcludeParts.add(
-                        '(NOT (FEC_Assignment_Users__c LIKE \'%' +
-                        String.escapeSingleQuotes(queueName.trim()) +
-                        '%\'))'
-                    );
                 }
                 if (!queueExcludeParts.isEmpty()) {
                     clauseParts.add('(' + String.join(queueExcludeParts, ' AND ') + ')');
