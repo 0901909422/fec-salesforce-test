@@ -444,34 +444,15 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.PassDue.DateAssgined = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(mcb3,'DateAssgined'));
         }
   
-        // SupplementaryCards
-        Dom.XmlNode suppCardsNode = infoNode.getChildElement('SupplementaryCards', null);
-        if (suppCardsNode != null) {
-            result.CardSecInfo.SupplementaryCards = new List<SupplementaryCard>();
-            for (Dom.XmlNode child : suppCardsNode.getChildElements()) {
-                String childName = child.getName();
-                // Bỏ qua namespace prefix nếu có
-                if (childName.contains(':')) {
-                    childName = childName.substring(childName.indexOf(':') + 1);
-                }
-                if (childName == 'SupplementaryCard') {
-                    SupplementaryCard sup = new SupplementaryCard();
-                    sup.CardNumber = FEC_CommonUltils.getXmlValue(child, 'CardNumber');
-                    sup.EmbossingName = FEC_CommonUltils.getXmlValue(child, 'EmbossingName');
-                    sup.CustomerName = FEC_CommonUltils.getXmlValue(child, 'CustomerName');
-                    sup.CustomerRelation = FEC_CommonUltils.getXmlValue(child, 'CustomerRelation');
-                    sup.CardholderName = FEC_CommonUltils.getXmlValue(child, 'CardholderName');
-                    sup.Status = FEC_CommonUltils.getXmlValue(child, 'Status');
-                    sup.ExpiryDate = FEC_CommonUltils.getXmlValue(child, 'ExpiryDate');
-                    sup.ContactPhone = FEC_CommonUltils.getXmlValue(child, 'ContactPhone');
-                    sup.CardIssueDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(child, 'CardIssueDate'));
-                    sup.CardActivationDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(child, 'CardActivationDate'));
-                    sup.PlasticIndicator = FEC_CommonUltils.getXmlValue(child, 'PlasticIndicator');
-                    sup.BlockCode = FEC_CommonUltils.getXmlValue(child, 'BlockCode');
-                    sup.CardholderFlag = FEC_CommonUltils.getXmlValue(child, 'CardholderFlag');
-                    sup.Gender = FEC_CommonUltils.getXmlValue(child, 'Gender');
-                    result.CardSecInfo.SupplementaryCards.add(sup);
-                }
+        // SupplementaryCards — hỗ trợ lồng SupplementaryCards / SupplementaryCard
+        result.CardSecInfo.SupplementaryCards = new List<SupplementaryCard>();
+        for (Dom.XmlNode child : infoNode.getChildElements()) {
+            String nodeName = child.getName();
+            if (nodeName != null && nodeName.contains(':')) {
+                nodeName = nodeName.substring(nodeName.indexOf(':') + 1);
+            }
+            if (nodeName == 'SupplementaryCards') {
+                collectSupplementaryCards(child, result.CardSecInfo.SupplementaryCards);
             }
         }
         
@@ -625,6 +606,55 @@ public with sharing class FEC_GetCardSecInfo {
         }
   
         return result;
+    }
+
+    private static void collectSupplementaryCards(
+        Dom.XmlNode parentNode,
+        List<SupplementaryCard> target
+    ) {
+        if (parentNode == null || target == null) {
+            return;
+        }
+
+        for (Dom.XmlNode child : parentNode.getChildElements()) {
+            String childName = child.getName();
+            if (childName != null && childName.contains(':')) {
+                childName = childName.substring(childName.indexOf(':') + 1);
+            }
+
+            if (childName == 'SupplementaryCards' || childName == 'SupplementaryCard') {
+                if (hasSupplementaryCardFields(child)) {
+                    target.add(parseSupplementaryCard(child));
+                } else {
+                    collectSupplementaryCards(child, target);
+                }
+            }
+        }
+    }
+
+    private static Boolean hasSupplementaryCardFields(Dom.XmlNode node) {
+        return String.isNotBlank(FEC_CommonUltils.getXmlValue(node, 'CardNumber'))
+            || String.isNotBlank(FEC_CommonUltils.getXmlValue(node, 'EmbossingName'))
+            || String.isNotBlank(FEC_CommonUltils.getXmlValue(node, 'CardholderName'));
+    }
+
+    private static SupplementaryCard parseSupplementaryCard(Dom.XmlNode node) {
+        SupplementaryCard sup = new SupplementaryCard();
+        sup.CardNumber = FEC_CommonUltils.getXmlValue(node, 'CardNumber');
+        sup.EmbossingName = FEC_CommonUltils.getXmlValue(node, 'EmbossingName');
+        sup.CustomerName = FEC_CommonUltils.getXmlValue(node, 'CustomerName');
+        sup.CustomerRelation = FEC_CommonUltils.getXmlValue(node, 'CustomerRelation');
+        sup.CardholderName = FEC_CommonUltils.getXmlValue(node, 'CardholderName');
+        sup.Status = FEC_CommonUltils.getXmlValue(node, 'Status');
+        sup.ExpiryDate = FEC_CommonUltils.getXmlValue(node, 'ExpiryDate');
+        sup.ContactPhone = FEC_CommonUltils.getXmlValue(node, 'ContactPhone');
+        sup.CardIssueDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(node, 'CardIssueDate'));
+        sup.CardActivationDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(node, 'CardActivationDate'));
+        sup.PlasticIndicator = FEC_CommonUltils.getXmlValue(node, 'PlasticIndicator');
+        sup.BlockCode = FEC_CommonUltils.getXmlValue(node, 'BlockCode');
+        sup.CardholderFlag = FEC_CommonUltils.getXmlValue(node, 'CardholderFlag');
+        sup.Gender = FEC_CommonUltils.getXmlValue(node, 'Gender');
+        return sup;
     }
   
     /**
