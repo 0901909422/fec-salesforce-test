@@ -101,9 +101,17 @@ public with sharing class FEC_CampaignBatchService {
 
     /**
      * Builds the SOQL query for instant push batch (FEC_PushCampaignDataBatch).
-     * @return Complete SOQL query string for instant push
+     * Uses ORDER BY CreatedDate ASC, Id ASC for stable iteration with the
+     * Apex Cursor (Database.getCursor) opened in the Queueable. Cursor handles
+     * up to 50M rows natively, so no LIMIT is applied to avoid orphaning
+     * records on high-volume days.
+     * @param dtStart  Start of the day filter (inclusive)
+     * @param dtEnd    End of the day filter (inclusive)
+     * @return Complete SOQL query string for instant push (no bind variables)
      */
-    public static String buildInstantPushQuery() {
+    public static String buildInstantPushQuery(DateTime dtStart, DateTime dtEnd) {
+        String dtStartStr = dtStart.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
+        String dtEndStr = dtEnd.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
@@ -114,14 +122,15 @@ public with sharing class FEC_CampaignBatchService {
             'FEC_CS_Campaign__r.FEC_Campaign__r.FEC_CampaignId__c, ' +
             'FEC_CS_Campaign__r.FEC_PushInstant__c ' +
             'FROM FEC_DataCampaign__c ' +
-            'WHERE CreatedDate >= :dtStart AND CreatedDate <= :dtEnd ' +
+            'WHERE CreatedDate >= ' + dtStartStr + ' AND CreatedDate <= ' + dtEndStr + ' ' +
             'AND FEC_IsPushed__c = false ' +
             'AND FEC_SendToCommsDB__c = null ' +
             'AND FEC_SentInstantly__c = null ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
             'AND FEC_RecordStatus__c != \'Pending-callback\' ' +
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
-            'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null)';
+            'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null) ' +
+            'ORDER BY CreatedDate ASC, Id ASC';
     }
 
     /**

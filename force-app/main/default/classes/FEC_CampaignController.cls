@@ -190,7 +190,7 @@ public with sharing class FEC_CampaignController {
         );
         update mappingRecord;
         FEC_PushCampaignDataBatch batch = new FEC_PushCampaignDataBatch(mappingId);
-        Id jobId = Database.executeBatch(batch, 2000);
+        Id jobId = System.enqueueJob(batch);
         return jobId;
     }
 

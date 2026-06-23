@@ -201,7 +201,9 @@ private class FEC_CampaignBatchServiceTest {
 
     @isTest
     static void testBuildInstantPushQuery_ReturnsNonEmpty() {
-        String query = FEC_CampaignBatchService.buildInstantPushQuery();
+        DateTime dtStart = FEC_Util.getStartOfToday();
+        DateTime dtEnd = FEC_Util.getEndOfToday();
+        String query = FEC_CampaignBatchService.buildInstantPushQuery(dtStart, dtEnd);
         Assert.isTrue(String.isNotBlank(query), 'Instant push query should not be blank');
         Assert.isTrue(query.contains('FEC_DataCampaign__c'),
             'Query should reference FEC_DataCampaign__c');
