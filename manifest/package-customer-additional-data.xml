@@ -81,6 +81,11 @@
  
     <types>
 		<members>Customer_Data_Management</members>
+		<name>FlexiPage</name>
+	</types>
+
+    <types>
+		<members>Customer_Data_Management</members>
 		<name>CustomTab</name>
 	</types>
     <version>65.0</version>

@@ -92,6 +92,10 @@
     </types>
     <types>
 		<members>Upload_Campaign_Data</members>
+		<name>FlexiPage</name>
+	</types>
+    <types>
+		<members>Upload_Campaign_Data</members>
 		<name>CustomTab</name>
 	</types>
     <version>65.0</version>
