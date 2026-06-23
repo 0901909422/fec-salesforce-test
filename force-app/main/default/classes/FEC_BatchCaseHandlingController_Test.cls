@@ -1,9 +1,10 @@
-@IsTest
+@IsTest(IsParallel=false)
 private class FEC_BatchCaseHandlingController_Test {
 
     @TestSetup
     static void setupData() {
-        User admin = privilegedUserForBulkCaseRead();
+        User admin = createBulkCasePrivilegedUser();
+        ensureBulkCaseHandlingFieldAccess(admin.Id);
 
         FEC_Product_Type__c prod = new FEC_Product_Type__c(
             Name = 'Credit Card',
@@ -271,13 +272,7 @@ private class FEC_BatchCaseHandlingController_Test {
      */
     @IsTest
     static void testExportRowUsesMasterDataNameNotCode() {
-        Case seeded = [
-            SELECT OwnerId
-            FROM Case
-            WHERE FEC_ID_Search__c = 'SRCH-001'
-            LIMIT 1
-        ];
-        User privileged = [SELECT Id FROM User WHERE Id = :seeded.OwnerId LIMIT 1];
+        User privileged = privilegedUserForBulkCaseRead();
         System.runAs(privileged) {
             Test.startTest();
             FEC_BatchCaseHandlingController.BulkCaseSearchResult gridResult =
@@ -485,8 +480,51 @@ private class FEC_BatchCaseHandlingController_Test {
         );
     }
 
-    /** Prefer System Administrator so stripInaccessible leaves Case custom fields readable in bulk search. */
+    private static User createBulkCasePrivilegedUser() {
+        Profile adminProfile = [
+            SELECT Id
+            FROM Profile
+            WHERE Name = 'System Administrator'
+            LIMIT 1
+        ];
+        String stamp = String.valueOf(System.currentTimeMillis());
+        User privileged = new User(
+            Username = 'bch.priv.' + stamp + '@fecredit.test',
+            Email = 'bch.priv.' + stamp + '@fecredit.test',
+            LastName = 'BCHPrivileged',
+            Alias = ('b' + stamp).left(8),
+            TimeZoneSidKey = 'Asia/Ho_Chi_Minh',
+            LocaleSidKey = 'en_US',
+            EmailEncodingKey = 'UTF-8',
+            LanguageLocaleKey = 'en_US',
+            ProfileId = adminProfile.Id
+        );
+        insert privileged;
+        return privileged;
+    }
+
+    private static void ensureBulkCaseHandlingFieldAccess(Id userId) {
+        if (userId == null) {
+            return;
+        }
+        FEC_TestDataFactory.assignPermissionSets(userId, new List<String>{
+            'RD_IT_User_Interaction_Case_Service_Case',
+            'RD_IT_User_Customer_360',
+            'FEC_Batch_Case_Handling'
+        });
+    }
+
+    /** Prefer dedicated BCH privileged user from @TestSetup (FLS + no lock on shared admin). */
     private static User privilegedUserForBulkCaseRead() {
+        List<User> privilegedUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND LastName = 'BCHPrivileged'
+            LIMIT 1
+        ];
+        if (!privilegedUsers.isEmpty()) {
+            return privilegedUsers[0];
+        }
         List<User> admins = [
             SELECT Id
             FROM User

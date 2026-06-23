@@ -149,8 +149,8 @@ public without sharing class FEC_IPPConversionController {
             return;
         }
         Case c = loadCaseForIPPConversion(caseId);
-        if (c == null || c.FEC_Account_or_Contract__c == null
-            || txs[0].FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+        Id linkedChId = getCaseLinkedCustomerHistoryId(c);
+        if (linkedChId == null || txs[0].FEC_Customer_History__c != linkedChId) {
             return;
         }
         FEC_CaseTriggerHandler.isExecuting = true;
@@ -200,7 +200,8 @@ public without sharing class FEC_IPPConversionController {
             WHERE Id = :c.FEC_IPP_Transaction__c
             LIMIT 1
         ];
-        if (txs.isEmpty() || txs[0].FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+        Id linkedChId = getCaseLinkedCustomerHistoryId(c);
+        if (txs.isEmpty() || txs[0].FEC_Customer_History__c != linkedChId) {
             return null;
         }
         return txs[0].Id;
@@ -210,7 +211,8 @@ public without sharing class FEC_IPPConversionController {
     private static List<EligibleTransactionDTO> loadIppUnbilledTransactions(Id caseId) {
         List<EligibleTransactionDTO> result = new List<EligibleTransactionDTO>();
         Case c = loadCaseForIPPConversion(caseId);
-        if (c == null || c.FEC_Account_or_Contract__c == null) {
+        Id linkedChId = getCaseLinkedCustomerHistoryId(c);
+        if (linkedChId == null) {
             return result;
         }
         String accountNumber = getAccountNumberForGetIPPDetails(caseId, null);
@@ -229,7 +231,7 @@ public without sharing class FEC_IPPConversionController {
         }
         List<FEC_Transaction__c> synced = syncUnbilledTransactionsFromApi(
             caseId,
-            c.FEC_Account_or_Contract__c,
+            linkedChId,
             apiRes.Transactions
         );
         for (FEC_Transaction__c tx : synced) {
@@ -668,11 +670,12 @@ public without sharing class FEC_IPPConversionController {
         }
         FEC_Transaction__c tx = txs[0];
         Case c = loadCaseForIPPConversion(caseId);
-        if (c == null || c.FEC_Account_or_Contract__c == null) {
+        Id linkedChId = getCaseLinkedCustomerHistoryId(c);
+        if (linkedChId == null) {
             dto.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
             return dto;
         }
-        if (tx.FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+        if (tx.FEC_Customer_History__c != linkedChId) {
             dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return dto;
         }
@@ -782,7 +785,8 @@ public without sharing class FEC_IPPConversionController {
             return result;
         }
         Case c = loadCaseForIPPConversion(caseId);
-        if (c == null || c.FEC_Account_or_Contract__c == null) {
+        Id linkedChId = getCaseLinkedCustomerHistoryId(c);
+        if (linkedChId == null) {
             result.errorMessage = System.Label.FEC_MSG_Not_Account_Linked;
             return result;
         }
@@ -804,7 +808,7 @@ public without sharing class FEC_IPPConversionController {
             return result;
         }
         FEC_Transaction__c tx = txs[0];
-        if (tx.FEC_Customer_History__c != c.FEC_Account_or_Contract__c) {
+        if (tx.FEC_Customer_History__c != linkedChId) {
             result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return result;
         }
@@ -952,7 +956,7 @@ public without sharing class FEC_IPPConversionController {
 
     @TestVisible
     private static String resolveCardNumberForGetIppDetails(Case c) {
-        if (c == null || c.FEC_Account_or_Contract__c == null) {
+        if (getCaseLinkedCustomerHistoryId(c) == null) {
             return null;
         }
         Map<String, Object> cPop = c.getPopulatedFieldsAsMap();
@@ -1004,6 +1008,17 @@ public without sharing class FEC_IPPConversionController {
         SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, cases);
         List<SObject> recs = decision.getRecords();
         return recs.isEmpty() ? null : (Case) recs[0];
+    }
+
+    /** Safe read after Security.stripInaccessible may remove FEC_Account_or_Contract__c. */
+    private static Id getCaseLinkedCustomerHistoryId(Case c) {
+        if (c == null) {
+            return null;
+        }
+        Map<String, Object> populated = c.getPopulatedFieldsAsMap();
+        return populated.containsKey('FEC_Account_or_Contract__c')
+            ? (Id) populated.get('FEC_Account_or_Contract__c')
+            : null;
     }
 
     @TestVisible

@@ -29,6 +29,29 @@ private class FEC_GetCSMdByCodeRest_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_UnitTestMyCaseChannelUtil.ensureApiChannel();
+
+        FEC_Product_Type__c productType = new FEC_Product_Type__c(
+            Name = 'Card',
+            FEC_Code__c = 'CARD',
+            FEC_Active__c = true
+        );
+        insert productType;
+
+        FEC_Business_Process__c businessProcess = new FEC_Business_Process__c(
+            Name = 'Complaint',
+            FEC_Code__c = 'Complaint',
+            FEC_Active__c = true
+        );
+        insert businessProcess;
+
+        FEC_Category__c category = new FEC_Category__c(
+            Name = 'Request',
+            FEC_Code__c = 'Request',
+            FEC_Active__c = true
+        );
+        insert category;
+
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'Test SubCat REST',
             FEC_Code__c = 'SC01',
@@ -37,10 +60,23 @@ private class FEC_GetCSMdByCodeRest_Test {
         );
         insert subCat;
 
-        insert new FEC_Nature_of_Case__c(
-            FEC_Sub_Category__c = subCat.Id,
+        FEC_Sub_Code__c subCode = new FEC_Sub_Code__c(
+            Name = 'SUB01',
+            FEC_Code__c = 'SUB01',
             FEC_Active__c = true
         );
+        insert subCode;
+
+        insert new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = productType.Id,
+            FEC_Business_Process__c = businessProcess.Id,
+            FEC_Category__c = category.Id,
+            FEC_Sub_Category__c = subCat.Id,
+            FEC_Sub_Code__c = subCode.Id,
+            FEC_Channel__c = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
+            FEC_Active__c = true
+        );
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
     }
 
     @IsTest

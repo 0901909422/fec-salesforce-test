@@ -3,6 +3,19 @@ private class FEC_BatchCaseHandlingExportService_Test {
 
     @TestSetup
     static void setup() {
+        List<User> admins = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+        if (!admins.isEmpty()) {
+            FEC_TestDataFactory.assignPermissionSets(admins[0].Id, new List<String>{
+                'RD_IT_User_Customer_360',
+                'RD_IT_User_Interaction_Case_Service_Case'
+            });
+        }
+
         FEC_Product_Type__c productType = new FEC_Product_Type__c(
             Name = 'Export Product',
             FEC_Code__c = 'EXP-PT',
@@ -273,16 +286,24 @@ private class FEC_BatchCaseHandlingExportService_Test {
         FEC_BatchCaseHandlingExportRow row = new FEC_BatchCaseHandlingExportRow();
         row.caseId = exportCase.Id;
 
-        Test.startTest();
-        FEC_BatchCaseHandlingExportService.enrichExportRows(new List<FEC_BatchCaseHandlingExportRow>{ row });
-        Test.stopTest();
+        User admin = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+        System.runAs(admin) {
+            Test.startTest();
+            FEC_BatchCaseHandlingExportService.enrichExportRows(new List<FEC_BatchCaseHandlingExportRow>{ row });
+            Test.stopTest();
 
-        System.assertEquals(FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT, row.updatedInfoAddressType);
+            System.assertEquals(FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT, row.updatedInfoAddressType);
         System.assert(row.updatedInfoAddress.contains('cong hoa'));
         System.assertEquals('true', row.updatedInfoMailingAddress);
         System.assertEquals(FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT, row.originalInfoAddressType);
         System.assert(row.originalInfoAddress.contains('Old Street'));
-        System.assertEquals('false', row.originalInfoMailingAddress);
+            System.assertEquals('false', row.originalInfoMailingAddress);
+        }
     }
 
     @IsTest

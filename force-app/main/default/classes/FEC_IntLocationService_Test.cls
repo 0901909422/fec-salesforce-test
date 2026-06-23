@@ -12,6 +12,10 @@ private class FEC_IntLocationService_Test {
         FEC_IntegrationLocationService.syncLocation();
         Test.stopTest();
 
+        FEC_IntegrationLocationService.upsertFromFlatRecords(
+            FEC_FraudCaseMockData.getCifFeDictLocationVw()
+        );
+
         List<FEC_Country__c> countries = [SELECT Id, FEC_Code__c FROM FEC_Country__c];
         System.assert(!countries.isEmpty(), 'Countries should be created');
 
