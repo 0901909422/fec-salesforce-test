@@ -141,7 +141,6 @@ public with sharing class FEC_CampaignBatchService {
      */
     public static String buildExistingRecordsPushQuery(DateTime dtStart) {
         String dtStartStr = dtStart.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-        String dtStartDateStr = String.valueOf(dtStart.dateGmt());
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
@@ -159,7 +158,7 @@ public with sharing class FEC_CampaignBatchService {
             'AND FEC_IsWithinLifetime__c = true ' +
             'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null) ' +
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
-            'AND (FEC_InsertionDate__c = null OR FEC_InsertionDate__c < ' + dtStartDateStr + ') ' +
+            'AND (FEC_InsertionDate__c = null OR FEC_InsertionDate__c < ' + dtStartStr + ') ' +
             'ORDER BY CreatedDate ASC, Id ASC';
     }
 
@@ -170,8 +169,8 @@ public with sharing class FEC_CampaignBatchService {
      * @return Complete SOQL query string for callback records push (no bind variables)
      */
     public static String buildCallbackRecordsPushQuery(DateTime dtStart, DateTime dtEnd) {
-        String dtStartDateStr = String.valueOf(dtStart.dateGmt());
-        String dtEndDateStr = String.valueOf(dtEnd.dateGmt());
+        String dtStartDateStr = dtStart.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
+        String dtEndDateStr = dtEnd.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
         return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
             'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
