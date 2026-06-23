@@ -295,8 +295,9 @@ public with sharing class FEC_CardInfoController {
             FROM FEC_Other_Card__c
             WHERE FEC_Customer_History__c = :customerHistoryId
         ]) {
-            if (String.isNotBlank(x.FEC_Card_Number__c)) {
-                inDb.put(x.FEC_Card_Number__c, x);
+            String key = normalizeOtherCardNumber(x.FEC_Card_Number__c);
+            if (String.isNotBlank(key)) {
+                inDb.put(key, x);
             }
         }
 
@@ -305,14 +306,14 @@ public with sharing class FEC_CardInfoController {
         Set<String> seen = new Set<String>();
 
         for (FEC_GetCardSecInfo.SupplementaryCard item : suppList) {
-            if (String.isBlank(item.CardNumber) || seen.contains(item.CardNumber)) {
+            String cardNumber = normalizeOtherCardNumber(item.CardNumber);
+            if (String.isBlank(cardNumber) || seen.contains(cardNumber)) {
                 continue;
             }
-            seen.add(item.CardNumber);
+            seen.add(cardNumber);
 
-            if (inDb.containsKey(item.CardNumber)) {
-                // Update record đã có: đồng bộ Gender và các field từ API
-                FEC_Other_Card__c rec = inDb.get(item.CardNumber);
+            if (inDb.containsKey(cardNumber)) {
+                FEC_Other_Card__c rec = inDb.get(cardNumber);
                 rec.FEC_Gender__c = item.Gender;
                 rec.FEC_Block_Code__c = item.BlockCode;
                 rec.FEC_Cardholder__c = item.CardholderName;
@@ -321,11 +322,12 @@ public with sharing class FEC_CardInfoController {
                 rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
                 rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
                 rec.FEC_Issue_Date__c = item.CardIssueDate;
+                rec.FEC_Card_Number__c = cardNumber;
                 toUpdate.add(rec);
             } else {
                 FEC_Other_Card__c rec = new FEC_Other_Card__c();
                 rec.FEC_Customer_History__c = customerHistoryId;
-                rec.FEC_Card_Number__c = item.CardNumber;
+                rec.FEC_Card_Number__c = cardNumber;
                 rec.FEC_Cardholder__c = item.CardholderName;
                 rec.FEC_Plastic_ID__c = item.PlasticIndicator;
                 rec.FEC_Embossing_Name__c = item.EmbossingName;
@@ -393,5 +395,12 @@ public with sharing class FEC_CardInfoController {
             out.add(dto);
         }
         return out;
+    }
+
+    private static String normalizeOtherCardNumber(String cardNumber) {
+        if (String.isBlank(cardNumber)) {
+            return null;
+        }
+        return FEC_CommonUltils.maskCardNumber(cardNumber.trim());
     }
 }
