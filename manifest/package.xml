@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-	
-	<types>
-		<members>FEC_CaseAssigAutoDistributeService_Test</members>
-		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
-		<members>FEC_CaseAssignmentAutoDistributeService</members>
-		<members>FEC_CaseAssignmentTriggerHandler</members>
-		<members>FEC_RoutingActionHistoryTriggerHandler</members>
-		<members>FEC_RoutingActionHistoryTrigHandler_Test</members>
-		<name>ApexClass</name>
-	</types>
-	<version>66.0</version>
+    <types>
+        <members>*</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>ApexComponent</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>ApexTestSuite</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>StaticResource</name>
+    </types>
+    <version>45.0</version>
 </Package>
