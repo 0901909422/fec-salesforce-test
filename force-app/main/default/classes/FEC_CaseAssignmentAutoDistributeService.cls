@@ -28,6 +28,24 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
      */
     private static Map<String, Set<Id>> queueRecipientUserIdsMemo;
 
+    /**
+     * Queue job chain chỉ được enqueue thêm tối đa 1 job/transaction. Khi FEC_CaseAssignmentAutoDistQueueJob
+     * đang xử lý assignment, Case trigger / handleQueueCasesAfterSave không được enqueue job phụ.
+     */
+    @TestVisible
+    private static Boolean suppressAutoDistQueueEnqueue = false;
+
+    @TestVisible
+    public static Boolean canEnqueueAutoDistQueueJob() {
+        return !suppressAutoDistQueueEnqueue
+            && Limits.getQueueableJobs() < Limits.getLimitQueueableJobs();
+    }
+
+    @TestVisible
+    public static void setSuppressAutoDistQueueEnqueue(Boolean suppress) {
+        suppressAutoDistQueueEnqueue = suppress == true;
+    }
+
     private class DistributionTarget {
         Case caseRecord;
         Boolean updateCaseOwner;
@@ -89,7 +107,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
          * enqueueJob trong loop theo số assignment. Một queue job duy nhất nhận full list và
          * chain từng assignment (FEC_CaseAssignmentAutoDistQueueJob).
          */
-        if (!dueAssignmentIds.isEmpty()) {
+        if (!dueAssignmentIds.isEmpty() && canEnqueueAutoDistQueueJob()) {
             System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(dueAssignmentIds));
         }
     }
@@ -236,7 +254,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             dueAssignmentIds.add(assignmentRecord.Id);
         }
 
-        if (!dueAssignmentIds.isEmpty() && Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+        if (!dueAssignmentIds.isEmpty() && canEnqueueAutoDistQueueJob()) {
             System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(dueAssignmentIds));
         }
     }
@@ -1075,6 +1093,29 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         }
     }
 
+    private static void runApplyDistributionDml(
+        List<FEC_Assignment__c> assignmentUpdates,
+        Map<Id, Case> caseUpdatesById,
+        Set<Id> casesForUserSync
+    ) {
+        Boolean priorSystem = FEC_CaseTriggerHandler.isSystemUpdate;
+        FEC_CaseTriggerHandler.isSystemUpdate = true;
+        try {
+            if (!assignmentUpdates.isEmpty()) {
+                update assignmentUpdates;
+            }
+            if (caseUpdatesById != null && !caseUpdatesById.isEmpty()) {
+                for (Id caseId : caseUpdatesById.keySet()) {
+                    FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
+                }
+                update caseUpdatesById.values();
+            }
+            rebuildAssignmentUsersForCases(casesForUserSync);
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = priorSystem;
+        }
+    }
+
     private static Integer applyDistributionResults(
         Id configAssignmentId,
         List<DistributionTarget> targets
@@ -1120,13 +1161,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             }
         }
 
-        if (!assignmentUpdates.isEmpty()) {
-            update assignmentUpdates;
-        }
-        if (!caseUpdatesById.isEmpty()) {
-            update caseUpdatesById.values();
-        }
-        rebuildAssignmentUsersForCases(casesForUserSync);
+        runApplyDistributionDml(assignmentUpdates, caseUpdatesById, casesForUserSync);
         return appliedCount;
     }
 
