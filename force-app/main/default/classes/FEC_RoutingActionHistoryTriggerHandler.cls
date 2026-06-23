@@ -96,7 +96,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       processNotificationEmails(newList);
       return;
     }
-    System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newList));*/
+    System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newList));
   }
 
   public static void processNotification(List<FEC_Routing_Action_History__c> newRecords) {
