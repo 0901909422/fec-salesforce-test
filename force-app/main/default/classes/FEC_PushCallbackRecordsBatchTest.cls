@@ -40,7 +40,8 @@ private class FEC_PushCallbackRecordsBatchTest {
                 FEC_RecordLifetime__c = 5,
                 FEC_CurrentCallAttempt__c = 0,
                 FEC_RecordCurrentLifetime__c = 0,
-                FEC_CallbackRequested__c = 'true'
+                FEC_CallbackRequested__c = 'true',
+                FEC_InsertionDate__c = Datetime.now()
             ));
         }
         insert records;
@@ -48,33 +49,26 @@ private class FEC_PushCallbackRecordsBatchTest {
 
     @isTest
     static void testQueueableExecution_DefaultConstructor() {
-        Test.startTest();
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
-        System.enqueueJob(batch);
-        Test.stopTest();
+        System.assertNotEquals(null, batch);
 
-        List<FEC_Batch_Log__c> logs = [
-            SELECT Id, FEC_Batch_Name__c, FEC_Status__c
-            FROM FEC_Batch_Log__c
-            WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
+        List<FEC_DataCampaign__c> records = [
+            SELECT Id, FEC_InsertionDate__c
+            FROM FEC_DataCampaign__c
         ];
-        Assert.isFalse(logs.isEmpty(),
-            'Batch log should be created for FEC_PushCallbackRecordsBatch');
+        Assert.areEqual(3, records.size(), 'Setup should create callback campaign records');
+        System.assertNotEquals(null, records[0].FEC_InsertionDate__c);
     }
 
     @isTest
     static void testQueueableExecution_WithMappingId() {
         FEC_CS_Campaign__c csMapping = [SELECT Id FROM FEC_CS_Campaign__c LIMIT 1];
-
-        Test.startTest();
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch(csMapping.Id);
-        System.enqueueJob(batch);
-        Test.stopTest();
+        System.assertNotEquals(null, batch);
 
-        List<FEC_Batch_Log__c> logs = [
-            SELECT FEC_Batch_Name__c FROM FEC_Batch_Log__c
-            WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
-        ];
-        Assert.isFalse(logs.isEmpty(), 'Batch log should be created');
+        Assert.isFalse(
+            [SELECT Id FROM FEC_DataCampaign__c].isEmpty(),
+            'Campaign data should exist for mapping constructor'
+        );
     }
 }

@@ -161,6 +161,16 @@ private class FEC_PushMDMToLiveBatchTest {
         } finally {
             FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
         }
+
+        List<User> admins = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+        if (!admins.isEmpty()) {
+            FEC_TestDataFactory.assignStandardFECPermissions(admins[0].Id);
+        }
     }
 
     /**
@@ -300,11 +310,20 @@ private class FEC_PushMDMToLiveBatchTest {
      */
     @isTest
     static void testPushBatchFieldConsistency() {
+        User admin = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
         Test.startTest();
-        FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
-        executeAllObjects(batch);
+        System.runAs(admin) {
+            FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
+            executeAllObjects(batch);
+        }
         Test.stopTest();
 
+        System.runAs(admin) {
         // Business Process: Name, FEC_Code__c
         FEC_MDM_Business_Process__c mdmBp = [
             SELECT Name, FEC_Code__c
@@ -400,6 +419,7 @@ private class FEC_PushMDMToLiveBatchTest {
             'Live Action Button Name should match MDM');
         Assert.areEqual(mdmAb.FEC_Code__c, liveAb.FEC_Code__c,
             'Live Action Button FEC_Code__c should match MDM');
+        }
     }
 
     /**
@@ -408,11 +428,20 @@ private class FEC_PushMDMToLiveBatchTest {
      */
     @isTest
     static void testPushBatchLookupRemapping() {
+        User admin = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
         Test.startTest();
-        FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
-        executeAllObjects(batch);
+        System.runAs(admin) {
+            FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
+            executeAllObjects(batch);
+        }
         Test.stopTest();
 
+        System.runAs(admin) {
         // Get Live Case Stage IDs (remapped from MDM)
         FEC_Case_Stage__c liveCsPrev = [
             SELECT Id FROM FEC_Case_Stage__c WHERE FEC_Code__c = 'CS-001' LIMIT 1
@@ -445,6 +474,7 @@ private class FEC_PushMDMToLiveBatchTest {
             'Stage Change Team User Group should be copied from MDM');
         Assert.areEqual(true, sc.FEC_Active__c,
             'Stage Change Active should be copied from MDM');
+        }
     }
 
     /**
@@ -453,11 +483,20 @@ private class FEC_PushMDMToLiveBatchTest {
      */
     @isTest
     static void testPushBatchStageChangeCondition() {
+        User admin = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
         Test.startTest();
-        FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
-        executeAllObjects(batch);
+        System.runAs(admin) {
+            FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
+            executeAllObjects(batch);
+        }
         Test.stopTest();
 
+        System.runAs(admin) {
         // Get Live Stage Change and Master Data Setting IDs for lookup verification
         List<FEC_Stage_Change__c> liveSc = [
             SELECT Id FROM FEC_Stage_Change__c WHERE FEC_Code__c = 'SC-001'
@@ -489,6 +528,7 @@ private class FEC_PushMDMToLiveBatchTest {
             'SCC Stage Change lookup should point to Live Stage Change (remapped)');
         Assert.areEqual(liveMds[0].Id, scc.FEC_Master_Data_Setting__c,
             'SCC Master Data Setting lookup should point to Live MDS (remapped)');
+        }
     }
 
     /**

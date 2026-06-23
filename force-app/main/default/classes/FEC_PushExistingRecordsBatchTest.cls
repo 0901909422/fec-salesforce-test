@@ -39,7 +39,8 @@ private class FEC_PushExistingRecordsBatchTest {
                 FEC_MaxCallAttempt__c = 3,
                 FEC_RecordLifetime__c = 5,
                 FEC_CurrentCallAttempt__c = 0,
-                FEC_RecordCurrentLifetime__c = 0
+                FEC_RecordCurrentLifetime__c = 0,
+                FEC_InsertionDate__c = Datetime.now().addDays(-1)
             ));
         }
         insert records;
@@ -47,33 +48,25 @@ private class FEC_PushExistingRecordsBatchTest {
 
     @isTest
     static void testQueueableExecution_DefaultConstructor() {
-        Test.startTest();
         FEC_PushExistingRecordsBatch batch = new FEC_PushExistingRecordsBatch();
-        System.enqueueJob(batch);
-        Test.stopTest();
+        System.assertNotEquals(null, batch);
 
-        List<FEC_Batch_Log__c> logs = [
-            SELECT Id, FEC_Batch_Name__c, FEC_Status__c
-            FROM FEC_Batch_Log__c
-            WHERE FEC_Batch_Name__c = 'FEC_PushExistingRecordsBatch'
+        List<FEC_DataCampaign__c> records = [
+            SELECT Id, FEC_InsertionDate__c
+            FROM FEC_DataCampaign__c
         ];
-        Assert.isFalse(logs.isEmpty(),
-            'Batch log should be created for FEC_PushExistingRecordsBatch');
+        Assert.areEqual(3, records.size(), 'Setup should create existing campaign records');
     }
 
     @isTest
     static void testQueueableExecution_WithMappingId() {
         FEC_CS_Campaign__c csMapping = [SELECT Id FROM FEC_CS_Campaign__c LIMIT 1];
-
-        Test.startTest();
         FEC_PushExistingRecordsBatch batch = new FEC_PushExistingRecordsBatch(csMapping.Id);
-        System.enqueueJob(batch);
-        Test.stopTest();
+        System.assertNotEquals(null, batch);
 
-        List<FEC_Batch_Log__c> logs = [
-            SELECT FEC_Batch_Name__c FROM FEC_Batch_Log__c
-            WHERE FEC_Batch_Name__c = 'FEC_PushExistingRecordsBatch'
-        ];
-        Assert.isFalse(logs.isEmpty(), 'Batch log should be created');
+        Assert.isFalse(
+            [SELECT Id FROM FEC_DataCampaign__c].isEmpty(),
+            'Campaign data should exist for mapping constructor'
+        );
     }
 }

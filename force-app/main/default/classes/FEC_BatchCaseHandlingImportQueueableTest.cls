@@ -241,6 +241,14 @@ private class FEC_BatchCaseHandlingImportQueueableTest {
 
     @IsTest
     static void failBatchImportRecord_marksProcessedWhenAtLeastOneRowSuccess() {
+        User admin = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+        FEC_TestDataFactory.assignPermissionSets(admin.Id, new List<String>{ 'FEC_Batch_Case_Handling' });
+
         Id batchId = insertProcessingBatch('CardReplacementPartialSuccess.xlsx');
         List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>{
             buildFailedRow(),
@@ -248,18 +256,20 @@ private class FEC_BatchCaseHandlingImportQueueableTest {
         };
         rows[1].status = System.Label.FEC_Operation_Success;
 
-        Test.startTest();
-        FEC_BatchCaseHandlingImportService.failBatchImportRecord(
-            batchId,
-            System.Label.FEC_BCH_ImportFailed,
-            rows
-        );
-        Test.stopTest();
+        System.runAs(admin) {
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.failBatchImportRecord(
+                batchId,
+                System.Label.FEC_BCH_ImportFailed,
+                rows
+            );
+            Test.stopTest();
 
-        SObject batchRow = queryBatch(batchId);
-        System.assertEquals('Processed', String.valueOf(batchRow.get('FEC_Status__c')));
-        System.assertEquals(1, Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Success_Records__c'))));
-        System.assertEquals(1, Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Failed_Records__c'))));
+            SObject batchRow = queryBatch(batchId);
+            System.assertEquals('Processed', String.valueOf(batchRow.get('FEC_Status__c')));
+            System.assertEquals(1, Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Success_Records__c'))));
+            System.assertEquals(1, Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Failed_Records__c'))));
+        }
     }
 
     // 02/06/2026 15:45 linhdev - hardening: queueable import nhiều dòng phải tự finalize, không treo Processing
