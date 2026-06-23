@@ -394,36 +394,33 @@ public without sharing class FEC_NotificationService {
         String targetCustomer = FEC_ConstantCommon.TARGET_GROUP_CUSTOMER;
 
         // =========================================================================
-        // 1. Filter Case có Status thay đổi
+        // 1. Collect Case Ids only - DO NOT compare status using Trigger.new
         // =========================================================================
-        List<Case> statusChangedCases = new List<Case>();
         Set<Id> caseIds = new Set<Id>();
 
         for (Case c : newCases) {
-            Case oldCase = oldMap.get(c.Id);
-            if (oldCase == null) continue;
+            if (c == null || c.Id == null) {
+                continue;
+            }
 
-            String oldStatus = oldCase.FEC_Final_Status__c;
-            String newStatus = c.FEC_Final_Status__c;
+            if (!oldMap.containsKey(c.Id)) {
+                continue;
+            }
 
-            if (String.isBlank(oldStatus) || String.isBlank(newStatus)) continue;
-            if (oldStatus == newStatus) continue;
-
-            statusChangedCases.add(c);
             caseIds.add(c.Id);
         }
 
-        System.debug('--- [sendZNSNotification] statusChangedCases=' + statusChangedCases.size());
-        if (statusChangedCases.isEmpty()) {
+        if (caseIds.isEmpty()) {
             return;
         }
 
         // =========================================================================
-        // 2. Query Case detail
+        // 2. Query fresh Case detail
         // =========================================================================
         Map<Id, Case> caseById = new Map<Id, Case>([
             SELECT Id,
                 Status,
+                FEC_Final_Status__c,
                 FEC_Stage_Name__c,
                 FEC_Customer_Type__c,
                 FEC_Product_Type__c,
@@ -439,7 +436,46 @@ public without sharing class FEC_NotificationService {
         ]);
 
         // =========================================================================
-        // 3. Query active Notification Config
+        // 3. Filter Case có Final Status thay đổi using fresh Case
+        // =========================================================================
+        List<Case> statusChangedCases = new List<Case>();
+
+        for (Id caseId : caseIds) {
+            Case oldCase = oldMap.get(caseId);
+            Case freshCase = caseById.get(caseId);
+
+            if (oldCase == null || freshCase == null) {
+                continue;
+            }
+
+            String oldStatus = oldCase.FEC_Final_Status__c;
+            String newStatus = freshCase.FEC_Final_Status__c;
+
+            System.debug(
+                '--- [sendZNSNotification] status compare case=' + caseId +
+                ', oldStatus=' + oldStatus +
+                ', freshNewStatus=' + newStatus
+            );
+
+            if (String.isBlank(oldStatus) || String.isBlank(newStatus)) {
+                continue;
+            }
+
+            if (oldStatus == newStatus) {
+                continue;
+            }
+
+            statusChangedCases.add(freshCase);
+        }
+
+        System.debug('--- [sendZNSNotification] statusChangedCases=' + statusChangedCases.size());
+
+        if (statusChangedCases.isEmpty()) {
+            return;
+        }
+
+        // =========================================================================
+        // 4. Query active Notification Config
         // =========================================================================
         List<FEC_Notification__c> notifications = [
             SELECT Id,
@@ -456,6 +492,7 @@ public without sharing class FEC_NotificationService {
         ];
 
         System.debug('--- [sendZNSNotification] notifications queried=' + notifications.size());
+
         if (notifications.isEmpty()) {
             return;
         }
@@ -470,7 +507,7 @@ public without sharing class FEC_NotificationService {
             loadTemplates(templateChannelsByNotificationId);
 
         // =========================================================================
-        // 4. Chỉ lấy Notification có channel ZNS
+        // 5. Chỉ lấy Notification có channel ZNS
         // =========================================================================
         List<FEC_Notification__c> eligibleNotifications = new List<FEC_Notification__c>();
 
@@ -486,6 +523,7 @@ public without sharing class FEC_NotificationService {
         }
 
         System.debug('--- [sendZNSNotification] eligibleNotifications=' + eligibleNotifications.size());
+
         if (eligibleNotifications.isEmpty()) {
             return;
         }
@@ -493,18 +531,17 @@ public without sharing class FEC_NotificationService {
         List<FEC_Notification_History__c> historiesToInsert = new List<FEC_Notification_History__c>();
 
         // =========================================================================
-        // 5. Loop Case + Notification Config
+        // 6. Loop fresh Case + Notification Config
         // =========================================================================
-        for (Case c : statusChangedCases) {
-            Case oldCase = oldMap.get(c.Id);
-            Case caseDetail = caseById.get(c.Id);
+        for (Case caseDetail : statusChangedCases) {
+            Case oldCase = oldMap.get(caseDetail.Id);
 
             if (oldCase == null || caseDetail == null) {
                 continue;
             }
 
             String oldStatus = oldCase.FEC_Final_Status__c;
-            String newStatus = c.FEC_Final_Status__c;
+            String newStatus = caseDetail.FEC_Final_Status__c;
             String stNameSf = caseDetail.FEC_Stage_Name__c;
 
             String phoneNumber = caseDetail.FEC_Account_or_Contract__r != null
@@ -512,13 +549,13 @@ public without sharing class FEC_NotificationService {
                 : null;
 
             if (String.isBlank(phoneNumber)) {
-                System.debug('--- SKIP ZNS case=' + c.Id + ' missing phoneNumber');
+                System.debug('--- SKIP ZNS case=' + caseDetail.Id + ' missing phoneNumber');
                 continue;
             }
 
             for (FEC_Notification__c n : eligibleNotifications) {
                 // =================================================================
-                // 5.1 Check Current Status -> Changed Status
+                // 6.1 Check Current Status -> Changed Status
                 // =================================================================
                 Boolean currentStatusOk = false;
                 Boolean changedStatusOk = false;
@@ -566,10 +603,11 @@ public without sharing class FEC_NotificationService {
                 }
 
                 Boolean statusTransitionOk = currentStatusOk && changedStatusOk;
+
                 if (!statusTransitionOk) {
                     System.debug(
                         '--- SKIP ZNS notif=' + n.Id +
-                        ' case=' + c.Id +
+                        ' case=' + caseDetail.Id +
                         ' status transition not match. old=' + oldStatus +
                         ', new=' + newStatus +
                         ', configCurrent=' + n.FEC_Current_Status__c +
@@ -579,16 +617,17 @@ public without sharing class FEC_NotificationService {
                 }
 
                 // =================================================================
-                // 5.2 Check Nature of Case
+                // 6.2 Check Nature of Case
                 // =================================================================
                 Boolean natureOk = matchesNatureOfCase(caseDetail, n);
+
                 if (!natureOk) {
-                    System.debug('--- SKIP ZNS notif=' + n.Id + ' case=' + c.Id + ' nature not match');
+                    System.debug('--- SKIP ZNS notif=' + n.Id + ' case=' + caseDetail.Id + ' nature not match');
                     continue;
                 }
 
                 // =================================================================
-                // 5.3 Get ZNS Template
+                // 6.3 Get ZNS Template
                 // =================================================================
                 List<FEC_Notification_Template_Channel__c> templateChannels =
                     templateChannelsByNotificationId.get(n.Id);
@@ -609,24 +648,27 @@ public without sharing class FEC_NotificationService {
                 }
 
                 // =================================================================
-                // 5.4 Send ZNS
+                // 6.4 Send ZNS
                 // =================================================================
                 try {
                     FEC_ZNSNotificationCallout.SendZnsMessageResponseDto res =
                         FEC_ZNSNotificationCallout.callSendZNSMessageByCaseWithoutLogging(
-                            c.Id,
+                            caseDetail.Id,
                             phoneNumber,
                             znsId
                         );
 
                     Boolean isSuccess = res != null && res.Sys != null && res.Sys.Code == 1;
+
                     String errorMessage = isSuccess ? null : (
-                        res != null && res.Sys != null ? res.Sys.Description : 'Empty response from ZNS API'
+                        res != null && res.Sys != null
+                            ? res.Sys.Description
+                            : 'Empty response from ZNS API'
                     );
 
                     historiesToInsert.add(
                         FEC_NotificationHistoryService.buildRow(
-                            c.Id,
+                            caseDetail.Id,
                             n.Id,
                             stNameSf,
                             znsTemplate.Name,
@@ -645,7 +687,7 @@ public without sharing class FEC_NotificationService {
                     );
 
                     System.debug(
-                        '--- ZNS sent. case=' + c.Id +
+                        '--- ZNS sent. case=' + caseDetail.Id +
                         ', notif=' + n.Id +
                         ', template=' + znsId +
                         ', success=' + isSuccess
@@ -653,7 +695,7 @@ public without sharing class FEC_NotificationService {
                 } catch (Exception ex) {
                     historiesToInsert.add(
                         FEC_NotificationHistoryService.buildRow(
-                            c.Id,
+                            caseDetail.Id,
                             n.Id,
                             stNameSf,
                             znsTemplate.Name,
@@ -670,7 +712,7 @@ public without sharing class FEC_NotificationService {
                     );
 
                     System.debug(
-                        '--- ZNS send failed. case=' + c.Id +
+                        '--- ZNS send failed. case=' + caseDetail.Id +
                         ', notif=' + n.Id +
                         ', error=' + ex.getMessage()
                     );
@@ -693,36 +735,33 @@ public without sharing class FEC_NotificationService {
         String targetCustomer = FEC_ConstantCommon.TARGET_GROUP_CUSTOMER;
 
         // =========================================================================
-        // 1. Filter Case có Status thay đổi
+        // 1. Collect Case Ids only - DO NOT compare status using Trigger.new
         // =========================================================================
-        List<Case> statusChangedCases = new List<Case>();
         Set<Id> caseIds = new Set<Id>();
 
         for (Case c : newCases) {
-            Case oldCase = oldMap.get(c.Id);
-            if (oldCase == null) continue;
+            if (c == null || c.Id == null) {
+                continue;
+            }
 
-            String oldStatus = oldCase.FEC_Final_Status__c;
-            String newStatus = c.FEC_Final_Status__c;
+            if (!oldMap.containsKey(c.Id)) {
+                continue;
+            }
 
-            if (String.isBlank(oldStatus) || String.isBlank(newStatus)) continue;
-            if (oldStatus == newStatus) continue;
-
-            statusChangedCases.add(c);
             caseIds.add(c.Id);
         }
 
-        System.debug('--- [sendMobileAppNotification] statusChangedCases=' + statusChangedCases.size());
-        if (statusChangedCases.isEmpty()) {
+        if (caseIds.isEmpty()) {
             return;
         }
 
         // =========================================================================
-        // 2. Query Case detail
+        // 2. Query fresh Case detail
         // =========================================================================
         Map<Id, Case> caseById = new Map<Id, Case>([
             SELECT Id,
                 Status,
+                FEC_Final_Status__c,
                 FEC_Stage_Name__c,
                 FEC_Customer_Type__c,
                 FEC_Product_Type__c,
@@ -738,7 +777,46 @@ public without sharing class FEC_NotificationService {
         ]);
 
         // =========================================================================
-        // 3. Query active Notification Config
+        // 3. Filter Case có Final Status thay đổi using fresh Case
+        // =========================================================================
+        List<Case> statusChangedCases = new List<Case>();
+
+        for (Id caseId : caseIds) {
+            Case oldCase = oldMap.get(caseId);
+            Case freshCase = caseById.get(caseId);
+
+            if (oldCase == null || freshCase == null) {
+                continue;
+            }
+
+            String oldStatus = oldCase.FEC_Final_Status__c;
+            String newStatus = freshCase.FEC_Final_Status__c;
+
+            System.debug(
+                '--- [sendMobileAppNotification] status compare case=' + caseId +
+                ', oldStatus=' + oldStatus +
+                ', freshNewStatus=' + newStatus
+            );
+
+            if (String.isBlank(oldStatus) || String.isBlank(newStatus)) {
+                continue;
+            }
+
+            if (oldStatus == newStatus) {
+                continue;
+            }
+
+            statusChangedCases.add(freshCase);
+        }
+
+        System.debug('--- [sendMobileAppNotification] statusChangedCases=' + statusChangedCases.size());
+
+        if (statusChangedCases.isEmpty()) {
+            return;
+        }
+
+        // =========================================================================
+        // 4. Query active Notification Config
         // =========================================================================
         List<FEC_Notification__c> notifications = [
             SELECT Id,
@@ -755,6 +833,7 @@ public without sharing class FEC_NotificationService {
         ];
 
         System.debug('--- [sendMobileAppNotification] notifications queried=' + notifications.size());
+
         if (notifications.isEmpty()) {
             return;
         }
@@ -769,7 +848,7 @@ public without sharing class FEC_NotificationService {
             loadTemplates(templateChannelsByNotificationId);
 
         // =========================================================================
-        // 4. Chỉ lấy Notification có channel Mobile App
+        // 5. Chỉ lấy Notification có channel Mobile App
         // =========================================================================
         List<FEC_Notification__c> eligibleNotifications = new List<FEC_Notification__c>();
 
@@ -785,6 +864,7 @@ public without sharing class FEC_NotificationService {
         }
 
         System.debug('--- [sendMobileAppNotification] eligibleNotifications=' + eligibleNotifications.size());
+
         if (eligibleNotifications.isEmpty()) {
             return;
         }
@@ -792,18 +872,17 @@ public without sharing class FEC_NotificationService {
         List<FEC_Notification_History__c> historiesToInsert = new List<FEC_Notification_History__c>();
 
         // =========================================================================
-        // 5. Loop Case + Notification Config
+        // 6. Loop fresh Case + Notification Config
         // =========================================================================
-        for (Case c : statusChangedCases) {
-            Case oldCase = oldMap.get(c.Id);
-            Case caseDetail = caseById.get(c.Id);
+        for (Case caseDetail : statusChangedCases) {
+            Case oldCase = oldMap.get(caseDetail.Id);
 
             if (oldCase == null || caseDetail == null) {
                 continue;
             }
 
             String oldStatus = oldCase.FEC_Final_Status__c;
-            String newStatus = c.FEC_Final_Status__c;
+            String newStatus = caseDetail.FEC_Final_Status__c;
             String stNameSf = caseDetail.FEC_Stage_Name__c;
 
             String phoneNumber = caseDetail.FEC_Account_or_Contract__r != null
@@ -815,13 +894,13 @@ public without sharing class FEC_NotificationService {
                 : null;
 
             if (String.isBlank(phoneNumber) || String.isBlank(nationalId)) {
-                System.debug('--- SKIP Mobile App case=' + c.Id + ' missing phoneNumber or nationalId');
+                System.debug('--- SKIP Mobile App case=' + caseDetail.Id + ' missing phoneNumber or nationalId');
                 continue;
             }
 
             for (FEC_Notification__c n : eligibleNotifications) {
                 // =================================================================
-                // 5.1 Check Current Status -> Changed Status
+                // 6.1 Check Current Status -> Changed Status
                 // =================================================================
                 Boolean currentStatusOk = false;
                 Boolean changedStatusOk = false;
@@ -869,10 +948,11 @@ public without sharing class FEC_NotificationService {
                 }
 
                 Boolean statusTransitionOk = currentStatusOk && changedStatusOk;
+
                 if (!statusTransitionOk) {
                     System.debug(
                         '--- SKIP Mobile App notif=' + n.Id +
-                        ' case=' + c.Id +
+                        ' case=' + caseDetail.Id +
                         ' status transition not match. old=' + oldStatus +
                         ', new=' + newStatus +
                         ', configCurrent=' + n.FEC_Current_Status__c +
@@ -882,16 +962,17 @@ public without sharing class FEC_NotificationService {
                 }
 
                 // =================================================================
-                // 5.2 Check Nature of Case
+                // 6.2 Check Nature of Case
                 // =================================================================
                 Boolean natureOk = matchesNatureOfCase(caseDetail, n);
+
                 if (!natureOk) {
-                    System.debug('--- SKIP Mobile App notif=' + n.Id + ' case=' + c.Id + ' nature not match');
+                    System.debug('--- SKIP Mobile App notif=' + n.Id + ' case=' + caseDetail.Id + ' nature not match');
                     continue;
                 }
 
                 // =================================================================
-                // 5.3 Get Mobile App Template
+                // 6.3 Get Mobile App Template
                 // =================================================================
                 List<FEC_Notification_Template_Channel__c> templateChannels =
                     templateChannelsByNotificationId.get(n.Id);
@@ -914,7 +995,7 @@ public without sharing class FEC_NotificationService {
                 String mobileContent = resolveTemplate(mobileAppTemplate.FEC_Body__c, caseDetail);
 
                 // =================================================================
-                // 5.4 Send Mobile App
+                // 6.4 Send Mobile App
                 // =================================================================
                 try {
                     FEC_MobileAppNotificationCallout.SendNotificationResponse res =
@@ -926,13 +1007,16 @@ public without sharing class FEC_NotificationService {
                         );
 
                     Boolean isSuccess = res != null && res.code == '1';
+
                     String errorMessage = isSuccess ? null : (
-                        res != null ? res.description : 'Empty response from Mobile App API'
+                        res != null
+                            ? res.description
+                            : 'Empty response from Mobile App API'
                     );
 
                     historiesToInsert.add(
                         FEC_NotificationHistoryService.buildRow(
-                            c.Id,
+                            caseDetail.Id,
                             n.Id,
                             stNameSf,
                             mobileAppTemplate.Name,
@@ -951,7 +1035,7 @@ public without sharing class FEC_NotificationService {
                     );
 
                     System.debug(
-                        '--- Mobile App notification sent. case=' + c.Id +
+                        '--- Mobile App notification sent. case=' + caseDetail.Id +
                         ', notif=' + n.Id +
                         ', template=' + mobileAppTemplate.Id +
                         ', success=' + isSuccess
@@ -959,7 +1043,7 @@ public without sharing class FEC_NotificationService {
                 } catch (Exception ex) {
                     historiesToInsert.add(
                         FEC_NotificationHistoryService.buildRow(
-                            c.Id,
+                            caseDetail.Id,
                             n.Id,
                             stNameSf,
                             mobileAppTemplate.Name,
@@ -976,7 +1060,7 @@ public without sharing class FEC_NotificationService {
                     );
 
                     System.debug(
-                        '--- Mobile App send failed. case=' + c.Id +
+                        '--- Mobile App send failed. case=' + caseDetail.Id +
                         ', notif=' + n.Id +
                         ', error=' + ex.getMessage()
                     );
@@ -1257,7 +1341,7 @@ public without sharing class FEC_NotificationService {
     /**
      * Thay thế placeholder {{FieldName}} trong template bằng giá trị từ Case
      */
-    private static String resolveTemplate(String template, Case c) {
+    public static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
             // Normalize: convert {{{...}}} → {{...}}

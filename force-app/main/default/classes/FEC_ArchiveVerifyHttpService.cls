@@ -27,7 +27,6 @@ public class FEC_ArchiveVerifyHttpService {
         req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_CASES_ARCHIVE_STATUS);
         req.setMethod('POST');
         req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-        req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
         req.setBody(JSON.serialize(body));
         req.setTimeout(TIMEOUT_MS);
 

@@ -108,7 +108,6 @@ public class FEC_AttachmentExportHttpService {
                 req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_UPLOAD);
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantArchive.API_CONTENT_TYPE_MULTIPART + boundary);
-                req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
                 req.setTimeout(TIMEOUT_MS);
                 req.setBodyAsBlob(bodyBlob);
 
@@ -173,7 +172,6 @@ public class FEC_AttachmentExportHttpService {
                 req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
                 req.setBody(jsonPayload);
                 req.setTimeout(TIMEOUT_MS);
-                req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
 
                 HttpResponse res = new Http().send(req);
                 lastStatus = res.getStatusCode();

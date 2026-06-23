@@ -207,9 +207,10 @@ public without sharing class FEC_NotificationHistoryService {
         if (rows == null || rows.isEmpty()) {
             return;
         }
-        if (!Schema.sObjectType.FEC_Notification_History__c.isCreateable()) {
+        // FECREDIT_CSM_2025_KH-2128: No need to check user permission
+        /*if (!Schema.sObjectType.FEC_Notification_History__c.isCreateable()) {
             return;
-        }
+        }*/
         try {
             insert rows;
         } catch (Exception e) {
