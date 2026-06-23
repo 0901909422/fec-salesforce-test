@@ -77,8 +77,8 @@ public with sharing class FEC_SyncPropertyFromSchemaBatch implements Database.Ba
     public void finish(Database.BatchableContext bc) {
         System.debug('FEC_DEBUG SyncPropertyFromSchema: FINISH batch');
         sendSummaryEmail();
-        // Chain Push to Live batch
-        Database.executeBatch(new FEC_PushMDMToLiveBatch(), 1);
+        // Chain Push to Live batch (record-level scope 200, heap-safe)
+        Database.executeBatch(new FEC_PushMDMToLiveBatch(), 200);
     }
 
     // ══════════════════════════════════════════════════════════════════════

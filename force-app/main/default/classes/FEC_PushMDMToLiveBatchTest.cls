@@ -187,9 +187,36 @@ private class FEC_PushMDMToLiveBatchTest {
             FEC_ObjectConstants.OBJ_MDM_DECISION_RULE,
             FEC_ObjectConstants.OBJ_MDM_DECISION_CONDITION
         };
+        // Mô phỏng framework: với mỗi object, build query (qua start) rồi execute lô record SObject.
         for (String objName : executionOrder) {
-            batch.execute(null, new List<String>{ objName });
+            FEC_PushMDMToLiveBatch b = new FEC_PushMDMToLiveBatch(new List<String>{ objName });
+            Database.QueryLocator ql = b.start(null);
+            List<SObject> recs = Database.query(ql.getQuery());
+            if (!recs.isEmpty()) {
+                b.execute(null, recs);
+            }
         }
+    }
+
+    /**
+     * Test: chạy batch qua framework (start → execute → finish/finalizeRun) để cover
+     * QueryLocator start, chaining/finalize. Test mode chỉ xử lý 1 object (BP), không chain.
+     */
+    @isTest
+    static void testPushBatch_FullLifecycle() {
+        Test.startTest();
+        Database.executeBatch(new FEC_PushMDMToLiveBatch(), 200);
+        Test.stopTest();
+
+        // Object đầu (Business Process) phải được push + Synced
+        FEC_MDM_Business_Process__c bp = [
+            SELECT Process_Change_Status__c FROM FEC_MDM_Business_Process__c
+            WHERE FEC_Code__c = 'BP-001' LIMIT 1
+        ];
+        Assert.areEqual('Synced', bp.Process_Change_Status__c,
+            'BP phải Synced sau khi chạy batch lifecycle');
+        Assert.isTrue([SELECT COUNT() FROM FEC_Business_Process__c WHERE FEC_Code__c = 'BP-001'] > 0,
+            'Live BP phải được tạo');
     }
 
     /**
@@ -488,8 +515,11 @@ private class FEC_PushMDMToLiveBatchTest {
         }
 
         Test.startTest();
-        FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
-        batch.execute(null, new List<String>{ FEC_ObjectConstants.OBJ_MDM_ACTION_BUTTON });
+        FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch(
+            new List<String>{ FEC_ObjectConstants.OBJ_MDM_ACTION_BUTTON }
+        );
+        List<SObject> delRecs = Database.query(batch.start(null).getQuery());
+        batch.execute(null, delRecs);
         Test.stopTest();
 
         // Verify Live Action Button was deleted

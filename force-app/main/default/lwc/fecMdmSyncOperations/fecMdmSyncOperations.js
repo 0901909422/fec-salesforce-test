@@ -26,6 +26,7 @@ import LABEL_COL_STATUS from '@salesforce/label/c.FEC_Col_Status';
 import LABEL_COL_TOTAL_ITEMS from '@salesforce/label/c.FEC_Col_Total_Items';
 import LABEL_COL_PROCESSED_ITEMS from '@salesforce/label/c.FEC_Col_Processed_Items';
 import LABEL_COL_ERROR_COUNT from '@salesforce/label/c.FEC_Col_Error_Count';
+import LABEL_COL_MISMATCH from '@salesforce/label/c.FEC_Col_Mismatch';
 import LABEL_COL_CREATED_DATE from '@salesforce/label/c.FEC_Col_Created_Date';
 import LABEL_NO_BATCH_LOGS from '@salesforce/label/c.FEC_No_Batch_Logs';
 
@@ -33,6 +34,7 @@ import { VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO } from 'c/fecConstants';
 
 const STATUS_SUCCESS = 'Success';
 const STATUS_FAILED = 'Failed';
+const STATUS_RECONCILING = 'Reconciling';
 
 export default class FecMdmSyncOperations extends LightningElement {
     labelTitle = LABEL_TITLE;
@@ -60,6 +62,12 @@ export default class FecMdmSyncOperations extends LightningElement {
         { label: LABEL_COL_PROCESSED_ITEMS, fieldName: 'FEC_Processed_Items__c', type: 'number' },
         { label: LABEL_COL_ERROR_COUNT, fieldName: 'FEC_Error_Count__c', type: 'number' },
         {
+            label: LABEL_COL_MISMATCH,
+            fieldName: 'FEC_Mismatch_Detail__c',
+            type: 'text',
+            wrapText: true
+        },
+        {
             label: LABEL_COL_CREATED_DATE,
             fieldName: 'CreatedDate',
             type: 'date',
@@ -79,7 +87,11 @@ export default class FecMdmSyncOperations extends LightningElement {
                 ...row,
                 _statusClass: row.FEC_Status__c === STATUS_SUCCESS
                     ? 'slds-text-color_success'
-                    : (row.FEC_Status__c === STATUS_FAILED ? 'slds-text-color_error' : 'slds-text-color_weak')
+                    : (row.FEC_Status__c === STATUS_FAILED
+                        ? 'slds-text-color_error'
+                        : (row.FEC_Status__c === STATUS_RECONCILING
+                            ? 'slds-text-color_weak'
+                            : 'slds-text-color_weak'))
             }));
         } else if (error) {
             // eslint-disable-next-line no-console
