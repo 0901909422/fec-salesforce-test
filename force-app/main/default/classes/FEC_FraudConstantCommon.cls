@@ -73,7 +73,7 @@ public with sharing class FEC_FraudConstantCommon {
 
 	public static final String SERVICE_CASE_LINK = '/lightning/r/Case/';
 	public static final String SERVICE_SFT_CASE_LINK = '/lightning/r/Case/';
-	public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'integration_fraud_handling_case_detail';
+	public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'FEC_Fraud_Case_Detail';
 	public static final String SYSTEM_CHANNEL = 'PEGACSM';
     public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
     public static final Integer SUCCESSFULL = 200;
