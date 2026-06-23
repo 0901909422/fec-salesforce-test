@@ -50,6 +50,16 @@ public without sharing class FEC_SecondaryController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
+        FEC_CommonUltils.beginDeferredApiLogging();
+        try {
+            return loadSecondaryInfoInternal(caseId);
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
+        }
+    }
+
+    private static SecondaryInfoDTO loadSecondaryInfoInternal(Id caseId) {
+
         /* ===== LOAD CASE ===== */
         Case c = [
             SELECT Id, FEC_Account_or_Contract__c
