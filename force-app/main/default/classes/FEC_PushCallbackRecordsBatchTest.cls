@@ -41,7 +41,7 @@ private class FEC_PushCallbackRecordsBatchTest {
                 FEC_CurrentCallAttempt__c = 0,
                 FEC_RecordCurrentLifetime__c = 0,
                 FEC_CallbackRequested__c = 'true',
-                FEC_InsertionDate__c = Datetime.now()
+                FEC_InsertionDate__c = DateTime.now()
             ));
         }
         insert records;
@@ -52,9 +52,10 @@ private class FEC_PushCallbackRecordsBatchTest {
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
         System.assertNotEquals(null, batch);
 
-        List<FEC_DataCampaign__c> records = [
-            SELECT Id, FEC_InsertionDate__c
-            FROM FEC_DataCampaign__c
+        List<FEC_Batch_Log__c> logs = [
+            SELECT Id, FEC_Batch_Name__c, FEC_Status__c, FEC_Processed_Items__c, FEC_Error_Count__c
+            FROM FEC_Batch_Log__c
+            WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
         ];
         Assert.areEqual(3, records.size(), 'Setup should create callback campaign records');
         System.assertNotEquals(null, records[0].FEC_InsertionDate__c);
@@ -66,9 +67,29 @@ private class FEC_PushCallbackRecordsBatchTest {
         FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch(csMapping.Id);
         System.assertNotEquals(null, batch);
 
-        Assert.isFalse(
-            [SELECT Id FROM FEC_DataCampaign__c].isEmpty(),
-            'Campaign data should exist for mapping constructor'
-        );
+        List<FEC_Batch_Log__c> logs = [
+            SELECT FEC_Batch_Name__c, FEC_Status__c
+            FROM FEC_Batch_Log__c
+            WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
+        ];
+        Assert.isFalse(logs.isEmpty(), 'Batch log should be created');
+    }
+
+    @isTest
+    static void testQueueableExecution_NoMatchingRecords() {
+        // Delete all records so cursor returns 0 — exercises early return path
+        delete [SELECT Id FROM FEC_DataCampaign__c];
+
+        Test.startTest();
+        FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch();
+        System.enqueueJob(batch);
+        Test.stopTest();
+
+        List<FEC_Batch_Log__c> logs = [
+            SELECT FEC_Batch_Name__c, FEC_Status__c
+            FROM FEC_Batch_Log__c
+            WHERE FEC_Batch_Name__c = 'FEC_PushCallbackRecordsBatch'
+        ];
+        Assert.isFalse(logs.isEmpty(), 'Batch log should be created even with no records');
     }
 }
