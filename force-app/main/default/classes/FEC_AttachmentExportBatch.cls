@@ -6,14 +6,15 @@
  * nhưng Attachment_Status còn null (chưa xử lý attachment).
  *
  * Per case:
- *   1. Query ContentDocumentLink → ContentVersion
- *   2. Presign → Upload từng file lên S3
+ *   1. Query ContentDocumentLink → ContentVersion (chỉ metadata)
+ *   2. Upload file lên Java theo từng chunk nhỏ (1-2 file/lần) → 1 case nhiều lần upload
  *   3. POST metadata lên Java /attachments/batch
  *   4. Update FEC_Attachment_Status__c = 'Completed'
  *
  * Batch size = 1 bắt buộc:
- *   Mỗi case có N file → N×2 callout (presign + PUT) + 1 POST
- *   Giới hạn 100 callout/transaction → size=1 an toàn cho ~49 file/case
+ *   Mỗi case có N file → ceil(N/chunkSize) callout upload + 1 POST
+ *   Với chunkSize=2, ~49 file/case → ~25 upload + 1 POST = 26 callout (< 100)
+ *   Chunk nhỏ giúp peak heap chỉ bằng vài file thay vì toàn bộ file của case.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 public class FEC_AttachmentExportBatch
@@ -54,21 +55,32 @@ public class FEC_AttachmentExportBatch
         // Phân loại Case nào thành công upload S3, Case nào lỗi
         List<Case> casesToMarkCompleted = new List<Case>();
         List<Case> casesToMarkFailed    = new List<Case>();
-        // ── [1] Upload files lên Java API cho từng Case ───────────────────
+        // ── [1] Upload files lên Java API cho từng Case ───processAttachments ────────────────
         for (Case c : cases) {
             try {
                 // Reset cho mỗi case
                 List<Map<String, Object>> tempAttachmentResponses = new List<Map<String, Object>>();
 
-                // Query tất cả attachments của case (chứa filename, contentType, blobData)
+                // Chỉ lấy METADATA (không load blob) để heap nhẹ
                 List<Map<String, Object>> attachments = FEC_AttachmentExportHttpService.processAttachments(c.Id);
-                if (!attachments.isEmpty()) {
-                    // Gọi 1 lần duy nhất: gửi caseId + tất cả files qua multipart/form-data
-                    // Giống Postman: caseId (Text) + files (File[])
+
+                // Gửi theo từng chunk nhỏ (1-2 file/lần) → mỗi lần chỉ giữ blob
+                // của vài file trong heap. 1 case có thể có nhiều lần upload.
+                Integer chunkSize = FEC_ConstantArchive.ATTACHMENT_UPLOAD_CHUNK_SIZE;
+                for (Integer i = 0; i < attachments.size(); i += chunkSize) {
+                    Integer endIdx = Math.min(i + chunkSize, attachments.size());
+                    List<Map<String, Object>> chunk = new List<Map<String, Object>>();
+                    for (Integer j = i; j < endIdx; j++) {
+                        chunk.add(attachments[j]);
+                    }
+
+                    // Load blob cho riêng chunk này rồi upload
+                    FEC_AttachmentExportHttpService.loadBlobs(chunk);
                     String uploadResponse = FEC_AttachmentExportHttpService.postAttachmentFiles(
                         String.valueOf(c.FEC_ID_Search__c),
-                        attachments
+                        chunk
                     );
+
                     // Parse response để lấy uploadedFiles metadata
                     Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(uploadResponse);
                     Map<String, Object> data = (Map<String, Object>) responseMap.get('data');
@@ -81,6 +93,14 @@ public class FEC_AttachmentExportBatch
                             's3Key'    => fileInfo.get('s3Key'),
                             'fileSize' => fileInfo.get('fileSize')
                         });
+                    }
+
+                    // QUAN TRỌNG (fix heap): chunk chứa THAM CHIẾU tới chính map
+                    // trong `attachments`, nên blobData vừa load vẫn bị `attachments`
+                    // giữ lại sau khi upload xong → blob của mọi chunk cộng dồn trong
+                    // heap. Gỡ blobData ra để GC thu hồi ngay sau mỗi lần upload.
+                    for (Map<String, Object> m : chunk) {
+                        m.remove('blobData');
                     }
                 }
 
