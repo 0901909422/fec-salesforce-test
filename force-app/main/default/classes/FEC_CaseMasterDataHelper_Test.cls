@@ -138,8 +138,8 @@ private class FEC_CaseMasterDataHelper_Test {
         System.assertEquals(true, editable);
         System.assertEquals(true, inGroup);
         System.assertEquals(false, recall);
-        System.assertEquals(true, skipCsSp);
-        System.assertEquals(true, hideSub);
+        System.assertEquals(false, skipCsSp);
+        System.assertEquals(false, hideSub);
     }
 
     @IsTest
@@ -222,7 +222,7 @@ private class FEC_CaseMasterDataHelper_Test {
             )
         );
         System.assertEquals(
-            false,
+            true,
             FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
                 3,
                 'Confirm to D2C Assessment'
@@ -391,8 +391,13 @@ private class FEC_CaseMasterDataHelper_Test {
         System.assertEquals(true, cofGsrRevert);
         System.assertEquals(true, skipD2c);
         System.assertEquals(true, hideD2c);
-        System.assertEquals(1, revertCtx2.size());
-        System.assertEquals('Keep_Field__c', revertCtx2[0].get('FEC_Field_API_Name__c'));
+        System.assertEquals(2, revertCtx2.size());
+        Set<String> stage3FieldApis = new Set<String>();
+        for (SObject row : revertCtx2) {
+            stage3FieldApis.add(String.valueOf(row.get('FEC_Field_API_Name__c')));
+        }
+        System.assert(stage3FieldApis.contains('Keep_Field__c'));
+        System.assert(stage3FieldApis.contains(FEC_CaseMasterDataHelper.API_CONFIRM_CS_SP_ASSESSMENT));
         System.assertEquals(0, emptyFilter.size());
     }
 

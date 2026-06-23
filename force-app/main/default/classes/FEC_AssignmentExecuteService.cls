@@ -228,7 +228,7 @@ public without sharing class FEC_AssignmentExecuteService {
         /*
          * 1. Direct user match
          */
-        if (assignmentValues.contains(currentUser.Id)) {
+        if (assignmentValues.contains(String.valueOf(currentUser.Id))) {
             return true;
         }
         
@@ -274,8 +274,9 @@ public without sharing class FEC_AssignmentExecuteService {
             return values;
         }
         
-        // tungnm37 fix: split bằng ',' - delimiter chuẩn
-        for (String value : assignmentUsers.split(',')) {
+        // tungnm37 fix: split bằng ',' hoặc ';' — FEC_Assignment_Users__c có thể dùng cả hai delimiter
+        String normalized = assignmentUsers.replace(';', ',');
+        for (String value : normalized.split(',')) {
             if (!String.isBlank(value)) {
                 values.add(value.trim());
             }

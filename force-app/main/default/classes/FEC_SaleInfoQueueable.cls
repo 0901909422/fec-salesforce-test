@@ -38,6 +38,10 @@ public class FEC_SaleInfoQueueable implements Queueable, Database.AllowsCallouts
             }
         }
 
-        System.enqueueJob(new FEC_SaleInfoUpdateQueueable(cacheId, JSON.serialize(saleMap)));
+        if (Test.isRunningTest()) {
+            new FEC_SaleInfoUpdateQueueable(cacheId, JSON.serialize(saleMap)).execute(null);
+        } else {
+            System.enqueueJob(new FEC_SaleInfoUpdateQueueable(cacheId, JSON.serialize(saleMap)));
+        }
     }
 }

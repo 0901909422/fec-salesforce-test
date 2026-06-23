@@ -3,18 +3,18 @@ private class FEC_EmailMessageTriggerHandler_Test {
 
     @TestSetup
     static void setupData() {
-        // 1. Tạo Customer Case (Parent)
         Id customerRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-            .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME).getRecordTypeId();
-        
+            .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)?.getRecordTypeId();
+
         Case parentCase = new Case(
             Subject = 'Parent Case',
-            RecordTypeId = customerRtId,
             Status = 'Open'
         );
+        if (customerRtId != null) {
+            parentCase.RecordTypeId = customerRtId;
+        }
         insert parentCase;
 
-        // 2. Tạo Interaction Case (Child)
         Case childCase = new Case(
             Subject = 'Interaction Case',
             ParentId = parentCase.Id,
