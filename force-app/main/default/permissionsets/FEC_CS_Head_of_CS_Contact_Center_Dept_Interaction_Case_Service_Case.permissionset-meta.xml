@@ -3082,6 +3082,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Customer_Request_1__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Data_Sync_Error__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -3313,6 +3318,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Insurance_Request_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Insurance_Request_Type_1__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
