@@ -267,6 +267,10 @@ public class FEC_CaseExportBatch
                     continue;
                 }
 
+                if (!fieldDesc.isAccessible()) {
+                    continue;
+                }
+
                 List<Schema.SObjectType> referenceTo = fieldDesc.getReferenceTo();
                 if (referenceTo == null || referenceTo.isEmpty()) {
                     continue;
@@ -343,6 +347,10 @@ public class FEC_CaseExportBatch
             Schema.DescribeFieldResult fieldDesc = caseFields.get(fieldName).getDescribe();
 
             if (fieldDesc.getType() != Schema.DisplayType.REFERENCE) {
+                continue;
+            }
+
+            if (!fieldDesc.isAccessible()) {
                 continue;
             }
 
