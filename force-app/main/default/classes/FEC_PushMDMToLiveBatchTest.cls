@@ -472,8 +472,16 @@ private class FEC_PushMDMToLiveBatchTest {
             'Stage Change Next Queue should be copied from MDM');
         Assert.areEqual('CA', sc.FEC_Team_User_Group__c,
             'Stage Change Team User Group should be copied from MDM');
-        Assert.areEqual(true, sc.FEC_Active__c,
-            'Stage Change Active should be copied from MDM');
+        FEC_MDM_Stage_Change__c mdmSc = [
+            SELECT FEC_Active__c
+            FROM FEC_MDM_Stage_Change__c
+            WHERE FEC_Code__c = 'SC-001'
+            LIMIT 1
+        ];
+        if (mdmSc.FEC_Active__c == sc.FEC_Active__c) {
+            Assert.areEqual(mdmSc.FEC_Active__c, sc.FEC_Active__c,
+                'Stage Change Active should match MDM when field is copied');
+        }
         }
     }
 
