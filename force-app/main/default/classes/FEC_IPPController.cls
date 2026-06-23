@@ -185,7 +185,7 @@ public with sharing class FEC_IPPController {
         return FEC_CommonUltils.parseDate(ipp.IPPStartDate);
     }
 
-    // Xóa IPP cũ của customer rồi insert mới từ API, cập nhật dto.Id cho LWC.
+    // Khớp IPP theo RecordNo+Plan: update giữ Id (FEC_IPP_To_Close__c), insert mới; không xóa bản ghi cũ.
     private static void saveIPPRecordsToDatabase(String caseId, List<IPPRecordDTO> dtos) {
         if (dtos == null || dtos.isEmpty()) {
             return;
@@ -196,48 +196,71 @@ public with sharing class FEC_IPPController {
             return;
         }
 
-        try {
-            List<FEC_IPP__c> existing = [
-                SELECT Id FROM FEC_IPP__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-            ];
-            if (!existing.isEmpty()) {
-                delete existing;
-            }
-        } catch (Exception e) {
-            System.debug('FEC_IPPController.saveIPPRecordsToDatabase delete error: ' + e.getMessage());
+        Map<String, FEC_IPP__c> existingByKey = new Map<String, FEC_IPP__c>();
+        for (FEC_IPP__c rec : [
+            SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c
+            FROM FEC_IPP__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+        ]) {
+            existingByKey.put(buildIppMatchKey(rec.FEC_IPP_Record_No__c, rec.FEC_IPP_Plan__c), rec);
         }
 
-        List<FEC_IPP__c> toInsertList = new List<FEC_IPP__c>();
+        List<FEC_IPP__c> toInsert = new List<FEC_IPP__c>();
+        List<FEC_IPP__c> toUpdate = new List<FEC_IPP__c>();
+        List<FEC_IPP__c> dtoRecords = new List<FEC_IPP__c>();
+
         for (IPPRecordDTO dto : dtos) {
-            FEC_IPP__c rec = new FEC_IPP__c();
-            rec.FEC_Customer_History__c = customerHistoryId;
-            rec.FEC_IPP_Record_No__c = dto.recordNo;
-            rec.FEC_IPP_Plan__c = dto.planNumber;
-            rec.FEC_IPP_Open_Date__c = dto.openDate;
-            rec.FEC_IPP_First_Due_Date__c = dto.firstDueDate;
-            rec.FEC_IPP_Mature_Date__c = dto.matureDate;
-            rec.FEC_IPP_Balance__c = dto.ippBalance;
-            rec.FEC_IPP_Current_Balance__c = dto.currentBalance;
-            rec.FEC_IPP_Interest_Rate__c = dto.interestRate;
-            rec.FEC_IPP_Term__c = dto.ippTerm;
-            rec.FEC_IPP_Current_Term__c = dto.currentTerm;
-            // FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c
-            // là Formula hoặc Roll-Up Summary → không gán khi insert
-            toInsertList.add(rec);
+            String key = buildIppMatchKey(dto.recordNo, dto.planNumber);
+            FEC_IPP__c rec = existingByKey.containsKey(key)
+                ? existingByKey.get(key)
+                : new FEC_IPP__c(FEC_Customer_History__c = customerHistoryId);
+            applyDtoToIppRecord(rec, dto);
+            dtoRecords.add(rec);
+            if (rec.Id == null) {
+                toInsert.add(rec);
+            } else {
+                toUpdate.add(rec);
+            }
         }
 
         try {
-            insert toInsertList;
+            if (!toUpdate.isEmpty()) {
+                update toUpdate;
+            }
+            if (!toInsert.isEmpty()) {
+                insert toInsert;
+            }
             for (Integer i = 0; i < dtos.size(); i++) {
-                if (i < toInsertList.size() && toInsertList[i].Id != null) {
-                    dtos[i].Id = toInsertList[i].Id;
+                if (i < dtoRecords.size() && dtoRecords[i].Id != null) {
+                    dtos[i].Id = dtoRecords[i].Id;
                 }
             }
         } catch (Exception e) {
             System.debug('FEC_IPPController.saveIPPRecordsToDatabase error: ' + e.getMessage());
             System.debug(e.getStackTraceString());
         }
+    }
+
+    private static String buildIppMatchKey(String recordNo, String planNumber) {
+        String rn = recordNo != null ? recordNo.trim() : '';
+        String plan = planNumber != null ? planNumber.trim() : '';
+        if (String.isBlank(plan)) {
+            plan = HYPHEN;
+        }
+        return rn + '_' + plan;
+    }
+
+    private static void applyDtoToIppRecord(FEC_IPP__c rec, IPPRecordDTO dto) {
+        rec.FEC_IPP_Record_No__c = dto.recordNo;
+        rec.FEC_IPP_Plan__c = dto.planNumber;
+        rec.FEC_IPP_Open_Date__c = dto.openDate;
+        rec.FEC_IPP_First_Due_Date__c = dto.firstDueDate;
+        rec.FEC_IPP_Mature_Date__c = dto.matureDate;
+        rec.FEC_IPP_Balance__c = dto.ippBalance;
+        rec.FEC_IPP_Current_Balance__c = dto.currentBalance;
+        rec.FEC_IPP_Interest_Rate__c = dto.interestRate;
+        rec.FEC_IPP_Term__c = dto.ippTerm;
+        rec.FEC_IPP_Current_Term__c = dto.currentTerm;
     }
 
     private static Id getCustomerHistoryIdFromCase(String caseId) {

@@ -443,6 +443,60 @@ private class FEC_CaseTriggerHandler_Test {
     }
 
     @IsTest
+    static void testBeforeInsert_bulkCasesGetUniqueSequentialIds() {
+        List<Case> rows = new List<Case>();
+        for (Integer i = 0; i < 3; i++) {
+            rows.add(new Case(
+                Subject = 'Bulk Case ID ' + i,
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN
+            ));
+        }
+
+        Test.startTest();
+        insert rows;
+        Test.stopTest();
+
+        Set<String> generatedIds = new Set<String>();
+        String sharedPrefix = null;
+        Long previousNumber = null;
+
+        for (Case row : [
+            SELECT FEC_ID_Search__c
+            FROM Case
+            WHERE Id IN :rows
+            ORDER BY FEC_ID_Search__c
+        ]) {
+            System.assertNotEquals(null, row.FEC_ID_Search__c);
+            System.assert(!generatedIds.contains(row.FEC_ID_Search__c), 'FEC_ID_Search__c must be unique.');
+            generatedIds.add(row.FEC_ID_Search__c);
+
+            Integer delimIdx = row.FEC_ID_Search__c.lastIndexOf(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER);
+            System.assert(delimIdx > 0, 'FEC_ID_Search__c must contain delimiter.');
+
+            String prefix = row.FEC_ID_Search__c.substring(0, delimIdx);
+            String numberPart = row.FEC_ID_Search__c.substring(
+                delimIdx + FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER.length()
+            );
+            System.assert(numberPart.isNumeric(), 'Sequence part must be numeric.');
+
+            if (sharedPrefix == null) {
+                sharedPrefix = prefix;
+            } else {
+                System.assertEquals(sharedPrefix, prefix, 'Bulk insert should share the same prefix.');
+            }
+
+            Long currentNumber = Long.valueOf(numberPart);
+            if (previousNumber != null) {
+                System.assert(
+                    currentNumber > previousNumber,
+                    'Allocated numbers should increase across bulk insert.'
+                );
+            }
+            previousNumber = currentNumber;
+        }
+    }
+
+    @IsTest
     static void testEmail2CaseBeforeInsert_setsInternalChannel() {
         Id rtId = interactionRecordTypeId();
         if (rtId == null) {
