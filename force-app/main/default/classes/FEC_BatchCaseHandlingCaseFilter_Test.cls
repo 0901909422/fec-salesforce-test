@@ -556,6 +556,11 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         }
     }
 
+    /**
+     * Tạo Routing assignment để rollup FEC_Assignment_Count__c > 0.
+     * Không dùng login user làm FEC_Assignment_Owner__c — trigger sẽ sync UserId vào FEC_Assignment_Users__c
+     * và làm test nhánh Owner/Queue owner bị nhiễu bởi nhánh FEC_Assignment_Users__c LIKE UserId.
+     */
     private static void insertRoutingAssignment(Id caseId) {
         String status;
         for (Schema.PicklistEntry entry :
@@ -565,13 +570,24 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
                 break;
             }
         }
-        insert new FEC_Assignment__c(
+
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+
+        FEC_Assignment__c assignment = new FEC_Assignment__c(
             FEC_Case__c = caseId,
             FEC_Assignment_Name__c = 'BCH Filter Assignment ' + String.valueOf(System.currentTimeMillis()),
             FEC_Assignment_Status__c = status,
-            FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-            FEC_Assignment_Owner__c = UserInfo.getUserId()
+            FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
         );
+        if (!otherUsers.isEmpty()) {
+            assignment.FEC_Assignment_Owner__c = otherUsers[0].Id;
+        }
+        insert assignment;
     }
 
     /**
