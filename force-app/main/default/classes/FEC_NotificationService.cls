@@ -1341,7 +1341,7 @@ public without sharing class FEC_NotificationService {
     /**
      * Thay thế placeholder {{FieldName}} trong template bằng giá trị từ Case
      */
-    private static String resolveTemplate(String template, Case c) {
+    public static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
             // Normalize: convert {{{...}}} → {{...}}

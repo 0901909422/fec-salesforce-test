@@ -83,9 +83,24 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   public static void processNotification(List<FEC_Routing_Action_History__c> newRecords) {
-    // Nếu đã ở async context rồi thì không gọi @future nữa.
+    // Nếu đã ở async context rồi (Queueable/Batch/Future):
+    // - Không gọi lại @future được (future method không được gọi từ context async khác).
+    // - Gọi processNotificationEmails() trực tiếp tại đây vẫn đang nằm trong Trigger context
+    //   (Trigger.isExecuting), nên callout THẬT (ZNS, Mobile App) sẽ bị Salesforce chặn:
+    //   "Callout from triggers are currently not supported". processZnsNotification/
+    //   processMobileAppNotification có try-catch nên sẽ không crash, nhưng notification đó
+    //   sẽ bị ghi log FAIL (không gửi được) — chỉ Email là an toàn vì không tính là callout.
+    // => Ưu tiên enqueue 1 Queueable job MỚI để thoát hẳn khỏi Trigger context (callout hoạt động
+    //    bình thường trong transaction riêng của job đó). Enqueue bị giới hạn tối đa 1 job mới
+    //    trong 1 Queueable/Batch/Future context đang chạy nên PHẢI check quota trước; nếu hết quota
+    //    thì fallback gọi trực tiếp để KHÔNG làm crash job cha (VD: FEC_BatchCaseHandlingImportQueueable).
     if (System.isFuture() || System.isQueueable() || System.isBatch()) {
-        System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newRecords));
+        if (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+            System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newRecords));
+        } else {
+            System.debug(LoggingLevel.WARN, '--- [processNotification] Hết quota Queueable job, xử lý trực tiếp. ZNS/Mobile App có thể bị log FAIL do callout-from-trigger, Email vẫn gửi bình thường.');
+            processNotificationEmails(newRecords);
+        }
         return;
     }
 
@@ -97,12 +112,12 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
     
     if (!routingHistoryIds.isEmpty()) {
-      processNotificationEmailsAsync(routingHistoryIds);
+      processNotificationAsync(routingHistoryIds);
     }
   }
 
   @future(callout=true)
-  public static void processNotificationEmailsAsync(List<Id> routingHistoryIds) {
+  public static void processNotificationAsync(List<Id> routingHistoryIds) {
       if (routingHistoryIds == null || routingHistoryIds.isEmpty()) {
           return;
       }
@@ -144,7 +159,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
     System.debug('--- [processNotificationEmails] senderEmail: ' + senderEmail);
 
-      // 2. Query Case - bổ sung Primary Phone để gửi ZNS
+      // 2. Query Case - bổ sung Primary Phone để gửi ZNS và National ID để gửi MobileApp
       Map<Id, Case> caseMap = new Map<Id, Case>([
           SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c,
                 FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c,
@@ -153,15 +168,17 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
                 FEC_Account_or_Contract__r.FEC_Customer_Type__c,
                 FEC_Account_or_Contract__r.FEC_Email__c,
                 FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+                FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
                 FEC_Interaction__r.FEC_Interaction_Email__c,
                 FEC_Case_Email__c
           FROM Case WHERE Id IN :caseIds
       ]);
 
-      // 3. Query Notification Template Channel cho CẢ Email và ZNS
+      // 3. Query Notification Template Channel cho CẢ Email, ZNS và Mobile App
       Set<String> validChannelNames = new Set<String>{
           FEC_ConstantCommon.EMAIL,
-          FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS
+          FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS,
+          FEC_ConstantCommon.NOTIFICATION_CHANNEL_MOBILE_APP
       };
       List<FEC_Notification_Template_Channel__c> activeChannels = [
           SELECT FEC_Notification_Template__c, FEC_Notification_Channel__c, FEC_Notification_Channel__r.Name,
@@ -243,7 +260,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       List<FEC_Notification.RoutingEmailHistoryInput> routingHistories = new List<FEC_Notification.RoutingEmailHistoryInput>();
 
       // 6. Danh sách log cho ZNS (ZNS gửi trực tiếp trong loop, không gửi bulk như Email)
-      List<FEC_Notification_History__c> znsHistoriesToInsert = new List<FEC_Notification_History__c>();
+      List<FEC_Notification_History__c> historiesToInsert = new List<FEC_Notification_History__c>();
 
       for (FEC_Routing_Action_History__c history : historyToChannelsMap.keySet()) {
           Case relatedCase = caseMap.get(history.FEC_Case__c);
@@ -255,92 +272,14 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
               if (channelName == FEC_ConstantCommon.NOTIFICATION_CHANNEL_ZNS) {
                   // ===================== AUTO ZNS =====================
-                  String phoneNumber = relatedCase.FEC_Account_or_Contract__r?.FEC_Primary_Phone__c;
-                  Boolean templateActive = template != null && template.FEC_Active__c == true;
-                  String znsTemplateId = template != null ? template.FEC_Subject_Line__c : null; // FEC_Subject_Line__c lưu Template ID của ZNS
-
-                  if (String.isBlank(phoneNumber) || template == null || !templateActive || String.isBlank(znsTemplateId)) {
-                      System.debug('--- [processNotificationEmails] SKIP ZNS. history=' + history.Id + ', missing phone/template');
-                      continue;
-                  }
-
-                  try {
-                      FEC_ZNSNotificationCallout.SendZnsMessageResponseDto res =
-                          FEC_ZNSNotificationCallout.callSendZNSMessageByCaseWithoutLogging(relatedCase.Id, phoneNumber, znsTemplateId);
-
-                      Boolean isSuccess = res != null && res.Sys != null && res.Sys.Code == 1;
-                      String errorMessage = isSuccess ? null : (res != null && res.Sys != null ? res.Sys.Description : 'Empty response from ZNS API');
-
-                      znsHistoriesToInsert.add(
-                          FEC_NotificationHistoryService.buildRow(
-                              relatedCase.Id,
-                              matchedNotification.Id,
-                              relatedCase.FEC_Stage_Name__c,
-                              template.Name,
-                              matchedNotification.Name,
-                              channelName,
-                              matchedNotification.FEC_Target_Group__c,
-                              FEC_NotificationHistoryService.SEND_TYPE_AUTO,
-                              isSuccess ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
-                              errorMessage,
-                              FEC_NotificationHistoryService.SEND_USER_SYSTEM,
-                              null,
-                              System.now()
-                          )
-                      );
-                  } catch (Exception ex) {
-                      znsHistoriesToInsert.add(
-                          FEC_NotificationHistoryService.buildRow(
-                              relatedCase.Id,
-                              matchedNotification.Id,
-                              relatedCase.FEC_Stage_Name__c,
-                              template.Name,
-                              matchedNotification.Name,
-                              channelName,
-                              matchedNotification.FEC_Target_Group__c,
-                              FEC_NotificationHistoryService.SEND_TYPE_AUTO,
-                              FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
-                              ex.getMessage(),
-                              FEC_NotificationHistoryService.SEND_USER_SYSTEM,
-                              null,
-                              System.now()
-                          )
-                      );
-                  }
-
-              } else {
-                  // ===================== AUTO EMAIL (logic cũ, giữ nguyên) =====================
-                  String targetEmailAddress = null;
-                  String accType = relatedCase.FEC_Account_or_Contract__r?.FEC_Customer_Type__c;
-                  if (accType == FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER) {
-                      targetEmailAddress = relatedCase.FEC_Account_or_Contract__r?.FEC_Email__c;
-                  } else {
-                      targetEmailAddress = String.isNotBlank(relatedCase.FEC_Interaction__r?.FEC_Interaction_Email__c)
-                          ? relatedCase.FEC_Interaction__r.FEC_Interaction_Email__c
-                          : relatedCase.FEC_Case_Email__c;
-                  }
-
-                  if (String.isNotBlank(targetEmailAddress) && template != null) {
-                      listEmailsToProcess.add(new FEC_Notification.EmailInfo(
-                          relatedCase.Id,
-                          targetEmailAddress,
-                          String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
-                          template.FEC_Enhanced_Letterhead__r?.FEC_Header__c,
-                          template.FEC_Body__c,
-                          template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c,
-                          template.Id
-                      ));
-
-                      FEC_Notification.RoutingEmailHistoryInput hi = new FEC_Notification.RoutingEmailHistoryInput();
-                      hi.caseId = relatedCase.Id;
-                      hi.notificationRuleId = matchedNotification.Id;
-                      hi.stageName = relatedCase.FEC_Stage_Name__c;
-                      hi.templateDisplayName = template.Name;
-                      hi.channelName = String.isNotBlank(channelName) ? channelName : FEC_ConstantCommon.EMAIL;
-                      hi.targetGroup = matchedNotification.FEC_Target_Group__c;
-                      hi.notificationRuleName = matchedNotification.Name;
-                      routingHistories.add(hi);
-                  }
+                  processZnsNotification(history, relatedCase, matchedNotification, template, channelName, historiesToInsert);
+              } else if (channelName == FEC_ConstantCommon.NOTIFICATION_CHANNEL_MOBILE_APP) {
+                  // ===================== AUTO MOBILE APP ===============
+                  processMobileAppNotification(history, relatedCase, matchedNotification, template, channelName, historiesToInsert);
+              } else
+              {
+                  // ===================== AUTO EMAIL =====================
+                  processEmailNotification(relatedCase, matchedNotification, template, channelName, listEmailsToProcess, routingHistories);
               }
           }
       }
@@ -350,10 +289,221 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
           FEC_Notification.executeSendEmailsBulk(listEmailsToProcess, senderEmail, routingHistories);
       }
 
-      // 8. Ghi log lịch sử cho ZNS
+      // 8. Ghi log lịch sử cho ZNS và Mobile App
       FEC_ZNSNotificationCallout.writeLogSendNoti();
-      if (!znsHistoriesToInsert.isEmpty()) {
-          FEC_NotificationHistoryService.insertRows(znsHistoriesToInsert);
+      FEC_MobileAppNotificationCallout.writeLogSendNoti();
+      if (!historiesToInsert.isEmpty()) {
+          FEC_NotificationHistoryService.insertRows(historiesToInsert);
+      }
+  }
+
+  /**
+   * Xử lý gửi thông báo qua kênh ZNS cho 1 cặp (history, case, notification, template) đã match.
+   * Khác với Email, ZNS được gửi (callout) ngay trong vòng lặp, không gửi bulk.
+   * Sau khi gửi (thành công hoặc lỗi), build 1 dòng log và add vào znsHistoriesToInsert để insert sau.
+   *
+   * @param history              Routing Action History đang xử lý (chỉ dùng để log Id khi SKIP)
+   * @param relatedCase          Case liên quan, dùng lấy số điện thoại (Primary Phone) và Stage Name
+   * @param matchedNotification  Notification rule đã match với history/case
+   * @param template             Template ZNS tương ứng (FEC_Subject_Line__c lưu Template ID của ZNS)
+   * @param channelName          Tên channel (ZNS), dùng để ghi log
+   * @param znsHistoriesToInsert List log ZNS (output) - method này append kết quả gửi vào list này
+   */
+  private static void processZnsNotification(
+    FEC_Routing_Action_History__c history,
+    Case relatedCase,
+    FEC_Notification__c matchedNotification,
+    FEC_Template__c template,
+    String channelName,
+    List<FEC_Notification_History__c> znsHistoriesToInsert
+  ) {
+      String phoneNumber = relatedCase.FEC_Account_or_Contract__r?.FEC_Primary_Phone__c;
+      Boolean templateActive = template != null && template.FEC_Active__c == true;
+      String znsTemplateId = template != null ? template.FEC_Subject_Line__c : null; // FEC_Subject_Line__c lưu Template ID của ZNS
+
+      if (String.isBlank(phoneNumber) || template == null || !templateActive || String.isBlank(znsTemplateId)) {
+          System.debug('--- [processZnsNotification] SKIP ZNS. history=' + history.Id + ', missing phone/template');
+          return;
+      }
+
+      try {
+          FEC_ZNSNotificationCallout.SendZnsMessageResponseDto res =
+              FEC_ZNSNotificationCallout.callSendZNSMessageByCaseWithoutLogging(relatedCase.Id, phoneNumber, znsTemplateId);
+
+          Boolean isSuccess = res != null && res.Sys != null && res.Sys.Code == 1;
+          String errorMessage = isSuccess ? null : (res != null && res.Sys != null ? res.Sys.Description : 'Empty response from ZNS API');
+
+          znsHistoriesToInsert.add(
+              FEC_NotificationHistoryService.buildRow(
+                  relatedCase.Id,
+                  matchedNotification.Id,
+                  relatedCase.FEC_Stage_Name__c,
+                  template.Name,
+                  matchedNotification.Name,
+                  channelName,
+                  matchedNotification.FEC_Target_Group__c,
+                  FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                  isSuccess ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                  errorMessage,
+                  FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                  null,
+                  System.now()
+              )
+          );
+      } catch (Exception ex) {
+          znsHistoriesToInsert.add(
+              FEC_NotificationHistoryService.buildRow(
+                  relatedCase.Id,
+                  matchedNotification.Id,
+                  relatedCase.FEC_Stage_Name__c,
+                  template.Name,
+                  matchedNotification.Name,
+                  channelName,
+                  matchedNotification.FEC_Target_Group__c,
+                  FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                  FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                  ex.getMessage(),
+                  FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                  null,
+                  System.now()
+              )
+          );
+      }
+  }
+
+  /**
+   * Xử lý gửi thông báo qua kênh Mobile App cho 1 cặp (history, case, notification, template) đã match.
+   * Sau khi gửi (thành công hoặc lỗi), build 1 dòng log và add vào mobileAppHistoriesToInsert để insert sau.
+   *
+   * @param history              Routing Action History đang xử lý (chỉ dùng để log Id khi SKIP)
+   * @param relatedCase          Case liên quan, dùng lấy số điện thoại (Primary Phone) và Stage Name
+   * @param matchedNotification  Notification rule đã match với history/case
+   * @param template             Template Mobile App tương ứng
+   * @param channelName          Tên channel, dùng để ghi log
+   * @param historiesToInsert List log (output) - method này append kết quả gửi vào list này
+   */
+  private static void processMobileAppNotification(
+    FEC_Routing_Action_History__c history,
+    Case relatedCase,
+    FEC_Notification__c matchedNotification,
+    FEC_Template__c template,
+    String channelName,
+    List<FEC_Notification_History__c> historiesToInsert
+  ) {
+      String phoneNumber = relatedCase.FEC_Account_or_Contract__r?.FEC_Primary_Phone__c;
+      String nationalId = relatedCase.FEC_Account_or_Contract__r?.FEC_National_ID_Passport_ID__c;
+      Boolean templateActive = template != null && template.FEC_Active__c == true;
+
+      if ((String.isBlank(phoneNumber) && String.isBlank(nationalId)) || template == null || !templateActive) {
+          System.debug('--- [processMobileAppNotification] SKIP MobileApp. history=' + history.Id + ', missing phone & nationalId/template');
+          return;
+      }
+
+      String mobileTitle = FEC_NotificationService.resolveTemplate(template.FEC_Subject_Line__c, relatedCase);
+      mobileTitle = String.isNotBlank(mobileTitle) ? mobileTitle.trim() : FEC_ConstantCommon.NOTIFICATION_MOBILE_APP_TITLE;
+      String mobileContent = FEC_NotificationService.resolveTemplate(template.FEC_Body__c, relatedCase);
+
+      try {
+          FEC_MobileAppNotificationCallout.SendNotificationResponse res =
+            FEC_MobileAppNotificationCallout.sendNotificationWithoutLogging(
+              mobileContent,
+              nationalId,
+              phoneNumber,
+              mobileTitle
+            );
+
+          Boolean isSuccess = res != null && res.code == '1';
+          String errorMessage = isSuccess ? null : (res != null ? res.description : 'Empty response from Mobile App API');
+
+          historiesToInsert.add(
+              FEC_NotificationHistoryService.buildRow(
+                  relatedCase.Id,
+                  matchedNotification.Id,
+                  relatedCase.FEC_Stage_Name__c,
+                  template.Name,
+                  matchedNotification.Name,
+                  channelName,
+                  matchedNotification.FEC_Target_Group__c,
+                  FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                  isSuccess ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                  errorMessage,
+                  FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                  null,
+                  System.now()
+              )
+          );
+      } catch (Exception ex) {
+          historiesToInsert.add(
+              FEC_NotificationHistoryService.buildRow(
+                  relatedCase.Id,
+                  matchedNotification.Id,
+                  relatedCase.FEC_Stage_Name__c,
+                  template.Name,
+                  matchedNotification.Name,
+                  channelName,
+                  matchedNotification.FEC_Target_Group__c,
+                  FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                  FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                  ex.getMessage(),
+                  FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                  null,
+                  System.now()
+              )
+          );
+      }
+  }
+
+  /**
+   * Xử lý build thông tin gửi thông báo qua kênh Email cho 1 cặp (case, notification, template) đã match.
+   * Khác với ZNS, method này KHÔNG gửi email ngay - chỉ build EmailInfo + RoutingEmailHistoryInput
+   * và add vào 2 list output truyền vào. Việc gửi thực tế (bulk, 1 lần) do executeSendEmailsBulk
+   * thực hiện sau khi đã xử lý xong toàn bộ historyToChannelsMap.
+   *
+   * @param relatedCase          Case liên quan, dùng để xác định email người nhận
+   * @param matchedNotification  Notification rule đã match với history/case
+   * @param template             Template Email tương ứng (subject, body, header/footer letterhead)
+   * @param channelName          Tên channel (Email), dùng để ghi log lịch sử
+   * @param listEmailsToProcess  List EmailInfo (output) - method này append email cần gửi vào list này
+   * @param routingHistories     List RoutingEmailHistoryInput (output) - dùng ghi log sau khi gửi bulk
+   */
+  private static void processEmailNotification(
+    Case relatedCase,
+    FEC_Notification__c matchedNotification,
+    FEC_Template__c template,
+    String channelName,
+    List<FEC_Notification.EmailInfo> listEmailsToProcess,
+    List<FEC_Notification.RoutingEmailHistoryInput> routingHistories
+  ) {
+      String targetEmailAddress = null;
+      String accType = relatedCase.FEC_Account_or_Contract__r?.FEC_Customer_Type__c;
+      if (accType == FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER) {
+          targetEmailAddress = relatedCase.FEC_Account_or_Contract__r?.FEC_Email__c;
+      } else {
+          targetEmailAddress = String.isNotBlank(relatedCase.FEC_Interaction__r?.FEC_Interaction_Email__c)
+              ? relatedCase.FEC_Interaction__r.FEC_Interaction_Email__c
+              : relatedCase.FEC_Case_Email__c;
+      }
+
+      if (String.isNotBlank(targetEmailAddress) && template != null) {
+          listEmailsToProcess.add(new FEC_Notification.EmailInfo(
+              relatedCase.Id,
+              targetEmailAddress,
+              String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
+              template.FEC_Enhanced_Letterhead__r?.FEC_Header__c,
+              template.FEC_Body__c,
+              template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c,
+              template.Id
+          ));
+
+          FEC_Notification.RoutingEmailHistoryInput hi = new FEC_Notification.RoutingEmailHistoryInput();
+          hi.caseId = relatedCase.Id;
+          hi.notificationRuleId = matchedNotification.Id;
+          hi.stageName = relatedCase.FEC_Stage_Name__c;
+          hi.templateDisplayName = template.Name;
+          hi.channelName = String.isNotBlank(channelName) ? channelName : FEC_ConstantCommon.EMAIL;
+          hi.targetGroup = matchedNotification.FEC_Target_Group__c;
+          hi.notificationRuleName = matchedNotification.Name;
+          routingHistories.add(hi);
       }
   }
 
