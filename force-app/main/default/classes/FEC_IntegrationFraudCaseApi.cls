@@ -1032,7 +1032,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         String subCode
     ) {
         try {
-            String sftCaseId = generateSFTCaseId();
+            String sftCaseId = generateSFTCaseId('SFT');
             log('[createSFTCase] Generated SFT Case ID: ' + sftCaseId);
 
             // 1. Create standard Case record with SFT_Case record type
@@ -1166,36 +1166,54 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     }
 
     /**
-     * Generates the next SFT case ID in format: SFT-XXXXXXXXXXXXXXXX
-     * Starts from SFT-5000000, increments sequentially.
+     * Generates the next SFT case ID in format: SFT-XXXXXXXXXX
+     *
+     * Uses the FEC_Sequence__c counter (one row per prefix) and locks the row
+     * with FOR UPDATE so concurrent transactions can't allocate the same id.
+     * If the counter is missing or below the configured starting number, it
+     * is initialized from FEC_FraudConstantCommon.START_NUMBER_CASE_SFT.
      */
-    private static String generateSFTCaseId() {
+    private static String generateSFTCaseId(String prefix) {
+        //final String prefix = 'SFT';
         Long startNumber = FEC_FraudConstantCommon.START_NUMBER_CASE_SFT;
-        String prefix = 'SFT-';
 
-        // Find the highest existing SFT case number
-        List<FEC_Integration_Case__c> lastCase = [
-            SELECT FEC_Service_Case_ID__c
-            FROM FEC_Integration_Case__c
-            WHERE FEC_Service_Case_ID__c LIKE 'SFT-%'
-            ORDER BY CreatedDate DESC
-            LIMIT 1
-        ];
+        try {
+            // Lock the sequence row to serialize concurrent allocations
+            List<FEC_Sequence__c> sequences = [
+                SELECT Id, FEC_Current_Value__c
+                FROM FEC_Sequence__c
+                WHERE FEC_Prefix_Code__c = :prefix
+                LIMIT 1
+                FOR UPDATE
+            ];
 
-        if (!lastCase.isEmpty()) {
-            String lastId = lastCase[0].FEC_Service_Case_ID__c;
-            String numberPart = lastId.replace(prefix, '');
-            try {
-                Long lastNumber = Long.valueOf(numberPart);
-                if (lastNumber >= startNumber) {
-                    startNumber = lastNumber + 1;
-                }
-            } catch (Exception e) {
-                log('[generateSFTCaseId] Could not parse last SFT number: ' + numberPart);
+            FEC_Sequence__c seq;
+            if (sequences.isEmpty()) {
+                // No row exists yet for this prefix — seed it from the
+                // configured starting number.
+                seq = new FEC_Sequence__c(
+                    FEC_Prefix_Code__c = prefix,
+                    FEC_Current_Value__c = startNumber
+                );
+                insert seq;
+            } else {
+                // Honour whatever value is on the row; just increment by one.
+                seq = sequences[0];
+                Long current = seq.FEC_Current_Value__c == null
+                    ? 0
+                    : seq.FEC_Current_Value__c.longValue();
+                seq.FEC_Current_Value__c = current + 1;
+                update seq;
             }
-        }
 
-        return prefix + String.valueOf(startNumber);
+            String caseId = prefix + '-' + String.valueOf(seq.FEC_Current_Value__c.longValue());
+            log('[generateSFTCaseId] Allocated ' + caseId);
+            return caseId;
+        } catch (Exception ex) {
+            log('[generateSFTCaseId] ERROR: ' + ex.getTypeName() + ' - ' + ex.getMessage());
+            log('[generateSFTCaseId] Stack: ' + ex.getStackTraceString());
+            throw new AuraHandledException('Unable to generate SFT case id: ' + ex.getMessage());
+        }
     }
 
     private static void log(String msg) {
