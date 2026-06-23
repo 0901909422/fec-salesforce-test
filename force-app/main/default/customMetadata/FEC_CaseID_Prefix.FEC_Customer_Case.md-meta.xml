@@ -11,6 +11,10 @@
         <value xsi:type="xsd:string">S</value>
     </values>
     <values>
+        <field>FEC_Init_Number__c</field>
+        <value xsi:type="xsd:double">73068574</value>
+    </values>
+    <values>
         <field>FEC_Record_Type__c</field>
         <value xsi:type="xsd:string">Customer_Case</value>
     </values>
