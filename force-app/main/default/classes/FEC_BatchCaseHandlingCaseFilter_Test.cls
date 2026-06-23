@@ -485,8 +485,8 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         Test.stopTest();
 
         System.assert(
-            combined.contains('FEC_Assignment_Users__c LIKE'),
-            'Mệnh đề WHERE cơ sở phải chứa điều kiện FEC_Assignment_Users__c LIKE tên Queue.'
+            combined.contains('FEC_Assignment_Users__c =') || combined.contains('FEC_Assignment_Users__c LIKE'),
+            'Mệnh đề WHERE cơ sở phải chứa điều kiện FEC_Assignment_Users__c exact match tên Queue.'
         );
         System.assertEquals(
             1,
@@ -556,6 +556,11 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         }
     }
 
+    /**
+     * Tạo Routing assignment để rollup FEC_Assignment_Count__c > 0.
+     * Không dùng login user làm FEC_Assignment_Owner__c — trigger sẽ sync UserId vào FEC_Assignment_Users__c
+     * và làm test nhánh Owner/Queue owner bị nhiễu bởi nhánh FEC_Assignment_Users__c LIKE UserId.
+     */
     private static void insertRoutingAssignment(Id caseId) {
         String status;
         for (Schema.PicklistEntry entry :
@@ -565,13 +570,24 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
                 break;
             }
         }
-        insert new FEC_Assignment__c(
+
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+
+        FEC_Assignment__c assignment = new FEC_Assignment__c(
             FEC_Case__c = caseId,
             FEC_Assignment_Name__c = 'BCH Filter Assignment ' + String.valueOf(System.currentTimeMillis()),
             FEC_Assignment_Status__c = status,
-            FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-            FEC_Assignment_Owner__c = UserInfo.getUserId()
+            FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
         );
+        if (!otherUsers.isEmpty()) {
+            assignment.FEC_Assignment_Owner__c = otherUsers[0].Id;
+        }
+        insert assignment;
     }
 
     /**
@@ -1135,14 +1151,121 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         Test.stopTest();
 
         System.assert(
-            combined.contains('FEC_Assignment_Users__c LIKE'),
-            'Filter Queue equals phải chứa điều kiện FEC_Assignment_Users__c LIKE tên Queue.'
+            combined.contains('FEC_Assignment_Users__c =') || combined.contains('FEC_Assignment_Users__c LIKE'),
+            'Filter Queue equals phải chứa điều kiện FEC_Assignment_Users__c exact match tên Queue.'
         );
         System.assertEquals(
             1,
             count,
             'Case có FEC_Assignment_Users__c chứa tên Queue phải match filter Queue equals.'
         );
+    }
+
+    /**
+     * Kịch bản: filter Queue equals phải exact match FEC_Assignment_Users__c (không match substring).
+     * Ví dụ "Handling" không được match "Colls Complaint Handling".
+     */
+    @IsTest
+    static void testBuildCompleteWhere_QueueFilterExactMatchNotSubstring() {
+        String shortQueueName = 'Handling';
+        String longQueueName = 'Colls Complaint Handling';
+        List<Group> handlingQueues = [
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Name = :shortQueueName
+            LIMIT 1
+        ];
+        if (handlingQueues.isEmpty()) {
+            System.assert(true, 'Skipped: no Handling queue in org.');
+            return;
+        }
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(handlingQueues[0].Id, UserInfo.getUserId());
+        }
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (otherUsers.isEmpty()) {
+            System.assert(true, 'Skipped: no other active user.');
+            return;
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id exactCaseId;
+        Id substringCaseId;
+        Id multiValueCaseId;
+        System.runAs(runUser) {
+            List<Case> cases = new List<Case>();
+            Case exactCase = new Case(
+                Subject = 'Queue Exact Match Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = otherUsers[0].Id,
+                FEC_ID_Search__c = 'FILTER-QUEUE-EXACT',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            Case substringCase = new Case(
+                Subject = 'Queue Substring Only Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = otherUsers[0].Id,
+                FEC_ID_Search__c = 'FILTER-QUEUE-SUBSTRING',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            Case multiValueCase = new Case(
+                Subject = 'Queue Multi Value Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = otherUsers[0].Id,
+                FEC_ID_Search__c = 'FILTER-QUEUE-MULTI',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                exactCase.RecordTypeId = bulkCaseRtId;
+                substringCase.RecordTypeId = bulkCaseRtId;
+                multiValueCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert new List<Case>{ exactCase, substringCase, multiValueCase };
+            update new List<Case>{
+                new Case(Id = exactCase.Id, FEC_Assignment_Users__c = shortQueueName),
+                new Case(Id = substringCase.Id, FEC_Assignment_Users__c = longQueueName),
+                new Case(Id = multiValueCase.Id, FEC_Assignment_Users__c = 'Other Queue,' + shortQueueName)
+            };
+            exactCaseId = exactCase.Id;
+            substringCaseId = substringCase.Id;
+            multiValueCaseId = multiValueCase.Id;
+        }
+
+        String filtersJson = '[{"propertyKey":"QUEUE","operatorKey":"equals","valueList":["' +
+            String.escapeSingleQuotes(shortQueueName) +
+            '"]}]';
+
+        Test.startTest();
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(
+            FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson)
+        );
+        String combined = String.join(whereParts, ' AND ');
+        Test.stopTest();
+
+        System.assert(
+            !combined.contains('LIKE \'%Handling%\''),
+            'Filter Queue không được dùng LIKE substring cho FEC_Assignment_Users__c.'
+        );
+
+        Integer exactCount = Database.countQuery(
+            'SELECT COUNT() FROM Case WHERE ' + combined + ' AND Id = \'' + String.valueOf(exactCaseId) + '\''
+        );
+        Integer substringCount = Database.countQuery(
+            'SELECT COUNT() FROM Case WHERE ' + combined + ' AND Id = \'' + String.valueOf(substringCaseId) + '\''
+        );
+        Integer multiValueCount = Database.countQuery(
+            'SELECT COUNT() FROM Case WHERE ' + combined + ' AND Id = \'' + String.valueOf(multiValueCaseId) + '\''
+        );
+
+        System.assertEquals(1, exactCount, 'Case có FEC_Assignment_Users__c = Handling phải match.');
+        System.assertEquals(0, substringCount, 'Case chỉ chứa Colls Complaint Handling không được match Handling.');
+        System.assertEquals(1, multiValueCount, 'Case có token Handling trong danh sách phân tách bằng dấu phẩy phải match.');
     }
 
     @IsTest

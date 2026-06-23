@@ -845,10 +845,10 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     /**
-     * Kịch bản: quy trình không GSR/COF — user không phải queue member phải báo ERR_NOT_OWNER.
+     * Kịch bản: quy trình không GSR/COF — user không phải queue member vẫn pass validate (không chặn ERR_NOT_OWNER).
      */
     @IsTest
-    static void testValidateRows_NonCofGsr_RejectsQueueOwnedCaseForNonMember() {
+    static void testValidateRows_NonCofGsr_AllowsQueueOwnedCaseForNonMember() {
         Id isolatedQueueId = createIsolatedQueueWithoutMembership();
         System.runAs(batchImportRunUser()) {
             String caseKey = 'CASE-QUEUE-NOMEMBER-' + String.valueOf(DateTime.now().getTime());
@@ -879,17 +879,17 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
             System.assertEquals(1, results.size());
             System.assert(
-                results[0].errors != null && results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
-                'User không phải queue member phải báo ERR_NOT_OWNER: ' + results[0].errors
+                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                'Validate không chặn ERR_NOT_OWNER khi user không phải queue member: ' + results[0].errors
             );
         }
     }
 
     /**
-     * Kịch bản: quy trình COF — dù user là queue member vẫn phải báo ERR_NOT_OWNER khi không phải Owner.
+     * Kịch bản: quy trình COF — queue member không bị chặn ERR_NOT_OWNER ở validate.
      */
     @IsTest
-    static void testValidateRows_CofGsr_RejectsQueueOwnedCaseForMember() {
+    static void testValidateRows_CofGsr_AllowsQueueOwnedCaseForMember() {
         System.runAs(batchImportRunUser()) {
             List<FEC_Business_Process__c> cofBpRows = [
                 SELECT Id, FEC_Code__c
@@ -943,8 +943,8 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
             System.assertEquals(1, results.size());
             System.assert(
-                results[0].errors != null && results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
-                'COF queue member không phải owner phải báo ERR_NOT_OWNER: ' + results[0].errors
+                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                'Validate không chặn ERR_NOT_OWNER cho COF queue member: ' + results[0].errors
             );
         }
     }
