@@ -5,6 +5,13 @@
  */
 public without sharing class FEC_CaseAssignmentTriggerHandler {
     private static Boolean isDispatching = false;
+    @TestVisible
+    private static Boolean suppressImmediateDistributionEnqueue = false;
+
+    @TestVisible
+    static void setSuppressImmediateDistributionEnqueue(Boolean suppress) {
+        suppressImmediateDistributionEnqueue = suppress == true;
+    }
 
     public static void handleAfterInsert(List<FEC_Case_Assignment__c> newList) {
         if (newList == null || newList.isEmpty()) {
@@ -44,6 +51,9 @@ public without sharing class FEC_CaseAssignmentTriggerHandler {
     }
 
     private static void enqueueImmediateDistribution(Set<Id> assignmentIds) {
+        if (suppressImmediateDistributionEnqueue) {
+            return;
+        }
         Set<Id> continuousAssignmentIds =
             FEC_CaseAssignmentAutoDistributeService.filterAssignmentIdsForImmediateActivation(
                 assignmentIds
@@ -54,7 +64,7 @@ public without sharing class FEC_CaseAssignmentTriggerHandler {
         isDispatching = true;
         try {
             List<Id> idList = new List<Id>(continuousAssignmentIds);
-            if (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+            if (FEC_CaseAssignmentAutoDistributeService.canEnqueueAutoDistQueueJob()) {
                 System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(idList));
             } else {
                 FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(idList[0]);

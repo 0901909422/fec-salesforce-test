@@ -68,6 +68,10 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
   }
 
+  // 23/06/2026 linhdev - @TestVisible: mô phỏng context queueable khi Test.stopTest() chạy sync (isQueueable=false).
+  @TestVisible
+  private static Boolean syncNotificationEmailsOverride = false;
+
   public static void sendNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
     if (newList == null || newList.isEmpty()) return;
     if (FEC_NotificationService.suppressForCaseSubmit) {
@@ -76,10 +80,23 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
       return;
     }
-    /*if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
+    // 23/06/2026 linhdev - Queueable/Future/Batch (limit=1): xử lý sync để BCH import chain giữ slot.
+    if (
+      syncNotificationEmailsOverride ||
+      System.isQueueable() ||
+      System.isFuture() ||
+      System.isBatch() ||
+      Limits.getLimitQueueableJobs() == 1
+    ) {
+      processNotificationEmails(newList);
       return;
     }
-    System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newList));*/
+    // 23/06/2026 linhdev - hết slot queueable trong sync txn: fallback sync thay vì throw LimitException.
+    if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
+      processNotificationEmails(newList);
+      return;
+    }
+    System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newList));
   }
 
   public static void processNotification(List<FEC_Routing_Action_History__c> newRecords) {

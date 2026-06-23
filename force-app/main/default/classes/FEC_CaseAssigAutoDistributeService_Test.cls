@@ -207,8 +207,10 @@ private class FEC_CaseAssigAutoDistributeService_Test {
             rule.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
             update rule;
 
+            Test.startTest();
             Integer assignedCount =
                 FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(rule.Id);
+            Test.stopTest();
             System.assert(assignedCount > 0, 'Phân phối phải gán ít nhất một Case từ Queue.');
 
             List<Case> processedCases = [
@@ -266,8 +268,10 @@ private class FEC_CaseAssigAutoDistributeService_Test {
             timeRule.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
             update timeRule;
 
+            Test.startTest();
             Integer assignedCount =
                 FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(timeRule.Id);
+            Test.stopTest();
             System.assert(assignedCount > 0, 'Time-Based phải phân phối Case khớp NOC không SubCode.');
 
             List<FEC_Case_Assignment_Logs__c> logs = [
@@ -560,8 +564,10 @@ private class FEC_CaseAssigAutoDistributeService_Test {
             rule.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
             update rule;
 
+            Test.startTest();
             Integer assignedCount =
                 FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(rule.Id);
+            Test.stopTest();
             System.assert(assignedCount > 0, 'Phải phân phối Case có FEC_Assignment__c trên queue.');
         }
     }
@@ -738,6 +744,172 @@ private class FEC_CaseAssigAutoDistributeService_Test {
             oldMap
         );
         System.assert(true, 'Các nhánh guard handleQueueCasesAfterSave phải thoát sớm không lỗi.');
+    }
+
+    @IsTest
+    static void testAutoDistQueueJob_ChainsMultipleAssignmentsWithoutQueueableLimit() {
+        System.runAs(testRunAsUser()) {
+            FEC_Case_Assignment__c rule1 = [
+                SELECT Id
+                FROM FEC_Case_Assignment__c
+                WHERE Name = 'Continuous Rule'
+                LIMIT 1
+            ];
+            FEC_Case_Assignment__c rule2 = new FEC_Case_Assignment__c(
+                Name = 'Continuous Rule 2',
+                FEC_Assignment_Method__c = 'Continuous',
+                FEC_Scheduled_Time__c = 1,
+                FEC_Select_Queues__c = 'Queue CS Support',
+                FEC_Role__c = 'CS Agent A;CS Agent B',
+                FEC_Scale__c = 1,
+                FEC_Status__c = 'Draft'
+            );
+            insert rule2;
+
+            FEC_Case_Assignment_NOC__c templateNoc = [
+                SELECT FEC_Product_Type__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c
+                FROM FEC_Case_Assignment_NOC__c
+                WHERE FEC_Case_Assignment_Name__c = :rule1.Id
+                LIMIT 1
+            ];
+            insert new FEC_Case_Assignment_NOC__c(
+                FEC_Case_Assignment_Name__c = rule2.Id,
+                FEC_Product_Type__c = templateNoc.FEC_Product_Type__c,
+                FEC_Category__c = templateNoc.FEC_Category__c,
+                FEC_Sub_Category__c = templateNoc.FEC_Sub_Category__c,
+                FEC_Sub_Code__c = templateNoc.FEC_Sub_Code__c
+            );
+
+            Group testQueue = getTestQueue();
+            insertQueueCases(2, testQueue.Id);
+
+            FEC_CaseAssignmentTriggerHandler.setSuppressImmediateDistributionEnqueue(true);
+            try {
+                rule1.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+                rule2.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+                update new List<FEC_Case_Assignment__c>{ rule1, rule2 };
+            } finally {
+                FEC_CaseAssignmentTriggerHandler.setSuppressImmediateDistributionEnqueue(false);
+            }
+
+            Test.startTest();
+            System.enqueueJob(
+                new FEC_CaseAssignmentAutoDistQueueJob(new List<Id>{ rule1.Id, rule2.Id })
+            );
+            Test.stopTest();
+
+            System.assert(
+                [
+                    SELECT COUNT()
+                    FROM Case
+                    WHERE Subject LIKE 'Bulk Queue Case%' AND Owner.Type = 'User'
+                ] > 0,
+                'Chain queue job phải phân phối Case mà không vượt giới hạn Queueable.'
+            );
+        }
+    }
+
+    @IsTest
+    static void testHandleQueueCasesAfterSave_SkipsEnqueueWhenSuppressFlagOn() {
+        System.runAs(testRunAsUser()) {
+            FEC_Case_Assignment__c rule = [
+                SELECT Id
+                FROM FEC_Case_Assignment__c
+                WHERE Name = 'Continuous Rule'
+                LIMIT 1
+            ];
+            rule.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+            update rule;
+
+            Group testQueue = getTestQueue();
+            insertQueueCases(1, testQueue.Id);
+            Case queueCase = [
+                SELECT Id, OwnerId, IsClosed
+                FROM Case
+                WHERE Subject LIKE 'Bulk Queue Case%'
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+
+            Integer jobsBefore = [
+                SELECT COUNT()
+                FROM AsyncApexJob
+                WHERE ApexClass.Name = 'FEC_CaseAssignmentAutoDistQueueJob'
+            ];
+
+            FEC_CaseAssignmentAutoDistributeService.setSuppressAutoDistQueueEnqueue(true);
+            try {
+                FEC_CaseAssignmentAutoDistributeService.handleQueueCasesAfterSave(
+                    new List<Case>{ queueCase },
+                    null
+                );
+            } finally {
+                FEC_CaseAssignmentAutoDistributeService.setSuppressAutoDistQueueEnqueue(false);
+            }
+
+            System.assertEquals(
+                jobsBefore,
+                [
+                    SELECT COUNT()
+                    FROM AsyncApexJob
+                    WHERE ApexClass.Name = 'FEC_CaseAssignmentAutoDistQueueJob'
+                ],
+                'Khi suppress bật, handleQueueCasesAfterSave không enqueue thêm queue job.'
+            );
+        }
+    }
+
+    @IsTest
+    static void testAutoDistQueueJob_ConstructorsAndEmptyExecute() {
+        new FEC_CaseAssignmentAutoDistQueueJob((Id) null).execute(null);
+        new FEC_CaseAssignmentAutoDistQueueJob((List<Id>) null).execute(null);
+        new FEC_CaseAssignmentAutoDistQueueJob(new List<Id>()).execute(null);
+        System.assert(true, 'Constructor / execute rỗng phải thoát sớm không lỗi.');
+    }
+
+    @IsTest
+    static void testAutoDistQueueJob_ProductionChainEnqueuesTail() {
+        System.runAs(testRunAsUser()) {
+            FEC_Case_Assignment__c rule = [
+                SELECT Id
+                FROM FEC_Case_Assignment__c
+                WHERE Name = 'Continuous Rule'
+                LIMIT 1
+            ];
+            FEC_CaseAssignmentTriggerHandler.setSuppressImmediateDistributionEnqueue(true);
+            try {
+                rule.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+                update rule;
+            } finally {
+                FEC_CaseAssignmentTriggerHandler.setSuppressImmediateDistributionEnqueue(false);
+            }
+
+            Integer jobsBefore = [
+                SELECT COUNT()
+                FROM AsyncApexJob
+                WHERE ApexClass.Name = 'FEC_CaseAssignmentAutoDistQueueJob'
+            ];
+
+            FEC_CaseAssignmentAutoDistQueueJob.setRunProductionChainInTest(true);
+            try {
+                Test.startTest();
+                new FEC_CaseAssignmentAutoDistQueueJob(
+                    new List<Id>{ rule.Id, rule.Id }
+                ).execute(null);
+                Test.stopTest();
+            } finally {
+                FEC_CaseAssignmentAutoDistQueueJob.setRunProductionChainInTest(false);
+            }
+
+            System.assert(
+                [
+                    SELECT COUNT()
+                    FROM AsyncApexJob
+                    WHERE ApexClass.Name = 'FEC_CaseAssignmentAutoDistQueueJob'
+                ] > jobsBefore,
+                'Production chain phải enqueue job cho tail.'
+            );
+        }
     }
 
     @IsTest
