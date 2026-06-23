@@ -50,7 +50,7 @@ private class FEC_PushCampaignDataBatchTest {
     static void testBatchExecution_HappyPath() {
         Test.startTest();
         FEC_PushCampaignDataBatch batch = new FEC_PushCampaignDataBatch();
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         // Verify batch log was created
@@ -68,7 +68,7 @@ private class FEC_PushCampaignDataBatchTest {
 
         Test.startTest();
         FEC_PushCampaignDataBatch batch = new FEC_PushCampaignDataBatch(csMapping.Id);
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         List<FEC_Batch_Log__c> logs = [
@@ -82,7 +82,7 @@ private class FEC_PushCampaignDataBatchTest {
     static void testBatchLog_RecordCreated() {
         Test.startTest();
         FEC_PushCampaignDataBatch batch = new FEC_PushCampaignDataBatch();
-        Database.executeBatch(batch, 200);
+        System.enqueueJob(batch);
         Test.stopTest();
 
         List<FEC_Batch_Log__c> logs = [
