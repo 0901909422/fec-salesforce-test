@@ -22,7 +22,6 @@ public class FEC_CaseExportHttpService {
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON_UTF8);
                 req.setHeader('Accept',       FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-                req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
                 req.setBody(jsonPayload);
                 req.setTimeout(TIMEOUT_MS);
 
