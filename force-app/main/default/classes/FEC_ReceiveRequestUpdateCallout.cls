@@ -53,18 +53,15 @@ public with sharing class FEC_ReceiveRequestUpdateCallout {
         String requestJson = serializeRequest(buildRequest(body));
 
         try {
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(endpoint);
-            req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
-            req.setHeader(
-                FEC_ConstantCommon.HTTP_HEADER_CONTENT_TYPE,
-                FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            Map<String, String> headers = new Map<String, String>{
+                FEC_ConstantCommon.HTTP_HEADER_CONTENT_TYPE => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            };
+            HttpResponse response = FEC_CommonUltils.calloutApiWithHeaders(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                headers,
+                requestJson
             );
-            req.setBody(requestJson);
-            req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
-
-            Http http = new Http();
-            HttpResponse response = http.send(req);
 
             result.httpStatusCode = response.getStatusCode();
             result.response = parseResponse(response.getBody(), response.getStatusCode());
@@ -110,11 +107,16 @@ public with sharing class FEC_ReceiveRequestUpdateCallout {
 
     @TestVisible
     private static String resolveEndpoint() {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-        if (apiConfig == null || String.isBlank(apiConfig.FEC_Endpoint__c)) {
+        String endpoint = FEC_CommonUltils.buildCalloutEndpoint(
+            apiSetting?.FEC_Endpoint__c,
+            apiConfig?.FEC_Endpoint__c
+        );
+        if (String.isBlank(endpoint)) {
             throw new CalloutException(System.Label.FEC_MSG_Endpoint_Null);
         }
-        return 'callout:FEC_API' + apiConfig.FEC_Endpoint__c;
+        return endpoint;
     }
 
     @TestVisible

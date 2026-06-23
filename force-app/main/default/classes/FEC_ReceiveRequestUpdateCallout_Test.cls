@@ -16,7 +16,10 @@ private class FEC_ReceiveRequestUpdateCallout_Test {
     private class MockSuccessCallout implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             System.assertEquals('POST', req.getMethod());
-            System.assert(req.getEndpoint().startsWith('callout:FEC_API'), 'Endpoint phải đi qua Named Credential FEC_API.');
+            System.assert(
+                req.getEndpoint() != null && req.getEndpoint().contains('ReceiveRequestUpdate'),
+                'Endpoint phải ghép từ FEC_API_Setting__c + FEC_API_Config.ReceiveRequestUpdate.'
+            );
             System.assertEquals('application/json', req.getHeader('Content-Type'));
 
             Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(req.getBody());
@@ -47,9 +50,19 @@ private class FEC_ReceiveRequestUpdateCallout_Test {
         }
     }
 
+    @TestSetup
+    static void setupData() {
+        insert new FEC_API_Setting__c(
+            FEC_Endpoint__c = 'https://api-gateway.fecredit.com.vn'
+        );
+    }
+
     private static Boolean isEndpointConfigured() {
+        FEC_API_Setting__c setting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt cfg = FEC_API_Config__mdt.getInstance(FEC_ReceiveRequestUpdateCallout.API_CONFIG_NAME);
-        return cfg != null && String.isNotBlank(cfg.FEC_Endpoint__c);
+        return String.isNotBlank(
+            FEC_CommonUltils.buildCalloutEndpoint(setting?.FEC_Endpoint__c, cfg?.FEC_Endpoint__c)
+        );
     }
 
     private static FEC_ReceiveRequestUpdateCallout.RequestBody buildSampleBody() {
@@ -143,13 +156,16 @@ private class FEC_ReceiveRequestUpdateCallout_Test {
     }
 
     @IsTest
-    static void testResolveEndpoint_UsesPrivateConnect() {
+    static void testResolveEndpoint_UsesApiSetting() {
         if (!isEndpointConfigured()) {
             return;
         }
 
         String endpoint = FEC_ReceiveRequestUpdateCallout.resolveEndpoint();
-        System.assert(endpoint.startsWith('callout:FEC_API'), 'Endpoint phải dùng Named Credential FEC_API.');
+        System.assert(
+            endpoint.startsWith('https://api-gateway.fecredit.com.vn'),
+            'Endpoint phải lấy base từ FEC_API_Setting__c.'
+        );
         System.assert(
             endpoint.contains('/esb/cms_247api_rest/v1/ReceiveRequestUpdate'),
             'Endpoint phải khớp metadata ReceiveRequestUpdate.'
