@@ -504,7 +504,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             }
             String caseStatus     = (String) detail.get(caseField.CASE_STATUS_FIELD);
             String parentId       = (String) detail.get(caseField.PARENT_ID_FIELD);
-            String referenceId    = (String) detail.get(caseField.REFERENCE_FIELD);
+            //String referenceId    = (String) detail.get(caseField.REFERENCE_FIELD);
+            
             String caseId         = (String) detail.get(caseField.CASEID_FIELD);
             String channelID      = (String) detail.get(caseField.CHANNEL_ID_FIELD);
             Long messageTime = (Long) detail.get(caseField.MESSAGE_TIME);
@@ -562,7 +563,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_CaseID__c          = caseId;
             rec.FEC_Case_Status__c     = FEC_IntegrationFraudCaseUtil.mapCaseStatus(caseStatus);
             rec.FEC_Parent_CaseID__c   = parentId;
-            rec.FEC_Service_Case_ID__c = referenceId;
+            //rec.FEC_Service_Case_ID__c = referenceId;
             rec.FEC_Remark__c          = xmlRemark;
             rec.FEC_Sys_Creator_Email__c   = xmlCreatorEmail;
             rec.FEC_Case_Type__c       = xmlUserType;
