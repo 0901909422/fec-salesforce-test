@@ -35,9 +35,9 @@ public with sharing class FEC_GetCallingListResultBatch implements Database.Batc
 
         String query = FEC_CampaignBatchService.buildScheduledQuery(selectFields, dayOfWeek);
 
-        Integer totalRecords = Database.countQuery(
-            query.replaceFirst('SELECT .*? FROM', 'SELECT count() FROM')
-        );
+        String countQuery = query.replaceFirst('(?i)SELECT .*? FROM', 'SELECT count() FROM');
+        countQuery = countQuery.replaceFirst('(?i)\\s+ORDER BY .+$', '');
+        Integer totalRecords = Database.countQuery(countQuery);
         this.batchLogId = FEC_CampaignBatchLogger.logStart('FEC_GetCallingListResultBatch', totalRecords);
 
         return Database.getQueryLocator(query);
