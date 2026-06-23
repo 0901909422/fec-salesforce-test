@@ -93,15 +93,15 @@
     <picklistValues>
         <picklist>FEC_Card_Block_Reason__c</picklist>
         <values>
-            <fullName>A</fullName>
+            <fullName>Lost/Stolen Card with Transaction Activity</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Không sử dụng</fullName>
+            <fullName>Not In Use</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Thẻ bị mất%2F đánh cắp có phát sinh giao dịch</fullName>
+            <fullName>Temporarily Locked</fullName>
             <default>false</default>
         </values>
     </picklistValues>
