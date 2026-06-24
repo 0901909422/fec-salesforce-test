@@ -668,44 +668,11 @@ public without sharing class FEC_CustomEmailService {
 
 
 
-    private static Blob fetchInternalImageBlob(String imageUrl) {
-        if (String.isBlank(imageUrl)) return null;
-        try {
-            String endpointUrl = imageUrl;
-            if (endpointUrl.startsWith('/')) {
-                endpointUrl = URL.getOrgDomainUrl().toExternalForm() + endpointUrl;
-            } else if (!endpointUrl.startsWith('http://') && !endpointUrl.startsWith('https://')) {
-                endpointUrl = URL.getOrgDomainUrl().toExternalForm() + '/' + endpointUrl;
-            }
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(endpointUrl.replace('&amp;', '&'));
-            req.setMethod('GET');
-            req.setTimeout(15000);
-            Map<String, String> sessionInfo = Auth.SessionManagement.getCurrentSession();
-            String sid = sessionInfo != null ? sessionInfo.get('SESSION_ID') : null;
-            if (String.isNotBlank(sid)) req.setHeader('Authorization', 'Bearer ' + sid);
-            HttpResponse res = new Http().send(req);
-            if (res.getStatusCode() == 200) return res.getBodyAsBlob();
-            System.debug('fetchInternalImageBlob non-200: ' + res.getStatusCode() + ' for ' + endpointUrl);
-            // Fallback 2: PageReference.getContent() - works in batch/async context where session may be unavailable
-            try {
-                PageReference pr = new PageReference(endpointUrl.replace('&amp;', '&'));
-                Blob imgBlob = Test.isRunningTest() ? Blob.valueOf('Mock Image') : pr.getContent();
-                if (imgBlob != null && imgBlob.size() > 0) return imgBlob;
-            } catch (Exception e2) {
-                System.debug('fetchInternalImageBlob PageReference fallback failed: ' + e2.getMessage());
-            }
-        } catch (Exception e) {
-            System.debug('fetchInternalImageBlob failed: ' + e.getMessage());
-            return null;
-        }
-        return null;
-    }
-
     private static String inferImageFileNameFromUrl(String imageUrl) {
         String safeName = 'email-image.png';
         if (String.isBlank(imageUrl)) return safeName;
         try {
+            // Thu lay ten file tu alt attribute hoac filename param trong URL
             Pattern altPat = Pattern.compile('(?i)(?:filename|name)=([^&]+)');
             Matcher altMat = altPat.matcher(imageUrl);
             if (altMat.find()) return altMat.group(1).replace('%20', ' ');
@@ -716,20 +683,50 @@ public without sharing class FEC_CustomEmailService {
             return safeName;
         }
     }
-    // Wrapper cho attachment từ client
-    public class AttachmentWrapper {
-        @AuraEnabled public String fileName { get; set; }
-        @AuraEnabled public String base64Data { get; set; }
-        @AuraEnabled public String mimeType { get; set; }
-    }
 
-    /**
-     * Gửi email custom với đầy đủ validation, attachment, logging
-     */
+    private static Blob fetchInternalImageBlob(String imageUrl) {
+        if (String.isBlank(imageUrl)) return null;
+        try {
+            // URL trong HTML da co domain day du (vd: https://org--sandbox.file.force.com/servlet/rtaImage?...)
+            // Chi can decode HTML entities (&amp; -> &) roi fetch truc tiep
+            String endpointUrl = imageUrl.replace('&amp;', '&');
+
+            // Cach 1: Http + session token
+            try {
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint(endpointUrl);
+                req.setMethod('GET');
+                req.setTimeout(15000);
+                Map<String, String> sessionInfo = Auth.SessionManagement.getCurrentSession();
+                String sid = sessionInfo != null ? sessionInfo.get('SESSION_ID') : null;
+                if (String.isNotBlank(sid)) req.setHeader('Authorization', 'Bearer ' + sid);
+                HttpResponse res = new Http().send(req);
+                if (res.getStatusCode() == 200) return res.getBodyAsBlob();
+                System.debug('fetchInternalImageBlob Http non-200: ' + res.getStatusCode());
+            } catch (Exception eHttp) {
+                System.debug('fetchInternalImageBlob Http failed: ' + eHttp.getMessage());
+            }
+
+            // Cach 2: PageReference.getContent() - hoat dong trong batch/async
+            try {
+                PageReference pr = new PageReference(endpointUrl);
+                Blob imgBlob = Test.isRunningTest() ? Blob.valueOf('Mock Image') : pr.getContent();
+                if (imgBlob != null && imgBlob.size() > 0) return imgBlob;
+            } catch (Exception ePr) {
+                System.debug('fetchInternalImageBlob PageReference failed: ' + ePr.getMessage());
+            }
+
+            return null;
+        } catch (Exception e) {
+            System.debug('fetchInternalImageBlob failed: ' + e.getMessage());
+            return null;
+        }
+    }
     @AuraEnabled
     public static String sendEmailV2(
         String caseId,
         String fromEmail,
+
         String toEmail,
         String ccEmail,
         String subject,
@@ -779,17 +776,17 @@ public without sharing class FEC_CustomEmailService {
             }
 
             // Append Salesforce thread identifier to subject for reply tracking
-            String orgId = UserInfo.getOrganizationId();
+            String orgId = UserInfo.getOrganizationId(); 
             String shortOrgId = orgId.substring(0, 15);
             String shortCaseId = caseId.substring(0, 15);
-            String threadToken = '[ ref:' + shortOrgId + '.' + shortCaseId + ':ref ]';
+            String threadToken = '[ ref:' + shortOrgId + '.' + shortCaseId + ':ref ]'; 
             String subjectWithThread = subject.contains('[ ref:') ? subject : subject + ' ' + threadToken;
-
+ 
             mail.setSubject(subjectWithThread);
             // Resolve merge fields {{{...}}} va {{...}} trong body truoc khi gui
             String resolvedBody = resolveEmailTemplateText(body != null ? body : '', loadCaseForTemplateResolve(caseId, new List<String>{ body }));
             // tungnm37 fix: Convert internal Salesforce image URLs (header/footer) sang public ContentDistribution URL
-            // de Gmail/Outlook khong bi chan anh khi hien thi email
+            // de Gmail/Outlook khong bi chan anh khi hien thi email 
             resolvedBody = publicizeImagesForEmail(resolvedBody);
             mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
@@ -913,5 +910,11 @@ public without sharing class FEC_CustomEmailService {
         t.Priority     = 'Normal';
         t.ActivityDate = Date.today();
         insert t;
+    }
+
+    public class AttachmentWrapper {
+        @AuraEnabled public String fileName { get; set; }
+        @AuraEnabled public String base64Data { get; set; }
+        @AuraEnabled public String mimeType { get; set; }
     }
 }
