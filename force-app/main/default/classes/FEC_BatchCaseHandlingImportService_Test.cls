@@ -1077,6 +1077,15 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
             Case updated = [SELECT OwnerId FROM Case WHERE Id = :queueOwnedCase.Id LIMIT 1];
             System.assertEquals(queueId, updated.OwnerId, 'Quy trình GSR không được tự chuyển OwnerId từ Queue.');
+            System.assertEquals(
+                System.Label.FEC_Batch_Case_Handling_Success,
+                row.status,
+                'GSR queue-owned Resolve phải thành công khi import batch: ' + row.errors
+            );
+            System.assert(
+                row.errors == null || !row.errors.contains(System.Label.FEC_MSG_Action_Owner_Only),
+                'Không được chặn FEC_MSG_Action_Owner_Only: ' + row.errors
+            );
         }
     }
 
@@ -1140,6 +1149,15 @@ private class FEC_BatchCaseHandlingImportService_Test {
                 queueId,
                 updated.OwnerId,
                 'Quy trình COF không được tự chuyển OwnerId từ Queue sang Login User.'
+            );
+            System.assertEquals(
+                System.Label.FEC_Batch_Case_Handling_Success,
+                row.status,
+                'COF queue-owned Resolve phải thành công khi import batch: ' + row.errors
+            );
+            System.assert(
+                row.errors == null || !row.errors.contains(System.Label.FEC_MSG_Action_Owner_Only),
+                'Không được chặn FEC_MSG_Action_Owner_Only: ' + row.errors
             );
         }
     }

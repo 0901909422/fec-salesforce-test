@@ -3520,10 +3520,30 @@ public without sharing class FEC_CaseBusinessService {
     );
   }
 
+  // 24/06/2026 - bulk import COF/GSR: owner Queue cho phép Resolve/Reject/Update không cần chuyển OwnerId
+  private static Boolean isQueueCaseOwnerId(Id ownerId) {
+    return ownerId != null && String.valueOf(ownerId).startsWith('00G');
+  }
+
+  private static Boolean canBatchImportActOnQueueOwnedCase(Id caseOwnerId) {
+    return FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress() &&
+      isQueueCaseOwnerId(caseOwnerId);
+  }
+
+  private static void assertCaseRoutingActionOwner(Id caseOwnerId) {
+    if (caseOwnerId == UserInfo.getUserId()) {
+      return;
+    }
+    if (canBatchImportActOnQueueOwnedCase(caseOwnerId)) {
+      return;
+    }
+    throw new CaseBusinessServiceException(
+      System.Label.FEC_MSG_Action_Owner_Only
+    );
+  }
+
   private static void cancel(String caseId) {
     try {
-      Id currentUserId = UserInfo.getUserId();
-      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -3537,11 +3557,7 @@ public without sharing class FEC_CaseBusinessService {
 
       Case updatedCase = caselst.get(0);
       
-      if (updatedCase.OwnerId != currentUserId) {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Action_Owner_Only
-        );
-      }
+      assertCaseRoutingActionOwner(updatedCase.OwnerId);
       
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
 
@@ -3553,8 +3569,6 @@ public without sharing class FEC_CaseBusinessService {
 
   private static void reopen(String caseId) {
     try {
-      Id currentUserId = UserInfo.getUserId();
-      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -3568,11 +3582,7 @@ public without sharing class FEC_CaseBusinessService {
 
       Case updatedCase = caselst.get(0);
       
-      if (updatedCase.OwnerId != currentUserId) {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Action_Owner_Only
-        );
-      }
+      assertCaseRoutingActionOwner(updatedCase.OwnerId);
       
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
 
@@ -3584,8 +3594,6 @@ public without sharing class FEC_CaseBusinessService {
 
   private static void reject(String caseId) {
     try {
-      Id currentUserId = UserInfo.getUserId();
-      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -3599,11 +3607,7 @@ public without sharing class FEC_CaseBusinessService {
 
       Case updatedCase = caselst.get(0);
       
-      if (updatedCase.OwnerId != currentUserId) {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Action_Owner_Only
-        );
-      }
+      assertCaseRoutingActionOwner(updatedCase.OwnerId);
       
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
 
@@ -3615,8 +3619,6 @@ public without sharing class FEC_CaseBusinessService {
 
   private static void resolve(String caseId) {
     try {
-      Id currentUserId = UserInfo.getUserId();
-      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -3630,11 +3632,7 @@ public without sharing class FEC_CaseBusinessService {
 
       Case updatedCase = caselst.get(0);
       
-      if (updatedCase.OwnerId != currentUserId) {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Action_Owner_Only
-        );
-      }
+      assertCaseRoutingActionOwner(updatedCase.OwnerId);
       
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
 
@@ -5295,7 +5293,7 @@ public without sharing class FEC_CaseBusinessService {
       isParticipant = participants.contains(String.valueOf(currentUserId));
     }
     
-    if (!isOwner && !isParticipant) {
+    if (!isOwner && !isParticipant && !canBatchImportActOnQueueOwnedCase(currentCase.OwnerId)) {
       throw new CaseBusinessServiceException(
         System.Label.FEC_MSG_Update_Team_Permission_Denied
       );
