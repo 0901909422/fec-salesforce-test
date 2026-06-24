@@ -432,6 +432,25 @@ const EXPORT_HEADER_FIELD_MAP = {
   billamount: "billAmount",
   paymentdate: "paymentDate",
   excessamount: "excessAmount",
+  // 24/06/2026 linhdev - Refund Request (Loan) export (RefundLoanTemp1_PM Level Case info)
+  receiptdate: "receiptDate",
+  receiptamount: "receiptAmount",
+  transactionno: "transactionNo",
+  paymentchannel: "paymentChannel",
+  receiptdatelessthann: "receiptDate2",
+  receiptamountlessthann: "receiptAmount2",
+  transactionnolessthann: "transactionNo2",
+  paymentchannellessthann: "paymentChannel2",
+  refundamount: "refundAmount",
+  beneficiaryname: "beneficiaryName",
+  beneficiaryaccount: "beneficiaryAccount",
+  bankname: "bankName",
+  bankbranch: "bankBranch",
+  provincecity: "provinceCity",
+  "xácminhthôngtin": "verifyInformation",
+  "gọilại": "callback",
+  caseidliênquan: "relatedCaseId",
+  "thôngtinkhcungcấp": "customerProvidedInfo",
   selectedcontractnumber: "selectedContractNumber",
   correctcontractnumber: "correctContractNumber",
   correctaccountcontract: "correctAccountContract",
@@ -447,7 +466,34 @@ const EXPORT_HEADER_FIELD_MAP = {
   ippinterestrate: "ippInterestRate", // Toannd 14/6/2026
   ippterm: "ippTerm", // Toannd 14/6/2026
   ippinsurance: "ippInsurance", // Toannd 14/6/2026
-  ippcurrentterm: "ippCurrentTerm" // Toannd 14/6/2026
+  ippcurrentterm: "ippCurrentTerm", // Toannd 14/6/2026
+  // 24/06/2026 linhdev - Card Unblock/Phone Update D2C/Card Replacement export (account/card block)
+  accountstatus: "accountStatus",
+  plasticid: "plasticId",
+  creditlimit: "creditLimit",
+  blockcode1: "blockCode1",
+  blockcode2: "blockCode2",
+  blockcode: "blockCode",
+  dayspastdue: "daysPastDue",
+  // 24/06/2026 linhdev - Card Replacement export (CardReplacementTemp1/Temp2)
+  cardreplacementreason: "cardReplacementReason",
+  newblockcode: "newBlockCodeCardReplace",
+  // 24/06/2026 linhdev - Point Redemption export (PointsRedemptionTemp1_CSSupport)
+  availablepoints: "availablePoints",
+  redeemedpoints: "redeemedPoints",
+  // 24/06/2026 linhdev - Original MRC Return export (MRCReturnTemp1/Temp2)
+  mrczone: "mrcZone",
+  area: "mrcArea",
+  platenumber: "plateNumber",
+  status: "mrcStatus",
+  statusid: "mrcStatusId",
+  id: "mrcId",
+  remark: "mrcRemark",
+  modifieddate: "mrcModifiedDate",
+  deliverydate: "mrcDeliveryDate",
+  receiveddate: "mrcReceivedDate",
+  receiver: "mrcReceiver",
+  "xácnhậncủakháchhàng": "customerConfirmation"
 };
 const RESULT_COL_STATUS = "__Status";
 const RESULT_COL_ERRORS = "__Errors";
