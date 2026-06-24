@@ -1,6 +1,5 @@
 <template>
-  <lightning-accordion class="fec-chat-info" allow-multiple-sections-open
-    active-section-name={activeSections}>
+  <lightning-accordion class="fec-chat-info" allow-multiple-sections-open active-section-name={activeSections}>
     <lightning-accordion-section name="interactionChatInfo" label={labels.interactionInformation}>
       <div class="slds-var-p-horizontal_medium slds-var-p-vertical_small">
         <div class="fec-info-grid">
@@ -22,8 +21,7 @@
                 <template if:false={isUsernameReadOnly}>
                   <div class="fec-input-wrap">
                     <lightning-input data-id="chat-username-input" type="text" value={usernameDraft}
-                      onchange={handleUsernameChange} variant="label-hidden"
-                      required={isUsernameRequired}
+                      onchange={handleUsernameChange} variant="label-hidden" required={isUsernameRequired}
                       message-when-value-missing={completeFieldMsg}></lightning-input>
                   </div>
                 </template>
@@ -106,9 +104,7 @@
                 <template if:false={isPhoneReadOnly}>
                   <div class="fec-input-wrap">
                     <lightning-input data-id="chat-phone-input" type="tel" value={phoneDraft}
-                      onchange={handlePhoneChange} variant="label-hidden"
-                      required={isPhoneRequired}
-                      message-when-value-missing={completeFieldMsg}></lightning-input>
+                      onchange={handlePhoneChange} variant="label-hidden"></lightning-input>
                   </div>
                 </template>
               </span>
