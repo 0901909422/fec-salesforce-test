@@ -161,6 +161,13 @@ private class FEC_CommonUltils_Test {
         System.assertEquals(false, FEC_CommonUltils.isLengthValid(null, 5));
         System.assertEquals(true, FEC_CommonUltils.isMail('user.name@example.com'));
         System.assertEquals(false, FEC_CommonUltils.isMail('bad-email'));
+        System.assertEquals(null, FEC_CommonUltils.normalizeEmailForField(null));
+        System.assertEquals(null, FEC_CommonUltils.normalizeEmailForField('NULL'));
+        System.assertEquals(null, FEC_CommonUltils.normalizeEmailForField(' null '));
+        System.assertEquals(
+            'user@example.com',
+            FEC_CommonUltils.normalizeEmailForField('user@example.com')
+        );
         System.assertEquals(true, FEC_CommonUltils.isPhone('0901234567'));
         System.assertEquals(true, FEC_CommonUltils.isPhone('84901234567'));
         System.assertEquals(false, FEC_CommonUltils.isPhone('abc'));
