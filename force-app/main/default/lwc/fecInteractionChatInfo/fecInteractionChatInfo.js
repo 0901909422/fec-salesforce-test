@@ -188,7 +188,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     get realPhone() { return this.record?.FEC_Phone_Number__c || STR_EMPTY; }
     get hasPhone() { return !!this.realPhone?.trim(); }
     get hasRequiredChatFields() {
-        return this.hasUsername && this.hasPhone;
+        return this.hasUsername;
     }
     get createdOn() { return formatDateTimeVN(this.record?.FEC_Created_On__c); }
     get createdBy() { return this.record?.FEC_Created_by__c || STR_EMPTY; }
@@ -286,7 +286,7 @@ export default class FecInteractionChatInfo extends LightningElement {
         }
 
         const needsUsername = this.isUsernameRequired && !this.hasUsername;
-        const needsPhone = this.isPhoneRequired && !this.hasPhone;
+        // const needsPhone = this.isPhoneRequired && !this.hasPhone;
         if (!needsUsername && !needsPhone) {
             return false;
         }
@@ -296,10 +296,10 @@ export default class FecInteractionChatInfo extends LightningElement {
             this.isEditingUsername = true;
             this.usernameDraft = this.usernameDraft || STR_EMPTY;
         }
-        if (needsPhone) {
-            this.isEditingPhone = true;
-            this.phoneDraft = this.phoneDraft || STR_EMPTY;
-        }
+        // if (needsPhone) {
+        //     this.isEditingPhone = true;
+        //     this.phoneDraft = this.phoneDraft || STR_EMPTY;
+        // }
 
         // eslint-disable-next-line @lwc/lwc/no-async-operation
         requestAnimationFrame(() => {
@@ -315,16 +315,16 @@ export default class FecInteractionChatInfo extends LightningElement {
                     }
                 }
             }
-            if (needsPhone) {
-                const phoneInput = this.getPhoneInput();
-                if (phoneInput) {
-                    phoneInput.setCustomValidity(FEC_Complete_This_Field);
-                    phoneInput.reportValidity();
-                    if (!focused) {
-                        phoneInput.focus();
-                    }
-                }
-            }
+            // if (needsPhone) {
+            //     const phoneInput = this.getPhoneInput();
+            //     if (phoneInput) {
+            //         phoneInput.setCustomValidity(FEC_Complete_This_Field);
+            //         phoneInput.reportValidity();
+            //         if (!focused) {
+            //             phoneInput.focus();
+            //         }
+            //     }
+            // }
         });
 
         return true;
