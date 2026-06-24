@@ -10,6 +10,7 @@ private class FEC_GetCSCaseStatusService_Test {
             FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
             FEC_Channel_Vietnamese_name__c = 'Inbound',
             FEC_Channel_Status__c = true,
+            FEC_Self_Service_Flag__c = false,
             FEC_Update_Case_Status__c = true
         );
 
@@ -437,6 +438,147 @@ private class FEC_GetCSCaseStatusService_Test {
             TEST_ACCOUNT_NUMBER;
         req.CaseRequestInfo.ContractOrAccountInfos.ProductType = 'CreditCard';
         return req;
+    }
+
+    @IsTest
+    static void testGetCSCaseStatus_SelfServiceChannel_OpenCaseUsesCreateRemark() {
+        insert new FEC_Channel__c(
+            Name = 'Self Service',
+            FEC_Channel_ID__c = 'SELF_SERVICE',
+            FEC_Channel_Vietnamese_name__c = 'Self Service',
+            FEC_Channel_Status__c = true,
+            FEC_Self_Service_Flag__c = true,
+            FEC_Update_Case_Status__c = true
+        );
+
+        Case testCase = [
+            SELECT Id
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CASE123'
+            LIMIT 1
+        ];
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = testCase.Id,
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        insert new FEC_Case_Remarks__c(
+            FEC_Case__c = testCase.Id,
+            FEC_Case_Remarks__c = 'Latest stage remark',
+            FEC_Stage_Name__c = 'Stage 2',
+            FEC_User_Role__c = 'Checker'
+        );
+
+        FEC_GetCSCaseStatusService.GetCSCaseStatusRequest req = buildMinimalRequest();
+        req.Sys.Channel = 'SELF_SERVICE';
+
+        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res =
+            FEC_GetCSCaseStatusService.GetCSCaseStatus(req);
+
+        System.assertEquals(
+            'Status test remarks',
+            res.CaseResultInfos[0].Remarks,
+            'Self-service channel should not expose last remark until case is resolved.'
+        );
+    }
+
+    @IsTest
+    static void testGetCSCaseStatus_SelfServiceChannel_ResolvedCaseUsesLastRemark() {
+        insert new FEC_Channel__c(
+            Name = 'Self Service Resolved',
+            FEC_Channel_ID__c = 'SELF_SERVICE_RESOLVED',
+            FEC_Channel_Vietnamese_name__c = 'Self Service Resolved',
+            FEC_Channel_Status__c = true,
+            FEC_Self_Service_Flag__c = true,
+            FEC_Update_Case_Status__c = true
+        );
+
+        Case testCase = [
+            SELECT Id
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CASE123'
+            LIMIT 1
+        ];
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = testCase.Id,
+                Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        insert new FEC_Case_Remarks__c(
+            FEC_Case__c = testCase.Id,
+            FEC_Case_Remarks__c = 'Resolved last remark',
+            FEC_Stage_Name__c = 'Stage resolved',
+            FEC_User_Role__c = 'Checker'
+        );
+
+        FEC_GetCSCaseStatusService.GetCSCaseStatusRequest req = buildMinimalRequest();
+        req.Sys.Channel = 'SELF_SERVICE_RESOLVED';
+
+        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res =
+            FEC_GetCSCaseStatusService.GetCSCaseStatus(req);
+
+        System.assertEquals(
+            'Resolved last remark',
+            res.CaseResultInfos[0].Remarks,
+            'Self-service channel should return last remark when case is resolved.'
+        );
+    }
+
+    @IsTest
+    static void testGetCSCaseStatus_NonSelfServiceChannel_AlwaysUsesLastRemark() {
+        FEC_Channel__c inboundChannel = [
+            SELECT Id
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_ID__c = :FEC_ConstantCommon.CHANNEL_INBOUND_NAME
+            LIMIT 1
+        ];
+        inboundChannel.FEC_Self_Service_Flag__c = false;
+        update inboundChannel;
+
+        Case testCase = [
+            SELECT Id
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CASE123'
+            LIMIT 1
+        ];
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = testCase.Id,
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        insert new FEC_Case_Remarks__c(
+            FEC_Case__c = testCase.Id,
+            FEC_Case_Remarks__c = 'Open case last remark',
+            FEC_Stage_Name__c = 'Stage open',
+            FEC_User_Role__c = 'Maker'
+        );
+
+        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res =
+            FEC_GetCSCaseStatusService.GetCSCaseStatus(buildMinimalRequest());
+
+        System.assertEquals(
+            'Open case last remark',
+            res.CaseResultInfos[0].Remarks,
+            'Non-self-service channel should always return last remark.'
+        );
     }
 
     @IsTest
