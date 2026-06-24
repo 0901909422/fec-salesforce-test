@@ -463,6 +463,259 @@ public without sharing class FEC_CustomEmailService {
         FEC_ConstantCommon.CASE_STATUS_CANCELLED
     };
 
+    /**
+     * tungnm37 fix: Convert Salesforce internal image URLs trong HTML body sang public URLs
+     * (ContentDistribution) de Gmail/Outlook client co the load anh header/footer ma khong bi chan.
+     * Anh luu trong FEC_Header__c / FEC_Footer__c (lightning-input-rich-text) co URL noi bo
+     * (servlet/servlet/rtaImage, *.force.com, /sfc/servlet, /content/...) can auth -> Gmail proxy block.
+     * Tra ve HTML body voi cac image src da duoc thay bang public URL.
+     */
+    public static String publicizeImagesForEmail(String htmlBody) {
+        if (String.isBlank(htmlBody)) return htmlBody;
+        try {
+            // Regex: bat tat ca <img ... src='...' ... >  (src dung single hoac double quote)
+            Pattern imgPat = Pattern.compile('(?i)<img[^>]+src\s*=\s*["\'](.*?)["\']');
+            Matcher imgMat = imgPat.matcher(htmlBody);
+            if (!imgMat.find()) return htmlBody;
+
+            // Reset matcher de duyet lai tu dau
+            imgMat = imgPat.matcher(htmlBody);
+            List<String> internalUrls = new List<String>();
+            while (imgMat.find()) {
+                String src = imgMat.group(1);
+                if (String.isNotBlank(src) && isInternalSalesforceImageUrl(src)) {
+                    internalUrls.add(src);
+                }
+            }
+            if (internalUrls.isEmpty()) return htmlBody;
+
+            // Trich raw Id tu tung internal URL (khong co SOQL - chi regex)
+            Set<Id> cvIds = new Set<Id>();
+            Set<Id> contentDocIds = new Set<Id>();
+            Map<String, String> urlToRawId = new Map<String, String>();
+            for (String url : internalUrls) {
+                String rawId = extractRawIdFromUrl(url);
+                if (String.isBlank(rawId)) continue;
+                urlToRawId.put(url, rawId);
+                if (rawId.startsWith('068')) {
+                    cvIds.add((Id) rawId);
+                } else if (rawId.startsWith('05D') || rawId.startsWith('05d')) {
+                    contentDocIds.add((Id) rawId);
+                }
+            }
+
+            // Batch resolve ContentDocument (05D) -> ContentVersion (068) trong 1 SOQL duy nhat
+            if (!contentDocIds.isEmpty()) {
+                for (ContentVersion cv : [
+                    SELECT Id, ContentDocumentId FROM ContentVersion
+                    WHERE ContentDocumentId IN :contentDocIds AND IsLatest = true
+                ]) {
+                    cvIds.add(cv.Id);
+                    // Map raw 05D Id -> 068 Id de dung o buoc sau
+                    if (urlToRawId != null) {
+                        for (String url : urlToRawId.keySet()) {
+                            String docId15 = String.valueOf(cv.ContentDocumentId).substring(0, 15);
+                            String rawId15 = urlToRawId.get(url);
+                            if (String.isNotBlank(rawId15) && rawId15.length() >= 15 && rawId15.substring(0, 15) == docId15) {
+                                urlToRawId.put(url, String.valueOf(cv.Id));
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            // Fallback cho rich-text image refid dang 0EM...: fetch binary truc tiep bang session hien tai,
+            // sau do luu lai thanh ContentVersion de tao direct public download URL cho Gmail.
+            List<ContentVersion> fetchedImageVersions = new List<ContentVersion>();
+            List<String> fetchedUrls = new List<String>();
+            for (String url : internalUrls) {
+                String resolvedId = urlToRawId.get(url);
+                if (String.isNotBlank(resolvedId) && resolvedId.startsWith('068')) continue; // da resolve duoc thanh ContentVersion
+                Blob imgBlob = fetchInternalImageBlob(url);
+                if (imgBlob == null || imgBlob.size() == 0) continue;
+                String inferredFileName = inferImageFileNameFromUrl(url);
+                ContentVersion fetchedCv = new ContentVersion();
+                fetchedCv.Title = inferredFileName.contains('.') ? inferredFileName.substringBeforeLast('.') : inferredFileName;
+                fetchedCv.PathOnClient = inferredFileName;
+                fetchedCv.VersionData = imgBlob;
+                fetchedImageVersions.add(fetchedCv);
+                fetchedUrls.add(url);
+            }
+            if (!fetchedImageVersions.isEmpty()) {
+                insert fetchedImageVersions;
+                for (ContentVersion insertedCv : [SELECT Id, Title, PathOnClient FROM ContentVersion WHERE Id IN :fetchedImageVersions]) {
+                    cvIds.add(insertedCv.Id);
+                }
+                // Re-map inserted ContentVersions theo thu tu tao de thay URL ve sau
+                for (Integer idx = 0; idx < fetchedUrls.size() && idx < fetchedImageVersions.size(); idx++) {
+                    urlToRawId.put(fetchedUrls[idx], String.valueOf(fetchedImageVersions[idx].Id));
+                }
+            }
+            // Tao ContentDistribution cho cac ContentVersion chua co public link
+            if (!cvIds.isEmpty()) {
+                Map<Id, ContentDistribution> existingDist = new Map<Id, ContentDistribution>();
+                for (ContentDistribution cd : [
+                    SELECT Id, ContentVersionId, ContentDownloadUrl
+                    FROM ContentDistribution WHERE ContentVersionId IN :cvIds
+                ]) {
+                    existingDist.put(cd.ContentVersionId, cd);
+                }
+
+                List<ContentDistribution> toCreate = new List<ContentDistribution>();
+                Set<Id> needCreate = new Set<Id>();
+                for (Id cvId : cvIds) {
+                    if (!existingDist.containsKey(cvId)) needCreate.add(cvId);
+                }
+                if (!needCreate.isEmpty()) {
+                    for (Id cvId : needCreate) {
+                        ContentDistribution cd = new ContentDistribution(
+                            Name = 'Email Image ' + cvId,
+                            ContentVersionId = cvId
+                        );
+                        toCreate.add(cd);
+                    }
+                    insert toCreate;
+                    for (ContentDistribution cd : [
+                        SELECT Id, ContentVersionId, ContentDownloadUrl
+                        FROM ContentDistribution WHERE Id IN :toCreate
+                    ]) {
+                        existingDist.put(cd.ContentVersionId, cd);
+                    }
+                }
+
+                Map<String, String> urlToPublicUrl = new Map<String, String>();
+                for (String url : internalUrls) {
+                    String cvId = urlToRawId.get(url);
+                    if (String.isNotBlank(cvId) && existingDist.containsKey((Id) cvId)) {
+                        String publicUrl = existingDist.get((Id) cvId).ContentDownloadUrl;
+                        if (String.isNotBlank(publicUrl)) urlToPublicUrl.put(url, publicUrl);
+                    }
+                }
+                if (urlToPublicUrl.isEmpty()) return htmlBody;
+
+                String result = htmlBody;
+                for (String internalUrl : urlToPublicUrl.keySet()) {
+                    result = result.replace(internalUrl, urlToPublicUrl.get(internalUrl));
+                }
+                return result;
+            }
+            return htmlBody;
+        } catch (Exception e) {
+            System.debug('publicizeImagesForEmail failed: ' + e.getMessage());
+            return htmlBody;
+        }
+    }
+
+    private static Boolean isInternalSalesforceImageUrl(String url) {
+        if (String.isBlank(url)) return false;
+        String lower = url.toLowerCase();
+        if (lower.startsWith('data:')) return false;
+        if (lower.contains('/servlet/servlet/rtaimage')) return true;
+        if (lower.contains('/servlet/rtaimage')) return true;
+        if (lower.contains('/sfc/servlet')) return true;
+        if (lower.contains('/content/servlet')) return true;
+        if (lower.contains('.force.com/') && lower.contains('rtaimage')) return true;
+        if (lower.contains('/sfc/p/b')) return true;
+        return false;
+    }
+
+    /**
+     * Trich raw Salesforce Id (15 hoac 18 ky tu) tu image URL chi bang regex - KHONG SOQL.
+     * Tra ve ContentVersion Id (068) hoac ContentDocument Id (05D) tuy loai URL.
+     * Su dung trong vong lap; viec resolve 05D -> 068 duoc batch o ngoai.
+     */
+    private static String extractRawIdFromUrl(String url) {
+        if (String.isBlank(url)) return null;
+        try {
+            // rtaImage?refid=068...  hoac  rtaImage?refid=05D...
+            Pattern refPat = Pattern.compile('(?i)refid=([a-z0-9]{15,18})');
+            Matcher refMat = refPat.matcher(url);
+            if (refMat.find()) return refMat.group(1);
+            // /ContentVersion/068...
+            Pattern cvPat = Pattern.compile('(?i)/contentversion/([a-z0-9]{15,18})');
+            Matcher cvMat = cvPat.matcher(url);
+            if (cvMat.find()) return cvMat.group(1);
+            // Generic 18-char ContentVersion Id (068 prefix)
+            Pattern idPat = Pattern.compile('(?i)068[a-z0-9]{12,15}');
+            Matcher idMat = idPat.matcher(url);
+            if (idMat.find()) return idMat.group(0);
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Convenience wrapper: trich Id tu URL va resolve 05D -> 068 (co 1 SOQL).
+     * CHI dung cho single call - khong dung trong vong lap.
+     */
+    private static String extractContentVersionIdFromUrl(String url) {
+        String rawId = extractRawIdFromUrl(url);
+        if (String.isBlank(rawId)) return null;
+        if (rawId.startsWith('068')) return rawId;
+        if (rawId.startsWith('05D') || rawId.startsWith('05d')) {
+            try {
+                List<ContentVersion> cvs = [
+                    SELECT Id FROM ContentVersion
+                    WHERE ContentDocumentId = :rawId AND IsLatest = true LIMIT 1
+                ];
+                if (!cvs.isEmpty()) return cvs[0].Id;
+            } catch (Exception e) { return null; }
+        }
+        return null;
+    }
+
+
+
+    private static Blob fetchInternalImageBlob(String imageUrl) {
+        if (String.isBlank(imageUrl)) return null;
+        try {
+            String endpointUrl = imageUrl;
+            if (endpointUrl.startsWith('/')) {
+                endpointUrl = URL.getOrgDomainUrl().toExternalForm() + endpointUrl;
+            } else if (!endpointUrl.startsWith('http://') && !endpointUrl.startsWith('https://')) {
+                endpointUrl = URL.getOrgDomainUrl().toExternalForm() + '/' + endpointUrl;
+            }
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(endpointUrl.replace('&amp;', '&'));
+            req.setMethod('GET');
+            req.setTimeout(15000);
+            Map<String, String> sessionInfo = Auth.SessionManagement.getCurrentSession();
+            String sid = sessionInfo != null ? sessionInfo.get('SESSION_ID') : null;
+            if (String.isNotBlank(sid)) req.setHeader('Authorization', 'Bearer ' + sid);
+            HttpResponse res = new Http().send(req);
+            if (res.getStatusCode() == 200) return res.getBodyAsBlob();
+            System.debug('fetchInternalImageBlob non-200: ' + res.getStatusCode() + ' for ' + endpointUrl);
+            // Fallback 2: PageReference.getContent() - works in batch/async context where session may be unavailable
+            try {
+                PageReference pr = new PageReference(endpointUrl.replace('&amp;', '&'));
+                Blob imgBlob = Test.isRunningTest() ? Blob.valueOf('Mock Image') : pr.getContent();
+                if (imgBlob != null && imgBlob.size() > 0) return imgBlob;
+            } catch (Exception e2) {
+                System.debug('fetchInternalImageBlob PageReference fallback failed: ' + e2.getMessage());
+            }
+        } catch (Exception e) {
+            System.debug('fetchInternalImageBlob failed: ' + e.getMessage());
+            return null;
+        }
+        return null;
+    }
+
+    private static String inferImageFileNameFromUrl(String imageUrl) {
+        String safeName = 'email-image.png';
+        if (String.isBlank(imageUrl)) return safeName;
+        try {
+            Pattern altPat = Pattern.compile('(?i)(?:filename|name)=([^&]+)');
+            Matcher altMat = altPat.matcher(imageUrl);
+            if (altMat.find()) return altMat.group(1).replace('%20', ' ');
+            String refId = extractRawIdFromUrl(imageUrl);
+            if (String.isNotBlank(refId)) return 'email-image-' + refId + '.png';
+            return safeName;
+        } catch (Exception e) {
+            return safeName;
+        }
+    }
     // Wrapper cho attachment từ client
     public class AttachmentWrapper {
         @AuraEnabled public String fileName { get; set; }
@@ -533,8 +786,11 @@ public without sharing class FEC_CustomEmailService {
             String subjectWithThread = subject.contains('[ ref:') ? subject : subject + ' ' + threadToken;
 
             mail.setSubject(subjectWithThread);
-            // Resolve merge fields {{{...}}} và {{...}} trong body trước khi gửi
+            // Resolve merge fields {{{...}}} va {{...}} trong body truoc khi gui
             String resolvedBody = resolveEmailTemplateText(body != null ? body : '', loadCaseForTemplateResolve(caseId, new List<String>{ body }));
+            // tungnm37 fix: Convert internal Salesforce image URLs (header/footer) sang public ContentDistribution URL
+            // de Gmail/Outlook khong bi chan anh khi hien thi email
+            resolvedBody = publicizeImagesForEmail(resolvedBody);
             mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
 
@@ -582,7 +838,7 @@ public without sharing class FEC_CustomEmailService {
                 em.ToAddress = toEmail;
                 if (String.isNotBlank(ccEmail)) em.CcAddress = ccEmail;
                 em.Subject = subjectWithThread;
-                em.HtmlBody = body;
+                em.HtmlBody = resolvedBody;
                 em.TextBody = body.replaceAll('<[^>]+>', '');
                 em.Incoming = false;
                 em.Status = '3';
@@ -659,4 +915,3 @@ public without sharing class FEC_CustomEmailService {
         insert t;
     }
 }
-
