@@ -229,4 +229,54 @@ private class FEC_CustomerAddDataController_Test {
 
         System.assertEquals(1, rows.size(), 'Search Interaction với Account/Contract phải hiển thị Additional Data.');
     }
+
+    @IsTest
+    static void testGetAdditionalDataRows_ContractNoKey() {
+        String contractNo = '20241128-9918678';
+        Date todayVn = FEC_CustomerAdditionalDataController.getTodayVietnam();
+
+        FEC_CustomerAdditionalInfoConfig__c cfg = new FEC_CustomerAdditionalInfoConfig__c(
+            FEC_KeyIdentifier__c = 'CONTRACT_NO',
+            FEC_FieldID__c = 'MRCField',
+            FEC_Status__c = FEC_ConstantCommon.PROCESSED_STATUS,
+            FEC_IsActive__c = true,
+            FEC_StartDate__c = todayVn,
+            FEC_EndDate__c = todayVn.addDays(1),
+            FEC_FieldName__c = 'Thư hoàn MRC'
+        );
+        insert cfg;
+
+        insert new FEC_CustomerAdditionalInfo__c(
+            FEC_IsActive__c = true,
+            FEC_KeyIdentifier__c = 'CONTRACT_NO',
+            FEC_KeyIDValue__c = contractNo,
+            FEC_FieldID__c = 'MRCField',
+            FEC_Config__c = cfg.Id,
+            FEC_FieldValue__c = 'MRC Value',
+            FEC_CompositeKey__c = contractNo + '!CONTRACT_NO!MRCField'
+        );
+
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_CustomerAdditionalInfo__c info = [
+            SELECT CreatedDate FROM FEC_CustomerAdditionalInfo__c
+            WHERE FEC_KeyIdentifier__c = 'CONTRACT_NO' LIMIT 1
+        ];
+        Test.setCreatedDate(c.Id, info.CreatedDate.addSeconds(1));
+        update new FEC_Customer_History__c(
+            Id = c.FEC_Account_or_Contract__c,
+            FEC_CIF_Number__c = null,
+            FEC_National_ID_Passport_ID__c = null,
+            FEC_Account_Number__c = null,
+            FEC_Contract_Number__c = contractNo
+        );
+
+        Test.startTest();
+        List<FEC_CustomerAdditionalDataController.RowDTO> rows =
+            FEC_CustomerAdditionalDataController.getAdditionalDataRows(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(1, rows.size(), 'CONTRACT_NO phải match FEC_Contract_Number__c khi Account Number null.');
+        System.assertEquals('MRC Value', rows[0].fieldValue);
+        System.assertEquals('Thư hoàn MRC', rows[0].fieldLabel);
+    }
 }

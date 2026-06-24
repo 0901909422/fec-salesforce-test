@@ -121,7 +121,8 @@ public with sharing class FEC_CustomerAdditionalDataController {
                    FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
                    FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
                    FEC_Account_or_Contract__r.FEC_Application_ID__c,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Contract_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -139,13 +140,8 @@ public with sharing class FEC_CustomerAdditionalDataController {
         tryPutSingleLookupKey(m, KEY_ID_CARD, ac.FEC_National_ID_Passport_ID__c);
         tryPutSingleLookupKey(m, KEY_PHONE_NUMBER, ac.FEC_Primary_Phone__c);
         tryPutSingleLookupKey(m, KEY_APPLICATION_ID, ac.FEC_Application_ID__c);
-        if (ac.FEC_Account_Number__c != null) {
-            String acctTrim = ac.FEC_Account_Number__c.trim();
-            if (!String.isBlank(acctTrim)) {
-                m.put(KEY_ACCOUNT_NO, new Set<String>{ acctTrim });
-                m.put(KEY_CONTRACT_NO, new Set<String>{ acctTrim });
-            }
-        }
+        tryPutSingleLookupKey(m, KEY_ACCOUNT_NO, ac.FEC_Account_Number__c);
+        tryPutSingleLookupKey(m, KEY_CONTRACT_NO, ac.FEC_Contract_Number__c);
         return m;
     }
 
