@@ -4517,10 +4517,6 @@
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
-        <tab>FEC_Product_Type__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
         <tab>FEC_Routing_Action_History__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
