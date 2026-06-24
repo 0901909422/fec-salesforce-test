@@ -698,7 +698,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Card_Number__c = m != null ? m.MaskedCardNumber : null,
             FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
-            FEC_Product_Association__c = m != null ? m.ProductAssociation : null,
+            // FEC_Product_Association__c = m != null ? m.ProductAssociation : null, // field formula
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
             FEC_Card_Type__c = m != null
                 ? FEC_CommonUltils.resolveCardType(
