@@ -75,6 +75,16 @@ public without sharing class FEC_EmailMessageTriggerHandler {
             }
         }
 
+
+        Set<Id> serviceCaseParentIds = new Set<Id>();
+        if (!interactionParentIds.isEmpty()) {
+            for (Case c : [SELECT Id, RecordType.DeveloperName FROM Case
+                            WHERE Id IN :interactionParentIds
+                            AND RecordType.DeveloperName IN :TARGET_RECORD_TYPES]) {
+                serviceCaseParentIds.add(c.Id);
+            }
+        }
+
         Map<Id, Integer> interactionParentOutgoingCount = new Map<Id, Integer>();
         if (!interactionParentIds.isEmpty()) {
             for (AggregateResult ar : [
@@ -93,6 +103,9 @@ public without sharing class FEC_EmailMessageTriggerHandler {
             Case oldInteraction = parentCaseMap.get(em.ParentId);
             if (oldInteraction == null) continue;
             if (oldInteraction.RecordType == null || oldInteraction.RecordType.DeveloperName != 'Interaction') continue;
+            if (oldInteraction.ParentId != null && serviceCaseParentIds.contains(oldInteraction.ParentId)) {
+                continue;
+            }
             if (oldInteraction.ParentId != null
                 && interactionParentOutgoingCount.containsKey(oldInteraction.ParentId)
                 && interactionParentOutgoingCount.get(oldInteraction.ParentId) > 0) {
