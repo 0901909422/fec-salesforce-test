@@ -192,7 +192,7 @@ private class FEC_CardInfoController_Test {
             System.assertEquals(1, result.cardDeliveries.size());
             System.assertEquals(1, result.otherCards.size());
             System.assertEquals('412345******6789', result.cardDeliveries[0].cardNumber);
-            System.assertEquals('5123450000009999', result.otherCards[0].cardNumber);
+            System.assertEquals('512345******9999', result.otherCards[0].cardNumber);
         }
     }
 
