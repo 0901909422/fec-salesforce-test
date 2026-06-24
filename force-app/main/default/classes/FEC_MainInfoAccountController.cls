@@ -118,6 +118,7 @@ public without sharing class FEC_MainInfoAccountController {
         FEC_GetApplicationsList.ResponseWrapper appRes;
         FEC_EmeaAccountInqService.EmeaResult emeaRes;
         FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
+        String dealIdFromProductList;
 
         FEC_CommonUltils.beginDeferredApiLogging();
         try {
@@ -198,13 +199,34 @@ public without sharing class FEC_MainInfoAccountController {
                 System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
                 cardSecRes = null;
             }
+
+            String acctForDealMatch = (cardRes != null
+                && cardRes.CardBasicInfo != null
+                && cardRes.CardBasicInfo.MainCard != null)
+                ? cardRes.CardBasicInfo.MainCard.AccountNumber
+                : accountNumber;
+            dealIdFromProductList = resolveDealIdFromProductList(
+                cifNumber,
+                null,
+                acctForDealMatch
+            );
         } finally {
             FEC_CommonUltils.flushDeferredApiLogs();
         }
 
-        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, emeaRes, appRes, cardSecRes);
+        updateAccountFromAPI(
+            c.FEC_Account_or_Contract__c,
+            cardRes,
+            cusRes,
+            emeaRes,
+            appRes,
+            cardSecRes,
+            dealIdFromProductList
+        );
 
-        return fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
+        MainInfoDTO dto = fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
+        applyDealIdToDto(dto, dealIdFromProductList);
+        return dto;
     }
 
     @AuraEnabled
@@ -366,10 +388,13 @@ public without sharing class FEC_MainInfoAccountController {
 
         String accountNumber;
         String cifNumber;
+        String applicationIdForDeal;
+        String accountNumberForDeal;
 
         if (c.FEC_Account_or_Contract__c != null) {
             FEC_Customer_History__c acc = [
-                SELECT FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
+                SELECT FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c,
+                    FEC_Application_ID__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
@@ -381,10 +406,13 @@ public without sharing class FEC_MainInfoAccountController {
                 acc.FEC_Contract_Number__c
             );
             cifNumber = acc.FEC_CIF_Number__c;
+            applicationIdForDeal = acc.FEC_Application_ID__c;
+            accountNumberForDeal = acc.FEC_Account_Number__c;
         }
 
         FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper mcms;
         FEC_EmeaAccountInqService.EmeaResult emeaRes;
+        String dealIdFromProductList;
 
         FEC_CommonUltils.beginDeferredApiLogging();
         try {
@@ -423,6 +451,12 @@ public without sharing class FEC_MainInfoAccountController {
                 System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
                 emeaRes = null;
             }
+
+            dealIdFromProductList = resolveDealIdFromProductList(
+                cifNumber,
+                applicationIdForDeal,
+                accountNumberForDeal
+            );
         } finally {
             FEC_CommonUltils.flushDeferredApiLogs();
         }
@@ -431,7 +465,7 @@ public without sharing class FEC_MainInfoAccountController {
 
         MainInfoDTO dto = fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
         overlayEmeaFinancialsOnDto(dto, emeaRes);
-        overlayContractNumberFromProductList(dto, cifNumber);
+        applyDealIdToDto(dto, dealIdFromProductList);
         return dto;
     }
 
@@ -522,8 +556,12 @@ public without sharing class FEC_MainInfoAccountController {
         return fin;
     }
 
-    private static String resolveDealIdFromProductList(String cifNumber, String applicationId) {
-        if (String.isBlank(cifNumber) || String.isBlank(applicationId)) {
+    private static String resolveDealIdFromProductList(
+        String cifNumber,
+        String applicationId,
+        String accountNumber
+    ) {
+        if (String.isBlank(cifNumber)) {
             return null;
         }
 
@@ -531,14 +569,31 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_GetProductListCallout.CIF_GetProductsListResponse res =
                 FEC_GetProductListCallout.callService(cifNumber);
 
-            if (res == null || res.products == null) {
+            if (res == null || res.products == null || res.products.isEmpty()) {
                 return null;
             }
 
-            for (FEC_GetProductListCallout.ProductInfo p : res.products) {
-                if (applicationId == p.applicationId) {
-                    return p.dealId;
+            if (String.isNotBlank(applicationId)) {
+                for (FEC_GetProductListCallout.ProductInfo p : res.products) {
+                    if (applicationId == p.applicationId) {
+                        return p.dealId;
+                    }
                 }
+            }
+
+            if (String.isNotBlank(accountNumber)) {
+                String normalizedAccount = accountNumber.trim();
+                for (FEC_GetProductListCallout.ProductInfo p : res.products) {
+                    if (p.accountNumber != null
+                        && normalizedAccount == p.accountNumber.trim()) {
+                        return p.dealId;
+                    }
+                }
+            }
+
+            if (res.products.size() == 1
+                && String.isNotBlank(res.products[0].dealId)) {
+                return res.products[0].dealId;
             }
         } catch (Exception e) {
             System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
@@ -547,13 +602,8 @@ public without sharing class FEC_MainInfoAccountController {
         return null;
     }
 
-    private static void overlayContractNumberFromProductList(MainInfoDTO dto, String cifNumber) {
-        if (dto == null) {
-            return;
-        }
-
-        String dealId = resolveDealIdFromProductList(cifNumber, dto.applicationId);
-        if (String.isNotBlank(dealId)) {
+    private static void applyDealIdToDto(MainInfoDTO dto, String dealId) {
+        if (dto != null && String.isNotBlank(dealId)) {
             dto.contractNumber = dealId;
         }
     }
@@ -586,7 +636,8 @@ public without sharing class FEC_MainInfoAccountController {
         FEC_GetCustomerList.ResponseWrapper cusRes,
         FEC_EmeaAccountInqService.EmeaResult emeaRes,
         FEC_GetApplicationsList.ResponseWrapper appRes,
-        FEC_GetCardSecInfo.ResponseWrapper cardSecRes
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes,
+        String dealId
     ) {
         if (accountId == null) return;
 
@@ -670,11 +721,6 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
-
-        String dealId = resolveDealIdFromProductList(
-            hist.FEC_CIF_Number__c,
-            a != null ? a.ApplicationID : null
-        );
 
         FEC_Customer_History__c accountToUpdate = new FEC_Customer_History__c(
             Id = accountId,
