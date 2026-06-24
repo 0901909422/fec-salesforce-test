@@ -122,8 +122,13 @@ public with sharing class FEC_FullCustomerIntegrationJob
             if (String.isNotBlank(result.primaryPhone)) {
                 hist.FEC_Primary_Phone__c = result.primaryPhone;
             }
-            if (String.isNotBlank(result.emailAddress)) {
-                hist.FEC_Email__c = result.emailAddress;
+            String email = FEC_CommonUltils.normalizeEmailForField(result.emailAddress);
+            if (String.isNotBlank(email)) {
+                hist.FEC_Email__c = email;
+            } else {
+                hist.FEC_Email__c = FEC_CommonUltils.normalizeEmailForField(
+                    hist.FEC_Email__c
+                );
             }
             if (String.isNotBlank(result.plasticID)) {
                 hist.FEC_Plastic_ID__c = result.plasticID;

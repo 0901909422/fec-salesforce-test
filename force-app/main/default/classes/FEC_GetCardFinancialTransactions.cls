@@ -45,6 +45,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
         public String RRN;
         public String AuthCode;
         public String MerchantName;
+        public String MCC;
         public String PaymentFlag;
         public String IsCashTRNX;
         public Integer OTPSent;
@@ -295,47 +296,72 @@ public with sharing class FEC_GetCardFinancialTransactions {
         }
  
         // ================= TRANSACTIONS =================
-    result.Transactions = new List<FinancialTransaction>();
- 
-    Dom.XmlNode txnsNode = responseNode.getChildElement('Transactions', null);
-    if (txnsNode != null) {
- 
-        for (Dom.XmlNode txnNode : txnsNode.getChildElements()) {
+        result.Transactions = new List<FinancialTransaction>();
+
+        Dom.XmlNode txnsNode = responseNode.getChildElement('Transactions', null);
+        if (txnsNode != null) {
+            collectFinancialTransactions(txnsNode, result.Transactions);
+        }
+
+        return result;
+    }
+
+    private static void collectFinancialTransactions(
+        Dom.XmlNode parentNode,
+        List<FinancialTransaction> target
+    ) {
+        if (parentNode == null || target == null) {
+            return;
+        }
+
+        for (Dom.XmlNode txnNode : parentNode.getChildElements()) {
             String nodeName = txnNode.getName();
             if (nodeName != null && nodeName.contains(':')) {
                 nodeName = nodeName.substring(nodeName.indexOf(':') + 1);
             }
-            if (nodeName != 'FinancialTransactions' && nodeName != 'Transaction') {
-                continue;
-            }
- 
-            FinancialTransaction ft = new FinancialTransaction();
-            ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
-            ft.Description = FEC_CommonUltils.getXmlValue(txnNode, 'Description');
-            ft.CreditDebitFlag = FEC_CommonUltils.getXmlValue(txnNode, 'CreditDebitFlag');
-            ft.TransactionType = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionType');
-            ft.Status = FEC_CommonUltils.getXmlValue(txnNode, 'Status');
-            ft.TRNXAmount = FEC_CommonUltils.xmlValToDecimal(txnNode, 'TRNXAmount');
-            ft.TransactionCode = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionCode');
-            ft.Fee = FEC_CommonUltils.xmlValToDecimal(txnNode, 'Fee');
-            ft.PostingDate = FEC_CommonUltils.getXmlValue(txnNode, 'PostingDate');
-            ft.SettlementDate = FEC_CommonUltils.getXmlValue(txnNode, 'SettlementDate');
-            ft.Plan = FEC_CommonUltils.getXmlValue(txnNode, 'Plan');
-            ft.PlanType = FEC_CommonUltils.getXmlValue(txnNode, 'PlanType');
-            ft.RRN = FEC_CommonUltils.getXmlValue(txnNode, 'RRN');
-            ft.AuthCode = FEC_CommonUltils.getXmlValue(txnNode, 'AuthCode');
-            ft.MerchantName = FEC_CommonUltils.getXmlValue(txnNode, 'MerchantName');
-            ft.PaymentFlag = FEC_CommonUltils.getXmlValue(txnNode, 'PaymentFlag');
-            ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
-            ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
-            ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
-            ft.TRNXCurrencyCode = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXCurrencyCode');
 
-            result.Transactions.add(ft);
+            if (nodeName == 'FinancialTransactions'
+                || nodeName == 'FinancialTransaction'
+                || nodeName == 'Transaction') {
+                if (hasFinancialTransactionFields(txnNode)) {
+                    target.add(parseFinancialTransaction(txnNode));
+                } else {
+                    collectFinancialTransactions(txnNode, target);
+                }
+            }
         }
- 
-        }
- 
-        return result;
+    }
+
+    private static Boolean hasFinancialTransactionFields(Dom.XmlNode txnNode) {
+        return String.isNotBlank(FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime'))
+            || String.isNotBlank(FEC_CommonUltils.getXmlValue(txnNode, 'PostingDate'))
+            || FEC_CommonUltils.xmlValToDecimal(txnNode, 'TRNXAmount') != null
+            || String.isNotBlank(FEC_CommonUltils.getXmlValue(txnNode, 'TransactionCode'));
+    }
+
+    private static FinancialTransaction parseFinancialTransaction(Dom.XmlNode txnNode) {
+        FinancialTransaction ft = new FinancialTransaction();
+        ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
+        ft.Description = FEC_CommonUltils.getXmlValue(txnNode, 'Description');
+        ft.CreditDebitFlag = FEC_CommonUltils.getXmlValue(txnNode, 'CreditDebitFlag');
+        ft.TransactionType = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionType');
+        ft.Status = FEC_CommonUltils.getXmlValue(txnNode, 'Status');
+        ft.TRNXAmount = FEC_CommonUltils.xmlValToDecimal(txnNode, 'TRNXAmount');
+        ft.TransactionCode = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionCode');
+        ft.Fee = FEC_CommonUltils.xmlValToDecimal(txnNode, 'Fee');
+        ft.PostingDate = FEC_CommonUltils.getXmlValue(txnNode, 'PostingDate');
+        ft.SettlementDate = FEC_CommonUltils.getXmlValue(txnNode, 'SettlementDate');
+        ft.Plan = FEC_CommonUltils.getXmlValue(txnNode, 'Plan');
+        ft.PlanType = FEC_CommonUltils.getXmlValue(txnNode, 'PlanType');
+        ft.RRN = FEC_CommonUltils.getXmlValue(txnNode, 'RRN');
+        ft.AuthCode = FEC_CommonUltils.getXmlValue(txnNode, 'AuthCode');
+        ft.MerchantName = FEC_CommonUltils.getXmlValue(txnNode, 'MerchantName');
+        ft.MCC = FEC_CommonUltils.getXmlValue(txnNode, 'MCC');
+        ft.PaymentFlag = FEC_CommonUltils.getXmlValue(txnNode, 'PaymentFlag');
+        ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
+        ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
+        ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
+        ft.TRNXCurrencyCode = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXCurrencyCode');
+        return ft;
     }
 }

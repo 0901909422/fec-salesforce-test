@@ -50,6 +50,16 @@ public without sharing class FEC_SecondaryController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
+        FEC_CommonUltils.beginDeferredApiLogging();
+        try {
+            return loadSecondaryInfoInternal(caseId);
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
+        }
+    }
+
+    private static SecondaryInfoDTO loadSecondaryInfoInternal(Id caseId) {
+
         /* ===== LOAD CASE ===== */
         Case c = [
             SELECT Id, FEC_Account_or_Contract__c
@@ -140,7 +150,12 @@ public without sharing class FEC_SecondaryController {
                     ));
 
                    if( pc.Contact.Channel == FEC_ConstantCommon.EMAIL && String.isBlank(hist.FEC_Email__c)){
-                        hist.FEC_Email__c = pc.Contact.ContactString;
+                        String email = FEC_CommonUltils.normalizeEmailForField(
+                            pc.Contact.ContactString
+                        );
+                        if (String.isNotBlank(email)) {
+                            hist.FEC_Email__c = email;
+                        }
                     }
                 }
             }

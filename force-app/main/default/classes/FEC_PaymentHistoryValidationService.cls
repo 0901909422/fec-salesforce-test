@@ -615,6 +615,21 @@ public with sharing class FEC_PaymentHistoryValidationService {
     return String.isBlank(value) ? FEC_ConstantCommon.STR_EMPTY : value;
   }
 
+  /** Dedupe key for FEC_Payment_History__c rows (date + particulars + amount). */
+  @TestVisible
+  private static String paymentHistoryRowDedupeKey(FEC_Payment_History__c payment) {
+    if (payment == null) {
+      return '';
+    }
+    String datePart = payment.FEC_Payment_Date__c != null
+      ? String.valueOf(payment.FEC_Payment_Date__c) : '';
+    String particularsPart = String.isNotBlank(payment.FEC_Particulars__c)
+      ? payment.FEC_Particulars__c.trim() : FEC_ConstantCommon.STR_EMPTY;
+    String amountPart = payment.FEC_Payment_Amount__c != null
+      ? String.valueOf(payment.FEC_Payment_Amount__c) : '';
+    return datePart + '|' + particularsPart + '|' + amountPart;
+  }
+
   @AuraEnabled
   public static List<Map<String, Object>> getPaymentHistoryRows(String caseId) {
     List<Map<String, Object>> rows = new List<Map<String, Object>>();
@@ -632,14 +647,22 @@ public with sharing class FEC_PaymentHistoryValidationService {
     }
     Id customerHistoryId = cases[0].FEC_Account_or_Contract__c;
     List<FEC_Payment_History__c> payments = [
-      SELECT FEC_Payment_No__c, FEC_Payment_Date__c, FEC_Payment_Amount__c
+      SELECT FEC_Payment_No__c, FEC_Payment_Date__c, FEC_Payment_Amount__c, FEC_Particulars__c, CreatedDate
       FROM FEC_Payment_History__c
       WHERE FEC_Customer_History__c = :customerHistoryId
-      ORDER BY FEC_Payment_No__c ASC
+      ORDER BY FEC_Payment_No__c ASC, CreatedDate ASC
     ];
+    Set<String> seenKeys = new Set<String>();
+    Integer displayNo = 0;
     for (FEC_Payment_History__c p : payments) {
+      String dedupeKey = paymentHistoryRowDedupeKey(p);
+      if (seenKeys.contains(dedupeKey)) {
+        continue;
+      }
+      seenKeys.add(dedupeKey);
+      displayNo++;
       Map<String, Object> row = new Map<String, Object>();
-      row.put('RemovalNote', p.FEC_Payment_No__c);
+      row.put('RemovalNote', displayNo);
       row.put('BankAddress', p.FEC_Payment_Date__c != null
         ? ((DateTime) p.FEC_Payment_Date__c).format('dd/MM/yyyy') : '');
       row.put('PaymentAmount', p.FEC_Payment_Amount__c);

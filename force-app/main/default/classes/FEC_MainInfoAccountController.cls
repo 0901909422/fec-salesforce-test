@@ -204,7 +204,7 @@ public without sharing class FEC_MainInfoAccountController {
 
         updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, emeaRes, appRes, cardSecRes);
 
-        return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
+        return fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
     }
 
     @AuraEnabled
@@ -365,10 +365,11 @@ public without sharing class FEC_MainInfoAccountController {
         ];
 
         String accountNumber;
+        String cifNumber;
 
         if (c.FEC_Account_or_Contract__c != null) {
             FEC_Customer_History__c acc = [
-                SELECT FEC_Account_Number__c, FEC_Contract_Number__c
+                SELECT FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
@@ -379,6 +380,7 @@ public without sharing class FEC_MainInfoAccountController {
                 acc.FEC_Account_Number__c,
                 acc.FEC_Contract_Number__c
             );
+            cifNumber = acc.FEC_CIF_Number__c;
         }
 
         FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper mcms;
@@ -429,6 +431,7 @@ public without sharing class FEC_MainInfoAccountController {
 
         MainInfoDTO dto = fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
         overlayEmeaFinancialsOnDto(dto, emeaRes);
+        overlayContractNumberFromProductList(dto, cifNumber);
         return dto;
     }
 
@@ -517,6 +520,42 @@ public without sharing class FEC_MainInfoAccountController {
                 (emeaRes.amtMemoDb != null ? emeaRes.amtMemoDb : 0) -
                 (emeaRes.amtMemoCr != null ? emeaRes.amtMemoCr : 0);
         return fin;
+    }
+
+    private static String resolveDealIdFromProductList(String cifNumber, String applicationId) {
+        if (String.isBlank(cifNumber) || String.isBlank(applicationId)) {
+            return null;
+        }
+
+        try {
+            FEC_GetProductListCallout.CIF_GetProductsListResponse res =
+                FEC_GetProductListCallout.callService(cifNumber);
+
+            if (res == null || res.products == null) {
+                return null;
+            }
+
+            for (FEC_GetProductListCallout.ProductInfo p : res.products) {
+                if (applicationId == p.applicationId) {
+                    return p.dealId;
+                }
+            }
+        } catch (Exception e) {
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+        }
+
+        return null;
+    }
+
+    private static void overlayContractNumberFromProductList(MainInfoDTO dto, String cifNumber) {
+        if (dto == null) {
+            return;
+        }
+
+        String dealId = resolveDealIdFromProductList(cifNumber, dto.applicationId);
+        if (String.isNotBlank(dealId)) {
+            dto.contractNumber = dealId;
+        }
     }
 
     private static void overlayEmeaFinancialsOnDto(
@@ -631,10 +670,16 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
+
+        String dealId = resolveDealIdFromProductList(
+            hist.FEC_CIF_Number__c,
+            a != null ? a.ApplicationID : null
+        );
+
         FEC_Customer_History__c accountToUpdate = new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
-            FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
+            FEC_Contract_Number__c = dealId,
             FEC_Account_Status__c = m != null ? m.Status : null,
             FEC_Credit_Limit__c = m != null ? m.CreditLimit : null,
             FEC_OTB__c = m != null ? m.OTB : null,
@@ -653,6 +698,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Card_Number__c = m != null ? m.MaskedCardNumber : null,
             FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
+            // FEC_Product_Association__c = m != null ? m.ProductAssociation : null, // field formula
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
             FEC_Card_Type__c = m != null
                 ? FEC_CommonUltils.resolveCardType(

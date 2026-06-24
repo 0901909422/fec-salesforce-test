@@ -100,6 +100,23 @@ public with sharing class FEC_CommonUltils {
     return Pattern.matches(regex, email);
   }
 
+  /** Bỏ placeholder API (NULL, N/A, …) và email không hợp lệ trước khi ghi FEC_Email__c. */
+  public static String normalizeEmailForField(String email) {
+    if (String.isBlank(email)) {
+      return null;
+    }
+    String trimmed = email.trim();
+    if (
+      trimmed.equalsIgnoreCase('NULL') ||
+      trimmed.equalsIgnoreCase('N/A') ||
+      trimmed.equalsIgnoreCase('NA') ||
+      trimmed.equalsIgnoreCase('NONE')
+    ) {
+      return null;
+    }
+    return isMail(trimmed) ? trimmed : null;
+  }
+
   /**
    * Kiểm tra Case Status có thuộc nhóm Resolved hay không (bắt đầu bằng prefix Resolved).
    * @param status Case Status (có thể null)

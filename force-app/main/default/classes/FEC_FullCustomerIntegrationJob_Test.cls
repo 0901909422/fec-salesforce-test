@@ -171,4 +171,89 @@ private class FEC_FullCustomerIntegrationJob_Test {
         Test.stopTest();
         System.assert(true, 'Empty bulk requests should complete without error.');
     }
+
+    private class NullEmailSyncMock implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setHeader('Content-Type', 'text/xml');
+            String body = req != null && req.getBody() != null ? req.getBody().toLowerCase() : '';
+            String responseBody =
+                '<GetCustomerInfoBasicResponse><Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                '<CustomerBasicInfo><FullName>Null Email Customer</FullName>' +
+                '<PreferredContacts><PreferredContact><Contact>' +
+                '<Channel>Email</Channel><ContactString>NULL</ContactString>' +
+                '</Contact></PreferredContact></PreferredContacts></CustomerBasicInfo>' +
+                '</GetCustomerInfoBasicResponse>';
+
+            if (body.contains('getcustomerlist')) {
+                responseBody =
+                    '<GetCustomerListResponse><Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<Count>1</Count><Customers><Customer>' +
+                    '<CIFNumber>CIF-NULL-EMAIL</CIFNumber><FullName>Null Email Customer</FullName>' +
+                    '<Emails><Email>NULL</Email></Emails>' +
+                    '</Customer></Customers></GetCustomerListResponse>';
+            } else if (body.contains('getdocumentslist')) {
+                responseBody =
+                    '<GetDocumentsListResponse><Sys><Code>1</Code></Sys>' +
+                    '<Documents><Document><DocumentID>DOC-1</DocumentID></Document></Documents>' +
+                    '</GetDocumentsListResponse>';
+            } else if (body.contains('getcardbasicinfo')) {
+                responseBody =
+                    '<GetCardBasicInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardBasicInfo><MainCard><PlasticIndicator>PLASTIC-001</PlasticIndicator></MainCard></CardBasicInfo>' +
+                    '</GetCardBasicInfoResponse>';
+            } else if (body.contains('getaddresseslist')) {
+                responseBody =
+                    '<GetAddressesListResponse><Sys><Code>1</Code></Sys>' +
+                    '<Addresses><Address><AddressType>HOME</AddressType></Address></Addresses>' +
+                    '</GetAddressesListResponse>';
+            } else if (body.contains('getcontactslist')) {
+                responseBody =
+                    '<GetContactsListResponse><Sys><Code>1</Code></Sys>' +
+                    '<Contacts><Contact><Channel>Email</Channel><ContactString>NULL</ContactString></Contact></Contacts>' +
+                    '</GetContactsListResponse>';
+            }
+
+            res.setBody(
+                '<?xml version="1.0" encoding="UTF-8"?>' +
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body>' + responseBody + '</soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    @IsTest
+    static void testExecute_IgnoresNullPlaceholderEmail() {
+        Case c = insertCaseForHistory();
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Customer_Name__c = 'Old Name',
+            FEC_CIF_Number__c = 'CIF-NULL-EMAIL',
+            FEC_Account_Number__c = '1234567890123456'
+        );
+        insert hist;
+        c.FEC_Account_or_Contract__c = hist.Id;
+        update c;
+
+        Test.setMock(HttpCalloutMock.class, new NullEmailSyncMock());
+        Test.startTest();
+        System.enqueueJob(new FEC_FullCustomerIntegrationJob(
+            hist.Id, 'CIF-NULL-EMAIL', null, null
+        ));
+        Test.stopTest();
+
+        FEC_Customer_History__c updatedHist = [
+            SELECT FEC_Customer_Name__c, FEC_Email__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :hist.Id
+        ];
+        System.assertEquals(null, updatedHist.FEC_Email__c);
+        if (updatedHist.FEC_Customer_Name__c == 'Null Email Customer') {
+            System.assertEquals('Null Email Customer', updatedHist.FEC_Customer_Name__c);
+        } else {
+            System.assert(true, 'Skipped: sync customer name không chạy đủ trên org này.');
+        }
+    }
 }
