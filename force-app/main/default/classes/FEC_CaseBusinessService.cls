@@ -2448,11 +2448,9 @@ public without sharing class FEC_CaseBusinessService {
   public static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
     if (String.isBlank(caseId)) return;
     try {
-      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
-        FEC_Case__c = caseId,
-        FEC_Field_List__c = fieldListJson
-      );
-      //PhongBT: Chỉ gán NOC lên history khi BP code chứa COF hoặc GSR (lookup trỏ FEC_Nature_of_Case__c).
+      // 24/06/2026 phong - chỉ tạo Case Flow History khi NOC thuộc COF hoặc GSR;
+      // nếu NOC không thuộc COF/GSR (hoặc không có NOC) thì bỏ qua hoàn toàn.
+      Boolean isNocCofOrGsr = false;
       if (String.isNotBlank(natureOfCaseId)) {
         List<FEC_Nature_of_Case__c> nocRows = [
           SELECT Id, FEC_Business_Process__r.FEC_Code__c
@@ -2466,12 +2464,17 @@ public without sharing class FEC_CaseBusinessService {
             : nocRows[0].FEC_Business_Process__r.FEC_Code__c;
           if (String.isNotBlank(bpCode)) {
             String u = bpCode.toUpperCase();
-            if (u.contains('GSR') || u.contains('COF')) {
-        history.FEC_Nature_of_Cases__c = natureOfCaseId;
-            }
+            isNocCofOrGsr = u.contains('COF') || u.contains('GSR');
           }
         }
       }
+      if (!isNocCofOrGsr) return;
+
+      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
+        FEC_Case__c = caseId,
+        FEC_Field_List__c = fieldListJson,
+        FEC_Nature_of_Cases__c = natureOfCaseId
+      );
       insert history;
     } catch (Exception e) {
       System.debug('createCaseFlowHistory error: ' + e.getMessage());

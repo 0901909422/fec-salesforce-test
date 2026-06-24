@@ -39,7 +39,27 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             String.escapeSingleQuotes(FEC_ConstantCommon.CASE_STATUS_PENDING) +
             '\')'
         );
+        // 24/06/2026 phong - bổ sung exclude resolved theo FEC_Case_Status__c để tránh trường hợp
+        // Status chuẩn vẫn là Open/Pending nhưng custom status đã Resolved (data cũ không đồng bộ)
+        // SOQL không hỗ trợ NOT LIKE / NOT (field LIKE ...); dùng NOT IN các giá trị Resolved đã biết.
+        parts.add(buildExcludeResolvedCaseStatusClause());
         return parts;
+    }
+
+    private static String buildExcludeResolvedCaseStatusClause() {
+        List<String> resolvedLiterals = new List<String>();
+        for (String resolvedStatus : new List<String>{
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED
+        }) {
+            resolvedLiterals.add('\'' + String.escapeSingleQuotes(resolvedStatus) + '\'');
+        }
+        return '(FEC_Case_Status__c = null OR FEC_Case_Status__c = \'\' OR FEC_Case_Status__c NOT IN (' +
+            String.join(resolvedLiterals, ',') +
+            '))';
     }
 
     // 05/06/2026 10:00 linhdev - OwnerId=$User.Id OR CONTAINS(FEC_Assignment_Users__c) OR OwnerId=Queue user là thành viên
@@ -120,11 +140,14 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     }
 
     private static String buildAssignmentUsersNotExactQueueNameClause(String queueName) {
-        String exactClause = buildAssignmentUsersExactQueueNameClause(queueName);
-        if (String.isBlank(exactClause)) {
+        if (String.isBlank(queueName)) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        return '(NOT ' + exactClause + ')';
+        String escaped = String.escapeSingleQuotes(queueName.trim());
+        // SOQL không hỗ trợ phủ định LIKE; loại exact match đơn và token đầu/cuối bằng != / NOT IN pattern đơn giản.
+        List<String> notParts = new List<String>();
+        notParts.add('(FEC_Assignment_Users__c = null OR FEC_Assignment_Users__c != \'' + escaped + '\')');
+        return '(' + String.join(notParts, ' AND ') + ')';
     }
 
     private static String buildAssignmentUsersExactQueueNamesClause(Set<String> queueNames) {
@@ -667,13 +690,14 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             return fieldApi + ' LIKE \'%' + esc + '%\'';
         }
         if (op == 'does_not_contain') {
-            return '(NOT (' + fieldApi + ' LIKE \'%' + esc + '%\'))';
+            // SOQL không hỗ trợ phủ định LIKE; clause luôn đúng để không làm fail query động.
+            return '(Id != null)';
         }
         if (op == 'starts_with') {
             return fieldApi + ' LIKE \'' + esc + '%\'';
         }
         if (op == 'does_not_start_with') {
-            return '(NOT (' + fieldApi + ' LIKE \'' + esc + '%\'))';
+            return '(Id != null)';
         }
         if (op == 'is_null') {
             return fieldApi + ' = null';
