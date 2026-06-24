@@ -1,4 +1,4 @@
-﻿import { LightningElement, api, track, wire } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
@@ -213,19 +213,23 @@ export default class FecInteractionChatInfo extends LightningElement {
         return this.canEditChatFields && !this.isReview && (this.isEditingUsername || (this.isUsernameRequired && !this.hasUsername));
     }
 
+    get canEditPhone() {
+        if (!this.hasPhone) {
+            return this.canEditManualInteractionFields;
+        }
+        return this.canEditChatFields;
+    }
+
     get isPhoneReadOnly() {
-        if (!this.canEditChatFields || this.isReview) return true;
-        if (this.hasPhone && !this.isEditingPhone) return true;
-        if (!this.hasPhone && !this.isPhoneRequired && !this.isEditingPhone) return true;
-        return false;
+        return !this.canEditPhone || this.isReview || (this.hasPhone && !this.isEditingPhone);
     }
 
     get showPhoneEditIcon() {
-        return this.canEditChatFields && !this.isPhoneRequired && !this.hasPhone && !this.isEditingPhone;
+        return this.canEditPhone && !this.isReview && !this.hasPhone && !this.isEditingPhone;
     }
 
     get showPhoneSaveActions() {
-        return this.canEditChatFields && !this.isReview && (this.isEditingPhone || (this.isPhoneRequired && !this.hasPhone));
+        return this.canEditPhone && !this.isReview && this.isEditingPhone;
     }
 
     get isKycStatusReadOnly() {
