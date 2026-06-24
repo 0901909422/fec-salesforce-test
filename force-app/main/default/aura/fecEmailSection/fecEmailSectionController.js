@@ -97,13 +97,17 @@
             var renderResolvedTemplate = function(resolvedSubject, resolvedBody) {
                 component.set('v.titleBaseBody', resolvedBody);
                 var displayBody = title ? helper.replaceDanhXung(resolvedBody, title) : resolvedBody;
-                component.set('v.body', displayBody);
-                component.set('v.rawBody', displayBody); // lưu HTML hiển thị để gửi email
+                // Extract <style> block from template so it can be re-injected when sending/previewing email.
+                // Quill strips <style> tags, so we store it separately and prepend it back before sending.
+                var extracted = helper.extractTemplateStyleBlock(displayBody);
+                component.set('v.templateStyleBlock', extracted.style);
+                var bodyForEditor = helper.cleanBody(extracted.body);
+                component.set('v.body', bodyForEditor);
+                component.set('v.rawBody', bodyForEditor); // luu HTML hien thi de gui email
                 if (window._fecQuill) {
                     var _q = window._fecQuill;
-                    var _body = helper.cleanBody(displayBody);
                     window.setTimeout(function() {
-                        helper._setEditorHtml(component, _q, _body);
+                        helper._setEditorHtml(component, _q, bodyForEditor);
                     }, 50);
                 }
                 if (resolvedSubject) {
@@ -137,6 +141,7 @@
             component.set('v.titleBaseBody', '');
             component.set('v.body', '');
             component.set('v.rawBody', '');
+            component.set('v.templateStyleBlock', '');
             component.set('v.subject', '');
             component.set('v.attachments', []);
             if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
@@ -491,7 +496,9 @@
         } else {
             body = component.get('v.body') || '';
         }
-        helper.showPreviewModal(body);
+        var styleBlock = component.get('v.templateStyleBlock') || '';
+        var bodyForEmail = helper.normalizeEditorHtmlForEmail(body);
+        helper.showPreviewModal(styleBlock ? styleBlock + bodyForEmail : bodyForEmail);
     },
 
     closePreview: function(component, event, helper) {
@@ -636,11 +643,16 @@
         }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
-        // If v.body has table HTML but quill stripped it, use rawBody or v.body directly
+        // Convert Quill CSS classes (ql-font-*, ql-size-*, ql-align-*, ql-indent-*) to inline styles
+        // so email clients (Gmail/Outlook) render the same font/size/alignment as in the editor.
+        body = helper.normalizeEditorHtmlForEmail(body);
+        // Prepend template <style> block so responsive CSS works in email clients
+        var sendStyleBlock = component.get('v.templateStyleBlock') || '';
         var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
         if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
             body = storedBody;
         }
+        if (sendStyleBlock) body = sendStyleBlock + body;
         var lblSubjReq = component.get('v.lblSubjectRequired');
         if (!subject) {
             component.set('v.errorMsg', lblSubjReq);

@@ -63,6 +63,7 @@ public without sharing class FEC_ServiceCaseEmailService {
             // tungnm37 fix: Convert internal Salesforce image URLs (header/footer) sang public ContentDistribution URL
             // de Gmail/Outlook khong bi chan anh khi hien thi email
             String publicizedBody = FEC_CustomEmailService.publicizeImagesForEmail(body != null ? body : '');
+            publicizedBody = FEC_CustomEmailService.wrapEmailBodyForConsistentWidth(publicizedBody);
             mail.setHtmlBody(publicizedBody);
             mail.setSaveAsActivity(false);
             // Không setWhatId để tránh Salesforce tự tạo EmailMessage thêm lần nữa

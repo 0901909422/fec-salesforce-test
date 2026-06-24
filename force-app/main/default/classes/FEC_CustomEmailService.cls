@@ -571,7 +571,8 @@ public without sharing class FEC_CustomEmailService {
                     for (Id cvId : needCreate) {
                         ContentDistribution cd = new ContentDistribution(
                             Name = 'Email Image ' + cvId,
-                            ContentVersionId = cvId
+                            ContentVersionId = cvId,
+                            PreferencesNotifyOnVisit = false
                         );
                         toCreate.add(cd);
                     }
@@ -583,6 +584,7 @@ public without sharing class FEC_CustomEmailService {
                         existingDist.put(cd.ContentVersionId, cd);
                     }
                 }
+
 
                 Map<String, String> urlToPublicUrl = new Map<String, String>();
                 for (String url : internalUrls) {
@@ -606,6 +608,22 @@ public without sharing class FEC_CustomEmailService {
             return htmlBody;
         }
     }
+
+    public static String wrapEmailBodyForConsistentWidth(String htmlBody) {
+        if (String.isBlank(htmlBody)) return htmlBody; 
+ 
+        String normalizedBody = htmlBody.replace('\r\n', '\n').replace('\r', '\n'); 
+        if (normalizedBody.contains('data-fec-email-wrapper="1"')) { 
+            return normalizedBody;
+        }
+
+        String wrapper = '' +
+            '<table data-fec-email-wrapper="1" role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="width:600px;max-width:600px;border-collapse:collapse;border-spacing:0;margin:0;font-family:&quot;Times New Roman&quot;,serif;font-size:14px;line-height:1.5;color:#000;">' +
+            '<tr><td width="600" style="width:600px;max-width:600px;padding:0;margin:0;text-align:left;vertical-align:top;box-sizing:border-box;font-family:&quot;Times New Roman&quot;,serif;font-size:14px;line-height:1.5;color:#000;">' +
+            normalizedBody +
+            '</td></tr></table>';
+        return wrapper;
+    } 
 
     private static Boolean isInternalSalesforceImageUrl(String url) {
         if (String.isBlank(url)) return false;
@@ -788,6 +806,7 @@ public without sharing class FEC_CustomEmailService {
             // tungnm37 fix: Convert internal Salesforce image URLs (header/footer) sang public ContentDistribution URL
             // de Gmail/Outlook khong bi chan anh khi hien thi email 
             resolvedBody = publicizeImagesForEmail(resolvedBody);
+            resolvedBody = wrapEmailBodyForConsistentWidth(resolvedBody);
             mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
 
