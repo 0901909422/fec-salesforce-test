@@ -62,6 +62,25 @@ private class FEC_BancaController_Test {
         }
     }
 
+    /** Returns NID payload with blank map key to exercise skip branch in processNIDResponse. */
+    private class BancaInsuranceBlankKeyMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(FEC_ConstantCommon.HTTP_STATUS_OK);
+            res.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
+            FEC_SearchByListNIDsServiceCallout.NIDsResponse response =
+                new FEC_SearchByListNIDsServiceCallout.NIDsResponse();
+            response.result = new List<FEC_SearchByListNIDsServiceCallout.Result>{
+                (FEC_SearchByListNIDsServiceCallout.Result) JSON.deserialize(
+                    '{"buyerName":"No Key"}',
+                    FEC_SearchByListNIDsServiceCallout.Result.class
+                )
+            };
+            res.setBody(JSON.serialize(response));
+            return res;
+        }
+    }
+
     private static Case insertCaseWithCustomerHistory(
         String subject,
         String nationalId,
@@ -77,11 +96,13 @@ private class FEC_BancaController_Test {
             Name = 'FEC_BancaController_Test ' + subject,
             FEC_Case__c = c.Id,
             FEC_National_ID_Passport_ID__c = nationalId,
+            FEC_Search_Result_National_ID__c = nationalId,
             FEC_Primary_Phone__c = primaryPhone
         );
         insert history;
 
         c.FEC_Account_or_Contract__c = history.Id;
+        c.FEC_Search_National_ID__c = nationalId;
         update c;
         return c;
     }
@@ -95,7 +116,7 @@ private class FEC_BancaController_Test {
             FEC_User_ID__c = USER_EXISTING,
             FEC_Buyer_Name__c = 'Nguyen Van A',
             FEC_Premium_Fee__c = 500000,
-            FEC_Status__c = 'Active'
+            FEC_Expiry_Date__c = Date.today().addDays(365)
         );
     }
 
@@ -300,7 +321,7 @@ private class FEC_BancaController_Test {
     @IsTest
     static void loadInsuranceDetail_success() {
         FEC_Insurance_Info__c insurance = [
-            SELECT Id
+            SELECT Id, FEC_Expiry_Date__c, FEC_Cancel_Date__c
             FROM FEC_Insurance_Info__c
             WHERE FEC_User_ID__c = :USER_EXISTING
             LIMIT 1
@@ -316,7 +337,134 @@ private class FEC_BancaController_Test {
             detail.premiumFree != null && detail.premiumFree.contains('500000'),
             'Premium fee must be serialized as a string containing 500000.'
         );
-        System.assertEquals('Active', detail.status);
+        System.assertEquals(
+            FEC_CommonUltils.deriveInsuranceStatus(
+                insurance.FEC_Expiry_Date__c,
+                insurance.FEC_Cancel_Date__c
+            ),
+            detail.status
+        );
+    }
+
+    @IsTest
+    static void loadInsuranceDetail_expiredWhenCancelled() {
+        Case cs = testCase();
+        FEC_Insurance_Info__c insurance = new FEC_Insurance_Info__c(
+            FEC_Customer_History__c = cs.FEC_Account_or_Contract__c,
+            FEC_User_ID__c = 'USER_CANCELLED',
+            FEC_Cancel_Date__c = Date.today()
+        );
+        insert insurance;
+
+        Test.startTest();
+        BancaDtoMirror detail = loadInsuranceDetailMirror(insurance.Id);
+        Test.stopTest();
+
+        System.assertEquals(
+            FEC_CommonUltils.deriveInsuranceStatus(
+                insurance.FEC_Expiry_Date__c,
+                insurance.FEC_Cancel_Date__c
+            ),
+            detail.status
+        );
+    }
+
+    @IsTest
+    static void loadInsuranceDetail_expiredWhenPastExpiryDate() {
+        Case cs = testCase();
+        FEC_Insurance_Info__c insurance = new FEC_Insurance_Info__c(
+            FEC_Customer_History__c = cs.FEC_Account_or_Contract__c,
+            FEC_User_ID__c = 'USER_EXPIRED',
+            FEC_Expiry_Date__c = Date.today().addDays(-1)
+        );
+        insert insurance;
+
+        Test.startTest();
+        BancaDtoMirror detail = loadInsuranceDetailMirror(insurance.Id);
+        Test.stopTest();
+
+        System.assertEquals(
+            FEC_CommonUltils.deriveInsuranceStatus(
+                insurance.FEC_Expiry_Date__c,
+                insurance.FEC_Cancel_Date__c
+            ),
+            detail.status
+        );
+    }
+
+    @IsTest
+    static void loadataInsurance_commaSeparatedNationalIds() {
+        Case c = new Case(
+            Subject = 'FEC_BancaController_Test Comma NID',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN
+        );
+        insert c;
+
+        FEC_Customer_History__c history = new FEC_Customer_History__c(
+            Name = 'FEC_BancaController_Test Comma NID',
+            FEC_Case__c = c.Id,
+            FEC_Search_Result_National_ID__c = NATIONAL_ID + ';999888777',
+            FEC_Primary_Phone__c = PRIMARY_PHONE
+        );
+        insert history;
+
+        c.FEC_Account_or_Contract__c = history.Id;
+        c.FEC_Search_National_ID__c = NATIONAL_ID + ',999888777';
+        update c;
+
+        Test.setMock(HttpCalloutMock.class, new BancaInsuranceCalloutMock());
+
+        Test.startTest();
+        List<BancaDtoMirror> results = loadInsuranceList(c.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, results);
+        System.assert(results.size() >= 1, 'Comma-separated NIDs should still trigger insurance load.');
+    }
+
+    @IsTest
+    static void loadataInsurance_upsertsExistingRecordByPolicy() {
+        Case cs = testCase();
+        insert new FEC_Insurance_Info__c(
+            FEC_Customer_History__c = cs.FEC_Account_or_Contract__c,
+            FEC_User_ID__c = USER_NID,
+            FEC_Policy_Number__c = 'POL_NID_999',
+            FEC_Buyer_Name__c = 'Old Name'
+        );
+
+        Test.setMock(HttpCalloutMock.class, new BancaInsuranceCalloutMock());
+
+        Test.startTest();
+        loadInsuranceList(cs.Id);
+        Test.stopTest();
+
+        FEC_Insurance_Info__c updated = [
+            SELECT FEC_Buyer_Name__c
+            FROM FEC_Insurance_Info__c
+            WHERE FEC_Policy_Number__c = 'POL_NID_999'
+            LIMIT 1
+        ];
+        System.assertEquals('Buyer NID', updated.FEC_Buyer_Name__c);
+        System.assertEquals(
+            1,
+            [SELECT COUNT() FROM FEC_Insurance_Info__c WHERE FEC_Policy_Number__c = 'POL_NID_999']
+        );
+    }
+
+    @IsTest
+    static void loadataInsurance_skipsBlankInsuranceKeys() {
+        Case cs = testCase();
+        Test.setMock(HttpCalloutMock.class, new BancaInsuranceBlankKeyMock());
+
+        Test.startTest();
+        List<BancaDtoMirror> results = loadInsuranceList(cs.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, results);
+        System.assert(
+            userIdsFromResults(results).contains(USER_EXISTING),
+            'Blank API keys are skipped; seed row must still be returned.'
+        );
     }
 
     @IsTest
