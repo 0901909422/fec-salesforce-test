@@ -149,7 +149,14 @@ public with sharing class FEC_AttachmentController {
         cv.VersionData = fileBody;
         cv.FirstPublishLocationId = interactionCaseId;
         cv.Description = uniqueMessageId ?? ''; // Use Description field to store uniqueMessageId for duplicate checking
-        insert cv;
+        // ChatHub uploads are allowed even when the Case is in Review mode.
+        // Wrap the insert with the ChatHub bypass so the file-action trigger does not block it.
+        FEC_FileActionOnReviewService.enterChatHubFileUploadBypass();
+        try {
+            insert cv;
+        } finally {
+            FEC_FileActionOnReviewService.exitChatHubFileUploadBypass();
+        }
     }
 
     /** * downloadAndSaveBase64

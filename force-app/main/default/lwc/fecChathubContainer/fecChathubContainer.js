@@ -87,6 +87,8 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
     boundHandleMouseUp = null;
     boundInitResize = null;
     boundHandleWindowResize = null;
+    boundHandleMessage = null;
+    _isComponentConnected = false;
     _handleResizeMove = null;
     _handleResizeUp = null;
 
@@ -115,7 +117,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 this.chatHubUrl = finalUrl;
                 this.isInitialized = true;
                 this.isChatHubVisible = true;
-                window.addEventListener('message', this.handleMessage.bind(this));
+                window.addEventListener('message', this.boundHandleMessage);
                 console.log('%c✅ Event Listener Added', 'color:green');
             } else {
                 console.warn('%c⚠ Invalid Config Format', LOG_WARN);
@@ -138,6 +140,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         this.boundHandleMouseUp = this.handleMouseUp.bind(this);
         this.boundInitResize = this.initResize.bind(this);
         this.boundHandleWindowResize = this.handleWindowResize.bind(this);
+        this.boundHandleMessage = this.handleMessage.bind(this);
     }
 
     /**
@@ -145,6 +148,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     connectedCallback() {
+        this._isComponentConnected = true;
         // Kiểm tra Permission Set, nếu user không có thì xóa utility item khỏi DOM
         this.checkAccessAndRemoveUtilityIfNeeded();
 
@@ -282,7 +286,8 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     disconnectedCallback() {
-        window.removeEventListener('message', this.handleMessage.bind(this));
+        this._isComponentConnected = false;
+        window.removeEventListener('message', this.boundHandleMessage);
         document.removeEventListener('mousemove', this.boundHandleMouseMove);
         document.removeEventListener('mouseup', this.boundHandleMouseUp);
         window.removeEventListener('resize', this.boundHandleWindowResize);
@@ -314,6 +319,13 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     handleMessage(event) {
+        // Ignore messages that arrive after this instance has been disconnected.
+        // When the utility is popped out to a new window and re-docked, Salesforce
+        // destroys/recreates the component. A stale listener would otherwise run
+        // against a torn-down @wire(MessageContext) and throw "invalid message context".
+        if (!this._isComponentConnected) {
+            return;
+        }
         // Log origin for debugging if messages are not received
         // const trustedUrl = localStorage.getItem(CHATHUB_URL_KEY);
         // console.log('DEBUG Origin:', event.origin, 'Expected:', trustedUrl);
@@ -885,10 +897,19 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {Promise<void>}
      */
     async refreshOpenCaseTab(caseId) {
-        if (!caseId || !this.isConsoleNavigation) return;
+        if (!caseId) return;
+
+        // Always publish the LMS update first. This works in any navigation context
+        // (including review mode opened outside the console) and lets fecChatHistoryForCase
+        // refresh its data immediately without a manual page reload.
+        if (this._isComponentConnected && this.messageContext) {
+            publish(this.messageContext, FEC_CHAT_UPDATE, { recordId: caseId });
+        }
+
+        // The Workspace API (getAllTabInfo/refreshTab) only works in console navigation.
+        if (!this.isConsoleNavigation) return;
 
         try {
-            publish(this.messageContext, FEC_CHAT_UPDATE, { recordId: caseId });
             const allTabs = await getAllTabInfo();
             let targetTabId = null;
 
