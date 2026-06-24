@@ -60,7 +60,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
     _gotoPage;
 
     // Sorting state - single column sort
-    sortedDirection = 'desc';
+    @track sortedDirection = 'desc';
     
 
     /* ================= LIFECYCLE ================= */
@@ -69,6 +69,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
         if (this.defaultSortedBy) {
             this.sortedBy = this.defaultSortedBy;
             this.sortedDirection = this.defaultSortDirection || 'desc';
+            if (this._records.length > 0) {
+                this.sortData(this.sortedBy, this.sortedDirection);
+            }
         }
     }
 
@@ -209,11 +212,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 headerClass,
                 fullHeaderClass: 'sortable-header ' + headerClass,
                 headerStyle: widthStyle,
-                // asc = cũ→mới / A→Z → mũi tên lên; desc = mới→cũ → mũi tên xuống
+                // desc = mới→cũ → mũi tên xuống; asc = cũ→mới → mũi tên lên
                 iconName: isSorted
                     ? (this.sortedDirection === 'desc'
-                        ? 'utility:arrowup'
-                        : 'utility:arrowdown')
+                        ? 'utility:arrowdown'
+                        : 'utility:arrowup')
                     : 'utility:arrowdown',
                 iconClass: isSorted
                     ? 'sort-icon active'
@@ -575,9 +578,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
         if (this.sortedBy === fieldName) {
             this.sortedDirection = this.sortedDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            // Sort by new column, default to asc
             this.sortedBy = fieldName;
-            this.sortedDirection = 'asc';
+            this.sortedDirection = (fieldName === this.defaultSortedBy)
+                ? (this.defaultSortDirection || 'desc')
+                : 'asc';
         }
 
         this.currentPage = 1;
