@@ -3506,6 +3506,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     // 05/06/2026 14:00 linhdev - quy trình không GSR/COF Resolve/Reject/Update: owner Queue → chuyển OwnerId sang Login User
+    // 24/06/2026 - COF/GSR giữ owner Queue; FEC_CaseBusinessService bỏ qua owner check khi batch import + owner Queue
     private static void transferQueueOwnedCaseToLoginUserForNonCofGsrProcess(
         Id caseId,
         String methodKey,

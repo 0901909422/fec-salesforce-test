@@ -1,15 +1,15 @@
 @IsTest
 private class FEC_BatchCaseHandlingImportQueueableTest {
 
-    // 08/06/2026 linhdev - queueable apply 2 row/transaction để tăng throughput import lớn
+    // 24/06/2026 phong - queueable apply 1 row/transaction (resolve + resolveAllAssignments tốn SOQL)
     @IsTest
     static void importApplyChunkSize_queueableUsesConfiguredRowsPerExecute() {
         System.assertEquals(
-            2,
+            1,
             FEC_BatchCaseHandlingImportQueueable.MAX_APPLICABLE_ROWS_PER_EXECUTE
         );
         System.assertEquals(
-            2,
+            1,
             FEC_BatchCaseHandlingImportService.IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE
         );
         System.assertEquals(
