@@ -306,7 +306,10 @@ public without sharing class FEC_BancaController {
             ? String.valueOf(rec.FEC_Premium_Fee__c)
             : null;
 
-        dto.status           = rec.FEC_Status__c;
+        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(
+            rec.FEC_Expiry_Date__c,
+            rec.FEC_Cancel_Date__c
+        );
 
         dto.gender           = rec.FEC_Buyer_Gender__c;
         dto.salesChannel     = rec.FEC_Sale_Channel__c;
