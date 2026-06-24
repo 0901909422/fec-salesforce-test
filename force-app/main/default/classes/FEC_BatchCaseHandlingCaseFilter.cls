@@ -39,6 +39,13 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             String.escapeSingleQuotes(FEC_ConstantCommon.CASE_STATUS_PENDING) +
             '\')'
         );
+        // 24/06/2026 phong - bổ sung exclude resolved theo FEC_Case_Status__c để tránh trường hợp
+        // Status chuẩn vẫn là Open/Pending nhưng custom status đã Resolved (data cũ không đồng bộ)
+        parts.add(
+            '(FEC_Case_Status__c = null OR NOT (FEC_Case_Status__c LIKE \'' +
+            String.escapeSingleQuotes(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED) +
+            '%\'))'
+        );
         return parts;
     }
 
