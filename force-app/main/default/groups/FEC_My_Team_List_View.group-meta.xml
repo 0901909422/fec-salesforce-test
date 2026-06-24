@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Group xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Danh sách role được xem List View My Team. doesIncludeBosses=false để role cha (vd. Center Director) không kế thừa quyền xem.</description>
+    <doesIncludeBosses>false</doesIncludeBosses>
+    <name>My Team List View</name>
+</Group>
