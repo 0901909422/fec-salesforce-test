@@ -795,45 +795,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
                     try {
                         const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: sessionId });
-
-                        if (caseId && this.isConsoleNavigation) {
-                            publish(this.messageContext, FEC_CHAT_UPDATE, { recordId: caseId });
-                            const allTabs = await getAllTabInfo();
-                            let targetTabId = null;
-
-                            // Loop through all tabs and subtabs to find the Case ID
-                            for (const tab of allTabs) {
-                                // 1. Check if Case is a Primary Tab
-                                if (tab.recordId === caseId) {
-                                    targetTabId = tab.tabId;
-                                    break;
-                                }
-
-                                // 2. Check if Case is a Subtab within this Primary Tab
-                                if (tab.subtabs && tab.subtabs.length > 0) {
-                                    for (const subtab of tab.subtabs) {
-                                        if (subtab.recordId === caseId) {
-                                            targetTabId = subtab.tabId; // Get the ID of the subtab
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (targetTabId) break; // Exit outer loop if found
-                            }
-
-                            if (targetTabId) {
-                                setTimeout(async () => {
-                                    try {
-                                        await notifyRecordUpdateAvailable([{ recordId: caseId }]);
-                                        await refreshTab(targetTabId, { includeAllSubtabs: true });
-                                    } catch (err) {
-                                        console.warn('[FEC-ChatHub] Error while refreshing tab:', err);
-                                    }
-                                }, 50);
-                            } else {
-                                console.log(`[FEC-ChatHub] Could not find any open tab containing Case ID: ${caseId}`);
-                            }
-                        }
+                        await this.refreshOpenCaseTab(caseId);
                     } catch (refreshErr) {
                         console.warn('[FEC-ChatHub] Error calling Workspace API:', refreshErr);
                     }
@@ -905,10 +867,65 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 });
 
                 showToast(this, 'Success', 'File downloaded and saved to Case.', 'success');
+
+                // Refresh the open Case tab so the newly saved file shows up immediately,
+                // without requiring the user to manually reload the page.
+                await this.refreshOpenCaseTab(caseId);
             } catch (error) {
                 showToast(this, 'Error', 'Unable to download and save file.', 'error');
                 console.error('Apex: error', error);
             }
+        }
+    }
+
+    /**
+     * Finds the open Workspace tab/subtab containing the given Case and refreshes it
+     * so newly saved records (e.g. attachments) appear without a manual page reload.
+     * @param {string} caseId - The Case record Id to locate and refresh
+     * @return {Promise<void>}
+     */
+    async refreshOpenCaseTab(caseId) {
+        if (!caseId || !this.isConsoleNavigation) return;
+
+        try {
+            publish(this.messageContext, FEC_CHAT_UPDATE, { recordId: caseId });
+            const allTabs = await getAllTabInfo();
+            let targetTabId = null;
+
+            // Loop through all tabs and subtabs to find the Case ID
+            for (const tab of allTabs) {
+                // 1. Check if Case is a Primary Tab
+                if (tab.recordId === caseId) {
+                    targetTabId = tab.tabId;
+                    break;
+                }
+
+                // 2. Check if Case is a Subtab within this Primary Tab
+                if (tab.subtabs && tab.subtabs.length > 0) {
+                    for (const subtab of tab.subtabs) {
+                        if (subtab.recordId === caseId) {
+                            targetTabId = subtab.tabId; // Get the ID of the subtab
+                            break;
+                        }
+                    }
+                }
+                if (targetTabId) break; // Exit outer loop if found
+            }
+
+            if (targetTabId) {
+                setTimeout(async () => {
+                    try {
+                        await notifyRecordUpdateAvailable([{ recordId: caseId }]);
+                        await refreshTab(targetTabId, { includeAllSubtabs: true });
+                    } catch (err) {
+                        console.warn('[FEC-ChatHub] Error while refreshing tab:', err);
+                    }
+                }, 50);
+            } else {
+                console.log(`[FEC-ChatHub] Could not find any open tab containing Case ID: ${caseId}`);
+            }
+        } catch (refreshErr) {
+            console.warn('[FEC-ChatHub] Error calling Workspace API:', refreshErr);
         }
     }
 
