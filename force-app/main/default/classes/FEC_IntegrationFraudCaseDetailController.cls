@@ -302,10 +302,9 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
         log('BU CaseIDs = ' + result.buCaseIds);
         return result;
     }
-    private static List<FEC_Integration_Case__c> loadFaudCaseByServiceId(String serviceCaseId) {
-        if (String.isBlank(serviceCaseId)) {
-            return new List<FEC_Integration_Case__c>();
-        }
+   
+
+    private static List<FEC_Integration_Case__c> loadFraudCaseByCaseId(String caseId) {       
         List<FEC_Integration_Case__c> records = [
             SELECT Id,
                    FEC_CaseID__c,
@@ -326,7 +325,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Updated_Time__c,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
-            WHERE FEC_Integrate_Case_ID__c =:serviceCaseId
+            WHERE FEC_CaseID__c =:caseId
             ORDER BY CreatedDate DESC
         ];
         return records;
@@ -381,7 +380,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
         List<FEC_Integration_Case__c> hierarchy =
             new List<FEC_Integration_Case__c>();
 
-        List<FEC_Integration_Case__c> fraudCase = loadFaudCaseByServiceId(rootCase.FEC_Integrate_Case_ID__c);
+        List<FEC_Integration_Case__c> fraudCase = loadFraudCaseByCaseId(rootCase.FEC_CaseID__c);
         hierarchy.addAll(fraudCase);
 
         for (FEC_Integration_Case__c bu : rootAndBu) {
