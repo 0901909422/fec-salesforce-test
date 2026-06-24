@@ -438,20 +438,10 @@ public with sharing class FEC_UpdateCustomerContact {
 
     if (String.isBlank(req.Channel)) {
       throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
-    } else {
-      List<FEC_CommonUltils.PicklistOption> channelOptionlst = FEC_CommonUltils.getPicklistOptions(
-        'Case',
-        'FEC_Channel__c'
+    } else if (!FEC_CommonUltils.isLengthValid(req.Channel, 255)) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Channel', '255'})
       );
-
-      Set<String> validChannellst = new Set<String>();
-      for (FEC_CommonUltils.PicklistOption option : channelOptionlst) {
-        validChannellst.add(option.value);
-      }
-
-      if (!validChannellst.contains(req.Channel)) {
-        throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Channel'}));
-      }
     }
 
     if (String.isBlank(req.CommunicationType)) {
@@ -521,13 +511,18 @@ public with sharing class FEC_UpdateCustomerContact {
       if (!contactlst.isEmpty()) {
         FEC_Contact_List__c matched = contactlst.get(0);
         req.ContactId = matched.FEC_Contact_ID__c;
-        // 13/06/2026 linhdev - Channel theo Record Type (Customer_Case / Internal_Case)
-        req.Channel = resolveChannelForApi(selectedCase);
-        req.CommunicationType = resolveCommunicationTypeForApi(
-          selectedCase,
-          matched,
-          method
-        );
+        req.Channel = matched.FEC_Channel__c;
+        req.CommunicationType = matched.FEC_Communication_Type__c;
+        if (String.isBlank(req.Channel)) {
+          throw new FEC_APIServiceException(
+            String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'})
+          );
+        }
+        if (String.isBlank(req.CommunicationType)) {
+          throw new FEC_APIServiceException(
+            String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CommunicationType'})
+          );
+        }
         req.ContactString = PHONE_UPDATE.equals(method)
           ? selectedCase.FEC_Updated_Info_Phone_Number__c
           : selectedCase.FEC_Updated_Info_Email__c;

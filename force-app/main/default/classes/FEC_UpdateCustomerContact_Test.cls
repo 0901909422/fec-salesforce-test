@@ -63,6 +63,7 @@ private class FEC_UpdateCustomerContact_Test {
         FEC_Contact_List__c contact = new FEC_Contact_List__c(
             FEC_Customer_History__c = ch.Id,
             FEC_Contact_ID__c = 'C001',
+            FEC_Channel__c = 'Phone',
             FEC_Communication_Type__c = 'Phone',
             FEC_Contact_String__c = '0901234567'
         );
@@ -148,6 +149,7 @@ private class FEC_UpdateCustomerContact_Test {
         insert new FEC_Contact_List__c(
             FEC_Customer_History__c = ch.Id,
             FEC_Contact_ID__c = 'E001',
+            FEC_Channel__c = 'Email',
             FEC_Communication_Type__c = 'Email',
             FEC_Contact_String__c = 'test@example.com'
         );
@@ -242,15 +244,15 @@ private class FEC_UpdateCustomerContact_Test {
 
     @IsTest
     static void testValidation_InvalidChannelAndContactString() {
-        // invalid channel
+        // channel quá dài
         FEC_UpdateCustomerContact.CustomerContactRequest req1 = new FEC_UpdateCustomerContact.CustomerContactRequest();
         req1.CIFNumber = 'CIF123';
-        req1.Channel = 'INVALID_CHANNEL_X';
+        req1.Channel = 'X'.repeat(256);
         req1.CommunicationType = FEC_ConstantCommon.PHONE;
         req1.ContactString = '0901234567';
         try {
             FEC_UpdateCustomerContact.updateCustomerContact(req1);
-            System.assert(false, 'Phải ném exception khi Channel invalid.');
+            System.assert(false, 'Phải ném exception khi Channel vượt max length.');
         } catch (Exception e) {
             System.assertNotEquals(null, e.getMessage());
         }
@@ -349,28 +351,14 @@ private class FEC_UpdateCustomerContact_Test {
     }
 
     @IsTest
-    static void testUpdateValue_InternalCase_SendsInternalChannel() {
-        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)) {
-            return;
-        }
-
-        Case c = [
-            SELECT Id, FEC_Account_or_Contract__c
-            FROM Case
+    static void testUpdateValue_SendsContactListChannelAndCommunicationType() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Contact_List__c contact = [
+            SELECT FEC_Channel__c, FEC_Communication_Type__c
+            FROM FEC_Contact_List__c
+            WHERE FEC_Contact_ID__c = 'C001'
             LIMIT 1
         ];
-        Id internalRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME).getRecordTypeId();
-
-        FEC_CaseTriggerHandler.isExecuting = true;
-        try {
-            update new Case(
-                Id = c.Id,
-                RecordTypeId = internalRtId
-            );
-        } finally {
-            FEC_CaseTriggerHandler.isExecuting = false;
-        }
 
         SoapCaptureMock captureMock = new SoapCaptureMock();
         Test.setMock(HttpCalloutMock.class, captureMock);
@@ -383,9 +371,15 @@ private class FEC_UpdateCustomerContact_Test {
         System.assertEquals(true, res.success);
         System.assert(
             captureMock.requestBody.contains(
-                '<Channel>' + FEC_ConstantCommon.CHANNEL_INTERNAL + '</Channel>'
+                '<Channel>' + contact.FEC_Channel__c + '</Channel>'
             ),
-            'Internal_Case phải gửi Channel=Internal trong SOAP request.'
+            'Phải gửi Channel từ FEC_Contact_List__c.'
+        );
+        System.assert(
+            captureMock.requestBody.contains(
+                '<CommunicationType>' + contact.FEC_Communication_Type__c + '</CommunicationType>'
+            ),
+            'Phải gửi CommunicationType từ FEC_Contact_List__c.'
         );
     }
 }
