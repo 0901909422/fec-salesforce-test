@@ -1,4 +1,4 @@
-﻿import { LightningElement, api, wire } from "lwc";
+import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
@@ -10,6 +10,8 @@ import { RefreshEvent } from "lightning/refresh";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
+import isInteractionChatActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionChatActionBlocked";
+import VALIDATE_INTERACTION_CHAT from "@salesforce/messageChannel/FEC_Validate_Interaction_Chat__c";
 //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
 import getCaseSearchFlags from "@salesforce/apex/FEC_SearchController.getCaseSearchFlags";
 import getTestServiceErrorAccountNumber from "@salesforce/apex/FEC_SearchController.getTestServiceErrorAccountNumber";
@@ -1714,6 +1716,58 @@ hasAnySearchCriteria(params) {
     }
   }
 
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
+      return false;
+    }
+
+
+    const chatOk = await this.ensureInteractionChatBeforeCreateCase(recordId);
+    if (!chatOk) {
+      return false; 
+    }
+
+    // return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    return true;
+  }
+
+    async ensureInteractionChatBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionChatActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_CHAT, { recordId });
+        return false; // Chặn lại và phát tín hiệu bôi đỏ ô input
+      }
+      return true;
+    } catch (error) {
+      console.error('isInteractionChatActionBlocked error', error);
+      return true;
+    }
+  }
+
+
+   async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
+      return false;
+    }
+    const chatOk = await this.ensureInteractionChatBeforeCreateCase(recordId);
+    if (!chatOk) {
+      return false; 
+    }
+
+    const phoneOk = await this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    if (!phoneOk) {
+      return false;
+    }
+
+    return true;
+  }
+
   async ensureInteractionPhoneBeforeCreateCase(recordId) {
     if (!recordId) {
       return true;
@@ -1731,13 +1785,6 @@ hasAnySearchCriteria(params) {
     }
   }
 
-  async ensureInteractionFieldsBeforeCreateCase(recordId) {
-    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
-    if (!emailOk) {
-      return false;
-    }
-    // return this.ensureInteractionPhoneBeforeCreateCase(recordId);
-  }
 
   // Handle button actions from datatable rows
   async handleRowAction(event) {

@@ -179,7 +179,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     }
 
     get isPhoneRequired() {
-        return !this.isReview && this.isManualChatInteraction && this.canEditChatFields;
+        return false;
     }
 
     get customerUsername() { return this.record?.FEC_Customer_Username__c || STR_EMPTY; }
@@ -287,7 +287,7 @@ export default class FecInteractionChatInfo extends LightningElement {
 
         const needsUsername = this.isUsernameRequired && !this.hasUsername;
         // const needsPhone = this.isPhoneRequired && !this.hasPhone;
-        if (!needsUsername && !needsPhone) {
+        if (!needsUsername ) {
             return false;
         }
 

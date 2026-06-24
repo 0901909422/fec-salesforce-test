@@ -241,11 +241,9 @@ public without sharing class FEC_InteractionInforHandler {
         return requiresManualInteractionPhone(getInteractionForPhoneAction(recordId));
     }
 
-    private static Boolean hasRequiredManualChatFields(Case interaction) {
-        return String.isNotBlank(interaction.FEC_Phone_Number__c)
-            && String.isNotBlank(interaction.FEC_Customer_Username__c);
+private static Boolean hasRequiredManualChatFields(Case interaction) {
+        return String.isNotBlank(interaction.FEC_Customer_Username__c); // Chỉ bắt buộc Username
     }
-
     private static Boolean requiresManualInteractionChat(Case interaction) {
         return interaction != null
             && interaction.FEC_Is_Manual__c == true
