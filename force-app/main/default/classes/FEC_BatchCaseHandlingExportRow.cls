@@ -124,4 +124,50 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String temporaryAddress;
     @AuraEnabled public String closureEmail;
     @AuraEnabled public String temporaryEmail;
+    // 24/06/2026 linhdev - Refund Request (Loan) export (RefundLoanTemp1_PM Level Case info)
+    @AuraEnabled public String refundAmount;
+    @AuraEnabled public String receiptDate;
+    @AuraEnabled public String receiptAmount;
+    @AuraEnabled public String transactionNo;
+    @AuraEnabled public String paymentChannel;
+    @AuraEnabled public String receiptDate2;
+    @AuraEnabled public String receiptAmount2;
+    @AuraEnabled public String transactionNo2;
+    @AuraEnabled public String paymentChannel2;
+    @AuraEnabled public String beneficiaryName;
+    @AuraEnabled public String beneficiaryAccount;
+    @AuraEnabled public String bankName;
+    @AuraEnabled public String bankBranch;
+    @AuraEnabled public String provinceCity;
+    @AuraEnabled public String verifyInformation;
+    @AuraEnabled public String callback;
+    @AuraEnabled public String relatedCaseId;
+    @AuraEnabled public String customerProvidedInfo;
+    // 24/06/2026 linhdev - Card Unblock/Phone Update D2C/Card Replacement export (account/card block)
+    @AuraEnabled public String accountStatus;
+    @AuraEnabled public String plasticId;
+    @AuraEnabled public String creditLimit;
+    @AuraEnabled public String blockCode1;
+    @AuraEnabled public String blockCode2;
+    @AuraEnabled public String blockCode;
+    @AuraEnabled public String daysPastDue;
+    // 24/06/2026 linhdev - Card Replacement export (CardReplacementTemp1/Temp2)
+    @AuraEnabled public String cardReplacementReason;
+    @AuraEnabled public String newBlockCodeCardReplace;
+    // 24/06/2026 linhdev - Point Redemption export (PointsRedemptionTemp1_CSSupport)
+    @AuraEnabled public String availablePoints;
+    @AuraEnabled public String redeemedPoints;
+    // 24/06/2026 linhdev - Original MRC Return export (MRCReturnTemp1/Temp2)
+    @AuraEnabled public String mrcZone;
+    @AuraEnabled public String mrcArea;
+    @AuraEnabled public String plateNumber;
+    @AuraEnabled public String mrcStatus;
+    @AuraEnabled public String mrcStatusId;
+    @AuraEnabled public String mrcId;
+    @AuraEnabled public String mrcRemark;
+    @AuraEnabled public String mrcModifiedDate;
+    @AuraEnabled public String mrcDeliveryDate;
+    @AuraEnabled public String mrcReceivedDate;
+    @AuraEnabled public String mrcReceiver;
+    @AuraEnabled public String customerConfirmation;
 }
