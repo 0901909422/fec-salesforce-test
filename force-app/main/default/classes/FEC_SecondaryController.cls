@@ -150,7 +150,12 @@ public without sharing class FEC_SecondaryController {
                     ));
 
                    if( pc.Contact.Channel == FEC_ConstantCommon.EMAIL && String.isBlank(hist.FEC_Email__c)){
-                        hist.FEC_Email__c = pc.Contact.ContactString;
+                        String email = FEC_CommonUltils.normalizeEmailForField(
+                            pc.Contact.ContactString
+                        );
+                        if (String.isNotBlank(email)) {
+                            hist.FEC_Email__c = email;
+                        }
                     }
                 }
             }

@@ -361,9 +361,14 @@ public without sharing class FEC_CustomerIntegrationService {
                     continue;
                 }
                 if (pc.Contact.Channel == FEC_ConstantCommon.EMAIL && String.isBlank(hist.FEC_Email__c)) {
-                    hist.FEC_Email__c = pc.Contact.ContactString;
-                    if (result != null) {
-                        result.emailAddress = pc.Contact.ContactString;
+                    String email = FEC_CommonUltils.normalizeEmailForField(
+                        pc.Contact.ContactString
+                    );
+                    if (String.isNotBlank(email)) {
+                        hist.FEC_Email__c = email;
+                        if (result != null) {
+                            result.emailAddress = email;
+                        }
                     }
                 }
             }
@@ -1079,9 +1084,12 @@ public without sharing class FEC_CustomerIntegrationService {
 
         if (customer.Emails != null && !customer.Emails.isEmpty()) {
             for (FEC_GetCustomerList.EmailInfo em : customer.Emails) {
-                if (em != null && String.isNotBlank(em.Email)) {
-                    hist.FEC_Email__c = em.Email;
-                    result.emailAddress = em.Email;
+                String email = FEC_CommonUltils.normalizeEmailForField(
+                    em != null ? em.Email : null
+                );
+                if (String.isNotBlank(email)) {
+                    hist.FEC_Email__c = email;
+                    result.emailAddress = email;
                     break;
                 }
             }
