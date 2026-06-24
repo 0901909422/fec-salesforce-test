@@ -25,7 +25,7 @@ public without sharing class FEC_GetInteractionCases {
             'FEC_Channel__c, FEC_Interaction_Subchannel__c, FEC_External_Interaction_ID__c, ' +
             'FEC_Interaction_Email__c, FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
-            'WHERE RecordType.DeveloperName IN :rtNames ';
+            'WHERE RecordType.DeveloperName IN :rtNames AND ArchiveExternalId__c = null ';
         soql += FEC_GetServiceCases.buildCustomerFilterClause(filterCtx);
         //'AND (IsClosed = false OR ClosedDate >= :archiveThreshold) ' +
         soql += 'ORDER BY FEC_Created_On__c DESC NULLS LAST';

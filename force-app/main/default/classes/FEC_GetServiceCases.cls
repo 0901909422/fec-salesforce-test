@@ -40,7 +40,8 @@ public without sharing class FEC_GetServiceCases {
             'FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames AND IsClosed = false ' +
-            'AND (FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN :resolvedStatuses) ';
+            'AND (FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN :resolvedStatuses) ' + 
+            'AND ArchiveExternalId__c = null ';
         soql += buildCustomerFilterClause(filterCtx);
         soql += 'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
@@ -107,7 +108,8 @@ public without sharing class FEC_GetServiceCases {
             'FEC_Case_Created_On__c, FEC_Case_Created_By__c, ' +
             'FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
-            'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c IN :resolvedStatuses ';
+            'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c IN :resolvedStatuses ' + 
+            'AND ArchiveExternalId__c = null ';
         soql += buildCustomerFilterClause(filterCtx);
         //'AND (ClosedDate = null OR ClosedDate >= :archiveThreshold) ' +
         soql += 'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
