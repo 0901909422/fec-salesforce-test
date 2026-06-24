@@ -209,7 +209,7 @@ export default class Fec_allocationHistory extends LightningElement {
             AgentName: row?.AgentName ?? STR_EMPTY,
             AllocationDate: formatDateField(row?.AllocationDate),
             CurrentBucket: row?.CurrentBucket ?? STR_EMPTY,
-            CurrentSubPool: row?.CurrentSubPool ?? STR_EMPTY,
+            CurrentSubPool: row?.BucketDownLayerName ?? STR_EMPTY,
             Job: row?.Job ?? STR_EMPTY,
             DPD: row?.DPD ?? STR_EMPTY,
             POS: formatCurrency0(row?.POS, { emptyDisplay: STR_EMPTY, integerMode: 'trunc' })
