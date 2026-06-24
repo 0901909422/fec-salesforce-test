@@ -421,6 +421,39 @@ private class FEC_PaymentHistoryValidationService_Test {
     }
 
     @IsTest
+    static void testGetPaymentHistoryRows_DedupesDuplicateRecords() {
+        Case c = getTestCase();
+        Id chId = c.FEC_Account_or_Contract__c;
+        Date payDate = Date.today();
+        insert new List<FEC_Payment_History__c>{
+            new FEC_Payment_History__c(
+                FEC_Customer_History__c = chId,
+                FEC_Payment_No__c = 2,
+                FEC_Payment_Date__c = payDate,
+                FEC_Payment_Amount__c = 200000,
+                FEC_Particulars__c = 'CHK-DUP'
+            ),
+            new FEC_Payment_History__c(
+                FEC_Customer_History__c = chId,
+                FEC_Payment_No__c = 2,
+                FEC_Payment_Date__c = payDate,
+                FEC_Payment_Amount__c = 200000,
+                FEC_Particulars__c = 'CHK-DUP'
+            )
+        };
+
+        Test.startTest();
+        List<Map<String, Object>> rows = FEC_PaymentHistoryValidationService.getPaymentHistoryRows(
+            String.valueOf(c.Id)
+        );
+        Test.stopTest();
+
+        System.assertEquals(2, rows.size(), 'Duplicate DB rows must collapse to one per dedupe key.');
+        System.assertEquals(1, rows[0].get('RemovalNote'));
+        System.assertEquals(2, rows[1].get('RemovalNote'));
+    }
+
+    @IsTest
     static void testValidation_RC0404_CaseWithoutAccount() {
         Case emptyCase;
         FEC_CaseTriggerHandler.isExecuting = true;
