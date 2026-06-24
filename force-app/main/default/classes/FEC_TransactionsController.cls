@@ -82,7 +82,7 @@ public without sharing class FEC_TransactionsController {
         }
 
         FEC_Customer_History__c ch = [
-            SELECT Id, FEC_Account_Number__c, FEC_Contract_Number__c
+            SELECT Id, FEC_Account_Number__c, FEC_Contract_Number__c, FEC_Card_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
         ];
@@ -91,7 +91,7 @@ public without sharing class FEC_TransactionsController {
         if (String.isBlank(accNumber)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
-    
+
         TransactionsResponse res = new TransactionsResponse();
         res.unbilledTransactions = new List<TransactionDTO>();
         res.pendingTransactions  = new List<TransactionDTO>();
@@ -100,16 +100,21 @@ public without sharing class FEC_TransactionsController {
            UNBILLED – API calls (GetCardBasicInfo + M_FAS_OUTSTANDING_AUTH_INQ only)
            =============================== */
         FEC_CommonUltils.beginDeferredApiLogging();
+        FEC_GetCardBasicInfo.ResponseWrapper cardBasicInfoRes;
         List<FEC_GetCardBasicInfo.TransactionInfo> cardTransactions;
         List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> outstandingAuths;
         try {
-            cardTransactions = callCardBasicInfoSafe(accNumber);
+            cardBasicInfoRes = callCardBasicInfoResponseSafe(accNumber);
+            cardTransactions = extractCardTransactions(cardBasicInfoRes);
             outstandingAuths = callOutstandingAuthSafe(accNumber);
 
             /* ===============================
-               PENDING – unchanged (FEC_VMXAUTHDETAILINQ)
+               PENDING – FEC_VMXAUTHDETAILINQ (ACCT_NBR = CardNumber)
                =============================== */
-            res.pendingTransactions = loadPendingRealtime(accNumber, ch.Id);
+            res.pendingTransactions = loadPendingRealtime(
+                resolveVmxCardNbr(cardBasicInfoRes, ch),
+                ch.Id
+            );
         } finally {
             FEC_CommonUltils.flushDeferredApiLogs();
         }
@@ -235,9 +240,13 @@ public without sharing class FEC_TransactionsController {
     /* =====================================================
        PENDING 
        ===================================================== */
-    private static List<TransactionDTO> loadPendingRealtime(String accNumber, Id historyId) {
+    private static List<TransactionDTO> loadPendingRealtime(String cardNumber, Id historyId) {
 
         List<TransactionDTO> result = new List<TransactionDTO>();
+
+        if (String.isBlank(cardNumber)) {
+            return result;
+        }
 
         try {
             FEC_VMXAUTHDETAILINQ.ResponseWrapper res =
@@ -248,7 +257,7 @@ public without sharing class FEC_TransactionsController {
                     FEC_ConstantCommon.VMX_VERSION_DEFAULT,
                     FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
                     FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                    accNumber,
+                    cardNumber,
                     FEC_ConstantCommon.STR_EMPTY
                 );
 
@@ -992,24 +1001,47 @@ public without sharing class FEC_TransactionsController {
     /* =====================================================
        SAFE CALLS
        ===================================================== */
-    private static List<FEC_GetCardBasicInfo.TransactionInfo>
-    callCardBasicInfoSafe(String acc) {
+    private static FEC_GetCardBasicInfo.ResponseWrapper callCardBasicInfoResponseSafe(String acc) {
         try {
-            FEC_GetCardBasicInfo.ResponseWrapper res =
-                FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    acc
-                );
-            return res != null
-                && res.CardBasicInfo != null
-                && res.CardBasicInfo.Transactions != null
-                ? res.CardBasicInfo.Transactions
-                : new List<FEC_GetCardBasicInfo.TransactionInfo>();
+            return FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                acc
+            );
         } catch (Exception e) {
-            return new List<FEC_GetCardBasicInfo.TransactionInfo>();
+            return null;
         }
+    }
+
+    private static List<FEC_GetCardBasicInfo.TransactionInfo> extractCardTransactions(
+        FEC_GetCardBasicInfo.ResponseWrapper res
+    ) {
+        return res != null
+            && res.CardBasicInfo != null
+            && res.CardBasicInfo.Transactions != null
+            ? res.CardBasicInfo.Transactions
+            : new List<FEC_GetCardBasicInfo.TransactionInfo>();
+    }
+
+    private static List<FEC_GetCardBasicInfo.TransactionInfo> callCardBasicInfoSafe(String acc) {
+        return extractCardTransactions(callCardBasicInfoResponseSafe(acc));
+    }
+
+    private static String resolveVmxCardNbr(
+        FEC_GetCardBasicInfo.ResponseWrapper cardBasicInfoRes,
+        FEC_Customer_History__c ch
+    ) {
+        if (cardBasicInfoRes != null
+            && cardBasicInfoRes.CardBasicInfo != null
+            && cardBasicInfoRes.CardBasicInfo.MainCard != null
+            && String.isNotBlank(cardBasicInfoRes.CardBasicInfo.MainCard.CardNumber)) {
+            return cardBasicInfoRes.CardBasicInfo.MainCard.CardNumber.trim();
+        }
+        if (ch != null && String.isNotBlank(ch.FEC_Card_Number__c)) {
+            return ch.FEC_Card_Number__c.trim();
+        }
+        return null;
     }
 
     private static List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>

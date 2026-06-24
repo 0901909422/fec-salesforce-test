@@ -91,12 +91,12 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         String vmxVersion,
         String context,
         String name,
-        String acctNbr,
+        String cardNbr,
         String contData
     ) {
         ResponseWrapper res = callService(
             transID, requestorId, dateTimeStr, vmxVersion,
-            context, name, acctNbr, contData
+            context, name, cardNbr, contData
         );
         if (res != null && res.VMXMsgOut != null && res.VMXMsgOut.Auths != null) {
             return res.VMXMsgOut.Auths;
@@ -111,12 +111,12 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         String vmxVersion,
         String context,
         String name,
-        String acctNbr,
+        String cardNbr,
         String contData
     ) {
         return callServiceInternal(
             transID, requestorId, dateTimeStr, vmxVersion,
-            context, name, acctNbr, contData
+            context, name, cardNbr, contData
         );
     }
 
@@ -130,7 +130,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         String vmxVersion,
         String context,
         String name,
-        String acctNbr,
+        String cardNbr,
         String contData
     ) {
         try {
@@ -140,7 +140,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
 
             requestorId = FEC_CommonUltils.resolveRequestorId(apiConfig);
 
-            String acctForCall = resolveAccountForCall(acctNbr, apiSetting, apiConfig);
+            String cardForCall = resolveCardNbrForCall(cardNbr, apiSetting, apiConfig);
 
             String ctx     = String.isNotBlank(context)
                                  ? context.trim()
@@ -153,11 +153,11 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
                                  : VMX_VERSION_E8V6;
             String cont    = contData != null ? contData : '';
 
-            validateRequest(transID, requestorId, dateTimeStr, ctx, msgName, acctForCall);
+            validateRequest(transID, requestorId, dateTimeStr, ctx, msgName, cardForCall);
 
             String soapBody = buildSoapRequest(
                 transID, requestorId, dateTimeStr, ver,
-                ctx, msgName, acctForCall, cont
+                ctx, msgName, cardForCall, cont
             );
 
             String endpoint = apiSetting?.FEC_Call_Mock__c
@@ -226,8 +226,8 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         responseLog = null;
     }
 
-    private static String resolveAccountForCall(
-        String acctNbr,
+    private static String resolveCardNbrForCall(
+        String cardNbr,
         FEC_API_Setting__c  apiSetting,
         FEC_API_Config__mdt apiConfig
     ) {
@@ -235,7 +235,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
             && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
             return apiConfig.FEC_Account_Number_Hard_Code__c.trim();
         }
-        return String.isNotBlank(acctNbr) ? acctNbr.trim() : acctNbr;
+        return String.isNotBlank(cardNbr) ? cardNbr.trim() : cardNbr;
     }
 
     /* =====================================================
@@ -248,7 +248,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         String vmxVersion,
         String context,
         String name,
-        String acctNbr,
+        String cardNbr,
         String contData
     ) {
         Dom.Document doc = new Dom.Document();
@@ -275,7 +275,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
 
         msgIn.addChildElement('CONTEXT',   null, null).addTextNode(context);
         msgIn.addChildElement('NAME',      null, null).addTextNode(name);
-        msgIn.addChildElement('ACCT_NBR',  null, null).addTextNode(acctNbr);
+        msgIn.addChildElement('ACCT_NBR',  null, null).addTextNode(cardNbr);
         msgIn.addChildElement('CONT_DATA', null, null).addTextNode(contData);
 
         return doc.toXmlString();
@@ -636,7 +636,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         String dateTimeStr,
         String context,
         String name,
-        String acctNbr
+        String cardNbr
     ) {
         if (String.isBlank(transID) || transID.length() > 36) {
             throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
@@ -693,16 +693,16 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
             );
         }
 
-        if (String.isBlank(acctNbr)) {
+        if (String.isBlank(cardNbr)) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Param_Required,
                     new List<String>{ 'ACCT_NBR' })
             );
         }
-        if (acctNbr.length() > 30) {
+        if (cardNbr.length() > 19) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Param_Maxlength,
-                    new List<String>{ 'ACCT_NBR', '30' })
+                    new List<String>{ 'ACCT_NBR', '19' })
             );
         }
     }
