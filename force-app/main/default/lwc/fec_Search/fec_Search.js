@@ -1736,7 +1736,7 @@ hasAnySearchCriteria(params) {
     if (!emailOk) {
       return false;
     }
-    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+    // return this.ensureInteractionPhoneBeforeCreateCase(recordId);
   }
 
   // Handle button actions from datatable rows
