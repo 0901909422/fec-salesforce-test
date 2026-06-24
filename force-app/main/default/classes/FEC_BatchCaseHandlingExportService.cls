@@ -88,7 +88,42 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Recipient_Phone_Number__c',
             'FEC_Selected_Address__c',
             'FEC_Selected_Address__r.FEC_Full_Address__c',
-            'FEC_Account_or_Contract__r.FEC_Email__c'
+            'FEC_Selected_Address__r.FEC_Address_Type__c',
+            'FEC_Account_or_Contract__r.FEC_Email__c',
+            // 24/06/2026 linhdev - Card Unblock/Phone Update D2C/Card Replacement export (account/card block)
+            'FEC_Account_or_Contract__r.FEC_Account_Status__c',
+            'FEC_Account_or_Contract__r.FEC_Plastic_ID__c',
+            'FEC_Account_or_Contract__r.FEC_Credit_Limit__c',
+            'FEC_Account_or_Contract__r.FEC_Block_Code_1__c',
+            'FEC_Account_or_Contract__r.FEC_Block_Code_2__c',
+            'FEC_Account_or_Contract__r.FEC_Block_Code__c',
+            'FEC_Account_or_Contract__r.FEC_Days_Past_Due__c',
+            'FEC_Account_or_Contract__r.FEC_Available_Points__c',
+            // 24/06/2026 linhdev - Original MRC Return export (MRCReturnTemp1/Temp2)
+            'FEC_Account_or_Contract__r.FEC_MRC_Zone__c',
+            'FEC_Account_or_Contract__r.FEC_Area__c',
+            'FEC_Account_or_Contract__r.FEC_Plate_Number__c',
+            'FEC_Account_or_Contract__r.FEC_MRC_Status__c',
+            'FEC_Account_or_Contract__r.FEC_Status_ID__c',
+            'FEC_Account_or_Contract__r.FEC_ID__c',
+            'FEC_Account_or_Contract__r.FEC_Remark__c',
+            'FEC_Account_or_Contract__r.FEC_Modified_Date__c',
+            'FEC_Account_or_Contract__r.FEC_Delivery_Date__c',
+            'FEC_Account_or_Contract__r.FEC_Received_Date__c',
+            'FEC_Account_or_Contract__r.FEC_Original_MRC_Receiver__c',
+            // 24/06/2026 linhdev - Card Replacement / Point Redemption export
+            'FEC_Card_Replacement_Reason__c',
+            'FEC_New_Block_Code_Card_Replace__c',
+            'FEC_Redeemed_Points__c',
+            'FEC_Customer_Confirmation__c',
+            // 24/06/2026 linhdev - Refund Request (Loan) export (RefundLoanTemp1_PM Level Case info)
+            'FEC_Account_or_Contract__r.FEC_Excess_Amount__c',
+            'FEC_Refund_Amount__c',
+            'FEC_Beneficiary_Name__c',
+            'FEC_Beneficiary_Account__c',
+            'FEC_Bank_Name_Noaccent__c',
+            'FEC_Bank_Branch_Name_Noaccent__c',
+            'FEC_Province_City__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         return selectFields;
@@ -213,6 +248,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         enrichPendingCsSupportLabels(rows);
         enrichAddressUpdateExportFields(rows);
         enrichContractClosureExportFields(rows);
+        enrichRefundLoanExportFields(rows);
     }
 
     // 15/06/2026 linhdev - Address Update export: Updated = Address Info gắn Case có Parent; Original = parent record
@@ -333,6 +369,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
     }
 
     // 16/06/2026 toannd - Contract Closure export: Temporary Address + Temporary Email (Level Case info)
+    // 24/06/2026 linhdev - bổ sung Address từ FEC_Address_Info__c + fallback FEC_Selected_Address__r (Card Replacement)
     private static void enrichContractClosureExportFields(List<FEC_BatchCaseHandlingExportRow> rows) {
         if (rows == null || rows.isEmpty()) {
             return;
@@ -347,26 +384,45 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             return;
         }
 
+        Map<Id, String> standardAddressByCaseId = new Map<Id, String>();
         Map<Id, String> temporaryAddressByCaseId = new Map<Id, String>();
         if (Schema.sObjectType.FEC_Address_Info__c.isAccessible()) {
-            List<FEC_Address_Info__c> tempAddresses = [
-                SELECT FEC_Case__c, FEC_Full_Address__c, LastModifiedDate
+            List<FEC_Address_Info__c> caseAddresses = [
+                SELECT FEC_Case__c, FEC_Full_Address__c, FEC_Address_Type__c, LastModifiedDate
                 FROM FEC_Address_Info__c
                 WHERE FEC_Case__c IN :caseIds
-                AND FEC_Address_Type__c = :FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY
                 ORDER BY LastModifiedDate DESC
             ];
-            SObjectAccessDecision tempAddrDecision = Security.stripInaccessible(
+            SObjectAccessDecision addrDecision = Security.stripInaccessible(
                 AccessType.READABLE,
-                tempAddresses
+                caseAddresses
             );
-            tempAddresses = (List<FEC_Address_Info__c>) tempAddrDecision.getRecords();
-            for (FEC_Address_Info__c addr : tempAddresses) {
-                if (addr == null || addr.FEC_Case__c == null || temporaryAddressByCaseId.containsKey(addr.FEC_Case__c)) {
+            caseAddresses = (List<FEC_Address_Info__c>) addrDecision.getRecords();
+            for (FEC_Address_Info__c addr : caseAddresses) {
+                if (addr == null || addr.FEC_Case__c == null) {
                     continue;
                 }
-                temporaryAddressByCaseId.put(addr.FEC_Case__c, formatAddressInfoAddress(addr));
+                Id caseIdRef = addr.FEC_Case__c;
+                String addressType = addr.FEC_Address_Type__c;
+                if (isTemporaryAddressType(addressType)) {
+                    if (!temporaryAddressByCaseId.containsKey(caseIdRef)) {
+                        temporaryAddressByCaseId.put(caseIdRef, formatAddressInfoAddress(addr));
+                    }
+                } else if (!standardAddressByCaseId.containsKey(caseIdRef)) {
+                    standardAddressByCaseId.put(caseIdRef, formatAddressInfoAddress(addr));
+                }
             }
+        }
+
+        Map<Id, Case> selectedAddressCaseById = new Map<Id, Case>();
+        for (Case c : [
+            SELECT Id,
+                FEC_Selected_Address__r.FEC_Full_Address__c,
+                FEC_Selected_Address__r.FEC_Address_Type__c
+            FROM Case
+            WHERE Id IN :caseIds
+        ]) {
+            selectedAddressCaseById.put(c.Id, c);
         }
 
         Map<Id, String> temporaryEmailByCaseId = loadContractClosureTemporaryEmailsByCaseId(caseIds);
@@ -375,13 +431,212 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             if (r == null || r.caseId == null) {
                 continue;
             }
+            if (standardAddressByCaseId.containsKey(r.caseId)) {
+                r.closureAddress = standardAddressByCaseId.get(r.caseId);
+            }
             if (temporaryAddressByCaseId.containsKey(r.caseId)) {
                 r.temporaryAddress = temporaryAddressByCaseId.get(r.caseId);
+            }
+            Case selectedCase = selectedAddressCaseById.get(r.caseId);
+            SObject selectedAddr = selectedCase == null
+                ? null
+                : safeRelatedSObject(selectedCase, 'FEC_Selected_Address__r');
+            if (selectedAddr != null) {
+                String selectedFullAddress = safeRelatedFieldString(selectedAddr, 'FEC_Full_Address__c');
+                String selectedAddressType = safeRelatedFieldString(selectedAddr, 'FEC_Address_Type__c');
+                if (String.isNotBlank(selectedFullAddress)) {
+                    if (isTemporaryAddressType(selectedAddressType)) {
+                        if (String.isBlank(r.temporaryAddress)) {
+                            r.temporaryAddress = selectedFullAddress;
+                        }
+                    } else if (String.isBlank(r.closureAddress)) {
+                        r.closureAddress = selectedFullAddress;
+                    }
+                }
             }
             if (temporaryEmailByCaseId.containsKey(r.caseId)) {
                 r.temporaryEmail = temporaryEmailByCaseId.get(r.caseId);
             }
         }
+    }
+
+    // 24/06/2026 linhdev - nhận diện Temporary Address cho export Address/Temporary Address
+    private static Boolean isTemporaryAddressType(String addressType) {
+        if (String.isBlank(addressType)) {
+            return false;
+        }
+        return addressType.trim().equalsIgnoreCase(FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY)
+            || addressType.trim().equalsIgnoreCase('Temporary');
+    }
+
+    // 24/06/2026 linhdev - Refund Request (Loan) export: receipt lines + Property Info (RefundLoanTemp1_PM Level Case info)
+    private static void enrichRefundLoanExportFields(List<FEC_BatchCaseHandlingExportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r != null && r.caseId != null) {
+                caseIds.add(r.caseId);
+            }
+        }
+        if (caseIds.isEmpty()) {
+            return;
+        }
+        enrichRefundLoanReceiptLines(rows, caseIds);
+        enrichRefundLoanPropertyInfoFields(rows, caseIds);
+    }
+
+    private static void enrichRefundLoanReceiptLines(
+        List<FEC_BatchCaseHandlingExportRow> rows,
+        Set<Id> caseIds
+    ) {
+        if (!Schema.sObjectType.FEC_Case_Refund_Details__c.isAccessible()) {
+            return;
+        }
+        List<FEC_Case_Refund_Details__c> detailRows = [
+            SELECT
+                FEC_Case__c,
+                FEC_Receipt_Date__c,
+                FEC_Receipt_Amount__c,
+                FEC_Transaction_Number__c,
+                FEC_Payment_Channel__c,
+                CreatedDate
+            FROM FEC_Case_Refund_Details__c
+            WHERE FEC_Case__c IN :caseIds
+            ORDER BY FEC_Case__c, CreatedDate ASC
+        ];
+        SObjectAccessDecision detailDecision = Security.stripInaccessible(
+            AccessType.READABLE,
+            detailRows
+        );
+        detailRows = (List<FEC_Case_Refund_Details__c>) detailDecision.getRecords();
+        Map<Id, List<FEC_Case_Refund_Details__c>> detailsByCaseId = new Map<Id, List<FEC_Case_Refund_Details__c>>();
+        for (FEC_Case_Refund_Details__c detailRow : detailRows) {
+            if (detailRow == null || detailRow.FEC_Case__c == null) {
+                continue;
+            }
+            if (!detailsByCaseId.containsKey(detailRow.FEC_Case__c)) {
+                detailsByCaseId.put(detailRow.FEC_Case__c, new List<FEC_Case_Refund_Details__c>());
+            }
+            detailsByCaseId.get(detailRow.FEC_Case__c).add(detailRow);
+        }
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || r.caseId == null) {
+                continue;
+            }
+            List<FEC_Case_Refund_Details__c> caseDetails = detailsByCaseId.get(r.caseId);
+            if (caseDetails == null || caseDetails.isEmpty()) {
+                continue;
+            }
+            applyRefundReceiptLineToRow(r, caseDetails[0], 1);
+            if (caseDetails.size() > 1) {
+                applyRefundReceiptLineToRow(r, caseDetails[1], 2);
+            }
+        }
+    }
+
+    private static void applyRefundReceiptLineToRow(
+        FEC_BatchCaseHandlingExportRow row,
+        FEC_Case_Refund_Details__c detailRow,
+        Integer lineIndex
+    ) {
+        if (row == null || detailRow == null || lineIndex == null) {
+            return;
+        }
+        String receiptDateVal = detailRow.FEC_Receipt_Date__c == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : formatExportDate(detailRow.FEC_Receipt_Date__c);
+        String receiptAmountVal = formatExportCurrency(detailRow.FEC_Receipt_Amount__c);
+        String transactionNoVal = detailRow.FEC_Transaction_Number__c == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : detailRow.FEC_Transaction_Number__c;
+        String paymentChannelVal = detailRow.FEC_Payment_Channel__c == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : detailRow.FEC_Payment_Channel__c;
+        if (lineIndex == 1) {
+            row.receiptDate = receiptDateVal;
+            row.receiptAmount = receiptAmountVal;
+            row.transactionNo = transactionNoVal;
+            row.paymentChannel = paymentChannelVal;
+            return;
+        }
+        if (lineIndex == 2) {
+            row.receiptDate2 = receiptDateVal;
+            row.receiptAmount2 = receiptAmountVal;
+            row.transactionNo2 = transactionNoVal;
+            row.paymentChannel2 = paymentChannelVal;
+        }
+    }
+
+    private static void enrichRefundLoanPropertyInfoFields(
+        List<FEC_BatchCaseHandlingExportRow> rows,
+        Set<Id> caseIds
+    ) {
+        if (!Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
+            return;
+        }
+        Map<String, Schema.SObjectField> aiFields = Schema.SObjectType.FEC_Additional_Info__c.fields.getMap();
+        List<String> selectParts = new List<String>{ 'FEC_Case__c', 'LastModifiedDate' };
+        if (aiFields.containsKey('FEC_Verify_Information__c')) {
+            selectParts.add('toLabel(FEC_Verify_Information__c)');
+        }
+        if (aiFields.containsKey('FEC_Callback__c')) {
+            selectParts.add('toLabel(FEC_Callback__c)');
+        }
+        if (aiFields.containsKey('FEC_Customer_Provided_Info__c')) {
+            selectParts.add('toLabel(FEC_Customer_Provided_Info__c)');
+        }
+        if (aiFields.containsKey('FEC_Related_Case_ID__c')) {
+            selectParts.add('FEC_Related_Case_ID__c');
+        }
+        if (selectParts.size() <= 2) {
+            return;
+        }
+        String soql =
+            'SELECT ' +
+            String.join(selectParts, ', ') +
+            ' FROM FEC_Additional_Info__c' +
+            ' WHERE FEC_Case__c IN :caseIds' +
+            ' ORDER BY LastModifiedDate DESC';
+        List<SObject> infoRows = Database.query(soql);
+        SObjectAccessDecision infoDecision = Security.stripInaccessible(
+            AccessType.READABLE,
+            infoRows
+        );
+        infoRows = infoDecision.getRecords();
+        Map<Id, SObject> latestInfoByCaseId = new Map<Id, SObject>();
+        for (SObject infoRow : infoRows) {
+            Id caseIdRef = (Id) infoRow.get('FEC_Case__c');
+            if (caseIdRef == null || latestInfoByCaseId.containsKey(caseIdRef)) {
+                continue;
+            }
+            latestInfoByCaseId.put(caseIdRef, infoRow);
+        }
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || r.caseId == null) {
+                continue;
+            }
+            SObject infoRow = latestInfoByCaseId.get(r.caseId);
+            if (infoRow == null) {
+                continue;
+            }
+            r.verifyInformation = safePicklistLabel(infoRow, 'FEC_Verify_Information__c');
+            r.callback = safePicklistLabel(infoRow, 'FEC_Callback__c');
+            r.customerProvidedInfo = safePicklistLabel(infoRow, 'FEC_Customer_Provided_Info__c');
+            r.relatedCaseId = safeRelatedFieldString(infoRow, 'FEC_Related_Case_ID__c');
+        }
+    }
+
+    private static String safePicklistLabel(SObject row, String fieldApiName) {
+        if (row == null || String.isBlank(fieldApiName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (!row.getPopulatedFieldsAsMap().containsKey(fieldApiName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Object val = row.get(fieldApiName);
+        return val == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(val);
     }
 
     private static Map<Id, String> loadContractClosureTemporaryEmailsByCaseId(Set<Id> caseIds) {
@@ -539,10 +794,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.recipientPhoneNumber = populated.containsKey('FEC_Recipient_Phone_Number__c')
             ? c.FEC_Recipient_Phone_Number__c
             : null;
-        SObject selectedAddressRel = safeRelatedSObject(c, 'FEC_Selected_Address__r');
-        r.closureAddress = selectedAddressRel == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : safeRelatedFieldString(selectedAddressRel, 'FEC_Full_Address__c');
+        // 24/06/2026 linhdev - Address/Temporary Address enrich qua enrichContractClosureExportFields (FEC_Address_Info__c + Selected Address)
         r.closureEmail = ch == null
             ? FEC_ConstantCommon.STR_EMPTY
             : safeRelatedFieldString(ch, 'FEC_Email__c');
@@ -609,7 +861,45 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.billDate = populated.containsKey('FEC_Bill_Date__c') ? formatExportDate(c.FEC_Bill_Date__c) : FEC_ConstantCommon.STR_EMPTY;
         r.billAmount = populated.containsKey('FEC_Bill_Amount__c') ? formatExportCurrency(c.FEC_Bill_Amount__c) : FEC_ConstantCommon.STR_EMPTY;
         r.paymentDate = r.billDate;
-        r.excessAmount = r.billAmount;
+        String excessFromContract = FEC_ConstantCommon.STR_EMPTY;
+        if (ch != null && ch.get('FEC_Excess_Amount__c') != null) {
+            excessFromContract = formatExportCurrency((Decimal) ch.get('FEC_Excess_Amount__c'));
+        }
+        r.excessAmount = String.isNotBlank(excessFromContract) ? excessFromContract : r.billAmount;
+        // 24/06/2026 linhdev - Refund Request (Loan) export (RefundLoanTemp1_PM Level Case info)
+        r.refundAmount = populated.containsKey('FEC_Refund_Amount__c')
+            ? formatExportCurrency(c.FEC_Refund_Amount__c)
+            : FEC_ConstantCommon.STR_EMPTY;
+        r.beneficiaryName = populated.containsKey('FEC_Beneficiary_Name__c')
+            ? c.FEC_Beneficiary_Name__c
+            : null;
+        r.beneficiaryAccount = populated.containsKey('FEC_Beneficiary_Account__c')
+            ? c.FEC_Beneficiary_Account__c
+            : null;
+        r.bankName = populated.containsKey('FEC_Bank_Name_Noaccent__c')
+            ? c.FEC_Bank_Name_Noaccent__c
+            : null;
+        r.bankBranch = populated.containsKey('FEC_Bank_Branch_Name_Noaccent__c')
+            ? c.FEC_Bank_Branch_Name_Noaccent__c
+            : null;
+        r.provinceCity = populated.containsKey('FEC_Province_City__c')
+            ? c.FEC_Province_City__c
+            : null;
+        // 24/06/2026 linhdev - Card Replacement export (CardReplacementTemp1/Temp2)
+        r.cardReplacementReason = populated.containsKey('FEC_Card_Replacement_Reason__c')
+            ? c.FEC_Card_Replacement_Reason__c
+            : null;
+        r.newBlockCodeCardReplace = populated.containsKey('FEC_New_Block_Code_Card_Replace__c')
+            ? c.FEC_New_Block_Code_Card_Replace__c
+            : null;
+        // 24/06/2026 linhdev - Point Redemption export (PointsRedemptionTemp1_CSSupport)
+        r.redeemedPoints = populated.containsKey('FEC_Redeemed_Points__c')
+            ? c.FEC_Redeemed_Points__c
+            : null;
+        // 24/06/2026 linhdev - Original MRC Return export (MRCReturnTemp1/Temp2)
+        r.customerConfirmation = populated.containsKey('FEC_Customer_Confirmation__c')
+            ? c.FEC_Customer_Confirmation__c
+            : null;
         r.selectedContractNumber = populated.containsKey('FEC_Selected_Contract_Number__c') ? c.FEC_Selected_Contract_Number__c : null;
         r.correctContractNumber = FEC_ConstantCommon.STR_EMPTY; // tungnm37
         r.correctAccountContract = FEC_ConstantCommon.STR_EMPTY; // tungnm37
@@ -631,6 +921,34 @@ public without sharing class FEC_BatchCaseHandlingExportService {
                 : String.valueOf(ch.get('FEC_Tenure__c'));
             r.salesChannel = safeRelatedFieldString(ch, 'FEC_Sales_Channel__c');
             r.salesSubChannel = safeRelatedFieldString(ch, 'FEC_Sales_Sub_Channel__c');
+            // 24/06/2026 linhdev - Card Unblock/Phone Update D2C/Card Replacement export (account/card block)
+            r.accountStatus = safeRelatedFieldString(ch, 'FEC_Account_Status__c');
+            r.plasticId = safeRelatedFieldString(ch, 'FEC_Plastic_ID__c');
+            r.creditLimit = ch.get('FEC_Credit_Limit__c') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ch.get('FEC_Credit_Limit__c'));
+            r.blockCode1 = safeRelatedFieldString(ch, 'FEC_Block_Code_1__c');
+            r.blockCode2 = safeRelatedFieldString(ch, 'FEC_Block_Code_2__c');
+            r.blockCode = safeRelatedFieldString(ch, 'FEC_Block_Code__c');
+            r.daysPastDue = ch.get('FEC_Days_Past_Due__c') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ch.get('FEC_Days_Past_Due__c'));
+            // 24/06/2026 linhdev - Point Redemption export (PointsRedemptionTemp1_CSSupport)
+            r.availablePoints = ch.get('FEC_Available_Points__c') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ch.get('FEC_Available_Points__c'));
+            // 24/06/2026 linhdev - Original MRC Return export (MRCReturnTemp1/Temp2)
+            r.mrcZone = safeRelatedFieldString(ch, 'FEC_MRC_Zone__c');
+            r.mrcArea = safeRelatedFieldString(ch, 'FEC_Area__c');
+            r.plateNumber = safeRelatedFieldString(ch, 'FEC_Plate_Number__c');
+            r.mrcStatus = safeRelatedFieldString(ch, 'FEC_MRC_Status__c');
+            r.mrcStatusId = safeRelatedFieldString(ch, 'FEC_Status_ID__c');
+            r.mrcId = safeRelatedFieldString(ch, 'FEC_ID__c');
+            r.mrcRemark = safeRelatedFieldString(ch, 'FEC_Remark__c');
+            r.mrcModifiedDate = safeRelatedFieldDateString(ch, 'FEC_Modified_Date__c');
+            r.mrcDeliveryDate = safeRelatedFieldDateString(ch, 'FEC_Delivery_Date__c');
+            r.mrcReceivedDate = safeRelatedFieldDateString(ch, 'FEC_Received_Date__c');
+            r.mrcReceiver = safeRelatedFieldString(ch, 'FEC_Original_MRC_Receiver__c');
         }
         return r;
     }

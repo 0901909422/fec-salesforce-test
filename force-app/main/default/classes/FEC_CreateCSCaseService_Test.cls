@@ -13,11 +13,20 @@ private class FEC_CreateCSCaseService_Test {
                 '<GetCustomerListResponse>' +
                 '<Sys><TransID>1</TransID><DateTime>2026-05-19T00:00:00</DateTime><Code>0</Code><Description>OK</Description></Sys>' +
                 '<Count>1</Count>' +
-                '<Customers><Customer><CIFNumber>CIF001</CIFNumber><FullName>Nguyen Van A</FullName></Customer></Customers>' +
+                '<Customers><Customer><CIFNumber>CIF001</CIFNumber><FullName>Nguyen Van A</FullName><NationalID>123456789</NationalID></Customer></Customers>' +
                 '</GetCustomerListResponse>' +
                 '</soapenv:Body></soapenv:Envelope>'
             );
             return res;
+        }
+    }
+
+    private static String capturedGetCustomerListBody;
+
+    private class CapturingGetCustomerListCallout implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            capturedGetCustomerListBody = req.getBody();
+            return new MockGetCustomerListCallout().respond(req);
         }
     }
 
@@ -210,21 +219,23 @@ private class FEC_CreateCSCaseService_Test {
             'Expected success. Actual: ' + res.Sys.Code + ' - ' + res.Sys.Description
         );
 
-        Id expectedOwnerId = [
-            SELECT Id
-            FROM User
-            WHERE Email = :req.CreatorInfo.CreatorEmail AND IsActive = TRUE
-            LIMIT 1
-        ].Id;
-
         Case customerCase = [
-            SELECT OwnerId
+            SELECT FEC_MyCase_Creator__c
             FROM Case
             WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(expectedOwnerId, customerCase.OwnerId);
+        System.assertEquals(req.CreatorInfo.CreatorEmail, customerCase.FEC_MyCase_Creator__c);
+
+        Case interactionCase = [
+            SELECT FEC_MyCase_Creator__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(req.CreatorInfo.CreatorEmail, interactionCase.FEC_MyCase_Creator__c);
     }
 
     @IsTest
@@ -405,7 +416,7 @@ private class FEC_CreateCSCaseService_Test {
     }
 
     @IsTest
-    static void testCreateCSCaseRequest_MissingCreatorInfo_UsesRunningUserOwner() {
+    static void testCreateCSCaseRequest_MissingCreatorInfo_DoesNotSetMyCaseCreator() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CreatorInfo = null;
 
@@ -420,17 +431,18 @@ private class FEC_CreateCSCaseService_Test {
         System.assertEquals('1', res.Sys.Code, res.Sys.Description);
 
         Case customerCase = [
-            SELECT OwnerId
+            SELECT OwnerId, FEC_MyCase_Creator__c
             FROM Case
             WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(UserInfo.getUserId(), customerCase.OwnerId);
+        System.assertEquals(null, customerCase.FEC_MyCase_Creator__c);
+        System.assertEquals(Group.SObjectType, customerCase.OwnerId.getSObjectType());
     }
 
     @IsTest
-    static void testCreateCSCaseRequest_NullCreatorEmail_UsesRunningUserOwner() {
+    static void testCreateCSCaseRequest_NullCreatorEmail_DoesNotSetMyCaseCreator() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CreatorInfo.CreatorEmail = null;
 
@@ -445,13 +457,13 @@ private class FEC_CreateCSCaseService_Test {
         System.assertEquals('1', res.Sys.Code, res.Sys.Description);
 
         Case interactionCase = [
-            SELECT OwnerId
+            SELECT FEC_MyCase_Creator__c
             FROM Case
             WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(UserInfo.getUserId(), interactionCase.OwnerId);
+        System.assertEquals(null, interactionCase.FEC_MyCase_Creator__c);
     }
 
     @IsTest
@@ -548,7 +560,8 @@ private class FEC_CreateCSCaseService_Test {
     @IsTest
     static void testCreateCSCaseRequest_InvalidNationalId() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
-        req.CustomerInfo.NationalID = '';
+        req.CustomerInfo.NationalID = '1234567890123456';
+        req.CustomerInfo.ContractOrAccountNumber = null;
 
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
@@ -556,6 +569,10 @@ private class FEC_CreateCSCaseService_Test {
         Test.stopTest();
 
         System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(
+            System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG,
+            res.Sys.Description
+        );
     }
 
     @IsTest
@@ -648,11 +665,33 @@ private class FEC_CreateCSCaseService_Test {
     }
 
     @IsTest
-    static void testCreateCSCaseRequest_NonExistingUserType_NameOnly() {
+    static void testCreateCSCaseRequest_NonExistingUserType_MissingPhone() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CustomerInfo.Name = 'Nguyen Van A';
         req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE;
         req.CustomerInfo.PhoneNumber = null;
+        req.CustomerInfo.EmailAddress = null;
+        req.CustomerInfo.NationalID = null;
+        req.CustomerInfo.ContractOrAccountNumber = null;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(
+            System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG,
+            res.Sys.Description
+        );
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_NonExistingUserType_NameAndPhoneOnly() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.Name = 'Nguyen Van A';
+        req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE;
+        req.CustomerInfo.PhoneNumber = '0901234567';
         req.CustomerInfo.EmailAddress = null;
         req.CustomerInfo.NationalID = null;
         req.CustomerInfo.ContractOrAccountNumber = null;
@@ -667,7 +706,7 @@ private class FEC_CreateCSCaseService_Test {
         System.assertEquals(
             '1',
             res.Sys.Code,
-            'NON-EXISTING with Name only should succeed. Actual: ' + res.Sys.Description
+            'NON-EXISTING with Name and Phone should succeed. Actual: ' + res.Sys.Description
         );
 
         Case customerCase = [
@@ -711,7 +750,7 @@ private class FEC_CreateCSCaseService_Test {
     static void testCreateCSCaseRequest_NonExistingUserType_InvalidOptionalContract() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE;
-        req.CustomerInfo.PhoneNumber = null;
+        req.CustomerInfo.PhoneNumber = '0901234567';
         req.CustomerInfo.EmailAddress = null;
         req.CustomerInfo.NationalID = null;
         req.CustomerInfo.ContractOrAccountNumber = 'INVALID-FORMAT';
@@ -750,10 +789,11 @@ private class FEC_CreateCSCaseService_Test {
     }
 
     @IsTest
-    static void testCreateCSCaseRequest_ExistingUserTypeStillRequiresNationalId() {
+    static void testCreateCSCaseRequest_ExistingUserType_RequiresCustomerIdentifier() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CustomerInfo.UserType = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
         req.CustomerInfo.NationalID = null;
+        req.CustomerInfo.ContractOrAccountNumber = null;
 
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
@@ -762,8 +802,177 @@ private class FEC_CreateCSCaseService_Test {
 
         System.assertNotEquals('1', res.Sys.Code);
         System.assertEquals(
-            System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG,
+            System.Label.FEC_CS_CASE_CUSTOMER_IDENTIFIER_REQUIRED_MSG,
             res.Sys.Description
         );
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_ExistingUserType_OnlyNationalId() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
+        req.CustomerInfo.NationalID = '123456789';
+        req.CustomerInfo.ContractOrAccountNumber = null;
+
+        Test.setMock(HttpCalloutMock.class, new CapturingGetCustomerListCallout());
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+        System.assert(capturedGetCustomerListBody.contains('123456789'), 'NationalID should be sent to GetCustomerList');
+        System.assert(
+            !capturedGetCustomerListBody.contains('<AccountNumber>'),
+            'AccountNumber should not be sent when ContractOrAccountNumber is empty'
+        );
+
+        Case interactionCase = [
+            SELECT FEC_National_ID_Passport_ID__c, FEC_Account_Number__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals('123456789', interactionCase.FEC_National_ID_Passport_ID__c);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_ExistingUserType_OnlyContractOrAccountNumber() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
+        req.CustomerInfo.NationalID = null;
+
+        Test.setMock(HttpCalloutMock.class, new CapturingGetCustomerListCallout());
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+        System.assert(capturedGetCustomerListBody.contains('1234567890123456'), 'AccountNumber should be sent to GetCustomerList');
+
+        Case interactionCase = [
+            SELECT FEC_National_ID_Passport_ID__c, FEC_Account_Number__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals('1234567890123456', interactionCase.FEC_Account_Number__c);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_ExistingUserType_OptionalPhone() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
+        req.CustomerInfo.PhoneNumber = null;
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals(
+            '1',
+            res.Sys.Code,
+            'EXISTING without PhoneNumber should succeed. Actual: ' + res.Sys.Description
+        );
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_ExistingUserType_OptionalPhoneAndEmail() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
+        req.CustomerInfo.PhoneNumber = null;
+        req.CustomerInfo.EmailAddress = null;
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals(
+            '1',
+            res.Sys.Code,
+            'EXISTING without PhoneNumber and EmailAddress should succeed. Actual: ' + res.Sys.Description
+        );
+    }
+
+    @IsTest
+    static void testGetCustomerInfo_passesNationalIdAndContractOrAccountNumber() {
+        capturedGetCustomerListBody = null;
+        Test.setMock(HttpCalloutMock.class, new CapturingGetCustomerListCallout());
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CustomerResponse resp =
+            FEC_CreateCSCaseService.getCustomerInfo(
+                '123456789',
+                '1234567890123456'
+            );
+        Test.stopTest();
+
+        System.assertNotEquals(null, resp);
+        System.assertEquals('123456789', resp.nationalId);
+        System.assertEquals('1234567890123456', resp.contractOrAccountNumber);
+        System.assert(capturedGetCustomerListBody.contains('123456789'), 'NationalID should be sent to GetCustomerList');
+        System.assert(capturedGetCustomerListBody.contains('1234567890123456'), 'AccountNumber should be sent to GetCustomerList');
+    }
+
+    @IsTest
+    static void testGetCustomerInfo_withNationalIdOnly() {
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CustomerResponse resp =
+            FEC_CreateCSCaseService.getCustomerInfo('123456789', null);
+        Test.stopTest();
+
+        System.assertNotEquals(null, resp);
+        System.assertEquals('123456789', resp.nationalId);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_ExistingUserType_CustomerHistoryStoresNationalId() {
+        capturedGetCustomerListBody = null;
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
+        req.CustomerInfo.NationalID = '123456789';
+
+        Test.setMock(HttpCalloutMock.class, new CapturingGetCustomerListCallout());
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+        System.assert(capturedGetCustomerListBody.contains('123456789'), 'NationalID should be sent to GetCustomerList');
+
+        FEC_Customer_History__c history = [
+            SELECT FEC_National_ID_Passport_ID__c, FEC_Account_Number__c, FEC_CIF_Number__c
+            FROM FEC_Customer_History__c
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals('123456789', history.FEC_National_ID_Passport_ID__c);
+        System.assertEquals('1234567890123456', history.FEC_Account_Number__c);
+        System.assertEquals('CIF001', history.FEC_CIF_Number__c);
     }
 }

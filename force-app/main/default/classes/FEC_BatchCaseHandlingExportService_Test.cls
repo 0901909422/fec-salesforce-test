@@ -372,4 +372,159 @@ private class FEC_BatchCaseHandlingExportService_Test {
         System.assertEquals(minimalCase.Id, row.caseId);
         System.assertEquals('BCH-EXP-MIN', row.caseIdSearch);
     }
+
+    // 24/06/2026 linhdev - Refund Request (Loan) export (RefundLoanTemp1_PM Level Case info)
+    @IsTest
+    static void testMapEnrichExportRows_refundLoanInfoFields() {
+        if (Schema.getGlobalDescribe().get('FEC_Case_Refund_Details__c') == null) {
+            System.assert(true, 'Skipped: FEC_Case_Refund_Details__c not on org.');
+            return;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case refundCase;
+        try {
+            refundCase = new Case(
+                Subject = 'Refund Loan Export Case',
+                FEC_ID_Search__c = 'BCH-EXP-REFUND',
+                FEC_Refund_Amount__c = 500000,
+                FEC_Beneficiary_Name__c = 'NGUYEN THI NGOC HUONG',
+                FEC_Beneficiary_Account__c = '553313',
+                FEC_Bank_Name_Noaccent__c = 'ACB',
+                FEC_Bank_Branch_Name_Noaccent__c = 'CN BA THANG HAI',
+                FEC_Province_City__c = 'Thành phố Hồ Chí Minh'
+            );
+            insert refundCase;
+            insert new FEC_Case_Refund_Details__c(
+                FEC_Case__c = refundCase.Id,
+                FEC_Receipt_Date__c = Date.today(),
+                FEC_Receipt_Amount__c = 650000,
+                FEC_Transaction_Number__c = '46622',
+                FEC_Payment_Channel__c = 'pb'
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Id caseId = refundCase.Id;
+        String soql =
+            'SELECT ' +
+            String.join(FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields(), ',') +
+            ' FROM Case WHERE Id = :caseId';
+        Case fullCase = Database.query(soql);
+
+        Test.startTest();
+        FEC_BatchCaseHandlingExportRow row = FEC_BatchCaseHandlingExportService.mapCaseToExportRow(fullCase);
+        FEC_BatchCaseHandlingExportService.enrichExportRows(new List<FEC_BatchCaseHandlingExportRow>{ row });
+        Test.stopTest();
+
+        System.assertEquals('500000', row.refundAmount);
+        System.assertEquals('NGUYEN THI NGOC HUONG', row.beneficiaryName);
+        System.assertEquals('553313', row.beneficiaryAccount);
+        System.assertEquals('ACB', row.bankName);
+        System.assertEquals('CN BA THANG HAI', row.bankBranch);
+        System.assertEquals('Thành phố Hồ Chí Minh', row.provinceCity);
+        System.assertEquals('650000', row.receiptAmount);
+        System.assertEquals('46622', row.transactionNo);
+        System.assertEquals('pb', row.paymentChannel);
+        System.assert(String.isNotBlank(row.receiptDate));
+    }
+
+    // 24/06/2026 linhdev - export account/card block, Card Replacement, Point Redemption, MRC Return, Address
+    @IsTest
+    static void testMapEnrichExportRows_templateSpecificFields() {
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case exportCase;
+        try {
+            exportCase = new Case(
+                Subject = 'BCH Template Fields Export',
+                FEC_ID_Search__c = 'BCH-EXP-TPL'
+            );
+            insert exportCase;
+
+            FEC_Customer_History__c hist = new FEC_Customer_History__c(
+                Name = 'BCH Export Hist',
+                FEC_Case__c = exportCase.Id,
+                FEC_Customer_Name__c = 'Hist Customer',
+                FEC_Account_Status__c = 'Active',
+                FEC_Plastic_ID__c = 'PLASTIC-001',
+                FEC_Credit_Limit__c = 5000000,
+                FEC_Block_Code_1__c = 'A',
+                FEC_Block_Code_2__c = 'B',
+                FEC_Block_Code__c = 'C',
+                FEC_Days_Past_Due__c = 3,
+                FEC_Available_Points__c = 1200,
+                FEC_MRC_Zone__c = 'Zone-A',
+                FEC_Area__c = 'Area-1',
+                FEC_Plate_Number__c = '51A-12345',
+                FEC_MRC_Status__c = 'Delivered',
+                FEC_Status_ID__c = 'ST-01',
+                FEC_ID__c = 'MRC-ID-01',
+                FEC_Remark__c = 'MRC remark',
+                FEC_Modified_Date__c = Date.today(),
+                FEC_Delivery_Date__c = Date.today().addDays(-2),
+                FEC_Received_Date__c = Date.today().addDays(-1),
+                FEC_Original_MRC_Receiver__c = 'Receiver A'
+            );
+            insert hist;
+
+            exportCase.FEC_Account_or_Contract__c = hist.Id;
+            exportCase.FEC_Card_Replacement_Reason__c = 'Bị mất/ đánh cắp';
+            exportCase.FEC_New_Block_Code_Card_Replace__c = 'L';
+            exportCase.FEC_Redeemed_Points__c = '500';
+            exportCase.FEC_Customer_Confirmation__c = 'Customer received MRC';
+            update exportCase;
+
+            insert new FEC_Address_Info__c(
+                FEC_Case__c = exportCase.Id,
+                FEC_Customer_History__c = hist.Id,
+                FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+                FEC_Street__c = 'Standard Street',
+                FEC_Number__c = '123'
+            );
+            insert new FEC_Address_Info__c(
+                FEC_Case__c = exportCase.Id,
+                FEC_Customer_History__c = hist.Id,
+                FEC_Address_Type__c = FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY,
+                FEC_Street__c = 'Temporary Street',
+                FEC_Number__c = '456'
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Id caseId = exportCase.Id;
+        String soql =
+            'SELECT ' +
+            String.join(FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields(), ',') +
+            ' FROM Case WHERE Id = :caseId';
+        Case fullCase = Database.query(soql);
+
+        Test.startTest();
+        FEC_BatchCaseHandlingExportRow row = FEC_BatchCaseHandlingExportService.mapCaseToExportRow(fullCase);
+        FEC_BatchCaseHandlingExportService.enrichExportRows(new List<FEC_BatchCaseHandlingExportRow>{ row });
+        Test.stopTest();
+
+        System.assertEquals('Active', row.accountStatus);
+        System.assertEquals('PLASTIC-001', row.plasticId);
+        System.assertEquals('5000000', row.creditLimit);
+        System.assertEquals('A', row.blockCode1);
+        System.assertEquals('B', row.blockCode2);
+        System.assertEquals('C', row.blockCode);
+        System.assertEquals('3', row.daysPastDue);
+        System.assertEquals('1200', row.availablePoints);
+        System.assertEquals('Bị mất/ đánh cắp', row.cardReplacementReason);
+        System.assertEquals('L', row.newBlockCodeCardReplace);
+        System.assertEquals('500', row.redeemedPoints);
+        System.assertEquals('Zone-A', row.mrcZone);
+        System.assertEquals('Area-1', row.mrcArea);
+        System.assertEquals('51A-12345', row.plateNumber);
+        System.assertEquals('Delivered', row.mrcStatus);
+        System.assertEquals('ST-01', row.mrcStatusId);
+        System.assertEquals('MRC-ID-01', row.mrcId);
+        System.assertEquals('MRC remark', row.mrcRemark);
+        System.assertEquals('Receiver A', row.mrcReceiver);
+        System.assertEquals('Customer received MRC', row.customerConfirmation);
+        System.assert(row.closureAddress.contains('Standard Street'));
+        System.assert(row.temporaryAddress.contains('Temporary Street'));
+    }
 }

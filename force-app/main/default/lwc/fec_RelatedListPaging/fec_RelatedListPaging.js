@@ -601,6 +601,19 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 return new Date(+y, +m - 1, +d).getTime();
             }
 
+            if (typeof v === 'string') {
+                const vnDateTime = v.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:,\s*|\s+)(\d{2}):(\d{2})(?::(\d{2}))?$/);
+                if (vnDateTime) {
+                    const d = +vnDateTime[1];
+                    const m = +vnDateTime[2];
+                    const y = +vnDateTime[3];
+                    const h = +vnDateTime[4];
+                    const min = +vnDateTime[5];
+                    const s = vnDateTime[6] != null ? +vnDateTime[6] : 0;
+                    return new Date(y, m - 1, d, h, min, s).getTime();
+                }
+            }
+
             if (typeof v !== 'string') return null;
 
             const t = Date.parse(v);

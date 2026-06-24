@@ -49,6 +49,8 @@ global with sharing class FEC_GetCSCaseStatusService {
             System.debug('Request: ' + JSON.serialize(req));
             
             validateRequest(req);
+            Boolean channelSelfServiceFlag =
+                resolveChannelSelfServiceFlag(req.Sys.Channel);
             
             List<Case> cases = applyFrdCaseFilters(
                 getCases(
@@ -84,7 +86,9 @@ global with sharing class FEC_GetCSCaseStatusService {
                 result.Remarks = resolveCaseResultRemarks(
                     resultCase.Id,
                     lastRemarkByCaseId,
-                    resultCase.FEC_Remarks__c
+                    resultCase.FEC_Remarks__c,
+                    resultCase.FEC_Case_Status__c,
+                    channelSelfServiceFlag
                 );
                 result.CreatedTime =
                     String.valueOf(resultCase.CreatedDate);
@@ -281,7 +285,7 @@ global with sharing class FEC_GetCSCaseStatusService {
         
         if (!String.isBlank(accountNumber)) {
             soql +=
-                ' AND FEC_Account_Contract_Number_Text__c = :accountNumber';
+                ' AND FEC_Account_or_Contract__r.Name = :accountNumber';
         }
 
         if (!String.isBlank(productType)) {
@@ -737,15 +741,42 @@ global with sharing class FEC_GetCSCaseStatusService {
     private static String resolveCaseResultRemarks(
         Id caseId,
         Map<Id, String> lastRemarkByCaseId,
-        String createCaseRemarks
+        String createCaseRemarks,
+        String caseStatus,
+        Boolean channelSelfServiceFlag
     ) {
-        if (caseId != null
+        Boolean useLastRemark = channelSelfServiceFlag != true
+            || isResolvedCaseStatus(caseStatus);
+
+        if (useLastRemark
+            && caseId != null
             && lastRemarkByCaseId != null
             && lastRemarkByCaseId.containsKey(caseId)
             && String.isNotBlank(lastRemarkByCaseId.get(caseId))) {
             return lastRemarkByCaseId.get(caseId);
         }
         return FEC_CommonUltils.defaultToEmpty(createCaseRemarks);
+    }
+
+    private static Boolean isResolvedCaseStatus(String caseStatus) {
+        return String.isNotBlank(caseStatus)
+            && caseStatus.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+    }
+
+    private static Boolean resolveChannelSelfServiceFlag(String channel) {
+        if (String.isBlank(channel)) {
+            return false;
+        }
+
+        List<FEC_Channel__c> channels = [
+            SELECT FEC_Self_Service_Flag__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_ID__c = :channel.trim()
+            AND FEC_Channel_Status__c = TRUE
+            LIMIT 1
+        ];
+
+        return !channels.isEmpty() && channels[0].FEC_Self_Service_Flag__c == true;
     }
 
     private static List<AdditionalInfor> buildAdditionalInfoList(

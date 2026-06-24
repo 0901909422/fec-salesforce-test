@@ -19066,4 +19066,11 @@
         <shortDescription>TECH_S3_NAMED_CREDENTIAL_DOMAIN</shortDescription>
         <value>callout:FEC_API</value>
     </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CUSTOMER_IDENTIFIER_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CUSTOMER_IDENTIFIER_REQUIRED_MSG</shortDescription>
+        <value>NationalID or ContractOrAccountNumber is required</value>
+    </labels>
 </CustomLabels>

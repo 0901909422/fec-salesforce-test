@@ -9,8 +9,12 @@ global with sharing class FEC_CreateCSCaseService {
         Boolean isSuccess = true;
         String errorMessage;
         CreateCSCaseResponse response;
+
+        // Tránh SOQL 101 khi Case trigger chạy sendEmail/SF App notification trong cùng transaction API.
+        FEC_CaseBusinessService.beginCaseSubmitNotificationSuppress();
         try {
-            
+            try {
+
             // -------------------------
             // BASIC NULL CHECK
             // -------------------------
@@ -31,9 +35,13 @@ global with sharing class FEC_CreateCSCaseService {
             CustomerResponse customerResp = null;
             if (
                 !isNonExistingUserType(req.CustomerInfo.UserType) &&
-                String.isNotBlank(req.CustomerInfo.ContractOrAccountNumber)
+                (String.isNotBlank(req.CustomerInfo.NationalID) ||
+                String.isNotBlank(req.CustomerInfo.ContractOrAccountNumber))
             ) {
-                customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
+                customerResp = getCustomerInfo(
+                    req.CustomerInfo.NationalID,
+                    req.CustomerInfo.ContractOrAccountNumber
+                );
             }
             // -------------------------
             // CREATE INTERACTION CASE
@@ -41,9 +49,13 @@ global with sharing class FEC_CreateCSCaseService {
             // -------------------------
             FEC_CreateCaseHandler.FEC_InteractionCaseDTO interactionDTO =
                 FEC_MyCaseSoapXml.buildInteractionCaseDto(req);
-            Id creatorOwnerId = resolveOwnerIdByCreatorEmail(req);
-            interactionDTO.ownerUserId = creatorOwnerId;
-            
+            applyExistingCustomerInfoToInteractionDto(
+                interactionDTO,
+                req.CustomerInfo,
+                customerResp
+            );
+            String myCaseCreatorEmail = resolveMyCaseCreatorEmail(req);
+
             FEC_CreateCaseHandler.FEC_InteractionCaseResponse interactionResp =
                 FEC_CreateCaseHandler.createInteractionCaseMyCaseAPI(interactionDTO);
             
@@ -56,6 +68,7 @@ global with sharing class FEC_CreateCSCaseService {
             if(customerResp != null ){
                 custHistoryRec.Name = customerResp.name;
                 custHistoryRec.FEC_Account_Number__c = customerResp.contractOrAccountNumber;
+                custHistoryRec.FEC_National_ID_Passport_ID__c = customerResp.nationalId;
                 custHistoryRec.FEC_Case__c = interactionResp.caseId;
                 custHistoryRec.FEC_CIF_Number__c = customerResp.cifNumber;
                 insert custHistoryRec;
@@ -90,8 +103,7 @@ global with sharing class FEC_CreateCSCaseService {
                 customerDTO.customerHistoryId = custHistoryRec.Id;
             }
             customerDTO.remarks     = req.RequestInfo.Remarks;
-            customerDTO.ownerUserId = creatorOwnerId; //Thangtv: CreatorEmail
-            
+
             //Thangtv: Customer Case MyCase API — External/Other; Sys.Channel → FEC_Other_Subchannel__c
             String channelFromXml = req.Sys != null && String.isNotBlank(req.Sys.Channel)
                 ? req.Sys.Channel.trim()
@@ -101,7 +113,12 @@ global with sharing class FEC_CreateCSCaseService {
             interactionResp.caseId,
             channelFromXml
                 );
-            
+
+            applyMyCaseCreator(
+                new List<Id>{ interactionResp.caseId, customerCase.Id },
+                myCaseCreatorEmail
+            );
+
             // Reload to get Link ID
             customerCase = [
                 SELECT Id, FEC_Link_ID__c
@@ -151,43 +168,46 @@ global with sharing class FEC_CreateCSCaseService {
             req.Sys.TransactionID,
             System.Label.FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG
                 );
-            
-        } catch (ValidationException ve) {
-            isSuccess = false;
-            errorMessage = ve.getMessage();
-            
-            response = errorResponse(
-                ve.transactionId,
-            ve.code,
-            ve.getMessage()
-                );
-        }catch (Exception e) {
-            isSuccess = false;
-            errorMessage = e.getMessage();
-            
-            response = errorResponse(
-                req != null && req.Sys != null
+
+            } catch (ValidationException ve) {
+                isSuccess = false;
+                errorMessage = ve.getMessage();
+
+                response = errorResponse(
+                    ve.transactionId,
+                ve.code,
+                ve.getMessage()
+                    );
+            } catch (Exception e) {
+                isSuccess = false;
+                errorMessage = e.getMessage();
+
+                response = errorResponse(
+                    req != null && req.Sys != null
+                    ? req.Sys.TransactionID
+                    : null,
+                '500',
+                'Internal server error: ' + e.getMessage()
+                    );
+            }
+
+            logApiFull(
+                FEC_ConstantCommon.MY_CASE_FUNCTION_CREATE_CS_CASE,
+            'POST',
+            req,
+            response,
+            isSuccess,
+            isSuccess ? '200' : '500',
+            errorMessage,
+            req != null && req.Sys != null
                 ? req.Sys.TransactionID
-                : null,
-            '500',
-            'Internal server error: ' + e.getMessage()
+                : null
                 );
+
+            return response;
+        } finally {
+            FEC_CaseBusinessService.endCaseSubmitNotificationSuppress();
         }
-        
-        logApiFull(
-            FEC_ConstantCommon.MY_CASE_FUNCTION_CREATE_CS_CASE,
-        'POST',
-        req,
-        response,
-        isSuccess,
-        isSuccess ? '200' : '500',
-        errorMessage,
-        req != null && req.Sys != null
-            ? req.Sys.TransactionID
-            : null
-            );
-        
-        return response;
     }
     
     // =================================================
@@ -398,35 +418,31 @@ global with sharing class FEC_CreateCSCaseService {
     }
     
     
-    /**
-     * CreatorInfo.CreatorEmail → User.Id làm Case Owner (Interaction + Customer).
-     * Thiếu CreatorInfo hoặc CreatorEmail rỗng → User đang gọi API.
-     */
-    private static Id resolveOwnerIdByCreatorEmail(CaseRequestType req) {
+    private static String resolveMyCaseCreatorEmail(CaseRequestType req) {
         if (req == null || req.CreatorInfo == null || String.isBlank(req.CreatorInfo.CreatorEmail)) {
-            return UserInfo.getUserId();
+            return null;
         }
-        
-        String email = req.CreatorInfo.CreatorEmail.trim();
-        String txnId = req.Sys != null ? req.Sys.TransactionID : null;
-        
-        List<User> users = [
-            SELECT Id
-            FROM User
-            WHERE IsActive = TRUE
-            AND Email = :email
-            LIMIT 1
-        ];
-        
-        if (users.isEmpty()) {
-            throw new ValidationException(
-                txnId,
-            System.Label.FEC_CS_CASE_ERROR_CODE,
-            System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG
-                );
+        return req.CreatorInfo.CreatorEmail.trim();
+    }
+
+    private static void applyMyCaseCreator(List<Id> caseIds, String creatorEmail) {
+        if (String.isBlank(creatorEmail) || caseIds == null || caseIds.isEmpty()) {
+            return;
         }
-        
-        return users[0].Id;
+
+        List<Case> casesToUpdate = new List<Case>();
+        for (Id caseId : caseIds) {
+            if (caseId != null) {
+                casesToUpdate.add(new Case(
+                    Id = caseId,
+                    FEC_MyCase_Creator__c = creatorEmail
+                ));
+            }
+        }
+
+        if (!casesToUpdate.isEmpty()) {
+            update casesToUpdate;
+        }
     }
     
     // =================================================
@@ -446,47 +462,90 @@ global with sharing class FEC_CreateCSCaseService {
         }
 
         if (isNonExistingUserType(c.UserType)) {
+            validateRequiredPhoneNumber(c, txnId);
             validateOptionalCustomerContactFields(c, txnId);
             return;
         }
-        
-        if (String.isBlank(c.PhoneNumber)
-            || c.PhoneNumber.length() > 15
-            || !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, c.PhoneNumber)
-        ) {
-            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG);
-        }
-        
-        if (String.isBlank(c.EmailAddress)
-            || c.EmailAddress.length() > 255
-            || !Pattern.matches(
-            FEC_ConstantCommon.PATTERN_EMAIL,
-        c.EmailAddress.toUpperCase()
-            )
-        ) {
-            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG);
-        }
-        
-        if(String.isBlank(c.NationalID) || c.NationalID.length()>15)
-            throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
-        
-        if (String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length() > 255) {
+
+        validatePhoneNumberIfPresent(c, txnId);
+        validateEmailAddressIfPresent(c, txnId);
+        validateExistingCustomerIdentifiers(c, txnId);
+    }
+
+    private static void validateExistingCustomerIdentifiers(CustomerInfoType c, String txnId) {
+        Boolean hasNationalId = String.isNotBlank(c.NationalID);
+        Boolean hasContractOrAccountNumber = String.isNotBlank(c.ContractOrAccountNumber);
+
+        if (!hasNationalId && !hasContractOrAccountNumber) {
             throw new ValidationException(
                 txnId,
                 System.Label.FEC_CS_CASE_ERROR_CODE,
-                System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+                System.Label.FEC_CS_CASE_CUSTOMER_IDENTIFIER_REQUIRED_MSG
             );
         }
-        if (!isValidContractOrAccountNumber(c.ContractOrAccountNumber)) {
+
+        if (hasNationalId && c.NationalID.length() > 15) {
             throw new ValidationException(
                 txnId,
                 System.Label.FEC_CS_CASE_ERROR_CODE,
-                System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+                System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG
             );
+        }
+
+        if (hasContractOrAccountNumber) {
+            if (c.ContractOrAccountNumber.length() > 255
+                || !isValidContractOrAccountNumber(c.ContractOrAccountNumber)
+            ) {
+                throw new ValidationException(
+                    txnId,
+                    System.Label.FEC_CS_CASE_ERROR_CODE,
+                    System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+                );
+            }
         }
     }
 
-    /** NON-EXISTING / Non-existing: only Name required; other contact fields optional. */
+    private static void applyExistingCustomerInfoToInteractionDto(
+        FEC_CreateCaseHandler.FEC_InteractionCaseDTO dto,
+        CustomerInfoType customerInfo,
+        CustomerResponse customerResp
+    ) {
+        if (dto == null || customerInfo == null || isNonExistingUserType(customerInfo.UserType)) {
+            return;
+        }
+
+        if (String.isNotBlank(customerInfo.NationalID)) {
+            dto.nationalId = customerInfo.NationalID;
+        }
+        applyContractOrAccountNumberToInteractionDto(dto, customerInfo.ContractOrAccountNumber);
+
+        if (customerResp == null) {
+            return;
+        }
+
+        if (String.isNotBlank(customerResp.nationalId)) {
+            dto.nationalId = customerResp.nationalId;
+        }
+        applyContractOrAccountNumberToInteractionDto(dto, customerResp.contractOrAccountNumber);
+    }
+
+    private static void applyContractOrAccountNumberToInteractionDto(
+        FEC_CreateCaseHandler.FEC_InteractionCaseDTO dto,
+        String contractOrAccountNumber
+    ) {
+        if (dto == null || String.isBlank(contractOrAccountNumber)) {
+            return;
+        }
+        if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, contractOrAccountNumber)) {
+            dto.accountNumber = contractOrAccountNumber;
+            dto.contractNumber = null;
+        } else if (Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, contractOrAccountNumber)) {
+            dto.contractNumber = contractOrAccountNumber;
+            dto.accountNumber = null;
+        }
+    }
+
+    /** NON-EXISTING / Non-existing: Name + PhoneNumber required; other contact fields optional. */
     @TestVisible
     private static Boolean isNonExistingUserType(String userType) {
         if (String.isBlank(userType)) {
@@ -512,24 +571,55 @@ global with sharing class FEC_CreateCSCaseService {
         return userType;
     }
 
+    private static void validateRequiredPhoneNumber(CustomerInfoType c, String txnId) {
+        if (String.isBlank(c.PhoneNumber)
+            || c.PhoneNumber.length() > 15
+            || !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, c.PhoneNumber)
+        ) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG
+            );
+        }
+    }
+
+    private static void validatePhoneNumberIfPresent(CustomerInfoType c, String txnId) {
+        if (String.isBlank(c.PhoneNumber)) {
+            return;
+        }
+        if (c.PhoneNumber.length() > 15
+            || !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, c.PhoneNumber)
+        ) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG
+            );
+        }
+    }
+
+    private static void validateEmailAddressIfPresent(CustomerInfoType c, String txnId) {
+        if (String.isBlank(c.EmailAddress)) {
+            return;
+        }
+        if (c.EmailAddress.length() > 255
+            || !Pattern.matches(
+                FEC_ConstantCommon.PATTERN_EMAIL,
+                c.EmailAddress.toUpperCase()
+            )
+        ) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG
+            );
+        }
+    }
+
     private static void validateOptionalCustomerContactFields(CustomerInfoType c, String txnId) {
-        if (String.isNotBlank(c.PhoneNumber)) {
-            if (c.PhoneNumber.length() > 15
-                || !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, c.PhoneNumber)
-            ) {
-                throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG);
-            }
-        }
-        if (String.isNotBlank(c.EmailAddress)) {
-            if (c.EmailAddress.length() > 255
-                || !Pattern.matches(
-                    FEC_ConstantCommon.PATTERN_EMAIL,
-                    c.EmailAddress.toUpperCase()
-                )
-            ) {
-                throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG);
-            }
-        }
+        validatePhoneNumberIfPresent(c, txnId);
+        validateEmailAddressIfPresent(c, txnId);
         if (String.isNotBlank(c.NationalID) && c.NationalID.length() > 15) {
             throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
         }
@@ -749,31 +839,12 @@ global with sharing class FEC_CreateCSCaseService {
     }
     
     private static void uploadFilesToCase(Id caseId, List<String> payloads) {
-        Case caseRow = [
-            SELECT FEC_Interaction_View_Mode__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        String previousMode = caseRow.FEC_Interaction_View_Mode__c;
-        Boolean restoreReviewMode = FEC_ConstantCommon.INTERACTION_REVIEW_MODE.equals(previousMode);
-
-        if (restoreReviewMode) {
-            update new Case(
-                Id = caseId,
-                FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE
-            );
-        }
-
+        Boolean priorBypass = FEC_FileActionOnReviewService.bypassMyCaseApiFileUpload;
+        FEC_FileActionOnReviewService.bypassMyCaseApiFileUpload = true;
         try {
             FEC_CaseFileUploadService.uploadMyCaseDocumentsToCase(caseId, payloads);
         } finally {
-            if (restoreReviewMode) {
-                update new Case(
-                    Id = caseId,
-                    FEC_Interaction_View_Mode__c = previousMode
-                );
-            }
+            FEC_FileActionOnReviewService.bypassMyCaseApiFileUpload = priorBypass;
         }
     }
     
@@ -889,43 +960,72 @@ global with sharing class FEC_CreateCSCaseService {
         return r;
     }
     
-    private static CustomerResponse getCustomerInfo(String accountContractNumber) {
-        if (String.isBlank(accountContractNumber)) {
+    @TestVisible
+    private static CustomerResponse getCustomerInfo(
+        String nationalId,
+        String contractOrAccountNumber
+    ) {
+        if (String.isBlank(nationalId) && String.isBlank(contractOrAccountNumber)) {
             return null;
         }
-        CustomerResponse resp = new CustomerResponse();
+
         String accountNumber = null;
         String contractNumber = null;
-        if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountContractNumber)) {
-            accountNumber = accountContractNumber;
-        } else if (Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, accountContractNumber)) {
-            contractNumber = accountContractNumber;
+        if (String.isNotBlank(contractOrAccountNumber)) {
+            if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, contractOrAccountNumber)) {
+                accountNumber = contractOrAccountNumber;
+            } else if (Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, contractOrAccountNumber)) {
+                contractNumber = contractOrAccountNumber;
+            }
         }
+
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
-            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,                 // requestorId
-        null,           // phoneNumber
-        null,                  // isReferenceSearch
-        null,          // fullName
-        null,            // nationalId
-        null,               // applicationId
-        null,     // creditCardNumber
-        accountNumber,
-        contractNumber,
-        null,  // email
-        null               // personId
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                null,
+                null,
+                nationalId,
+                null,
+                null,
+                accountNumber,
+                contractNumber,
+                null,
+                null
             );
-        
-        
+
         if (res == null || res.Customers == null || res.Customers.isEmpty()) {
             return null;
         }
-        
+
         FEC_GetCustomerList.Customer c = res.Customers[0];
+        CustomerResponse resp = new CustomerResponse();
         resp.name = c.FullName;
-        resp.contractOrAccountNumber = accountContractNumber;
         resp.cifNumber = c.CIFNumber;
+        resp.nationalId = String.isNotBlank(c.NationalID) ? c.NationalID : nationalId;
+        resp.contractOrAccountNumber = resolveContractOrAccountNumber(contractOrAccountNumber, c);
         return resp;
+    }
+
+    private static String resolveContractOrAccountNumber(
+        String requestValue,
+        FEC_GetCustomerList.Customer customer
+    ) {
+        if (String.isNotBlank(requestValue)) {
+            return requestValue;
+        }
+        if (customer == null || customer.Applications == null) {
+            return null;
+        }
+        for (FEC_GetCustomerList.Application app : customer.Applications) {
+            if (String.isNotBlank(app.AccountNumber)) {
+                return app.AccountNumber;
+            }
+            if (String.isNotBlank(app.ContractNumber)) {
+                return app.ContractNumber;
+            }
+        }
+        return null;
     }
     
     private static void logApiFull(
@@ -1055,6 +1155,7 @@ global with sharing class FEC_CreateCSCaseService {
     public class CustomerResponse {
         public String name;
         public String contractOrAccountNumber;
+        public String nationalId;
         public String cifNumber;
     }
     

@@ -78,7 +78,7 @@ public with sharing class FEC_CardPaymentController {
         if (customerHistoryId == null) {
             return records;
         }
-        // IPP Accrued Interest chỉ hiện khi (NextStatementDate - today) ≤ 4 ngày
+        // IPP Accrued Interest chỉ hiện khi trong cửa sổ T-4 Working day (không tính T7/CN)
         Boolean showIppAccruedInterest = resolveShowIppAccruedInterest(customerHistoryId);
         try {
             List<FEC_Card_Payment__c> payments = [
@@ -114,7 +114,7 @@ public with sharing class FEC_CardPaymentController {
     }
 
     /** Map FEC_Card_Payment__c → Map cho LWC.
-     *  showIppAccruedInterest: true khi (NextStatementDate - today) ≤ 4 ngày. */
+     *  showIppAccruedInterest: true khi trong cửa sổ T-4 Working day (không tính T7/CN). */
     private static Map<String, Object> buildCardPaymentRecordMap(FEC_Card_Payment__c p, Boolean showIppAccruedInterest) {
         Map<String, Object> record = new Map<String, Object>();
         record.put('FEC_Rec__c', p.FEC_Rec__c);
@@ -128,7 +128,7 @@ public with sharing class FEC_CardPaymentController {
         record.put('FEC_Per_Diem__c', p.FEC_Per_Diem__c);
         record.put('FEC_Deferred_Interest__c', p.FEC_Deferred_Interest__c);
         record.put('FEC_IPP_Interest__c', p.FEC_IPP_Interest__c);
-        // IPP Accrued Interest: chỉ show khi (NextStatementDate - today) ≤ 4 ngày
+        // IPP Accrued Interest: chỉ show khi trong cửa sổ T-4 Working day (không tính T7/CN)
         record.put('FEC_IPP_Accrued_Interest__c', showIppAccruedInterest ? p.FEC_IPP_Accrued_Interest__c : null);
         record.put('FEC_Close_Fee__c', p.FEC_Close_Fee__c);
         record.put('FEC_Close_Fee_Amount__c', p.FEC_Close_Fee_Amount__c);
@@ -521,7 +521,7 @@ public with sharing class FEC_CardPaymentController {
         return currBal + amtMemoDb - amtMemoCr;
     }
 
-    /** true khi (NextStatementDate - today) ≤ 4 ngày. */
+    /** true khi số ngày làm việc từ today đến NextStatementDate ≤ 4 (T-4 Working day, không tính T7/CN). */
     public static Boolean resolveShowIppAccruedInterest(Id customerHistoryId) {
         if (customerHistoryId == null) {
             return false;
@@ -534,8 +534,10 @@ public with sharing class FEC_CardPaymentController {
                 LIMIT 1
             ];
             if (!histories.isEmpty() && histories[0].FEC_Next_Statement_Date__c != null) {
-                Integer daysUntilNextStatement = Date.today().daysBetween(histories[0].FEC_Next_Statement_Date__c);
-                return daysUntilNextStatement <= 4;
+                return isWithinIppAccruedInterestWindow(
+                    Date.today(),
+                    histories[0].FEC_Next_Statement_Date__c
+                );
             }
         } catch (Exception e) {
             System.debug('Query NextStatementDate error: ' + e.getMessage());
@@ -543,7 +545,35 @@ public with sharing class FEC_CardPaymentController {
         return false;
     }
 
-    /** Total IPP Accrued Interest: chỉ cộng vào Full Payment khi (NextStatementDate - today) ≤ 4 ngày. */
+    /** true khi số ngày làm việc (T2-T6) trong khoảng (fromDate, toDate] ≤ 4. */
+    @TestVisible
+    private static Boolean isWithinIppAccruedInterestWindow(Date fromDate, Date toDate) {
+        return countWorkingDaysUntil(fromDate, toDate) <= 4;
+    }
+
+    /** Đếm số ngày làm việc (T2-T6) trong khoảng (fromDate, toDate], bỏ qua T7/CN. */
+    @TestVisible
+    private static Integer countWorkingDaysUntil(Date fromDate, Date toDate) {
+        if (fromDate == null || toDate == null || toDate <= fromDate) {
+            return 0;
+        }
+        Integer count = 0;
+        for (Date d = fromDate.addDays(1); d <= toDate; d = d.addDays(1)) {
+            if (!isWeekend(d)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @TestVisible
+    private static Boolean isWeekend(Date localDate) {
+        Datetime noonLocal = Datetime.newInstance(localDate.year(), localDate.month(), localDate.day(), 12, 0, 0);
+        Integer isoDayOfWeek = Integer.valueOf(noonLocal.format('u'));
+        return isoDayOfWeek >= 6;
+    }
+
+    /** Total IPP Accrued Interest: chỉ cộng vào Full Payment khi trong cửa sổ T-4 Working day. */
     public static Decimal applyIppAccruedInterestTotalRule(Decimal aggregatedIppAccrued, Id customerHistoryId) {
         if (!resolveShowIppAccruedInterest(customerHistoryId)) {
             return 0;
@@ -554,7 +584,7 @@ public with sharing class FEC_CardPaymentController {
   /**
      * PlanPaymentAmount = PlanCurrentBalance + AccruedInterest/100 + PerDiem/100
      *   + DeferredInterest + IPPAccruedInterest + CloseFeeAmount
-     * IPPAccruedInterest chỉ cộng khi (NextStatementDate - today) ≤ 4 ngày.
+     * IPPAccruedInterest chỉ cộng khi trong cửa sổ T-4 Working day (không tính T7/CN).
      */
     public static Decimal calculatePlanPaymentAmount(FEC_GetCardPlanInfo.CardPlan p, Boolean showIppAccruedInterest) {
         return sumPlanPaymentComponents(
