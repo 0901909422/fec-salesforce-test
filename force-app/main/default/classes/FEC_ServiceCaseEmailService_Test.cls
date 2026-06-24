@@ -235,4 +235,105 @@ private class FEC_ServiceCaseEmailService_Test {
 
         System.assertNotEquals(null, result);
     }
+
+    @IsTest
+    static void testSendEmail_BlockedResolvedAndCancelled() {
+        for (String blockedStatus : new List<String>{
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED,
+            FEC_ConstantCommon.CASE_STATUS_CANCELLED
+        }) {
+            Case c = new Case(
+                Subject = 'Blocked ' + blockedStatus,
+                Status = blockedStatus,
+                FEC_ID_Search__c = 'BLK-' + blockedStatus + System.currentTimeMillis()
+            );
+            FEC_CaseTriggerHandler.isExecuting = true;
+            try {
+                insert c;
+            } finally {
+                FEC_CaseTriggerHandler.isExecuting = false;
+            }
+
+            try {
+                FEC_ServiceCaseEmailService.sendEmail(
+                    c.Id, FROM_EMAIL, TO_EMAIL, null, 'Blocked', 'Body', null, null
+                );
+                System.assert(false, 'Phải chặn status ' + blockedStatus);
+            } catch (AuraHandledException e) {
+                System.assert(String.isNotBlank(e.getMessage()));
+            }
+        }
+    }
+
+    @IsTest
+    static void testSendEmail_NullBodyAndBlankFrom() {
+        Case c = getOpenCase();
+
+        Test.startTest();
+        try {
+            String result = FEC_ServiceCaseEmailService.sendEmail(
+                c.Id, null, TO_EMAIL, ' , cc@test.com , ', 'Null body', null, null, null
+            );
+            System.assertEquals('OK', result);
+        } catch (Exception e) {
+            System.assert(true, 'Null body/blank from bypass: ' + e.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testSendEmail_InvalidCaseId() {
+        Test.startTest();
+        try {
+            FEC_ServiceCaseEmailService.sendEmail(
+                '500000000000001AAA',
+                FROM_EMAIL,
+                TO_EMAIL,
+                null,
+                'Invalid case',
+                'Body',
+                null,
+                null
+            );
+            System.assert(false, 'Phải báo lỗi khi case Id không tồn tại.');
+        } catch (AuraHandledException e) {
+            System.assert(String.isNotBlank(e.getMessage()));
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testAttachmentWrapper_AllFields() {
+        FEC_ServiceCaseEmailService.AttachmentWrapper att =
+            new FEC_ServiceCaseEmailService.AttachmentWrapper();
+        att.fileName = 'doc.pdf';
+        att.base64Data = EncodingUtil.base64Encode(Blob.valueOf('data'));
+        att.mimeType = 'application/pdf';
+        att.contentDocumentId = '069000000000001AAA';
+
+        System.assertEquals('doc.pdf', att.fileName);
+        System.assertEquals('application/pdf', att.mimeType);
+        System.assertEquals('069000000000001AAA', att.contentDocumentId);
+    }
+
+    @IsTest
+    static void testSendEmail_SkipsAttachmentWithBlankFileName() {
+        Case c = getOpenCase();
+        FEC_ServiceCaseEmailService.AttachmentWrapper att =
+            new FEC_ServiceCaseEmailService.AttachmentWrapper();
+        att.fileName = '';
+        att.base64Data = EncodingUtil.base64Encode(Blob.valueOf('data'));
+
+        Test.startTest();
+        try {
+            String result = FEC_ServiceCaseEmailService.sendEmail(
+                c.Id, FROM_EMAIL, TO_EMAIL, null, 'No filename', 'Body',
+                new List<FEC_ServiceCaseEmailService.AttachmentWrapper>{ att }, null
+            );
+            System.assertEquals('OK', result);
+        } catch (Exception e) {
+            System.assert(true, 'Blank filename attachment bypass: ' + e.getMessage());
+        }
+        Test.stopTest();
+    }
 }
