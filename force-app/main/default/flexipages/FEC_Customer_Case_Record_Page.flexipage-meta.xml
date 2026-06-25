@@ -634,29 +634,16 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>accordionSections</name>
-                    <value>Facet-c2b2fea6-effe-4709-8634-7f9cc4a575ea</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>defaultSectionName</name>
-                    <value>accordionSection1</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:accordion</componentName>
-                <identifier>flexipage_accordion</identifier>
+                <componentName>fec_ArchiveAttachments</componentName>
+                <identifier>c_fec_ArchiveAttachments</identifier>
                 <visibilityRule>
                     <criteria>
-                        <leftValue>{!$Permission.CustomPermission.FEC_View_Conversations_on_Case_Handling_Interaction_Tab}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>true</rightValue>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
-        <name>Facet-1a25c907-85e5-4a95-8a95-f1f5a10908fb</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
