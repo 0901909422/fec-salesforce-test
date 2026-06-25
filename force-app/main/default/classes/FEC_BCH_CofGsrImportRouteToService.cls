@@ -170,6 +170,9 @@ public with sharing class FEC_BCH_CofGsrImportRouteToService {
             return;
         }
 
+        Set<Id> insertedAssignmentIds = new Set<Id>();
+        Map<Id, CreateContext> insertedAssignmentIdToCtx = new Map<Id, CreateContext>();
+
         Database.SaveResult[] saveResults = Database.insert(inserts, false);
         for (Integer i = 0; i < saveResults.size(); i++) {
             CreateContext ctx = insertIndexToCtx.get(i);
@@ -177,12 +180,138 @@ public with sharing class FEC_BCH_CofGsrImportRouteToService {
                 continue;
             }
             if (saveResults[i].isSuccess()) {
+                // 25/06/2026 PhongBT: tạo Routing Action History cho mỗi Assignment được sinh ra
+                Id newAssignmentId = saveResults[i].getId();
+                insertedAssignmentIds.add(newAssignmentId);
+                insertedAssignmentIdToCtx.put(newAssignmentId, ctx);
                 continue;
             }
             String message = saveResults[i].getErrors().isEmpty()
                 ? 'Tạo Assignment Route To thất bại.'
                 : saveResults[i].getErrors()[0].getMessage();
             markRowFailed(ctx.row, message);
+        }
+
+        // 25/06/2026 PhongBT: tạo Routing Action History cho các Assignment vừa insert thành công
+        if (!insertedAssignmentIds.isEmpty()) {
+            createRoutingHistoriesForInsertedAssignments(insertedAssignmentIds, insertedAssignmentIdToCtx, caseLiteById);
+        }
+    }
+
+    // 25/06/2026 PhongBT: tạo FEC_Routing_Action_History__c (FEC_Routing_Action_Type__c = Case)
+    // ứng với mỗi Assignment được sinh ra từ COF/GSR Case-level Route To import
+    private static void createRoutingHistoriesForInsertedAssignments(
+        Set<Id> assignmentIds,
+        Map<Id, CreateContext> ctxByAssignmentId,
+        Map<Id, Case> caseLiteById
+    ) {
+        if (assignmentIds == null || assignmentIds.isEmpty()) {
+            return;
+        }
+
+        // Reload assignments để lấy FEC_OwnerID__c (tên queue) sau insert
+        Map<Id, FEC_Assignment__c> assignmentById = new Map<Id, FEC_Assignment__c>([
+            SELECT Id, FEC_Case__c, FEC_OwnerID__c, FEC_Team__c
+            FROM FEC_Assignment__c
+            WHERE Id IN :assignmentIds
+        ]);
+
+        // Load importer user
+        List<User> importerRows = [
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (importerRows.isEmpty()) {
+            return;
+        }
+        User importer = importerRows[0];
+        String importerEmailId = FEC_CaseBusinessService.emailLocalPart(importer.Email);
+
+        // Collect case IDs để reload Case sau assignment insert
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_Assignment__c asg : assignmentById.values()) {
+            if (asg != null && asg.FEC_Case__c != null) {
+                caseIds.add(asg.FEC_Case__c);
+            }
+        }
+        Map<Id, Case> caseAfterById = caseIds.isEmpty()
+            ? new Map<Id, Case>()
+            : new Map<Id, Case>([
+                SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c,
+                       FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.FEC_Code__c
+                FROM Case
+                WHERE Id IN :caseIds
+            ]);
+
+        List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+        for (Id assignmentId : assignmentById.keySet()) {
+            FEC_Assignment__c asg = assignmentById.get(assignmentId);
+            if (asg == null || asg.FEC_Case__c == null) {
+                continue;
+            }
+            CreateContext ctx = ctxByAssignmentId.get(assignmentId);
+            if (ctx == null) {
+                continue;
+            }
+            Case caseAfter = caseAfterById.get(asg.FEC_Case__c);
+            Case caseLite = caseLiteById == null ? null : caseLiteById.get(asg.FEC_Case__c);
+
+            // FEC_Original_User_Queue__c = Queue/Email của Owner Case tại thời điểm routing
+            String originalLabel = caseLite != null
+                ? FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(caseLite.OwnerId, null)
+                : null;
+            String originalId = caseLite != null && caseLite.OwnerId != null
+                ? String.valueOf(caseLite.OwnerId)
+                : null;
+
+            // FEC_Updated_User_Queue__c = Queue/Email của Owner Assignment (FEC_OwnerID__c = tên queue)
+            String updatedLabel = asg.FEC_OwnerID__c;
+            String updatedId = null;
+            if (String.isNotBlank(asg.FEC_OwnerID__c)) {
+                List<Group> queues = [
+                    SELECT Id, Name
+                    FROM Group
+                    WHERE Name = :asg.FEC_OwnerID__c
+                    AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                    LIMIT 1
+                ];
+                if (!queues.isEmpty()) {
+                    updatedId = String.valueOf(queues[0].Id);
+                }
+            }
+
+            String stageName = caseLite != null
+                ? caseLite.FEC_Current_Case_Stage__r?.FEC_Code__c
+                : null;
+            if (String.isBlank(stageName) && caseAfter != null) {
+                stageName = caseAfter.FEC_Current_Case_Stage__r?.FEC_Code__c;
+            }
+
+            String finalStatusBefore = caseAfter != null ? caseAfter.FEC_Final_Status__c : null;
+
+            FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+                FEC_Routing_Action__c       = FEC_ConstantCommon.CASE_ROUTING_ACTION,
+                FEC_Routing_Action_Type__c  = 'Case',
+                FEC_Case__c                 = asg.FEC_Case__c,
+                FEC_Assignment__c           = assignmentId,
+                FEC_Original_User_Queue__c  = originalLabel,
+                FEC_Original_User_Queue_ID__c = originalId,
+                FEC_Updated_User_Queue__c   = updatedLabel,
+                FEC_Updated_User_Queue_ID__c = updatedId,
+                FEC_User__c                 = importerEmailId,
+                FEC_User_Role__c            = importer.UserRole?.Name,
+                FEC_Perform_User__c         = importer.Id,
+                FEC_Stage_Name__c           = stageName,
+                FEC_Current_Status__c       = finalStatusBefore,
+                FEC_Submitted_On__c         = ctx.submittedOn == null ? System.now() : ctx.submittedOn
+            );
+            histories.add(history);
+        }
+
+        if (!histories.isEmpty()) {
+            Database.insert(histories, false);
         }
     }
 

@@ -72,7 +72,12 @@ private class FEC_BCH_CofGsrImportRouteToService_Test {
 
     @IsTest
     static void testCollectAndApplyCreateRoutingAssignmentsBulk() {
-        Case c = [SELECT Id, OwnerId FROM Case LIMIT 1];
+        Case c = [
+            SELECT Id, OwnerId, FEC_Final_Status__c,
+                   FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.FEC_Code__c
+            FROM Case
+            LIMIT 1
+        ];
         FEC_BatchCaseHandlingImportRow okRow = new FEC_BatchCaseHandlingImportRow();
         okRow.status = System.Label.FEC_Operation_Success;
         FEC_BatchCaseHandlingImportRow badRow = new FEC_BatchCaseHandlingImportRow();
