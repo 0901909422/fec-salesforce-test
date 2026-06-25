@@ -19,3 +19,7 @@
 # NOTE: profiles, roles, queues, groups, workflows, reports, translations,
 # duplicateRules, matchingRules, milestoneTypes ARE supported by unlocked packages.
 # Do NOT exclude them unless a specific install error proves otherwise.
+
+**/tsconfig.json
+
+**/*.ts
