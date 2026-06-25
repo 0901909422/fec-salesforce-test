@@ -2688,7 +2688,10 @@ public without sharing class FEC_CaseBusinessService {
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
           FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
-          createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
+          // 26/06/2026 phong - bulk import: FEC_BCC_ImportResolveHistService ghi history với user thực hiện import
+          if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+            createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
+          }
           return null;
         }
         when TRANSFER {
