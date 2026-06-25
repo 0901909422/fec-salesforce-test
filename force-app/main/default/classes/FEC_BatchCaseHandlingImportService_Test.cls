@@ -618,7 +618,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
     /**
      * Kịch bản: countSuccessImportRows chỉ đếm dòng đã apply thành công (FEC_Batch_Case_Handling_Success).
-     * Dòng status null hoặc label khác không được tính success (tránh dashboard báo sai 3/3).
+     * FEC_Operation_Success trùng value "Success" trên org — dùng status khác cho dòng validate.
      */
     @IsTest
     static void testCountSuccessImportRows_onlyExplicitAppliedSuccess() {
@@ -629,7 +629,10 @@ private class FEC_BatchCaseHandlingImportService_Test {
         FEC_BatchCaseHandlingImportRow failed = new FEC_BatchCaseHandlingImportRow();
         failed.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         FEC_BatchCaseHandlingImportRow otherLabel = new FEC_BatchCaseHandlingImportRow();
-        otherLabel.status = System.Label.FEC_Operation_Success;
+        otherLabel.status = System.Label.FEC_Operation_Success ==
+            System.Label.FEC_Batch_Case_Handling_Success
+            ? 'Validated'
+            : System.Label.FEC_Operation_Success;
 
         Test.startTest();
         Integer successCount = FEC_BatchCaseHandlingImportService.countSuccessImportRows(
