@@ -174,6 +174,41 @@ public with sharing class FEC_BCH_AssignmentResolveRejectService {
         return results;
     }
 
+    // 26/06/2026 phong - bulk assignment Resolve: resolve main Case khi không còn assignment active (LastModifiedBy = user import)
+    public static Set<Id> syncMainCaseResolveWhenNoActiveAssignments(Set<Id> caseIds) {
+        Set<Id> resolvedCaseIds = new Set<Id>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return resolvedCaseIds;
+        }
+        Set<Id> casesWithActiveAssignments = new Set<Id>();
+        for (FEC_Assignment__c a : [
+            SELECT FEC_Case__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c IN :caseIds
+            AND FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+        ]) {
+            if (a != null && a.FEC_Case__c != null) {
+                casesWithActiveAssignments.add(a.FEC_Case__c);
+            }
+        }
+        List<Case> casesToResolve = new List<Case>();
+        for (Id caseId : caseIds) {
+            if (casesWithActiveAssignments.contains(caseId)) {
+                continue;
+            }
+            casesToResolve.add(new Case(
+                Id = caseId,
+                Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+                FEC_Team__c = null
+            ));
+            resolvedCaseIds.add(caseId);
+        }
+        if (!casesToResolve.isEmpty()) {
+            Database.update(casesToResolve, false);
+        }
+        return resolvedCaseIds;
+    }
+
     private static void syncAssignmentUsersForCases(Set<Id> caseIds) {
         if (caseIds == null || caseIds.isEmpty()) {
             return;

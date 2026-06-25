@@ -377,7 +377,10 @@ public without sharing class FEC_AssignmentController {
 
         if (!caseUpdateMap.isEmpty()) update caseUpdateMap.values();
         if (!assignmentsToUpdate.isEmpty()) update assignmentsToUpdate;
-        if (!historiesToInsert.isEmpty()) insert historiesToInsert;
+        // 26/06/2026 phong - bulk import: case Resolve history do FEC_BCC_ImportResolveHistService ghi, tránh duplicate với trigger
+        if (!historiesToInsert.isEmpty() && !FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+            insert historiesToInsert;
+        }
     }
 
     // =========================================================
@@ -489,6 +492,7 @@ public without sharing class FEC_AssignmentController {
             ? FEC_CommonUltils.getEmailPrefix(performingUser.Email)
             : FEC_CommonUltils.getEmailPrefix(UserInfo.getUserEmail());
         String userRole = performingUser?.UserRole?.Name;
+        Id performerId = performingUser != null ? performingUser.Id : UserInfo.getUserId();
 
         return new FEC_Routing_Action_History__c(
             FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
@@ -496,11 +500,11 @@ public without sharing class FEC_AssignmentController {
             FEC_Case__c = c.Id,
             FEC_Assignment__c = null,
             FEC_Decision__c = null,
-            FEC_Perform_User__c = performingUser?.Id,
-            FEC_Original_User_Queue__c = ownerLabel,
+            FEC_Perform_User__c = performerId,
+            FEC_Original_User_Queue__c = userPrefix,
             FEC_Updated_User_Queue__c = ownerLabel,
-            FEC_Original_User_Queue_ID__c = c.OwnerId != null
-                ? String.valueOf(c.OwnerId)
+            FEC_Original_User_Queue_ID__c = performerId != null
+                ? String.valueOf(performerId)
                 : null,
             FEC_Updated_User_Queue_ID__c = c.OwnerId != null
                 ? String.valueOf(c.OwnerId)

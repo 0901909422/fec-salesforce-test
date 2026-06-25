@@ -451,16 +451,9 @@ public without sharing class FEC_StatementsAccountController {
         ];
         if (!prevRows.isEmpty()) {
             prevStmtDate = prevRows[0].FEC_Statement_Date__c;
-        } else {
-            List<FEC_Customer_History__c> historyRows = [
-                SELECT FEC_Last_Statement_Date__c
-                FROM FEC_Customer_History__c
-                WHERE Id = :stmt.FEC_Customer_History__c
-                LIMIT 1
-            ];
-            prevStmtDate = historyRows.isEmpty()
-                ? null
-                : historyRows[0].FEC_Last_Statement_Date__c;
+        }
+        if (prevStmtDate != null && prevStmtDate >= stmtEnd) {
+            prevStmtDate = null;
         }
 
         String accountNumber = FEC_CommonUltils.resolveAccountNumber(
