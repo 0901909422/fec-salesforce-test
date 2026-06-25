@@ -1533,10 +1533,42 @@
                 tableStyle += (tableStyle ? ';' : '') + 'max-width:100%;width:100%;box-sizing:border-box';
                 table.setAttribute('style', tableStyle);
             }
+            var textBlocks = holder.querySelectorAll('p, div');
+            for (var b = 0; b < textBlocks.length; b++) {
+                var block = textBlocks[b];
+                var tagName = (block.tagName || '').toLowerCase();
+                var blockStyle = block.getAttribute('style') || '';
+                blockStyle += (blockStyle ? ';' : '') + 'margin:0;padding:0;line-height:1.5';
+                if (tagName === 'p') {
+                    blockStyle += ';mso-margin-top-alt:0;mso-margin-bottom-alt:0';
+                }
+                block.setAttribute('style', blockStyle);
+            }
             return holder.innerHTML;
         } catch (e) {
             return html;
         }
+    },
+    buildEmailBodyForTransport: function(component) {
+        var body = '';
+        if (window._fecQuill) {
+            body = window._fecQuill.root.innerHTML;
+            var text = window._fecQuill.getText().trim();
+            if (!text && !window._fecQuill.root.querySelector('table,img')) {
+                body = component.get('v.body') || '';
+            }
+        } else {
+            body = component.get('v.body') || '';
+        }
+        body = this.normalizeEditorHtmlForEmail(body);
+        // Fallback: Quill can drop tables/images when DOM is rewritten; prefer the stored raw body if it has structure the editor lost.
+        var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
+        if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
+            body = this.normalizeEditorHtmlForEmail(storedBody);
+        }
+        var styleBlock = component.get('v.templateStyleBlock') || '';
+        if (styleBlock) body = styleBlock + body;
+        return body;
     },
     cleanBody: function(html) {
         var result = html

@@ -382,9 +382,18 @@
                 existing.forEach(function(e) { if (e._contentDocumentId) existingDocIds[e._contentDocumentId] = true; if (e.name) existingNames[(e.name || '').toLowerCase()] = true; });
                 var duplicateFound = false;
                 var toAdd = [];
+                var MAX_SIZE = 5 * 1024 * 1024; // 5MB - Salesforce email attachment limit
                 uploaded.forEach(function(a) {
                     if ((a.contentDocumentId && existingDocIds[a.contentDocumentId]) || (a.fileName && existingNames[(a.fileName || '').toLowerCase()])) { duplicateFound = true; return; }
-                    toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
+                // Check file size (base64 size ~ 4/3 of raw)
+                if (a.base64Data) {
+                    var estimatedSize = Math.floor(a.base64Data.length * 0.75);
+                    if (estimatedSize > MAX_SIZE) {
+                        helper.showEmailToast(component, 'error', 'Error', 'File exceeds 5MB limit: ' + a.fileName);
+                        return;
+                    }
+                }
+                    toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _contentDocumentId: a.contentDocumentId, _mime: a.mimeType, size: a.contentSize || 0 }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
                 });
                 if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
                 if (toAdd.length) component.set('v.attachments', existing.concat(toAdd));
@@ -417,9 +426,18 @@
                 existing.forEach(function(e) { if (e._contentDocumentId) existingDocIds[e._contentDocumentId] = true; if (e.name) existingNames[(e.name || '').toLowerCase()] = true; });
                         var duplicateFound = false;
                         var toAdd = [];
+                        var MAX_SIZE = 5 * 1024 * 1024; // 5MB - Salesforce email attachment limit
                         uploaded.forEach(function(a) {
                             if ((a.contentDocumentId && existingDocIds[a.contentDocumentId]) || (a.fileName && existingNames[(a.fileName || '').toLowerCase()])) { duplicateFound = true; return; }
-                            toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
+                        // Check file size (base64 size ~ 4/3 of raw)
+                        if (a.base64Data) {
+                            var estimatedSize = Math.floor(a.base64Data.length * 0.75);
+                            if (estimatedSize > MAX_SIZE) {
+                                helper.showEmailToast(component, 'error', 'Error', 'File exceeds 5MB limit: ' + a.fileName);
+                                return;
+                            }
+                        }
+                            toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _contentDocumentId: a.contentDocumentId, _mime: a.mimeType, size: a.contentSize || 0 }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
                         });
                         if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
                         if (toAdd.length) component.set('v.attachments', existing.concat(toAdd));
@@ -443,41 +461,6 @@
             tryLoad(1);
         }), 1200);
     },
-    onAttachChange: function(component, event, helper) {
-        var files = event.target.files;
-        if (!files || files.length === 0) return;
-        // tungnm37 sửa: lưu ref trước khi Aura re-render
-        var inputTarget = event.target;
-        var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
-        var existing = component.get('v.attachments') || [];
-        var newList = existing.slice();
-        var existingLocalKeys = {};
-        existing.forEach(function(e) { existingLocalKeys[((e.name || '').toLowerCase()) + '|' + (e.size || 0)] = true; });
-        var duplicateFound = false;
-        for (var i = 0; i < files.length; i++) {
-            var f = files[i];
-            var localKey = (f.name || '').toLowerCase() + '|' + (f.size || 0);
-            if (existingLocalKeys[localKey]) { duplicateFound = true; continue; }
-            existingLocalKeys[localKey] = true;
-            var isImage = f.type && f.type.indexOf('image/') === 0;
-            // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
-            if (!isImage && f.size > MAX_SIZE) {
-                try {
-                    var t = $A.get('e.force:showToast');
-                    if (t) { t.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: f.name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 }); t.fire(); }
-                } catch(e) {}
-            } else {
-                newList.push({ name: f.name, size: f.size, file: f });
-            }
-        }
-        if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
-        component.set('v.attachments', newList);
-        // tungnm37 sửa: reset sau setTimeout để lần 2 vẫn trigger onchange
-        window.setTimeout(function() {
-            try { if (inputTarget) inputTarget.value = ''; } catch(ex) {}
-        }, 0);
-    },
-
     removeAttachment: function(component, event, helper) {
         var idx = parseInt(event.currentTarget.dataset.idx, 10);
         var list = (component.get('v.attachments') || []).slice();
@@ -486,19 +469,8 @@
     },
 
     previewEmail: function(component, event, helper) {
-        var body = '';
-        if (window._fecQuill) {
-            body = window._fecQuill.root.innerHTML;
-            var text = window._fecQuill.getText().trim();
-            if (!text && !window._fecQuill.root.querySelector('table,img')) {
-                body = component.get('v.body') || '';
-            }
-        } else {
-            body = component.get('v.body') || '';
-        }
-        var styleBlock = component.get('v.templateStyleBlock') || '';
-        var bodyForEmail = helper.normalizeEditorHtmlForEmail(body);
-        helper.showPreviewModal(styleBlock ? styleBlock + bodyForEmail : bodyForEmail);
+        var body = helper.buildEmailBodyForTransport(component);
+        helper.showPreviewModal(body);
     },
 
     closePreview: function(component, event, helper) {
@@ -642,17 +614,9 @@
             }
         }
         var subject = component.get('v.subject');
-        var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
-        // Convert Quill CSS classes (ql-font-*, ql-size-*, ql-align-*, ql-indent-*) to inline styles
-        // so email clients (Gmail/Outlook) render the same font/size/alignment as in the editor.
-        body = helper.normalizeEditorHtmlForEmail(body);
-        // Prepend template <style> block so responsive CSS works in email clients
-        var sendStyleBlock = component.get('v.templateStyleBlock') || '';
-        var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
-        if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
-            body = storedBody;
-        }
-        if (sendStyleBlock) body = sendStyleBlock + body;
+        // Build the email body exactly the same way as Preview so the sent email matches what the agent sees.
+        var body = helper.buildEmailBodyForTransport(component);
+
         var lblSubjReq = component.get('v.lblSubjectRequired');
         if (!subject) {
             component.set('v.errorMsg', lblSubjReq);
@@ -699,6 +663,15 @@
             finalToEmail = normalizedEmails.join(',');
         }
 
+        // Normalize CC: convert ; to , and clean up
+        var ccToSend = (component.get('v.ccEmail') || '').trim();
+        if (ccToSend) {
+            var ccNormalized2 = ccToSend.replace(/;/g, ',').replace(/,\s*/g, ',');
+            var ccEmailsArr = ccNormalized2.split(',').map(function(e) { return e.trim().replace(/\.+$/, ''); }).filter(function(e) { return e && e.indexOf('@') > -1; });
+            ccToSend = ccEmailsArr.join(',');
+            component.set('v.ccEmail', ccToSend);
+        }
+
         component.set('v.isSending', true);
         component.set('v.errorMsg', '');
 
@@ -708,39 +681,37 @@
             helper.doSendEmail(component, finalToEmail, subject, body, []);
             return;
         }
-        var converted = [];
-        var pending = 0;
-        var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
-        // tungnm37 sửa: ảnh insert vào body (_isInlineImg) không gửi kèm attachment
-        // chỉ strip blob URL khỏi body. File đính kèm thường mới convert base64.
-        var templateAtts = [];
-        var fileAtts = [];
+                var emailAtts = [];
+        var MAX_SIZE = 5 * 1024 * 1024; // 5MB per file
         for (var i = 0; i < attachments.length; i++) {
-            if (attachments[i]._fromTemplate || attachments[i]._fromStandardUpload) {
-                templateAtts.push({ fileName: attachments[i].name, base64Data: attachments[i]._base64, mimeType: attachments[i]._mime });
-            } else if (attachments[i]._isInlineImg) {
-                // Ảnh insert vào body — không gửi kèm, đã strip blob URL khỏi bodyToSend
-            } else {
-                // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
-                var attFile = attachments[i].file;
-                var isImg = attFile && attFile.type && attFile.type.indexOf('image/') === 0;
-                if (!isImg && attachments[i].size > MAX_SIZE) {
+            var a = attachments[i];
+            if (a._isInlineImg) {
+                continue;
+            }
+            if (a._fromStandardUpload && a._contentDocumentId) {
+                emailAtts.push({ fileName: a.name, contentDocumentId: a._contentDocumentId, mimeType: a._mime });
+            } else if (a._fromTemplate && a._base64) {
+                emailAtts.push({ fileName: a.name, base64Data: a._base64, mimeType: a._mime });
+            } else if (a.file) {
+                if (a.size > MAX_SIZE) {
                     component.set('v.isSending', false);
                     var toastSize = $A.get('e.force:showToast');
                     if (toastSize) {
-                        toastSize.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: attachments[i].name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 });
+                        toastSize.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: a.name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 });
                         toastSize.fire();
                     }
                     return;
                 }
-                fileAtts.push(attachments[i]);
+                emailAtts.push({ fileName: a.name, file: a.file, mimeType: a._mime });
             }
         }
+        var fileAtts = emailAtts.filter(function(a) { return a.file; });
+        var idAtts = emailAtts.filter(function(a) { return !a.file; });
         if (fileAtts.length === 0) {
-            helper.doSendEmail(component, finalToEmail, subject, body, templateAtts);
+            helper.doSendEmail(component, finalToEmail, subject, body, idAtts);
             return;
         }
-        pending = fileAtts.length;
+        var pending = fileAtts.length;
         var fileConverted = [];
         fileAtts.forEach(function(att, idx) {
             var reader = new FileReader();
@@ -749,18 +720,18 @@
                 var parts = dataUrl.split(',');
                 var mimeMatch = parts[0].match(/:(.*?);/);
                 fileConverted[idx] = {
-                    fileName: att.name,
+                    fileName: att.fileName,
                     base64Data: parts[1],
                     mimeType: mimeMatch ? mimeMatch[1] : 'application/octet-stream'
                 };
                 pending--;
                 if (pending === 0) {
-                    helper.doSendEmail(component, finalToEmail, subject, body, templateAtts.concat(fileConverted));
+                    helper.doSendEmail(component, finalToEmail, subject, body, idAtts.concat(fileConverted));
                 }
             });
             reader.onerror = $A.getCallback(function() {
                 component.set('v.isSending', false);
-                component.set('v.errorMsg', 'Error reading attachment: ' + att.name);
+                component.set('v.errorMsg', 'Error reading attachment: ' + att.fileName);
             });
             reader.readAsDataURL(att.file);
         });

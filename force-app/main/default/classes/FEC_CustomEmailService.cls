@@ -140,6 +140,7 @@ public without sharing class FEC_CustomEmailService {
             String ext = cdl.ContentDocument.FileExtension;
             item.put('name', cdl.ContentDocument.Title + (String.isNotBlank(ext) ? '.' + ext : ''));
             item.put('size', String.valueOf(cdl.ContentDocument.ContentSize));
+            item.put('downloadUrl', '/sfc/servlet.shepherd/document/download/' + String.valueOf(cdl.ContentDocumentId));
             item.put('createdDate', String.valueOf(cdl.ContentDocument.CreatedDate));
             result.add(item);
         }
@@ -156,13 +157,14 @@ public without sharing class FEC_CustomEmailService {
         }
         if (docIds.isEmpty()) return result;
         for (ContentVersion cv : [
-            SELECT ContentDocumentId, Title, FileExtension, VersionData, FileType
+            SELECT ContentDocumentId, Title, FileExtension, ContentSize, FileType
             FROM ContentVersion
             WHERE ContentDocumentId IN :docIds AND IsLatest = true
         ]) {
             FEC_ServiceCaseEmailService.AttachmentWrapper att = new FEC_ServiceCaseEmailService.AttachmentWrapper();
             att.fileName = cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : '');
-            att.base64Data = EncodingUtil.base64Encode(cv.VersionData);
+            // base64Data intentionally omitted: pass only contentDocumentId to avoid 4MB Aura payload limit.
+            // sendEmail() will fetch VersionData directly from ContentVersion when needed.
             String mime = FEC_ConstantCommon.MIME_OCTET_STREAM;
             if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PDF) mime = FEC_ConstantCommon.MIME_PDF;
             else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PNG) mime = FEC_ConstantCommon.MIME_PNG;
@@ -195,6 +197,7 @@ public without sharing class FEC_CustomEmailService {
             String ext = cdl.ContentDocument.FileExtension;
             item.put('name', cdl.ContentDocument.Title + (String.isNotBlank(ext) ? '.' + ext : ''));
             item.put('size', String.valueOf(cdl.ContentDocument.ContentSize));
+            item.put('downloadUrl', '/sfc/servlet.shepherd/document/download/' + String.valueOf(cdl.ContentDocumentId));
             result.get(String.valueOf(cdl.LinkedEntityId)).add(item);
         }
         return result;
@@ -813,15 +816,59 @@ public without sharing class FEC_CustomEmailService {
             // 4. Set OrgWideEmailAddress (From)
             System.debug('### Step 4: setFromAddress from=' + fromEmail);
             setFromAddress(mail, fromEmail, caseId);
+            // Validate total attachment size (Salesforce limit: 5MB per email)
+            if (attachments != null && !attachments.isEmpty()) {
+                Integer totalSize = 0;
+                for (AttachmentWrapper att : attachments) {
+                    if (String.isNotBlank(att.base64Data)) {
+                        // Base64 size ~ 4/3 of raw; 5MB raw ~ 6.67MB base64
+                        if (att.base64Data.length() > 7000000) {
+                            throw new AuraHandledException('File exceeds 5MB limit: ' + att.fileName);
+                        }
+                        totalSize += att.base64Data.length();
+                    }
+                }
+                // Base64 size ~ 4/3 of raw; 25MB raw ~ 33.3MB base64
+                if (totalSize > 33000000) {
+                    throw new AuraHandledException('Total attachment size exceeds 25MB limit. Please reduce file size.');
+                }
+            }
+
             System.debug('### Step 5: attachments');
 
             if (attachments != null && !attachments.isEmpty()) {
                 List<Messaging.EmailFileAttachment> emailAttachments = new List<Messaging.EmailFileAttachment>();
+                // Collect contentDocumentIds that need ContentVersion lookup (no base64 provided)
+                Set<Id> docIdsToFetch = new Set<Id>();
                 for (AttachmentWrapper att : attachments) {
-                    if (String.isBlank(att.base64Data) || String.isBlank(att.fileName)) continue;
+                    if (String.isBlank(att.base64Data) && String.isNotBlank(att.contentDocumentId)) {
+                        try { docIdsToFetch.add((Id) att.contentDocumentId); } catch (Exception idEx) {}
+                    }
+                }
+                // Batch query ContentVersion once for all docIds (avoids per-attachment SOQL)
+                Map<String, ContentVersion> cvByDocId = new Map<String, ContentVersion>();
+                if (!docIdsToFetch.isEmpty()) {
+                    for (ContentVersion cv : [
+                        SELECT ContentDocumentId, Title, FileExtension, VersionData, FileType
+                        FROM ContentVersion
+                        WHERE ContentDocumentId IN :docIdsToFetch AND IsLatest = true
+                    ]) {
+                        cvByDocId.put(String.valueOf(cv.ContentDocumentId), cv);
+                    }
+                }
+                for (AttachmentWrapper att : attachments) {
+                    if (String.isBlank(att.fileName)) continue;
                     Messaging.EmailFileAttachment efa = new Messaging.EmailFileAttachment();
                     efa.setFileName(att.fileName);
-                    efa.setBody(EncodingUtil.base64Decode(att.base64Data));
+                    Blob fileBlob = null;
+                    if (String.isNotBlank(att.base64Data)) {
+                        fileBlob = EncodingUtil.base64Decode(att.base64Data);
+                    } else if (String.isNotBlank(att.contentDocumentId)) {
+                        ContentVersion cv = cvByDocId.get(att.contentDocumentId);
+                        if (cv != null) fileBlob = cv.VersionData;
+                    }
+                    if (fileBlob == null) continue;
+                    efa.setBody(fileBlob);
                     if (String.isNotBlank(att.mimeType)) {
                         efa.setContentType(att.mimeType);
                     }
@@ -860,6 +907,55 @@ public without sharing class FEC_CustomEmailService {
                 em.Status = '3';
                 em.MessageDate = Datetime.now();
                 insert em;
+
+                // Store outgoing email attachments on the EmailMessage history record
+                if (attachments != null && !attachments.isEmpty()) {
+                    List<ContentVersion> cvs = new List<ContentVersion>();
+                    List<ContentDocumentLink> links = new List<ContentDocumentLink>();
+                    Set<Id> linkedDocIds = new Set<Id>();
+                    for (AttachmentWrapper att : attachments) {
+                        if (String.isBlank(att.fileName)) continue;
+                        if (String.isNotBlank(att.contentDocumentId)) {
+                            try {
+                                Id docId = (Id) att.contentDocumentId;
+                                if (!linkedDocIds.contains(docId)) {
+                                    links.add(new ContentDocumentLink(
+                                        ContentDocumentId = docId,
+                                        LinkedEntityId = em.Id,
+                                        ShareType = 'V',
+                                        Visibility = 'AllUsers'
+                                    ));
+                                    linkedDocIds.add(docId);
+                                }
+                            } catch (Exception idEx) {}
+                            continue;
+                        }
+                        if (String.isBlank(att.base64Data)) continue;
+                        ContentVersion cv = new ContentVersion();
+                        cv.Title = att.fileName.contains('.') ? att.fileName.substringBeforeLast('.') : att.fileName;
+                        cv.PathOnClient = att.fileName;
+                        cv.VersionData = EncodingUtil.base64Decode(att.base64Data);
+                        cvs.add(cv);
+                    }
+                    if (!cvs.isEmpty()) {
+                        insert cvs;
+                        List<ContentVersion> insertedCvs = [
+                            SELECT Id, ContentDocumentId
+                            FROM ContentVersion
+                            WHERE Id IN :cvs
+                        ];
+                        for (ContentVersion cv : insertedCvs) {
+                            if (cv.ContentDocumentId == null || linkedDocIds.contains(cv.ContentDocumentId)) continue;
+                            links.add(new ContentDocumentLink(
+                                ContentDocumentId = cv.ContentDocumentId,
+                                LinkedEntityId = em.Id,
+                                ShareType = 'V',
+                                Visibility = 'AllUsers'
+                            ));
+                        }
+                    }
+                    if (!links.isEmpty()) insert links;
+                }
             } catch (Exception emEx) {
                 System.debug('EmailMessage insert skipped: ' + emEx.getMessage());
             }
@@ -915,7 +1011,11 @@ public without sharing class FEC_CustomEmailService {
         Case cUpdate = new Case(Id = caseId);
         if (String.isNotBlank(fromEmail))   cUpdate.FEC_Email_From__c  = fromEmail;
         // FEC_Send_To__c là routing address - không update để tránh ghi đè
-        if (String.isNotBlank(ccEmail))     cUpdate.FEC_Email_CC__c    = ccEmail;
+        if (String.isNotBlank(ccEmail)) {
+            // FEC_Email_CC__c is Email type (single address) - store only the first CC address
+            String firstCc = ccEmail.split(',')[0].trim();
+            if (String.isNotBlank(firstCc)) cUpdate.FEC_Email_CC__c = firstCc;
+        }
         // FEC_Title_Reply__c is restricted picklist - skip update to avoid invalid value error
         update cUpdate;
 
@@ -935,5 +1035,6 @@ public without sharing class FEC_CustomEmailService {
         @AuraEnabled public String fileName { get; set; }
         @AuraEnabled public String base64Data { get; set; }
         @AuraEnabled public String mimeType { get; set; }
+        @AuraEnabled public String contentDocumentId { get; set; }
     }
 }
