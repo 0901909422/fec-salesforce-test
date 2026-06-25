@@ -560,8 +560,15 @@ public without sharing class FEC_StatementsAccountController {
             ORDER BY FEC_Post_Date__c DESC, FEC_Effective_Date__c DESC, CreatedDate DESC
         ]) {
             String key = billedTxnKey(t);
-            if (key != null && byKey.containsKey(key)) {
+            if (key == null && t.FEC_Post_Date__c == null) {
                 continue;
+            }
+            if (key != null && byKey.containsKey(key)) {
+                BilledTransactionDTO kept = byKey.get(key);
+                if (kept.postDate != null || t.FEC_Post_Date__c == null) {
+                    continue;
+                }
+                byKey.remove(key);
             }
 
             BilledTransactionDTO dto = new BilledTransactionDTO();
@@ -671,6 +678,10 @@ public without sharing class FEC_StatementsAccountController {
                 : (ft.OTPSent == 1 ? 'Yes' : (ft.OTPSent == 0 ? 'No' : 'N/A'));
 
             toSave.put(key, rec);
+            String matchKey = billedTxnMatchKey(ft);
+            if (matchKey != null) {
+                existingByMatchKey.put(matchKey, rec);
+            }
         }
 
         if (!duplicateDeletes.isEmpty()) {
