@@ -20,5 +20,13 @@
     <permissionSets>Customer_Data_Management</permissionSets>
     <permissionSets>FEC_Download_Report_Data</permissionSets>
     <permissionSets>Upload_Outbound_Campaign</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Chat</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Email</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_External</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Inbound</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Internal</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Outbound</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_F2F</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Letter</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
