@@ -1342,7 +1342,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                     // 02/06/2026 16:10 linhdev - outcomesJson khởi tạo null, queueable tự build state nhẹ cho các hop sau
                     new FEC_BatchCaseHandlingImportQueueable(
                         (Id) batchRow.get('Id'),
-                        JSON.serialize(rowResults),
+                        FEC_BatchCaseHandlingImportService.serializeImportRowsForApplyChain(rowResults),
                         null,
                         cofOrGsr,
                         0

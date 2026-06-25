@@ -254,7 +254,7 @@ private class FEC_BatchCaseHandlingImportQueueableTest {
             buildFailedRow(),
             buildApplicableRow('500000000000001AAA')
         };
-        rows[1].status = System.Label.FEC_Operation_Success;
+        rows[1].status = System.Label.FEC_Batch_Case_Handling_Success;
 
         System.runAs(admin) {
             Test.startTest();
@@ -297,6 +297,137 @@ private class FEC_BatchCaseHandlingImportQueueableTest {
         System.assertNotEquals('Processing', String.valueOf(batchRow.get('FEC_Status__c')));
     }
 
+    /**
+     * 25/06/2026 phong - integration: COF Resolve 3 dòng qua queueable chain (1 row/hop) phải 3/3 Success,
+     * không treo Processing (mô phỏng COFTemp1_CSCustomerCare 3 case sau deploy RoutingActionHistory guard).
+     */
+    @IsTest
+    static void queueableCofResolveThreeRows_allRowsSuccessAndChainCompletes() {
+        User admin = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+        FEC_TestDataFactory.assignPermissionSets(admin.Id, new List<String>{ 'FEC_Batch_Case_Handling' });
+
+        System.runAs(admin) {
+            List<FEC_Business_Process__c> cofBpRows = [
+                SELECT Id
+                FROM FEC_Business_Process__c
+                WHERE FEC_Code__c LIKE 'COF%'
+                LIMIT 1
+            ];
+            if (cofBpRows.isEmpty()) {
+                System.assert(true, 'Skipped: no COF business process in org.');
+                return;
+            }
+            Id cofBpId = cofBpRows[0].Id;
+            Id queueId = resolveCofImportQueueId();
+            if (queueId == null) {
+                return;
+            }
+
+            List<Id> caseIds = new List<Id>();
+            Long baseKey = DateTime.now().getTime();
+            for (Integer idx = 0; idx < 3; idx++) {
+                String caseKey = 'BCH-COF-3ROW-' + String.valueOf(baseKey + idx);
+                FEC_CaseTriggerHandler.isExecuting = true;
+                Case cofCase = new Case(
+                    Subject = 'COF Import Chain Case ' + idx,
+                    Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                    OwnerId = queueId,
+                    FEC_ID_Search__c = caseKey,
+                    FEC_Business_Process__c = cofBpId
+                );
+                insert cofCase;
+                FEC_CaseTriggerHandler.isExecuting = false;
+                update new Case(Id = cofCase.Id, FEC_ID_Search__c = caseKey);
+                caseIds.add(cofCase.Id);
+            }
+
+            List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>();
+            for (Id caseId : caseIds) {
+                rows.add(buildCofResolveApplicableRow(caseId));
+            }
+
+            Id batchId = insertProcessingBatch('COFTemp1_CSCustomerCare_3Rows.xlsx', 3);
+
+            Test.startTest();
+            System.enqueueJob(
+                new FEC_BatchCaseHandlingImportQueueable(
+                    batchId,
+                    FEC_BatchCaseHandlingImportService.serializeImportRowsForApplyChain(rows),
+                    null,
+                    true,
+                    0
+                )
+            );
+            Test.stopTest();
+
+            SObject batchRow = queryBatch(batchId);
+            System.assertEquals(
+                'Processed',
+                String.valueOf(batchRow.get('FEC_Status__c')),
+                'Batch phải finalize Processed sau 3 hop queueable.'
+            );
+            System.assertEquals(
+                3,
+                Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Success_Records__c'))),
+                'Dashboard phải báo 3 Success.'
+            );
+            System.assertEquals(
+                0,
+                Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Failed_Records__c'))),
+                'Dashboard phải báo 0 Failed.'
+            );
+
+            List<Case> updatedCases = [
+                SELECT Id, Status, FEC_Final_Status__c
+                FROM Case
+                WHERE Id IN :caseIds
+            ];
+            System.assertEquals(3, updatedCases.size());
+            for (Case updatedCase : updatedCases) {
+                System.assertEquals(
+                    FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+                    updatedCase.Status,
+                    'Case ' + updatedCase.Id + ' phải Resolved sau import COF Resolve.'
+                );
+            }
+        }
+    }
+
+    private static Id resolveCofImportQueueId() {
+        List<Group> queues = [
+            SELECT Id
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return null;
+        }
+        Id queueId = queues[0].Id;
+        if ([SELECT COUNT() FROM QueueSobject WHERE QueueId = :queueId AND SobjectType = 'Case'] == 0) {
+            insert new QueueSobject(QueueId = queueId, SobjectType = 'Case');
+        }
+        if ([SELECT COUNT() FROM GroupMember WHERE GroupId = :queueId AND UserOrGroupId = :UserInfo.getUserId()] == 0) {
+            insert new GroupMember(GroupId = queueId, UserOrGroupId = UserInfo.getUserId());
+        }
+        return queueId;
+    }
+
+    private static FEC_BatchCaseHandlingImportRow buildCofResolveApplicableRow(Id caseId) {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.recordId = String.valueOf(caseId);
+        row.routingAction = 'Resolve';
+        row.inputtedRemarks = 'COF bulk import 3-row chain integration test';
+        row.status = System.Label.FEC_Operation_Success;
+        return row;
+    }
+
     private static FEC_BatchCaseHandlingImportRow buildValidateRow(String caseIdSearch, String routingAction) {
         FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
         row.caseIdSearch = caseIdSearch;
@@ -323,13 +454,17 @@ private class FEC_BatchCaseHandlingImportQueueableTest {
     }
 
     private static Id insertProcessingBatch(String fileName) {
+        return insertProcessingBatch(fileName, 1);
+    }
+
+    private static Id insertProcessingBatch(String fileName, Integer totalRecords) {
         Schema.SObjectType batchType = Schema.getGlobalDescribe().get('FEC_Batch_Case_Handling__c');
         System.assertNotEquals(null, batchType, 'FEC_Batch_Case_Handling__c must exist in org');
         SObject batchRow = batchType.newSObject();
         Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_File_Name__c' }, fileName);
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
-        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, 1);
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalRecords == null ? 1 : totalRecords);
         insert batchRow;
         return (Id) batchRow.get('Id');
     }

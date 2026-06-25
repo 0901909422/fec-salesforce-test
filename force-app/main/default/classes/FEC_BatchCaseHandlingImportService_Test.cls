@@ -616,6 +616,139 @@ private class FEC_BatchCaseHandlingImportService_Test {
         System.assertEquals(0, emptyCount);
     }
 
+    /**
+     * Kịch bản: countSuccessImportRows chỉ đếm dòng đã apply thành công (FEC_Batch_Case_Handling_Success).
+     * Dòng status null hoặc label khác không được tính success (tránh dashboard báo sai 3/3).
+     */
+    @IsTest
+    static void testCountSuccessImportRows_onlyExplicitAppliedSuccess() {
+        FEC_BatchCaseHandlingImportRow applied = new FEC_BatchCaseHandlingImportRow();
+        applied.status = System.Label.FEC_Batch_Case_Handling_Success;
+        FEC_BatchCaseHandlingImportRow unprocessed = new FEC_BatchCaseHandlingImportRow();
+        unprocessed.status = null;
+        FEC_BatchCaseHandlingImportRow failed = new FEC_BatchCaseHandlingImportRow();
+        failed.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        FEC_BatchCaseHandlingImportRow otherLabel = new FEC_BatchCaseHandlingImportRow();
+        otherLabel.status = System.Label.FEC_Operation_Success;
+
+        Test.startTest();
+        Integer successCount = FEC_BatchCaseHandlingImportService.countSuccessImportRows(
+            new List<FEC_BatchCaseHandlingImportRow>{ applied, unprocessed, failed, otherLabel }
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, successCount, 'Chỉ dòng FEC_Batch_Case_Handling_Success mới được tính success.');
+    }
+
+    @IsTest
+    static void testFinalizeBatchImportRecord_partialApplyCountsOnlyExplicitSuccess() {
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get('FEC_Batch_Case_Handling__c');
+        if (batchType == null) {
+            System.assert(true, 'Skipped: FEC_Batch_Case_Handling__c not on org.');
+            return;
+        }
+
+        SObject batchRow = batchType.newSObject();
+        Map<String, Schema.SObjectField> fMap = batchType.getDescribe().fields.getMap();
+        if (fMap.containsKey('FEC_File_Name__c')) {
+            batchRow.put('FEC_File_Name__c', 'Partial_Apply_3_Rows.xlsx');
+        }
+        if (fMap.containsKey('FEC_Status__c')) {
+            batchRow.put('FEC_Status__c', 'Processing');
+        }
+        insert batchRow;
+        Id batchId = (Id) batchRow.get('Id');
+
+        FEC_BatchCaseHandlingImportRow row0 = new FEC_BatchCaseHandlingImportRow();
+        row0.status = System.Label.FEC_Batch_Case_Handling_Success;
+        FEC_BatchCaseHandlingImportRow row1 = new FEC_BatchCaseHandlingImportRow();
+        row1.recordId = '500000000000002AAA';
+        row1.status = null;
+        FEC_BatchCaseHandlingImportRow row2 = new FEC_BatchCaseHandlingImportRow();
+        row2.recordId = '500000000000003AAA';
+        row2.status = null;
+
+        Test.startTest();
+        FEC_BatchCaseHandlingImportService.finalizeBatchImportRecord(
+            batchId,
+            new List<FEC_BatchCaseHandlingImportRow>{ row0, row1, row2 }
+        );
+        Test.stopTest();
+
+        batchRow = [
+            SELECT FEC_Status__c, FEC_Total_Success_Records__c, FEC_Total_Failed_Records__c
+            FROM FEC_Batch_Case_Handling__c
+            WHERE Id = :batchId
+            LIMIT 1
+        ];
+        System.assertEquals('Processed', String.valueOf(batchRow.get('FEC_Status__c')));
+        System.assertEquals(1, Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Success_Records__c'))));
+        System.assertEquals(2, Integer.valueOf(String.valueOf(batchRow.get('FEC_Total_Failed_Records__c'))));
+    }
+
+    @IsTest
+    static void testCountUnprocessedImportRows_andMarkUnprocessedRows() {
+        FEC_BatchCaseHandlingImportRow applicable = new FEC_BatchCaseHandlingImportRow();
+        applicable.recordId = '500000000000001AAA';
+        applicable.status = 'Validated';
+        FEC_BatchCaseHandlingImportRow success = new FEC_BatchCaseHandlingImportRow();
+        success.recordId = '500000000000002AAA';
+        success.status = System.Label.FEC_Batch_Case_Handling_Success;
+        FEC_BatchCaseHandlingImportRow failed = new FEC_BatchCaseHandlingImportRow();
+        failed.recordId = '500000000000003AAA';
+        failed.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>{
+            applicable,
+            success,
+            failed
+        };
+
+        Test.startTest();
+        Integer unprocessedCount = FEC_BatchCaseHandlingImportService.countUnprocessedImportRows(rows);
+        FEC_BatchCaseHandlingImportService.markUnprocessedImportRows(rows, 'Not completed');
+        Test.stopTest();
+
+        System.assertEquals(1, unprocessedCount);
+        System.assertEquals(
+            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+            applicable.status
+        );
+        System.assertEquals('Not completed', applicable.errors);
+    }
+
+    @IsTest
+    static void testResolveImportProcessingTimeoutHours_scalesWithRowCount() {
+        Test.startTest();
+        Integer baseTimeout = FEC_BatchCaseHandlingImportService.resolveImportProcessingTimeoutHours(0);
+        Integer mediumTimeout = FEC_BatchCaseHandlingImportService.resolveImportProcessingTimeoutHours(501);
+        Integer largeTimeout = FEC_BatchCaseHandlingImportService.resolveImportProcessingTimeoutHours(50000);
+        Test.stopTest();
+
+        System.assertEquals(1, baseTimeout);
+        System.assertEquals(2, mediumTimeout);
+        System.assertEquals(24, largeTimeout);
+    }
+
+    @IsTest
+    static void testPrepareImportRowsForApplyChain_stripsHeavyPayload() {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.recordId = '500000000000001AAA';
+        row.originalHeaders = new List<String>{ 'Case ID', 'Routing Action' };
+        row.originalCells = new List<String>{ 'S-1', 'Resolve' };
+        row.originalColumnIndexes = new List<Integer>{ 0, 1 };
+        row.originalDataRowIndex = 5;
+        row.originalSheetName = 'Sheet1';
+
+        Test.startTest();
+        String payload = FEC_BatchCaseHandlingImportService.serializeImportRowsForApplyChain(
+            new List<FEC_BatchCaseHandlingImportRow>{ row }
+        );
+        Test.stopTest();
+
+        System.assert(!payload.contains('Case ID'), 'originalHeaders should be stripped from apply chain payload.');
+        System.assert(payload.contains('originalDataRowIndex'), 'Row index must remain for result export.');
+    }
+
     @IsTest
     static void testFinalizeBatchImportRecord_EmptyRows() {
         Schema.SObjectType batchType = Schema.getGlobalDescribe().get('FEC_Batch_Case_Handling__c');
