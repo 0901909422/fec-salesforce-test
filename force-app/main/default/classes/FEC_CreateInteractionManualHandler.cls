@@ -25,7 +25,7 @@ public without sharing class FEC_CreateInteractionManualHandler {
     
     @AuraEnabled
     public static Boolean hasChannelPermission(String channel) {
-        
+        System.debug(channel);
         if (String.isBlank(channel)) {
             return false;
         }
@@ -56,9 +56,11 @@ public without sharing class FEC_CreateInteractionManualHandler {
         String channelLower = channel.toLowerCase();
         
         for (PermissionSetGroupComponent component : components) {
+            System.debug(component.PermissionSet.Name);
             if (component.PermissionSet != null
                 && component.PermissionSet.Name != null
             && component.PermissionSet.Name.toLowerCase().contains(channelLower)) {
+                
                 return true;
             }
         }
