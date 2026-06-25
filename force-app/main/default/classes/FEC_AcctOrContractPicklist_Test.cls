@@ -754,13 +754,13 @@ private class FEC_AcctOrContractPicklist_Test {
         System.assertEquals(null, result,
             'Phải trả null khi FEC_Product_Code__c blank/null');
 
-        // 3. Kiểm thử kịch bản lỗi – productCode là UBANK (không match Loan/Card/Insurance) → trả null
+        // 3. UBank → trả FEC_Account_Number__c (fallback cho product type không phải Card)
         Case c2 = insertCase(null, null, null, false, null, null);
         insertCustomerHistory(c2.Id, TYPE_UBANK, null, TYPE_UBANK, 'CIF-UB');
         String ubankResult = FEC_AccountOrContractPicklistHandler.getInteractionFirstCustomerHistoryAccountNumber(
             c2.Id);
-        System.assertEquals(null, ubankResult,
-            'Phải trả null khi productCode là UBANK (không có nhánh xử lý)');
+        System.assertEquals(TYPE_UBANK, ubankResult,
+            'UBank phải trả FEC_Account_Number__c của Customer History đầu tiên');
     }
 
     @IsTest

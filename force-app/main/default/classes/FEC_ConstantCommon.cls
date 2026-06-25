@@ -1090,7 +1090,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_EXPIRED = 'Hết hiệu lực';
     public static final String STATUS_INSURANCE_CANCELLED = 'Đã hủy';
     public static final String STATUS_INSURANCE_NOT_ON_CONTRACT = 'Chưa lên HĐ bảo hiểm';
-    
+    public static final String SCREEN_ACCOUNT_CONTRACT_SEARCH = 'Account/Contract Search';
+    public static final String SCREEN_INTERNAL_CASE = 'Internal Case';
+    public static final String SCREEN_CUSTOMER_SEARCH = 'Customer Search';
     public static final String CASE_SUBCHANNEL_MOBILE_APP = 'Mobile App';
     
     public static final String DNB_CHANNEL_CALL = 'Call';
