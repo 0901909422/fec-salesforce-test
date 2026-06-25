@@ -99,7 +99,7 @@ export default class Fec_ArchiveAttachments extends LightningElement {
             });
 
             if (result.success) {
-                this.triggerBrowserDownload(result.base64Data, result.filename, result.contentType);
+                this.triggerBrowserDownload(result.base64Data, result.filename, 'application/octet-stream');
             } else {
                 this.showToast('Error', result.errorMessage || 'Download failed', 'error');
             }
