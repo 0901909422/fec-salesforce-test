@@ -10,6 +10,8 @@
  
 ****************************************************************************************/
 public with sharing class FEC_GetAddressesList {
+
+    public static FEC_ResponseLog responseLog;
  
     // =========================================================================
     // RESPONSE MODELS
@@ -69,23 +71,62 @@ public with sharing class FEC_GetAddressesList {
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_ADDRESSES_LIST_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
- 
-        if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
+
+        try {
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                null,
+                soapBody
+            );
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetAddressesList',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
+
+            if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
+                );
+            }
+
+            ResponseWrapper response = parseResponse(res.getBody());
+
+            if (response.Sys != null && response.Sys.Code != 1) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
+                );
+            }
+
+            return response;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
+        }
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
             );
         }
- 
-        ResponseWrapper response = parseResponse(res.getBody());
- 
-        if (response.Sys != null && response.Sys.Code != 1) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
-            );
-        }
- 
-        return response;
     }
 
     // =========================================================================
