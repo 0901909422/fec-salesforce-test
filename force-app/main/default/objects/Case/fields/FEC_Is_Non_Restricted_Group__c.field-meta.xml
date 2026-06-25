@@ -10,7 +10,8 @@
         ISPICKVAL($User.FEC_User_Group__c, &quot;DS&quot;),
         ISPICKVAL($User.FEC_User_Group__c, &quot;TS&quot;),
         ISPICKVAL($User.FEC_User_Group__c, &quot;CA&quot;),
-        ISPICKVAL($User.FEC_User_Group__c, &quot;IA&quot;)
+        ISPICKVAL($User.FEC_User_Group__c, &quot;IA&quot;),
+        ISPICKVAL($User.FEC_User_Group__c, &quot;IT&quot;)
     )
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
