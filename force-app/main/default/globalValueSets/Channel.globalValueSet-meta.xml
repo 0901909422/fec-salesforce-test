@@ -40,6 +40,16 @@
         <default>false</default>
         <label>Internal</label>
     </customValue>
+    <customValue>
+        <fullName>Social &amp; Media</fullName>
+        <default>false</default>
+        <label>Social &amp; Media</label>
+    </customValue>
+    <customValue>
+        <fullName>Research</fullName>
+        <default>false</default>
+        <label>Research</label>
+    </customValue>
     <masterLabel>Channel</masterLabel>
     <sorted>false</sorted>
 </GlobalValueSet>

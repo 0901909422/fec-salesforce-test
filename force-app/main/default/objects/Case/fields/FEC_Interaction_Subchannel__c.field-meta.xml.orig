@@ -116,11 +116,6 @@
                 <default>false</default>
                 <label>VCCA</label>
             </value>
-            <value>
-                <fullName>Chat</fullName>
-                <default>false</default>
-                <label>Chat</label>
-            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

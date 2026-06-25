@@ -584,23 +584,52 @@ public without sharing class ArchiveCaseController {
         String strValue = String.valueOf(rawValue);
         if (String.isBlank(strValue)) return;
 
-        Set<String> validValues = new Set<String>();
+        // Apply Pega → SF value mapping for known mismatches (case-insensitive keys)
+        strValue = applyPegaChannelMapping(strValue);
+
+        // Build case-insensitive lookup: lowercase → actual picklist value
+        Map<String, String> validValuesMap = new Map<String, String>();
         for (Schema.PicklistEntry ple : fieldDetail.getPicklistValues()) {
-            validValues.add(ple.getValue());
+            validValuesMap.put(ple.getValue().toLowerCase(), ple.getValue());
         }
 
         if (fieldType == Schema.DisplayType.MULTIPICKLIST) {
             List<String> validSelected = new List<String>();
             for (String val : strValue.split(';')) {
                 String trimmed = val.trim();
-                if (validValues.contains(trimmed)) {
-                    validSelected.add(trimmed);
+                String matched = validValuesMap.get(trimmed.toLowerCase());
+                if (matched != null) {
+                    validSelected.add(matched);
                 }
             }
             record.put(fieldName, validSelected.isEmpty() ? null : String.join(validSelected, ';'));
         } else {
-            record.put(fieldName, validValues.contains(strValue) ? strValue : null);
+            String matched = validValuesMap.get(strValue.toLowerCase());
+            record.put(fieldName, matched);
         }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Dat Ngo
+    Description:   Map Pega channel/subchannel values to Salesforce picklist values.
+                   Pega uses different naming conventions that don't match SF picklist entries.
+    Returns:       Mapped value (or original if no mapping found)
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/06/25      Dat Ngo             Init — fix Pega→SF channel mismatch
+    ------------------------------------------------------------*/
+    private static Map<String, String> PEGA_TO_SF_CHANNEL_MAP = new Map<String, String>{
+        'phone' => 'Inbound',
+        'outbound call' => 'Outbound',
+        'outbound phone call' => 'Outbound',
+        'internal correspondence' => 'Internal',
+        'face to face' => 'F2F'
+    };
+
+    public static String applyPegaChannelMapping(String rawValue) {
+        if (String.isBlank(rawValue)) return rawValue;
+        String mapped = PEGA_TO_SF_CHANNEL_MAP.get(rawValue.toLowerCase());
+        return mapped != null ? mapped : rawValue;
     }
 
     /*------------------------------------------------------------

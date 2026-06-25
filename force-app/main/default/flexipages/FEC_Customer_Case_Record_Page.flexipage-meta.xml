@@ -309,14 +309,50 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
+                <fieldItem>Record.FEC_Channel__c</fieldItem>
+                <identifier>RecordFEC_Channel_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Channel__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Channel_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Last_Updated_On_View__c</fieldItem>
+                <identifier>RecordFEC_Last_Updated_On_View_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
             <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On_View__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_View_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -325,20 +361,74 @@
     <flexiPageRegions>
         <itemInstances>
             <fieldInstance>
+                <fieldItem>Record.FEC_Interaction_Status__c</fieldItem>
+                <identifier>RecordFEC_Interaction_Status_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Interaction_Status__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Interaction_Status_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Interaction_Subchannel__c</fieldItem>
+                <identifier>RecordFEC_Interaction_Subchannel_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
             <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Interaction_Subchannel__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Interaction_Subchannel_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Last_Updated_By_View__c</fieldItem>
+                <identifier>RecordFEC_Last_Updated_By_View_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
             <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By_View__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_View_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b2ccf4d4-e823-4b23-b25a-cd1f5ebe8401</name>
