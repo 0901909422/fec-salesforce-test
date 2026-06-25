@@ -33,6 +33,10 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
     @AuraEnabled
     public String fullName { get; set; }
     @AuraEnabled
+    public String shortName { get; set; }
+    @AuraEnabled
+    public String title { get; set; }
+    @AuraEnabled
     public String birthday { get; set; }
     @AuraEnabled
     public String gender { get; set; }
@@ -96,7 +100,7 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       Dom.XmlNode sysNode = requestNode.addChildElement('Sys', null, null);
       sysNode.addChildElement('TransID', null, null).addTextNode(transId);
       sysNode.addChildElement('RequestorID', null, null)
-        .addTextNode(UUID.randomUUID().toString());
+        .addTextNode(FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN);
       sysNode.addChildElement('DateTime', null, null).addTextNode(timestamp);
 
       // --- CUSTOMER INFO ---
@@ -106,29 +110,15 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
         null
       );
 
-      if (String.isNotBlank(info.cifNumber))
-        addTextNodeSafe(custNode, 'CIFNumber', info.cifNumber);
-
-      if (String.isNotBlank(info.firstName))
-        addTextNodeSafe(custNode, 'FirstName', info.firstName);
-
-      if (String.isNotBlank(info.middleName))
-        addTextNodeSafe(custNode, 'MiddleName', info.middleName);
-
-      if (String.isNotBlank(info.lastName))
-        addTextNodeSafe(custNode, 'LastName', info.lastName);
-
-      if (String.isNotBlank(info.fullName))
-        addTextNodeSafe(custNode, 'FullName', info.fullName);
-
-      String dobStr = '';
-      if (info.birthday != null) {
-        dobStr = String.valueOf(info.birthday);
-        custNode.addChildElement('Birthday', null, null).addTextNode(dobStr);
-      }
-
-      if (String.isNotBlank(info.gender))
-        addTextNodeSafe(custNode, 'Gender', info.gender);
+      addTextNodeSafe(custNode, 'CIFNumber', info.cifNumber);
+      addTextNodeSafe(custNode, 'FirstName', info.firstName);
+      addTextNodeSafe(custNode, 'MiddleName', info.middleName);
+      addTextNodeSafe(custNode, 'LastName', info.lastName);
+      addTextNodeSafe(custNode, 'FullName', info.fullName);
+      addTextNodeSafe(custNode, 'ShortName', info.shortName);
+      addTextNodeSafe(custNode, 'Title', info.title);
+      addTextNodeSafe(custNode, 'Birthday', info.birthday);
+      addTextNodeSafe(custNode, 'Gender', info.gender);
       // addTextNodeSafe(custNode, 'NationalID', info.nationalId);
       // addTextNodeSafe(custNode, 'Email', info.email);
 
@@ -263,6 +253,12 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
     if (String.isNotBlank(info.fullName))
       checkLength('FullName', info.fullName, 255);
 
+    if (String.isNotBlank(info.shortName))
+      checkLength('ShortName', info.shortName, 255);
+
+    if (String.isNotBlank(info.title))
+      checkLength('Title', info.title, 255);
+
     // checkLength('NationalID', info.nationalId, 255);
   }
 
@@ -276,6 +272,91 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
         String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{fieldName, String.valueOf(length)})
       );
     }
+  }
+
+  @TestVisible
+  private static String buildUpdatedFullName(
+    String lastName,
+    String middleName,
+    String firstName
+  ) {
+    List<String> namePartslst = new List<String>();
+    if (String.isNotBlank(lastName)) {
+      namePartslst.add(lastName.trim());
+    }
+    if (String.isNotBlank(middleName)) {
+      namePartslst.add(middleName.trim());
+    }
+    if (String.isNotBlank(firstName)) {
+      namePartslst.add(firstName.trim());
+    }
+    return namePartslst.isEmpty() ? '' : String.join(namePartslst, ' ');
+  }
+
+  @TestVisible
+  private static void applyC360ReferenceInfo(
+    CustomerBasicInfo info,
+    Case selectedCase,
+    String method
+  ) {
+    if (selectedCase.FEC_Account_or_Contract__r == null) {
+      return;
+    }
+
+    info.shortName = selectedCase.FEC_Account_or_Contract__r.FEC_Short_Name__c;
+    info.title = selectedCase.FEC_Account_or_Contract__r.FEC_Title__c;
+
+    if (DOB_UPDATE.equals(method) || GENDER_UPDATE.equals(method)) {
+      info.firstName = selectedCase.FEC_Account_or_Contract__r.FEC_First_Name__c;
+      info.middleName = selectedCase.FEC_Account_or_Contract__r.FEC_Middle_Name__c;
+      info.lastName = selectedCase.FEC_Account_or_Contract__r.FEC_Last_Name__c;
+      info.fullName = selectedCase.FEC_Account_or_Contract__r.FEC_Customer_Name__c;
+    }
+
+    if (
+      !DOB_UPDATE.equals(method) &&
+      selectedCase.FEC_Account_or_Contract__r.FEC_Date_of_Birth__c != null
+    ) {
+      info.birthday = FEC_CommonUltils.formatDateYYYYMMDD(
+        selectedCase.FEC_Account_or_Contract__r.FEC_Date_of_Birth__c
+      );
+    }
+
+    if (
+      !GENDER_UPDATE.equals(method) &&
+      String.isNotBlank(selectedCase.FEC_Account_or_Contract__r.FEC_Gender__c)
+    ) {
+      info.gender = selectedCase.FEC_Account_or_Contract__r.FEC_Gender__c;
+    }
+  }
+
+  @TestVisible
+  private static void validateBusinessProcessForMethod(
+    Case selectedCase,
+    String expectedBusinessProcessCode
+  ) {
+    String businessProcessCode = selectedCase.FEC_Actual_Nature_of_Case__r
+      ?.FEC_Business_Process__r?.FEC_Code__c;
+    if (!expectedBusinessProcessCode.equals(businessProcessCode)) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Business Process'})
+      );
+    }
+  }
+
+  @TestVisible
+  private static void validateFullNameUpdateBusinessProcess(Case selectedCase) {
+    validateBusinessProcessForMethod(selectedCase, FULLNAME_UPDATE);
+  }
+
+  @TestVisible
+  private static void validateDobUpdateBusinessProcess(Case selectedCase) {
+    validateBusinessProcessForMethod(selectedCase, DOB_UPDATE);
+  }
+
+  @TestVisible
+  private static void validateGenderUpdateBusinessProcess(Case selectedCase) {
+    validateBusinessProcessForMethod(selectedCase, GENDER_UPDATE);
   }
 
   private static void addTextNodeSafe(
@@ -381,9 +462,18 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
         FEC_Updated_Info_Date_of_Birth__c,
         FEC_Updated_Info_Gender__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
+        FEC_Account_or_Contract__r.FEC_First_Name__c,
+        FEC_Account_or_Contract__r.FEC_Middle_Name__c,
+        FEC_Account_or_Contract__r.FEC_Last_Name__c,
+        FEC_Account_or_Contract__r.FEC_Customer_Name__c,
+        FEC_Account_or_Contract__r.FEC_Short_Name__c,
+        FEC_Account_or_Contract__r.FEC_Title__c,
+        FEC_Account_or_Contract__r.FEC_Date_of_Birth__c,
+        FEC_Account_or_Contract__r.FEC_Gender__c,
+        FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
         FEC_Process_Action_Count__c,
         FEC_Current_Case_Stage__r.Name,
-        FEC_Is_Test_API__c 
+        FEC_Is_Test_API__c
       FROM Case
       WHERE Id = :caseId
     ];
@@ -399,33 +489,28 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
     info.cifNumber = selectedCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c; // REQUIRED
 
     if (FULLNAME_UPDATE.equals(method)) {
-      List<String> fullNamelst = new List<String>();
-
-      if (String.isNotBlank(selectedCase.FEC_Updated_Info_Last_Name__c)) {
-        fullNamelst.add(selectedCase.FEC_Updated_Info_Last_Name__c);
-      }
-
-      if (String.isNotBlank(selectedCase.FEC_Updated_Info_Middle_Name__c)) {
-        fullNamelst.add(selectedCase.FEC_Updated_Info_Middle_Name__c);
-      }
-
-      if (String.isNotBlank(selectedCase.FEC_Updated_Info_First_Name__c)) {
-        fullNamelst.add(selectedCase.FEC_Updated_Info_First_Name__c);
-      }
-
+      validateFullNameUpdateBusinessProcess(selectedCase);
       info.firstName = selectedCase.FEC_Updated_Info_First_Name__c;
       info.middleName = selectedCase.FEC_Updated_Info_Middle_Name__c;
       info.lastName = selectedCase.FEC_Updated_Info_Last_Name__c;
-
-      if (!fullNamelst.isEmpty())
-        info.fullName = String.join(fullNamelst, ' ');
-    } else if (DOB_UPDATE.equals(method)) {
-      info.birthday = String.valueOf(
-        selectedCase.FEC_Updated_Info_Date_of_Birth__c
+      info.fullName = buildUpdatedFullName(
+        selectedCase.FEC_Updated_Info_Last_Name__c,
+        selectedCase.FEC_Updated_Info_Middle_Name__c,
+        selectedCase.FEC_Updated_Info_First_Name__c
       );
+    } else if (DOB_UPDATE.equals(method)) {
+      validateDobUpdateBusinessProcess(selectedCase);
+      if (selectedCase.FEC_Updated_Info_Date_of_Birth__c != null) {
+        info.birthday = FEC_CommonUltils.formatDateYYYYMMDD(
+          selectedCase.FEC_Updated_Info_Date_of_Birth__c
+        );
+      }
     } else if (GENDER_UPDATE.equals(method)) {
+      validateGenderUpdateBusinessProcess(selectedCase);
       info.gender = selectedCase.FEC_Updated_Info_Gender__c;
     }
+
+    applyC360ReferenceInfo(info, selectedCase, method);
 
     UpdateResult result = updateCustomerBasicInfo(info);
     
