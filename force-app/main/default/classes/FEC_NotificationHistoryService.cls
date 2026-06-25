@@ -8,6 +8,7 @@ public without sharing class FEC_NotificationHistoryService {
     public static final String SEND_STATUS_SUCCESS = 'Success';
     public static final String SEND_STATUS_FAILURE = 'Failure';
     public static final String SEND_USER_SYSTEM = 'System';
+    public static final String SEND_SYSTEM_CSM = 'CSM';
 
     /** API lookup từ FEC_Notification_History__c → FEC_Notification__c (cấu hình rule). */
     private static final String LOOKUP_FEC_NOTIFICATION = 'FEC_Notification__c';
@@ -47,6 +48,7 @@ public without sharing class FEC_NotificationHistoryService {
         row.FEC_User__c = trunc(resolveSendUserText(sentType, sendUserField, sendUserLookupValue), 255);
         row.FEC_User_Role__c = trunc(userRoleName, 255);
         row.FEC_Send_Date_Time__c = sentAt != null ? sentAt : System.now();
+        row.FEC_Send_System__c = SEND_SYSTEM_CSM;
         return row;
     }
 
@@ -59,7 +61,8 @@ public without sharing class FEC_NotificationHistoryService {
             return;
         }
         Schema.DescribeFieldResult dfr = fm.get(LOOKUP_FEC_NOTIFICATION).getDescribe();
-        if (!dfr.isCreateable() || dfr.getType() != Schema.DisplayType.REFERENCE) {
+        // Internal log: bypass FLS to ensure history is always written.
+        if (dfr.getType() != Schema.DisplayType.REFERENCE) {
             return;
         }
         for (Schema.SObjectType refTo : dfr.getReferenceTo()) {
