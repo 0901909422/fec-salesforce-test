@@ -130,6 +130,163 @@ private class FEC_RoutingActionHistoryTrigHandler_Test {
     }
 
     @IsTest
+    static void testProcessNotificationEmails_emailChannelMatchedFlow() {
+        Case c = [SELECT Id, FEC_Case_Email__c FROM Case LIMIT 1];
+        update new Case(Id = c.Id, FEC_Case_Email__c = 'routing.test@fec.com');
+
+        FEC_Template__c template = new FEC_Template__c(
+            Name = 'Routing Email Template',
+            FEC_Subject_Line__c = 'Routing Subject',
+            FEC_Body__c = 'Routing Body',
+            FEC_Active__c = true
+        );
+        insert template;
+
+        List<FEC_Notification_Channel__c> emailChannels = [
+            SELECT Id
+            FROM FEC_Notification_Channel__c
+            WHERE Name = :FEC_ConstantCommon.EMAIL
+            LIMIT 1
+        ];
+        FEC_Notification_Channel__c emailChannel = emailChannels.isEmpty()
+            ? new FEC_Notification_Channel__c(
+                Name = FEC_ConstantCommon.EMAIL,
+                FEC_Noti_Channel_Status__c = true
+            )
+            : emailChannels[0];
+        if (emailChannels.isEmpty()) {
+            insert emailChannel;
+        }
+
+        FEC_Notification__c notif = new FEC_Notification__c(
+            Name = 'Routing Email Notif',
+            FEC_Notification_Status__c = true,
+            FEC_Target_Group__c = FEC_ConstantCommon.TARGET_GROUP_CUSTOMER,
+            FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Resolved'
+        );
+        insert notif;
+
+        insert new FEC_Notification_Template_Channel__c(
+            FEC_Notification__c = notif.Id,
+            FEC_Notification_Channel__c = emailChannel.Id,
+            FEC_Notification_Template__c = template.Id
+        );
+
+        System.assert(
+            [SELECT COUNT()
+             FROM FEC_Notification_Template_Channel__c
+             WHERE FEC_Notification__c = :notif.Id
+               AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL] > 0
+        );
+
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Resolved',
+            FEC_Routing_Action_Type__c = 'Case',
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO
+        );
+        insert history;
+
+        Test.startTest();
+        FEC_RoutingActionHistoryTriggerHandler.processNotificationEmails(
+            new List<FEC_Routing_Action_History__c>{ history }
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, history.Id);
+    }
+
+    @IsTest
+    static void testProcessNotificationEmails_existingCustomerEmailPath() {
+        FEC_Case_Stage__c stage = [SELECT Id FROM FEC_Case_Stage__c LIMIT 1];
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = 'Routing Existing Customer',
+                Status = 'New',
+                FEC_Current_Case_Stage__c = stage.Id,
+                FEC_ID_Search__c = 'RAH-EXIST-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER,
+            FEC_Email__c = 'existing.customer@fec.com'
+        );
+        insert hist;
+        update new Case(Id = c.Id, FEC_Account_or_Contract__c = hist.Id);
+
+        FEC_Template__c template = new FEC_Template__c(
+            Name = 'Routing Existing Customer Template',
+            FEC_Subject_Line__c = 'Existing Subject',
+            FEC_Body__c = 'Existing Body',
+            FEC_Active__c = true
+        );
+        insert template;
+        List<FEC_Notification_Channel__c> emailChannels = [
+            SELECT Id
+            FROM FEC_Notification_Channel__c
+            WHERE Name = :FEC_ConstantCommon.EMAIL
+            LIMIT 1
+        ];
+        FEC_Notification_Channel__c emailChannel = emailChannels.isEmpty()
+            ? new FEC_Notification_Channel__c(
+                Name = FEC_ConstantCommon.EMAIL,
+                FEC_Noti_Channel_Status__c = true
+            )
+            : emailChannels[0];
+        if (emailChannels.isEmpty()) {
+            insert emailChannel;
+        }
+        FEC_Notification__c notif = new FEC_Notification__c(
+            Name = 'Routing Existing Customer Notif',
+            FEC_Notification_Status__c = true,
+            FEC_Target_Group__c = FEC_ConstantCommon.TARGET_GROUP_CUSTOMER,
+            FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Resolved'
+        );
+        insert notif;
+        insert new FEC_Notification_Template_Channel__c(
+            FEC_Notification__c = notif.Id,
+            FEC_Notification_Channel__c = emailChannel.Id,
+            FEC_Notification_Template__c = template.Id
+        );
+
+        System.assert(
+            [SELECT COUNT()
+             FROM FEC_Notification_Template_Channel__c
+             WHERE FEC_Notification__c = :notif.Id
+               AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL] > 0
+        );
+
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Resolved',
+            FEC_Routing_Action_Type__c = 'Case',
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO
+        );
+        insert history;
+
+        Test.startTest();
+        FEC_RoutingActionHistoryTriggerHandler.processNotificationEmails(
+            new List<FEC_Routing_Action_History__c>{ history }
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, history.Id);
+    }
+
+    @IsTest
     static void testProcessNotification_batchImportApplyInProgress_skipsEnqueue() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
@@ -142,7 +299,7 @@ private class FEC_RoutingActionHistoryTrigHandler_Test {
         Test.startTest();
         FEC_BatchCaseHandlingImportService.batchImportApplyInProgress = true;
         try {
-            FEC_RoutingActionHistoryTriggerHandler.processNotification(
+            FEC_RoutingActionHistoryTriggerHandler.sendNotificationEmails(
                 new List<FEC_Routing_Action_History__c>{ history }
             );
         } finally {
@@ -462,6 +619,31 @@ private class FEC_RoutingActionHistoryTrigHandler_Test {
 
         Case afterInsert = [SELECT FEC_Team__c FROM Case WHERE Id = :caseRow.Id];
         System.assertEquals(teamBefore, afterInsert.FEC_Team__c);
+    }
+
+    @IsTest
+    static void testAfterUpdate_routingHistory() {
+        Case caseRow = [SELECT Id FROM Case LIMIT 1];
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = caseRow.Id,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Open',
+            FEC_Routing_Action_Type__c = 'Case',
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+            FEC_Updated_User_Queue_ID__c = String.valueOf(UserInfo.getUserId())
+        );
+        insert history;
+
+        history.FEC_Changed_Status__c = 'Resolved';
+        Test.startTest();
+        update history;
+        Test.stopTest();
+
+        System.assertEquals(
+            'Resolved',
+            [SELECT FEC_Changed_Status__c FROM FEC_Routing_Action_History__c WHERE Id = :history.Id]
+                .FEC_Changed_Status__c
+        );
     }
 
     @IsTest
