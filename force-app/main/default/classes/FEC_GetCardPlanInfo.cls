@@ -11,6 +11,7 @@
 
  public with sharing class FEC_GetCardPlanInfo {
 
+    public static FEC_ResponseLog responseLog;
     private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CardInfo'; 
     
     // Cấu hình Validation
@@ -59,6 +60,8 @@
     // ==========================================
     @AuraEnabled
     public static CardPlanResult getCardPlanInfo(String accountNumber) {
+        String endpoint;
+        String requestBody;
         try {
             // 1. CHUẨN BỊ DỮ LIỆU
             String transId = UUID.randomUUID().toString();
@@ -80,28 +83,131 @@
             sysNode.addChildElement('DateTime', null, null).addTextNode(reqTime);
             
             requestNode.addChildElement('AccountNumber', null, null).addTextNode(accountNumber);
+            requestBody = doc.toXmlString();
             
             // 3. CALLOUT
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Plan_Info');
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
+            endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_CARD_PLAN_INFO_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                doc,
+                ''
+            );
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetCardPlanInfo',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                requestBody,
+                res,
+                null
+            );
 
             if (res.getStatusCode() == 200) {
-                // Parse kết quả
-                CardPlanResult result = parseResponse(res.getBodyDocument());
-                
-                return result;
-            } else {
-                throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
+                return parseResponse(res.getBodyDocument());
             }
+
+            String apiError = String.format(
+                System.Label.FEC_MSG_API_Error,
+                new List<String>{ res.getStatus() + ' - ' + res.getBody() }
+            );
+            responseLog.errorMessage = apiError;
+            throw new CalloutException(apiError);
         } catch (Exception e) {
+            if (responseLog != null) {
+                responseLog.errorMessage = e.getMessage();
+            } else if (String.isNotBlank(endpoint)) {
+                responseLog = new FEC_ResponseLog(
+                    'FEC_GetCardPlanInfo',
+                    endpoint,
+                    FEC_ConstantCommon.API_METHOD_POST,
+                    requestBody,
+                    null,
+                    e.getMessage()
+                );
+            }
             System.debug('Error: ' + e.getMessage());
             throw e;
+        } finally {
+            logApiResponse();
         }
+    }
+
+    /**
+     * Ghi FEC_API_Log__c sau callout. Insert chạy @future để tránh DML trước callout tiếp theo
+     * (lỗi "uncommitted work pending"). Khi đã nằm trong deferred scope thì enqueue cùng batch flush.
+     */
+    public static void logApiResponse() {
+        if (responseLog == null) {
+            return;
+        }
+
+        String statusCodeStr = responseLog.response == null
+            ? null
+            : String.valueOf(responseLog.response.getStatusCode());
+        String responseBody = responseLog.response == null ? null : responseLog.response.getBody();
+
+        if (FEC_CommonUltils.isDeferredApiLoggingActive()) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+            responseLog = null;
+            return;
+        }
+
+        if (System.isFuture() || System.isBatch()) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+            return;
+        }
+
+        persistApiLogAsync(
+            responseLog.apiName,
+            responseLog.endpoint,
+            responseLog.method,
+            responseLog.requestBody,
+            statusCodeStr,
+            responseBody,
+            responseLog.errorMessage
+        );
+        responseLog = null;
+    }
+
+    @future
+    private static void persistApiLogAsync(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        String statusCodeStr,
+        String responseBody,
+        String errorMessage
+    ) {
+        HttpResponse res = null;
+        if (String.isNotBlank(statusCodeStr)) {
+            res = new HttpResponse();
+            res.setStatusCode(Integer.valueOf(statusCodeStr));
+            res.setBody(responseBody != null ? responseBody : '');
+        }
+        FEC_CommonUltils.logApi(apiName, endpoint, method, requestBody, res, errorMessage);
     }
 
     // ==========================================

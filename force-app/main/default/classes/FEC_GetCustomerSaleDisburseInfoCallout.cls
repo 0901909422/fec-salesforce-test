@@ -1,4 +1,6 @@
 public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
+
+    public static FEC_ResponseLog responseLog;
     
     //=============== REQUEST CLASSES ===============//
     
@@ -164,35 +166,59 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             'RequestorID'  => requestorId
         };
 
-        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'GET', headers, null);
-
-        FEC_CommonUltils.logApi(
-            'FEC_GetCustomerSaleDisburseInfoCallout',
-            endpoint,
-            'GET',
-            null,
-            resp,
-            null
-        );
-
-
-        // Parse response
-        CustomerSaleDisburseInfoResponse response;
-        if (resp.getStatusCode() == 200) {
-            // Handle DateTime field mapping (DateTime is reserved in Apex)
-            String responseBody = resp.getBody().replace('"DateTime":', '"DateTime_x":');
-            response = (CustomerSaleDisburseInfoResponse) JSON.deserialize(
-                responseBody,
-                CustomerSaleDisburseInfoResponse.class
+        try {
+            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_GET,
+                headers,
+                null
             );
-        } else {
-            response = new CustomerSaleDisburseInfoResponse();
-            response.errorCode = String.valueOf(resp.getStatusCode());
-            response.errorMessage = resp.getStatus();   
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetCustomerSaleDisburseInfoCallout',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_GET,
+                null,
+                resp,
+                null
+            );
+
+            CustomerSaleDisburseInfoResponse response;
+            if (resp.getStatusCode() == 200) {
+                String responseBody = resp.getBody().replace('"DateTime":', '"DateTime_x":');
+                response = (CustomerSaleDisburseInfoResponse) JSON.deserialize(
+                    responseBody,
+                    CustomerSaleDisburseInfoResponse.class
+                );
+            } else {
+                responseLog.errorMessage = resp.getStatus();
+                response = new CustomerSaleDisburseInfoResponse();
+                response.errorCode = String.valueOf(resp.getStatusCode());
+                response.errorMessage = resp.getStatus();
+            }
+            return response;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
         }
-        return response;        
     }
-    
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
+    }    
     //=============== VALIDATION METHODS ===============//
     
     public static ValidationResult validateRequest(String applicationId) {

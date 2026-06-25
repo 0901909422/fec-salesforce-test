@@ -307,16 +307,17 @@ public with sharing class FEC_GetAssetsList {
     String transId = FEC_CommonUltils.generateTransactionId();
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     String envelope = buildEnvelope(req, transId, timestamp);
+
+    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+    String endpoint = apiSetting?.FEC_Call_Mock__c
+      ? FEC_MockupEndpoint.GET_ASSETS_LIST_ENDPOINT_MOCKUP
+      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
     try {
       HttpResponse res = sendRequest(envelope);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
-
-      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-      String endpoint = apiSetting?.FEC_Call_Mock__c
-        ? FEC_MockupEndpoint.GET_ASSETS_LIST_ENDPOINT_MOCKUP
-        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
       responseLog = new FEC_ResponseLog(
         'FEC_GetAssetsList',
@@ -334,11 +335,101 @@ public with sharing class FEC_GetAssetsList {
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
+
+      if (responseLog != null && !finalResult.success) {
+        responseLog.errorMessage = String.isNotBlank(finalResult.errorMessage)
+          ? finalResult.errorMessage
+          : finalResult.description;
+      }
     } catch (Exception ex) {
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
+      if (responseLog == null) {
+        responseLog = new FEC_ResponseLog(
+          'FEC_GetAssetsList',
+          endpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          envelope,
+          null,
+          ex.getMessage()
+        );
+      } else {
+        responseLog.errorMessage = ex.getMessage();
+      }
+    } finally {
+      logApiResponse();
     }
     return finalResult;
+  }
+
+  /**
+   * Ghi FEC_API_Log__c sau callout. Insert chạy @future để tránh DML trước callout tiếp theo
+   * (lỗi "uncommitted work pending"). Khi đã nằm trong deferred scope thì enqueue cùng batch flush.
+   */
+  public static void logApiResponse() {
+    if (responseLog == null) {
+      return;
+    }
+
+    String statusCodeStr = responseLog.response == null
+      ? null
+      : String.valueOf(responseLog.response.getStatusCode());
+    String responseBody = responseLog.response == null ? null : responseLog.response.getBody();
+
+    if (FEC_CommonUltils.isDeferredApiLoggingActive()) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+      responseLog = null;
+      return;
+    }
+
+    if (System.isFuture() || System.isBatch()) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+      return;
+    }
+
+    persistApiLogAsync(
+      responseLog.apiName,
+      responseLog.endpoint,
+      responseLog.method,
+      responseLog.requestBody,
+      statusCodeStr,
+      responseBody,
+      responseLog.errorMessage
+    );
+    responseLog = null;
+  }
+
+  @future
+  private static void persistApiLogAsync(
+    String apiName,
+    String endpoint,
+    String method,
+    String requestBody,
+    String statusCodeStr,
+    String responseBody,
+    String errorMessage
+  ) {
+    HttpResponse res = null;
+    if (String.isNotBlank(statusCodeStr)) {
+      res = new HttpResponse();
+      res.setStatusCode(Integer.valueOf(statusCodeStr));
+      res.setBody(responseBody != null ? responseBody : '');
+    }
+    FEC_CommonUltils.logApi(apiName, endpoint, method, requestBody, res, errorMessage);
   }
 
   private static void validate(
