@@ -1326,7 +1326,10 @@ public without sharing class FEC_BatchCaseHandlingController {
                         failureReason = System.Label.FEC_BCH_RequireFile;
                     } else if (failedCount == totalCount) {
                         finalStatus = 'Failure';
-                        failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+                        failureReason = FEC_BatchCaseHandlingImportService.resolveBatchFailureReasonFromRows(
+                            rowResults,
+                            System.Label.FEC_BCH_Import_Rows_Invalid
+                        );
                     } else {
                         finalStatus = 'Processed';
                     }
@@ -1367,7 +1370,10 @@ public without sharing class FEC_BatchCaseHandlingController {
                 failureReason = System.Label.FEC_BCH_RequireFile;
             } else if (failedCount == totalCount) {
                 finalStatus = 'Failure';
-                failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+                failureReason = FEC_BatchCaseHandlingImportService.resolveBatchFailureReasonFromRows(
+                    rowResults,
+                    System.Label.FEC_BCH_Import_Rows_Invalid
+                );
             } else {
                 finalStatus = 'Processed';
             }

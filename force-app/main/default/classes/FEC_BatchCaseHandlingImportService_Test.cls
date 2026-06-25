@@ -720,6 +720,135 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     @IsTest
+    static void testMarkUnprocessedImportRows_preservesExistingRowErrors() {
+        FEC_BatchCaseHandlingImportRow applicable = new FEC_BatchCaseHandlingImportRow();
+        applicable.recordId = '500000000000001AAA';
+        applicable.status = 'Validated';
+        applicable.errors = 'Case ID không tồn tại trong hệ thống';
+        List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>{ applicable };
+
+        Test.startTest();
+        FEC_BatchCaseHandlingImportService.markUnprocessedImportRows(rows, System.Label.FEC_BCH_ImportFailed);
+        Test.stopTest();
+
+        System.assertEquals(
+            'Case ID không tồn tại trong hệ thống',
+            applicable.errors,
+            'Không được ghi đè lỗi chi tiết bằng message chung chung'
+        );
+    }
+
+    @IsTest
+    static void testResolveBatchFailureReasonFromRows_usesRowErrorsInsteadOfGenericLabel() {
+        FEC_BatchCaseHandlingImportRow row1 = new FEC_BatchCaseHandlingImportRow();
+        row1.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row1.errors = 'Case ID không tồn tại trong hệ thống';
+        FEC_BatchCaseHandlingImportRow row2 = new FEC_BatchCaseHandlingImportRow();
+        row2.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row2.errors = 'Thiếu Routing Action';
+        List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>{ row1, row2 };
+
+        Test.startTest();
+        String reason = FEC_BatchCaseHandlingImportService.resolveBatchFailureReasonFromRows(
+            rows,
+            System.Label.FEC_BCH_Import_Rows_Invalid
+        );
+        Test.stopTest();
+
+        System.assert(reason.contains('Case ID không tồn tại trong hệ thống'), reason);
+        System.assert(reason.contains('Thiếu Routing Action'), reason);
+        System.assertNotEquals(System.Label.FEC_BCH_Import_Rows_Invalid, reason);
+    }
+
+    @IsTest
+    static void testResolveImportRowResultErrors_failedRowWithoutErrorsUsesDetailMessage() {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row.caseIdSearch = 'S-12345';
+        row.originalDataRowIndex = 4;
+        row.routingAction = 'Resolve';
+
+        Test.startTest();
+        String errors = FEC_BatchCaseHandlingImportService.resolveImportRowResultErrors(row);
+        Test.stopTest();
+
+        System.assert(errors.contains('dòng Excel 5'), errors);
+        System.assert(errors.contains('Case ID S-12345'), errors);
+        System.assert(errors.contains('Routing Action "Resolve"'), errors);
+        System.assert(errors.contains('Import thất bại khi cập nhật Case/Routing'), errors);
+    }
+
+    @IsTest
+    static void testFormatImportRowValidateException_includesRowContextAndExceptionDetail() {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.caseIdSearch = 'S-999';
+        row.originalDataRowIndex = 9;
+        Exception ex = new DmlException('FIELD_CUSTOM_VALIDATION_EXCEPTION: Remark bắt buộc');
+
+        Test.startTest();
+        String message = FEC_BatchCaseHandlingImportService.formatImportRowValidateException(row, ex);
+        Test.stopTest();
+
+        System.assert(message.contains('dòng Excel 10'), message);
+        System.assert(message.contains('Case ID S-999'), message);
+        System.assert(message.contains('Remark bắt buộc'), message);
+        System.assert(!message.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), message);
+    }
+
+    @IsTest
+    static void testResolveImportRowResultErrors_genericStoredErrorUsesRowContextNotInventedMessage() {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row.errors = System.Label.FEC_BCH_ImportFailed;
+        row.caseIdSearch = 'S-1';
+        row.originalDataRowIndex = 0;
+        row.routingAction = 'Resolve';
+
+        Test.startTest();
+        String errors = FEC_BatchCaseHandlingImportService.resolveImportRowResultErrors(row);
+        Test.stopTest();
+
+        System.assertNotEquals(System.Label.FEC_BCH_ImportFailed, errors, errors);
+        System.assert(errors.contains('Case ID S-1'), errors);
+        System.assert(errors.contains('Routing Action "Resolve"'), errors);
+        System.assert(!errors.contains('lỗi chung không ghi nhận'), errors);
+    }
+
+    @IsTest
+    static void testResolveImportRowResultErrors_storedBusinessErrorPrefixedWithRowReference() {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row.errors = 'Queue not found';
+        row.caseIdSearch = 'S-200';
+        row.originalDataRowIndex = 1;
+
+        Test.startTest();
+        String errors = FEC_BatchCaseHandlingImportService.resolveImportRowResultErrors(row);
+        Test.stopTest();
+
+        System.assert(errors.startsWith('[dòng Excel 2, Case ID S-200] '), errors);
+        System.assert(errors.contains('Không tìm thấy Queue.'), errors);
+    }
+
+    @IsTest
+    static void testResolveImportRowResultErrors_prefersBusinessCaseIdOverRecordId() {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row.errors = 'Queue not found';
+        row.recordId = '500000000000123AAA';
+        row.originalDataRowIndex = 6;
+        row.originalHeaders = new List<String>{ 'Case ID', 'Routing Action' };
+        row.originalCells = new List<String>{ 'I-9001', 'Resolve' };
+
+        Test.startTest();
+        String errors = FEC_BatchCaseHandlingImportService.resolveImportRowResultErrors(row);
+        Test.stopTest();
+
+        System.assert(errors.startsWith('[dòng Excel 7, Case ID I-9001] '), errors);
+        System.assert(!errors.contains('500000000000123AAA'), errors);
+    }
+
+    @IsTest
     static void testResolveImportProcessingTimeoutHours_scalesWithRowCount() {
         Test.startTest();
         Integer baseTimeout = FEC_BatchCaseHandlingImportService.resolveImportProcessingTimeoutHours(0);
@@ -920,7 +1049,10 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
             System.assertEquals(1, results.size());
             System.assert(
-                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                results[0].errors == null ||
+                    !results[0].errors.contains(
+                        System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member
+                    ),
                 'Queue member không được báo ERR_NOT_OWNER: ' + results[0].errors
             );
         }
@@ -981,10 +1113,10 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     /**
-     * Kịch bản: quy trình không GSR/COF — user không phải queue member vẫn pass validate (không chặn ERR_NOT_OWNER).
+     * Kịch bản: quy trình không GSR/COF — user không phải queue member phải fail owner check.
      */
     @IsTest
-    static void testValidateRows_NonCofGsr_AllowsQueueOwnedCaseForNonMember() {
+    static void testValidateRows_NonCofGsr_BlocksQueueOwnedCaseForNonMember() {
         Id isolatedQueueId = createIsolatedQueueWithoutMembership();
         System.runAs(batchImportRunUser()) {
             String caseKey = 'CASE-QUEUE-NOMEMBER-' + String.valueOf(DateTime.now().getTime());
@@ -1014,10 +1146,69 @@ private class FEC_BatchCaseHandlingImportService_Test {
             Test.stopTest();
 
             System.assertEquals(1, results.size());
-            System.assert(
-                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
-                'Validate không chặn ERR_NOT_OWNER khi user không phải queue member: ' + results[0].errors
+            System.assertEquals(
+                System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+                results[0].status
             );
+            System.assert(
+                results[0].errors != null &&
+                    results[0].errors.contains(
+                        System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member
+                    ),
+                'Phải chặn khi user không phải queue member: ' + results[0].errors
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF — user không phải Case Owner (owner là User khác) phải fail.
+     */
+    @IsTest
+    static void testValidateRows_NonCofGsr_BlocksCaseOwnedByOtherUser() {
+        User otherOwner = batchImportRunUser();
+        System.runAs(otherOwner) {
+            String caseKey = 'CASE-OTHER-OWNER-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case ownedCase = new Case(
+                Subject = 'Other User Owned Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = otherOwner.Id,
+                FEC_ID_Search__c = caseKey
+            );
+            insert ownedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = ownedCase.Id, FEC_ID_Search__c = caseKey);
+
+            User importer = [
+                SELECT Id
+                FROM User
+                WHERE IsActive = TRUE AND Id != :otherOwner.Id AND Profile.Name = 'System Administrator'
+                LIMIT 1
+            ];
+            System.runAs(importer) {
+                List<Object> inputRows = new List<Object>{
+                    new Map<String, Object>{
+                        'caseidsearch' => caseKey,
+                        'routingaction' => 'RESOLVE',
+                        'inputtedremarks' => 'Other owner should fail',
+                        'inputtedremarkscharlength' => '24'
+                    }
+                };
+
+                Test.startTest();
+                List<FEC_BatchCaseHandlingImportRow> results =
+                    FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+                Test.stopTest();
+
+                System.assertEquals(1, results.size());
+                System.assert(
+                    results[0].errors != null &&
+                        results[0].errors.contains(
+                            System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member
+                        ),
+                    'Phải chặn khi user không phải Case Owner: ' + results[0].errors
+                );
+            }
         }
     }
 
@@ -1079,7 +1270,10 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
             System.assertEquals(1, results.size());
             System.assert(
-                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                results[0].errors == null ||
+                    !results[0].errors.contains(
+                        System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member
+                    ),
                 'Validate không chặn ERR_NOT_OWNER cho COF queue member: ' + results[0].errors
             );
         }
@@ -1815,8 +2009,16 @@ private class FEC_BatchCaseHandlingImportService_Test {
             FEC_BatchCaseHandlingImportService.localizeImportResultError('field_custom_validation_exception')
         );
         System.assertEquals(
-            'Xử lý dữ liệu thất bại.',
+            'Không thể tiếp tục xử lý import do vượt giới hạn tài nguyên hệ thống. Vui lòng chia nhỏ file hoặc thử lại sau.',
             FEC_BatchCaseHandlingImportService.localizeImportResultError('Apex CPU time limit exceeded')
+        );
+        System.assertEquals(
+            'Xử lý dữ liệu thất bại. Nguyên nhân: Unexpected exception happened while importing case',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Unexpected exception happened while importing case')
+        );
+        System.assertEquals(
+            'Xử lý dữ liệu thất bại. Nguyên nhân: Unexpected exception line 1 line 2',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Unexpected exception line 1\nline 2')
         );
     }
 
