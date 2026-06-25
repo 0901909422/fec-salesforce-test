@@ -2657,6 +2657,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     OwnerId,
                     FEC_Current_Case_Stage__c,
                     FEC_Assignment_Count__c,
+                    FEC_Assignment_Users__c,
                     FEC_Final_Status__c,
                     FEC_Current_Case_Stage__r.FEC_Code__c,
                     FEC_Business_Process__r.FEC_Code__c,
@@ -2666,6 +2667,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             ]);
         // 28/05/2026 11:20 linhdev - preload stage screen sau clearCache để resolve routing không query lặp / Route To
         preloadImportStageScreensForApply(caseLiteById);
+        // 25/06/2026 PhongBT: preload login user info cho ownership check COF/GSR (tránh query lặp trong loop)
+        Id loginUserId = UserInfo.getUserId();
+        Set<Id> loginUserQueueIds = cofOrGsr == true
+            ? FEC_AssignmentListHandler.getCurrentUserQueueIds(loginUserId)
+            : new Set<Id>();
+        Set<String> loginUserQueueNames = cofOrGsr == true
+            ? FEC_AssignmentListHandler.getCurrentUserQueues(loginUserId)
+            : new Set<String>();
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
         Map<String, Map<String, String>> picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
@@ -2716,6 +2725,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
             if (cofOrGsr == true && String.isNotBlank(rr.routingAction)) {
                 Case caseForRoutingRule = caseLiteById.get(caseId);
+                // 25/06/2026 PhongBT: Check ownership cho COF/GSR trước khi xử lý
+                String ownershipError = validateCofGsrImportRowOwnership(caseForRoutingRule, loginUserQueueIds, loginUserId, loginUserQueueNames);
+                if (String.isNotBlank(ownershipError)) {
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                    rr.errors = appendError(rr.errors, ownershipError);
+                    continue;
+                }
                 String routingBlockedByAssignment = validateCaseRoutingActionBlockedByAssignmentCount(
                     rr,
                     caseForRoutingRule
@@ -3679,6 +3695,71 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             && rr != null
             && String.isNotBlank(rr.assignmentRoutingAction)
             && String.isBlank(rr.routingAction);
+    }
+
+    // 25/06/2026 PhongBT: Validate ownership cho COF/GSR import theo rule:
+    // TH1 (FEC_Assignment_Count__c = 0): Case Owner = login user hoặc Queue mà user là thành viên
+    // TH2 (FEC_Assignment_Count__c > 0): FEC_Assignment_Users__c chứa User ID hoặc exact match tên Queue của user
+    @TestVisible
+    private static String validateCofGsrImportRowOwnership(
+        Case caseLite,
+        Set<Id> loginUserQueueIds,
+        Id loginUserId,
+        Set<String> loginUserQueueNames
+    ) {
+        if (caseLite == null) {
+            return null;
+        }
+        Decimal assignmentCount = caseLite.FEC_Assignment_Count__c;
+        boolean hasAssignment = assignmentCount != null && assignmentCount > 0;
+
+        if (!hasAssignment) {
+            // TH1: FEC_Assignment_Count__c = 0
+            // Case Owner phải là login user HOẶC là Queue mà login user là thành viên
+            Id ownerId = caseLite.OwnerId;
+            if (ownerId == loginUserId) {
+                return null;
+            }
+            if (loginUserQueueIds != null && loginUserQueueIds.contains(ownerId)) {
+                return null;
+            }
+            return System.Label.FEC_BCH_Import_Err_Not_Case_Owner_Or_Queue_Member;
+        }
+
+        // TH2: FEC_Assignment_Count__c > 0
+        // FEC_Assignment_Users__c chứa User ID HOẶC exact match tên Queue mà user là thành viên
+        String assignmentUsers = caseLite.FEC_Assignment_Users__c;
+        if (String.isBlank(assignmentUsers)) {
+            return System.Label.FEC_BCH_Import_Err_Not_Assignment_Owner_Or_Queue_Member;
+        }
+        String normalized = assignmentUsers.replace(';', ',');
+        Set<String> assignmentUserSet = new Set<String>();
+        for (String val : normalized.split(',')) {
+            String trimmed = val == null ? null : val.trim();
+            if (String.isNotBlank(trimmed)) {
+                assignmentUserSet.add(trimmed);
+            }
+        }
+        // Check User ID
+        if (loginUserId != null) {
+            String userIdStr = String.valueOf(loginUserId);
+            if (assignmentUserSet.contains(userIdStr)) {
+                return null;
+            }
+            // Salesforce ID 15 vs 18 ký tự
+            if (userIdStr.length() > 15 && assignmentUserSet.contains(userIdStr.substring(0, 15))) {
+                return null;
+            }
+        }
+        // Check exact match Queue name
+        if (loginUserQueueNames != null) {
+            for (String queueName : loginUserQueueNames) {
+                if (String.isNotBlank(queueName) && assignmentUserSet.contains(queueName)) {
+                    return null;
+                }
+            }
+        }
+        return System.Label.FEC_BCH_Import_Err_Not_Assignment_Owner_Or_Queue_Member;
     }
 
     //PhongBT 29/05/26: COF/GSR — Revert/Update/Escalate ở Routing Action (case) không được khi Case có Assignment.

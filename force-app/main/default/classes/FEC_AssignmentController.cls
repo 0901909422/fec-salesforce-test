@@ -226,10 +226,15 @@ public without sharing class FEC_AssignmentController {
                 }
 
                 caseUpdateMap.put(c.Id, c);
-                assignmentsToUpdate.add(new FEC_Assignment__c(
-                    Id          = current.Id,
-                    FEC_Team__c = targetTeam
-                ));
+                if (action == FEC_ConstantCommon.CASE_ROUTING_ACTION
+                    || action == FEC_ConstantCommon.ACTION_ROUTE_TO) {
+                    //23/06/26 PhongBT: Bỏ update fec_team__c tại FEC_AssignmentController.handleAssignmentRouting vì đang đè luồng update tại import và update sai so với import (Batch Case Handling)
+                } else {
+                    assignmentsToUpdate.add(new FEC_Assignment__c(
+                        Id          = current.Id,
+                        FEC_Team__c = targetTeam
+                    ));
+                }
 
             }
 
