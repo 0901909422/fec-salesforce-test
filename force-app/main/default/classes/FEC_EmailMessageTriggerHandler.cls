@@ -162,6 +162,7 @@ public without sharing class FEC_EmailMessageTriggerHandler {
 
         if (!emailsToInsert.isEmpty()) {
             insert emailsToInsert;
+            copyAttachments(replyMsgs, emailsToInsert);
         }
 
         if (!parentPatches.isEmpty()) {
@@ -179,6 +180,39 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         return handledEmailIds;
     }
 
+    private static void copyAttachments(List<EmailMessage> sourceMsgs, List<EmailMessage> targetMsgs) {
+        if (sourceMsgs == null || targetMsgs == null || sourceMsgs.isEmpty() || targetMsgs.isEmpty()) return;
+        Map<Id, Id> sourceToTarget = new Map<Id, Id>();
+        for (Integer i = 0; i < sourceMsgs.size() && i < targetMsgs.size(); i++) {
+            if (sourceMsgs[i] != null && sourceMsgs[i].Id != null && targetMsgs[i] != null && targetMsgs[i].Id != null) {
+                sourceToTarget.put(sourceMsgs[i].Id, targetMsgs[i].Id);
+            }
+        }
+        if (sourceToTarget.isEmpty()) return;
+
+        List<ContentDocumentLink> toInsert = new List<ContentDocumentLink>();
+        for (ContentDocumentLink cdl : [
+            SELECT LinkedEntityId, ContentDocumentId, ShareType, Visibility
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId IN :sourceToTarget.keySet()
+        ]) {
+            Id targetId = sourceToTarget.get(cdl.LinkedEntityId);
+            if (targetId == null) continue;
+            toInsert.add(new ContentDocumentLink(
+                ContentDocumentId = cdl.ContentDocumentId,
+                LinkedEntityId = targetId,
+                ShareType = cdl.ShareType,
+                Visibility = cdl.Visibility
+            ));
+        }
+        if (!toInsert.isEmpty()) {
+            try {
+                insert toInsert;
+            } catch (Exception e) {
+                System.debug('copyAttachments failed: ' + e.getMessage());
+            }
+        }
+    }
     private static String stripThreadToken(String subject) {
         if (String.isBlank(subject)) return '';
         String result = subject.replaceAll('(?i)\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]', '');
@@ -283,6 +317,7 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         if (!toInsert.isEmpty()) {
             try {
                 insert toInsert;
+                copyAttachments(replyMsgs, toInsert);
             } catch (Exception e) {
                 System.debug('FEC_EmailMessageTriggerHandler insert failed: ' + e.getMessage());
             }

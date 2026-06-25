@@ -55,6 +55,7 @@ public without sharing class FEC_ServiceCaseEmailService {
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(toEmail.split(','));
             if (String.isNotBlank(ccEmail)) {
+                ccEmail = ccEmail.replace(';', ',');
                 List<String> ccList = new List<String>();
                 for (String cc : ccEmail.split(',')) { if (String.isNotBlank(cc.trim())) ccList.add(cc.trim()); }
                 if (!ccList.isEmpty()) mail.setCcAddresses(ccList);
@@ -71,14 +72,58 @@ public without sharing class FEC_ServiceCaseEmailService {
             // 5. Set From + ReplyTo = Email Service Address để khách reply về Salesforce
             setFromAndReplyTo(mail, fromEmail);
 
+            // Validate attachment sizes: per-file 5MB, total 25MB (Salesforce email limits)
+            if (attachments != null && !attachments.isEmpty()) {
+                Integer totalSize = 0;
+                for (AttachmentWrapper att : attachments) {
+                    if (String.isNotBlank(att.base64Data)) {
+                        // Base64 size ~ 4/3 of raw; 5MB raw ~ 6.67MB base64
+                        if (att.base64Data.length() > 7000000) {
+                            throw new AuraHandledException('File exceeds 5MB limit: ' + att.fileName);
+                        }
+                        totalSize += att.base64Data.length();
+                    }
+                }
+                // Base64 size ~ 4/3 of raw; 25MB raw ~ 33.3MB base64
+                if (totalSize > 33000000) {
+                    throw new AuraHandledException('Total attachment size exceeds 25MB limit. Please reduce file size.');
+                }
+            }
+
             // 6. Attachments
             if (attachments != null && !attachments.isEmpty()) {
                 List<Messaging.EmailFileAttachment> efas = new List<Messaging.EmailFileAttachment>();
+                // Collect contentDocumentIds that need ContentVersion lookup (no base64 provided)
+                Set<Id> docIdsToFetch = new Set<Id>();
                 for (AttachmentWrapper att : attachments) {
-                    if (String.isBlank(att.base64Data) || String.isBlank(att.fileName)) continue;
+                    if (String.isBlank(att.base64Data) && String.isNotBlank(att.contentDocumentId)) {
+                        try { docIdsToFetch.add((Id) att.contentDocumentId); } catch (Exception idEx) {}
+                    }
+                }
+                // Batch query ContentVersion once for all docIds (avoids per-attachment SOQL)
+                Map<String, ContentVersion> cvByDocId = new Map<String, ContentVersion>();
+                if (!docIdsToFetch.isEmpty()) {
+                    for (ContentVersion cv : [
+                        SELECT ContentDocumentId, Title, FileExtension, VersionData, FileType
+                        FROM ContentVersion
+                        WHERE ContentDocumentId IN :docIdsToFetch AND IsLatest = true
+                    ]) {
+                        cvByDocId.put(String.valueOf(cv.ContentDocumentId), cv);
+                    }
+                }
+                for (AttachmentWrapper att : attachments) {
+                    if (String.isBlank(att.fileName)) continue;
                     Messaging.EmailFileAttachment efa = new Messaging.EmailFileAttachment();
                     efa.setFileName(att.fileName);
-                    efa.setBody(EncodingUtil.base64Decode(att.base64Data));
+                    Blob fileBlob = null;
+                    if (String.isNotBlank(att.base64Data)) {
+                        fileBlob = EncodingUtil.base64Decode(att.base64Data);
+                    } else if (String.isNotBlank(att.contentDocumentId)) {
+                        ContentVersion cv = cvByDocId.get(att.contentDocumentId);
+                        if (cv != null) fileBlob = cv.VersionData;
+                    }
+                    if (fileBlob == null) continue;
+                    efa.setBody(fileBlob);
                     if (String.isNotBlank(att.mimeType)) efa.setContentType(att.mimeType);
                     efas.add(efa);
                 }
@@ -112,8 +157,26 @@ public without sharing class FEC_ServiceCaseEmailService {
                 // Store outgoing email attachments on the EmailMessage history record
                 if (attachments != null && !attachments.isEmpty()) {
                     List<ContentVersion> cvs = new List<ContentVersion>();
+                    List<ContentDocumentLink> links = new List<ContentDocumentLink>();
+                    Set<Id> linkedDocIds = new Set<Id>();
                     for (AttachmentWrapper att : attachments) {
-                        if (String.isBlank(att.base64Data) || String.isBlank(att.fileName)) continue;
+                        if (String.isBlank(att.fileName)) continue;
+                        if (String.isNotBlank(att.contentDocumentId)) {
+                            try {
+                                Id docId = (Id) att.contentDocumentId;
+                                if (!linkedDocIds.contains(docId)) {
+                                    links.add(new ContentDocumentLink(
+                                        ContentDocumentId = docId,
+                                        LinkedEntityId = em.Id,
+                                        ShareType = 'V',
+                                        Visibility = 'AllUsers'
+                                    ));
+                                    linkedDocIds.add(docId);
+                                }
+                            } catch (Exception idEx) {}
+                            continue;
+                        }
+                        if (String.isBlank(att.base64Data)) continue;
                         ContentVersion cv = new ContentVersion();
                         cv.Title = att.fileName.contains('.') ? att.fileName.substringBeforeLast('.') : att.fileName;
                         cv.PathOnClient = att.fileName;
@@ -127,8 +190,8 @@ public without sharing class FEC_ServiceCaseEmailService {
                             FROM ContentVersion
                             WHERE Id IN :cvs
                         ];
-                        List<ContentDocumentLink> links = new List<ContentDocumentLink>();
                         for (ContentVersion cv : insertedCvs) {
+                            if (cv.ContentDocumentId == null || linkedDocIds.contains(cv.ContentDocumentId)) continue;
                             links.add(new ContentDocumentLink(
                                 ContentDocumentId = cv.ContentDocumentId,
                                 LinkedEntityId = em.Id,
@@ -136,8 +199,8 @@ public without sharing class FEC_ServiceCaseEmailService {
                                 Visibility = 'AllUsers'
                             ));
                         }
-                        if (!links.isEmpty()) insert links;
                     }
+                    if (!links.isEmpty()) insert links;
                 }
             } catch (Exception emEx) {
                 System.debug('EmailMessage insert skipped: ' + emEx.getMessage());

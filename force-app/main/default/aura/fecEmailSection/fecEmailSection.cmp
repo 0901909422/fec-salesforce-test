@@ -199,7 +199,7 @@
                     </aura:if>
                     <div class="compose-footer">
                         <span class="foot-icon" title="Select files" onclick="{!c.openAttachModal}">
-                            <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
+                            
                             <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
                         </span>
                         <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
@@ -310,7 +310,7 @@
                     <!-- Inline footer: icons left, Send right -->
                     <div class="compose-footer">
                         <span class="foot-icon" title="Select files" onclick="{!c.openAttachModal}">
-                            <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
+                            
                             <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
                         </span>
                         <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
@@ -469,7 +469,7 @@
                                         <aura:iteration items="{!email.attachments}" var="att">
                                             <div class="feed-attachment-item">
                                                 <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
-                                                <span class="feed-attachment-name">{!att.name}</span>
+                                                <a class="feed-attachment-name" href="{!att.downloadUrl}" target="_blank" rel="noopener noreferrer">{!att.name}</a>
                                             </div>
                                         </aura:iteration>
                                     </div>

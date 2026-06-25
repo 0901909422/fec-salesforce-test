@@ -374,7 +374,11 @@ private class FEC_CustomEmailService_Test {
         System.assertEquals(1, files.size(), 'Phải trả về file gắn với Case.');
         System.assert(files[0].get('name').contains('CaseFile'), files[0].get('name'));
         System.assertEquals(1, attachments.size(), 'Phải build attachment từ ContentDocument.');
-        System.assert(String.isNotBlank(attachments[0].base64Data));
+        System.assertEquals(
+            String.valueOf(insertedCv.ContentDocumentId),
+            attachments[0].contentDocumentId
+        );
+        System.assert(attachments[0].fileName.contains('CaseFile'), attachments[0].fileName);
         System.assertEquals(0, emptyFiles.size());
         System.assertEquals(0, emptyAttachments.size());
     }
