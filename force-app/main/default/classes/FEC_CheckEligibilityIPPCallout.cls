@@ -13,7 +13,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
    //sử dụng API /esb/cms/CMS_IPP_BlockWS 
     public static final String API_CONFIG_NAME = 'FEC_CMS_IPP_BlockWS';
     private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_IPP_BlockWS';
-    private static ResponseLog responseLog;
+    private static FEC_ResponseLog responseLog;
     
     // =========================================================================
     // RESPONSE WRAPPERS
@@ -47,24 +47,6 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         @AuraEnabled public Decimal registrationRate { get; set; }
     }
 
-    public class ResponseLog {
-        public String apiName;
-        public String endpoint;
-        public String method;
-        public String requestBody;
-        public HttpResponse response;
-        public String errorMessage;
-
-        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
-            this.apiName = apiName;
-            this.endpoint = endpoint;
-            this.method = method;
-            this.requestBody = requestBody;
-            this.response = response;
-            this.errorMessage = errorMessage;
-        }
-    }
-
     // =========================================================================
     // MAIN CALLOUT METHOD
     // =========================================================================
@@ -80,7 +62,9 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         result.success = false;
         String transId = FEC_CommonUltils.generateTransactionId();
         String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
-        
+        String endpoint;
+        String soapRequest;
+
         try {
             // 1. Validate Input
             if (String.isBlank(accountNumber)) {
@@ -92,13 +76,13 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
             // 2. Build SOAP Request
             // Giống Reward Debit: tránh RequestorID quá dài nếu downstream map vào cột ngắn
             Dom.Document doc = buildSoapRequest(transId, FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, timestamp, accountNumber);
-            String soapRequest = doc.toXmlString();
+            soapRequest = doc.toXmlString();
 
             // 3. Resolve Endpoint & Callout
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
-            String endpoint = (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            endpoint = (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
             String soapAction = (apiConfig != null && String.isNotBlank(apiConfig.FEC_SOAP_Action__c))
                 ? apiConfig.FEC_SOAP_Action__c
@@ -113,8 +97,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
                 soapRequest
             );
 
-            // 4. Log Interaction
-            responseLog = new ResponseLog(
+            responseLog = new FEC_ResponseLog(
                 'FEC_CheckEligibilityIPPCallout',
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_POST,
@@ -130,10 +113,16 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
                 if (!result.success && String.isBlank(result.errorMessage)) {
                     result.errorMessage = System.Label.FEC_LABEL_API_Code + result.code + ' | ' + System.Label.FEC_LABEL_Description + result.description;
                 }
+                if (!result.success && responseLog != null) {
+                    responseLog.errorMessage = result.errorMessage;
+                }
             } else {
                 result.success = false;
                 result.httpStatus = (res != null) ? res.getStatusCode() : 0;
                 result.errorMessage = (res != null) ? res.getBody() : System.Label.FEC_MSG_No_Response;
+                if (responseLog != null) {
+                    responseLog.errorMessage = result.errorMessage;
+                }
             }
 
         } catch (Exception e) {
@@ -141,27 +130,92 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
             result.errorMessage = e.getMessage();
             if (responseLog != null) {
                 responseLog.errorMessage = e.getMessage();
+            } else if (String.isNotBlank(endpoint)) {
+                responseLog = new FEC_ResponseLog(
+                    'FEC_CheckEligibilityIPPCallout',
+                    endpoint,
+                    FEC_ConstantCommon.API_METHOD_POST,
+                    soapRequest,
+                    null,
+                    e.getMessage()
+                );
             }
             System.debug('### IPP CHECK ERROR: ' + e.getMessage() + '\n' + e.getStackTraceString());
+        } finally {
+            logApiResponse();
         }
 
         return result;
     }
 
-    // /**
-    //  * Persists the API log to the database.
-    //  */
+    /**
+     * Ghi FEC_API_Log__c sau callout. Insert chạy @future để tránh DML trước callout tiếp theo
+     * (lỗi "uncommitted work pending"). Khi đã nằm trong deferred scope thì enqueue cùng batch flush.
+     */
     public static void logApiResponse() {
-        if (responseLog != null) {
+        if (responseLog == null) {
+            return;
+        }
+
+        String statusCodeStr = responseLog.response == null
+            ? null
+            : String.valueOf(responseLog.response.getStatusCode());
+        String responseBody = responseLog.response == null ? null : responseLog.response.getBody();
+
+        if (FEC_CommonUltils.isDeferredApiLoggingActive()) {
             FEC_CommonUltils.logApi(
-                responseLog.apiName, 
-                responseLog.endpoint, 
-                responseLog.method, 
-                responseLog.requestBody, 
-                responseLog.response, 
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
                 responseLog.errorMessage
             );
+            responseLog = null;
+            return;
         }
+
+        if (System.isFuture() || System.isBatch()) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+            return;
+        }
+
+        persistApiLogAsync(
+            responseLog.apiName,
+            responseLog.endpoint,
+            responseLog.method,
+            responseLog.requestBody,
+            statusCodeStr,
+            responseBody,
+            responseLog.errorMessage
+        );
+        responseLog = null;
+    }
+
+    @future
+    private static void persistApiLogAsync(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        String statusCodeStr,
+        String responseBody,
+        String errorMessage
+    ) {
+        HttpResponse res = null;
+        if (String.isNotBlank(statusCodeStr)) {
+            res = new HttpResponse();
+            res.setStatusCode(Integer.valueOf(statusCodeStr));
+            res.setBody(responseBody != null ? responseBody : '');
+        }
+        FEC_CommonUltils.logApi(apiName, endpoint, method, requestBody, res, errorMessage);
     }
 
     // =========================================================================
