@@ -308,7 +308,8 @@ public without sharing class FEC_BancaController {
 
         dto.status           = FEC_CommonUltils.deriveInsuranceStatus(
             rec.FEC_Expiry_Date__c,
-            rec.FEC_Cancel_Date__c
+            rec.FEC_Cancel_Date__c,
+            rec.FEC_Effective_Date__c
         );
 
         dto.gender           = rec.FEC_Buyer_Gender__c;
@@ -437,7 +438,11 @@ public without sharing class FEC_BancaController {
         dto.paymentID        = item.paymentID;
         dto.cancelDate       = FEC_CommonUltils.toDateStr(item.cancelDate);
         dto.effectiveDate    = FEC_CommonUltils.toDateStr(item.effectiveDate);
-        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(dto.expiryDate, dto.cancelDate);
+        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(
+            dto.expiryDate,
+            dto.cancelDate,
+            dto.effectiveDate
+        );
 
         return dto;
     }
@@ -474,7 +479,11 @@ public without sharing class FEC_BancaController {
         dto.paymentID        = item.paymentID;
         dto.cancelDate       = FEC_CommonUltils.toDateStr(item.cancelDate);
         dto.effectiveDate    = FEC_CommonUltils.toDateStr(item.effectiveDate);
-        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(dto.expiryDate, dto.cancelDate);
+        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(
+            dto.expiryDate,
+            dto.cancelDate,
+            dto.effectiveDate
+        );
 
         return dto;
     }

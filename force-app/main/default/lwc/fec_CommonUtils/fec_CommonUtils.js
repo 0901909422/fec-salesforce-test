@@ -17,7 +17,9 @@ import {
   MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
   MSG_INVALID_EMAIL_FORMAT,
   INSURANCE_STATUS_ACTIVE,
-  INSURANCE_STATUS_EXPIRED
+  INSURANCE_STATUS_EXPIRED,
+  INSURANCE_STATUS_CANCELLED,
+  INSURANCE_STATUS_NOT_ON_CONTRACT
 } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
@@ -1258,20 +1260,26 @@ function parseApiDateString(value) {
   return null;
 }
 
-function deriveInsuranceStatus(expiryDateStr, cancelDateStr) {
+/** Mirror FEC_CommonUltils.deriveInsuranceStatus(expiryDate, cancelDate, effectiveDate). */
+function deriveInsuranceStatus(expiryDateStr, cancelDateStr, effectiveDateStr) {
+  const effectiveDate = parseApiDateString(effectiveDateStr);
+  if (!effectiveDate) {
+    return INSURANCE_STATUS_NOT_ON_CONTRACT;
+  }
+
   const cancelDate = parseApiDateString(cancelDateStr);
   if (cancelDate) {
-    return INSURANCE_STATUS_EXPIRED;
+    return INSURANCE_STATUS_CANCELLED;
   }
 
   const expiryDate = parseApiDateString(expiryDateStr);
   const today = new Date();
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (expiryDate && startOfToday > expiryDate) {
-    return INSURANCE_STATUS_EXPIRED;
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  if (expiryDate && yesterday <= expiryDate) {
+    return INSURANCE_STATUS_ACTIVE;
   }
 
-  return INSURANCE_STATUS_ACTIVE;
+  return INSURANCE_STATUS_EXPIRED;
 }
 
 export {
