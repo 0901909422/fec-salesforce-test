@@ -314,6 +314,8 @@ global with sharing class FEC_SearchArchiveInteraction_Test {
         FEC_SearchArchiveInteraction.ArchiveInteractionRow row = result[0];
         Assert.areEqual('IL18.Test Category', row.subcategory, 'Sub Category phải được enrich từ S3');
         Assert.areEqual('IL18.04.Test Code', row.subcode, 'Sub Code phải được enrich từ S3');
+        Assert.areEqual('archive@example.com', row.email, 'Interaction Email phải được enrich từ S3');
+        Assert.areEqual('Inbound', row.interactionChannel, 'Interaction Channel phải lấy FEC_Channel__c từ S3');
     }
 
     /**
@@ -391,7 +393,7 @@ global with sharing class FEC_SearchArchiveInteraction_Test {
         public HTTPResponse respond(HTTPRequest req) {
             HttpResponse res = new HttpResponse();
             res.setHeader('Content-Type', 'application/json');
-            res.setBody('{"Case":{"FEC_SubCategory__c":"IL18.Test Category","FEC_SubCode__c":"IL18.04.Test Code"}}');
+            res.setBody('{"Case":{"FEC_SubCategory__c":"IL18.Test Category","FEC_SubCode__c":"IL18.04.Test Code","FEC_Interaction_Email__c":"archive@example.com","FEC_Channel__c":"Inbound"}}');
             res.setStatusCode(200);
             return res;
         }
