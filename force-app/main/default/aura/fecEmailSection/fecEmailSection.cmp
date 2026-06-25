@@ -8,6 +8,7 @@
     <aura:attribute name="ccEmail" type="String" default="" />
     <aura:attribute name="subject" type="String" default="" />
     <aura:attribute name="body" type="String" default="" />
+    <aura:attribute name="replyQuoteBody" type="String" default="" />
     <aura:attribute name="rawBody" type="String" default="" />
     <aura:attribute name="errorMsg" type="String" default="" />
     <aura:attribute name="isSending" type="Boolean" default="false" />
@@ -478,15 +479,15 @@
                                 <aura:if isTrue="{!v.isHandling}">
                                 <div class="feed-actions">
                                     <div class="compose-footer-reply">
-                                        <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-subject="{!email.subject}" onclick="{!c.handleReply}" title="Reply">
+                                        <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-cc="{!email.ccAddress}" data-subject="{!email.subject}" data-date="{!email.messageDate}" data-body="{!email.bodyHtml}" onclick="{!c.handleReply}" title="Reply">
                                             <lightning:icon iconName="utility:reply" size="xx-small" class="reply-icon fec-icon" />
                                             Reply
                                         </button>
-                                        <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-subject="{!email.subject}" onclick="{!c.handleReplyAll}" title="Reply All">
+                                        <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-cc="{!email.ccAddress}" data-subject="{!email.subject}" data-date="{!email.messageDate}" data-body="{!email.bodyHtml}" onclick="{!c.handleReplyAll}" title="Reply All">
                                             <lightning:icon iconName="utility:reply_all" size="xx-small" class="reply-icon fec-icon" />
                                             Reply All
                                         </button>
-                                        <button class="foot-reply-btn" data-id="{!email.Id}" data-subject="{!email.subject}" onclick="{!c.handleForward}" title="Forward">
+                                        <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-cc="{!email.ccAddress}" data-subject="{!email.subject}" data-date="{!email.messageDate}" data-body="{!email.bodyHtml}" onclick="{!c.handleForward}" title="Forward">
                                             <lightning:icon iconName="utility:forward" size="xx-small" class="reply-icon fec-icon" />
                                             Forward
                                         </button>

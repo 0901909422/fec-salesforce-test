@@ -1549,6 +1549,42 @@
             return html;
         }
     },
+    normalizeReplySubject: function(subject) {
+        if (!subject) return '';
+        var s = String(subject).trim();
+        var changed = true;
+        while (changed) {
+            changed = false;
+            if (/^(RE|FW|FWD)\s*:\s*/i.test(s)) {
+                s = s.replace(/^(RE|FW|FWD)\s*:\s*/i, '').trim();
+                changed = true;
+            }
+            if (s.length > 1 && s.charAt(0) === '<' && s.charAt(s.length - 1) === '>') {
+                s = s.slice(1, -1).trim();
+                changed = true;
+            }
+        }
+        return s.trim();
+    },    buildQuoteHeader: function(email) {
+        if (!email) return '';
+        var lines = [];
+        if (email.from) lines.push('From: ' + email.from);
+        else if (email.fromAddress) lines.push('From: ' + email.fromAddress);
+        if (email.to) lines.push('To: ' + email.to);
+        else if (email.toAddress) lines.push('To: ' + email.toAddress);
+        if (email.cc) lines.push('Cc: ' + email.cc);
+        if (email.date) lines.push('Date: ' + email.date);
+        if (email.subject) lines.push('Subject: ' + email.subject);
+        return '<div style="margin-top:12px;width:500px;font-family:&quot;Times New Roman&quot;,serif;font-size:12px;color:#666;line-height:1.5;">' +
+            '________________________________________________________________<br>' +
+            (lines.length ? lines.join('<br>') + '<br><br>' : '') +
+            '</div>';
+    },
+    buildQuotedBody: function(currentBody, email) {
+        var header = this.buildQuoteHeader(email);
+        var quotedEmail = email ? (email.body || '') : '';
+        return (currentBody ? currentBody + '<br><br>' : '') + header + (quotedEmail || '');
+    },
     buildEmailBodyForTransport: function(component) {
         var body = '';
         if (window._fecQuill) {
@@ -1561,7 +1597,7 @@
             body = component.get('v.body') || '';
         }
         body = this.normalizeEditorHtmlForEmail(body);
-        // Fallback: Quill can drop tables/images when DOM is rewritten; prefer the stored raw body if it has structure the editor lost.
+        // Editor da chua day du draft + quote, khong can ghep them
         var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
         if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
             body = this.normalizeEditorHtmlForEmail(storedBody);
@@ -1569,14 +1605,13 @@
         var styleBlock = component.get('v.templateStyleBlock') || '';
         if (styleBlock) body = styleBlock + body;
         return body;
-    },
-    cleanBody: function(html) {
+    },    cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
             .replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '')
             // Collapse 3+ consecutive <br> into single
             .replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
-        // Strip leading whitespace/empty lines
+        // Strip leading whitespace/empty lines, but keep tables intact
         result = result.replace(/^(\s*<p[^>]*>\s*(<br\s*\/?>\s*)?<\/p>\s*)+/i, '');
         return result.trim();
     },
