@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Allow user to view the Interaction Information section on the Interaction tab of the Customer Case Handling page.</description>
+    <isLicensed>false</isLicensed>
+    <label>View Interaction Infor on Case Handling/Interaction Tab</label>
+</CustomPermission>
