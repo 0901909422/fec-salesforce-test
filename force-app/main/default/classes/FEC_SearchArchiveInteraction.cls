@@ -94,11 +94,14 @@ public without sharing class FEC_SearchArchiveInteraction {
             row.currentInteractionId = ac.currentinteractionid__c;
             row.nationalId = ac.nationalid__c;
 
-            // Enrich Sub Category / Sub Code từ full S3 JSON khi External Object index thiếu data.
+            // Enrich từ full S3 JSON khi External Object index thiếu data (Sub Category/Sub Code),
+            // và lấy Interaction Email (external object không có field email) — chỉ cho interactions.
             // Giải pháp tạm phía SF trước khi backend populate search index.
-            if ((String.isBlank(row.subcategory) || String.isBlank(row.subcode))
+            Boolean wantEmail = !serviceCasesOnly;
+            Boolean needFetch = (String.isBlank(row.subcategory) || String.isBlank(row.subcode) || wantEmail)
                     && String.isNotBlank(ac.s3_path__c)
-                    && s3EnrichCount < MAX_S3_ENRICH) {
+                    && s3EnrichCount < MAX_S3_ENRICH;
+            if (needFetch) {
                 s3EnrichCount++;
                 Map<String, Object> caseObj = fetchCaseDetailFromS3(ac);
                 if (caseObj != null) {
@@ -107,6 +110,15 @@ public without sharing class FEC_SearchArchiveInteraction {
                     }
                     if (String.isBlank(row.subcode)) {
                         row.subcode = (String) caseObj.get('FEC_SubCode__c');
+                    }
+                    if (wantEmail) {
+                        row.email = (String) caseObj.get('FEC_Interaction_Email__c');
+                        // Channel thật kiểu SF nằm trong S3 (pylabel__c chỉ là label Pega "CPM interaction").
+                        // Fallback: giữ pylabel__c đã set nếu S3 không có FEC_Channel__c.
+                        String s3Channel = (String) caseObj.get('FEC_Channel__c');
+                        if (String.isNotBlank(s3Channel)) {
+                            row.interactionChannel = s3Channel;
+                        }
                     }
                 }
             }
@@ -133,7 +145,9 @@ public without sharing class FEC_SearchArchiveInteraction {
     private static Map<String, Object> fetchCaseDetailFromS3(AthenaCases__x ac) {
         try {
             String migrationSource = ArchiveCaseController.getMigrationSource(ac.migration_source__c);
-            HttpResponse resp = ArchiveCaseController.callS3ToGetCaseDetail(ac, migrationSource);
+            // Gọi S3 KHÔNG ghi integration log (callS3ToGetCaseDetail có DML logIntegrationService →
+            // gây "callout after DML" khi enrich nhiều row trong vòng lặp → chỉ row đầu thành công).
+            HttpResponse resp = calloutS3DetailNoLog(ac.s3_path__c, migrationSource);
             if (resp == null) return null;
             Integer sc = resp.getStatusCode();
             if (sc != 200 && sc != 201) return null;
@@ -146,6 +160,26 @@ public without sharing class FEC_SearchArchiveInteraction {
             System.debug('fetchCaseDetailFromS3 failed for ' + ac.case_id__c + ': ' + e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Callout S3 lấy case detail KHÔNG ghi log (tránh DML giữa các callout trong vòng lặp).
+     * Build endpoint giống ArchiveCaseController.callS3ToGetCaseDetail nhưng bỏ logIntegrationService.
+     */
+    private static HttpResponse calloutS3DetailNoLog(String s3Path, String migrationSource) {
+        String serviceName = System.Label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
+        String endpoint = System.Label.TECH_S3_NAMED_CREDENTIAL_DOMAIN
+                + System.Label.TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP
+                + s3Path + '&source=' + migrationSource;
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
+            Boolean callMock = apiSetting != null && apiSetting.FEC_Call_Mock__c == true;
+            endpoint = callMock
+                ? endpoint
+                : (apiSetting.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) + s3Path + '&source=' + migrationSource;
+        }
+        return FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, null, null);
     }
     
     // Method to return JSON string of test data
@@ -288,5 +322,6 @@ public without sharing class FEC_SearchArchiveInteraction {
         @AuraEnabled public String phone;
         @AuraEnabled public String currentInteractionId;
         @AuraEnabled public String nationalId;
+        @AuraEnabled public String email;
     }
 }
