@@ -342,6 +342,8 @@ public without sharing class FEC_CustomerIntegrationService {
         hist.FEC_Middle_Name__c = info.MiddleName;
         hist.FEC_Last_Name__c = info.LastName;
         hist.FEC_Customer_Name__c = info.FullName;
+        hist.FEC_Title__c = info.Title;
+        hist.FEC_Short_Name__c = info.ShortName;
         hist.FEC_Date_of_Birth__c = info.Birthday;
         hist.FEC_Gender__c = info.Gender;
         hist.FEC_Marital_Status__c = info.MaritalStatus;
