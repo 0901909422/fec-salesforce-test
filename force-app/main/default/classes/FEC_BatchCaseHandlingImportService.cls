@@ -612,6 +612,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return;
         }
         try {
+            Id sourceContentVersionId = querySourceImportContentVersionId(batchRecordId);
+            if (sourceContentVersionId == null) {
+                sourceContentVersionId = querySourceContentVersionFromBatchFileLinks(batchRecordId);
+            }
+            if (sourceContentVersionId != null && rowResults != null && !rowResults.isEmpty()) {
+                rowResults = enrichImportRowsLayoutFromSourceFile(sourceContentVersionId, rowResults);
+            }
             String fileName = resolveBatchResultFileName(batchRecordId);
             Boolean cofOrGsr = isCofOrGsrImportRows(rowResults);
             List<List<String>> sheetRows = null;
@@ -2978,10 +2985,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         skipCaseRun = true;
                     }
                 }
-                // 28/05/2026 11:20 linhdev - không gọi run khi gần 101 SOQL; row còn lại xử lý ở queueable chunk sau
-                if (shouldYieldImportGovernorLimits()) {
-                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-                    rr.errors = appendError(rr.errors, System.Label.FEC_BCH_ImportFailed);
+                // 28/05/2026 11:20 linhdev - sync multi-chunk: defer row khi gần 101 SOQL (chunk sau xử lý tiếp)
+                // 25/06/2026 linhdev - queueable 1 row/hop: không đánh Failed ảo; vẫn runInternal (tránh chỉ 1 dòng Success)
+                if (shouldYieldImportGovernorLimits() && !System.isQueueable()) {
                     continue;
                 }
                 if (!skipCaseRun) {
