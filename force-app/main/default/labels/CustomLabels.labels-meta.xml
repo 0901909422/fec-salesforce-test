@@ -12098,6 +12098,14 @@
         <value>Reward eligibility check successful</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Reward_Not_Enrolled</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Reward Account Not Enrolled</shortDescription>
+        <value>Account is not enrolled in the Rewards program</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_SLA_Notif_Body_Approaching</fullName>
         <categories>SLA Notification</categories>
         <language>en_US</language>
@@ -19066,7 +19074,7 @@
         <shortDescription>TECH_S3_NAMED_CREDENTIAL_DOMAIN</shortDescription>
         <value>callout:FEC_API</value>
     </labels>
-    <labels>
+        <labels>
         <fullName>FEC_CS_CASE_CUSTOMER_IDENTIFIER_REQUIRED_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
