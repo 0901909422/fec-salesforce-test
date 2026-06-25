@@ -14,6 +14,9 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
   public static final String FULLNAME_UPDATE = 'Full Name Update';
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
+  public static final String API_NAME = 'FEC_UpdateCustomerBasicInfo';
+
+  public static FEC_ResponseLog responseLog;
 
   private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CustomerInfoUpdate';
 
@@ -129,15 +132,27 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       // addTextNodeSafe(custNode, 'NationalID', info.nationalId);
       // addTextNodeSafe(custNode, 'Email', info.email);
 
+      String requestBody = doc.toXmlString();
+      String endpoint = '';
+      String method = FEC_ConstantCommon.API_METHOD_POST;
       UpdateResult finalResult = new UpdateResult();
       try {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Update_Customer_Basic_Info');
 
-        String endpoint = apiSetting?.FEC_Call_Mock__c
+        endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.UPDATE_CUSTOMER_BASIC_INFO_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, method, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
+
+        responseLog = new FEC_ResponseLog(
+          API_NAME,
+          endpoint,
+          method,
+          requestBody,
+          res,
+          null
+        );
 
         Integer status = (res == null) ? null : res.getStatusCode();
         String resBody = (res == null) ? null : res.getBody();
@@ -153,14 +168,42 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
         if (finalResult.rawResponse == null)
           finalResult.rawResponse = resBody;
       } catch (Exception ex) {
+        if (responseLog != null) {
+          responseLog.errorMessage = ex.getMessage();
+        } else {
+          responseLog = new FEC_ResponseLog(
+            API_NAME,
+            endpoint,
+            method,
+            requestBody,
+            null,
+            ex.getMessage()
+          );
+        }
         finalResult.errorMessage = ex.getMessage();
         finalResult.success = false;
+      } finally {
+        logApiResponse();
       }
 
       return finalResult;
     } catch (Exception e) {
       System.debug('Error: ' + e.getMessage());
       throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+      responseLog = null;
     }
   }
 
