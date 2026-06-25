@@ -120,61 +120,7 @@ public without sharing class FEC_SecondaryController {
 
         syncSelfServiceChannels(hist);
 
-        /* ---------- 2. CONTACT LIST ---------- */
-         List<FEC_Contact_List__c> contactsToInsert = new List<FEC_Contact_List__c>();
-        Set<String> seenContactKeys = new Set<String>();
-
-        try {
-            FEC_GetCustomerInfoBasic.ResponseWrapper contactRes =
-                FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
-                    hist.FEC_CIF_Number__c
-                );
-
-            if (contactRes != null
-                && contactRes.CustomerBasicInfo != null
-                && contactRes.CustomerBasicInfo.PreferredContacts != null
-            ) {
-                for (FEC_GetCustomerInfoBasic.PreferredContact pc :
-                    contactRes.CustomerBasicInfo.PreferredContacts) {
-
-                    if (pc == null || pc.Contact == null) continue;
-
-                    String contactKey = buildContactDedupeKey(
-                        pc.Contact.Channel,
-                        pc.Contact.CommunicationType,
-                        pc.Contact.ContactString
-                    );
-                    if (seenContactKeys.contains(contactKey)) {
-                        continue;
-                    }
-                    seenContactKeys.add(contactKey);
-
-                    contactsToInsert.add(new FEC_Contact_List__c(
-                        FEC_Customer_History__c   = hist.Id,
-                        FEC_Channel__c            = pc.Contact.Channel,
-                        FEC_Communication_Type__c = pc.Contact.CommunicationType,
-                        FEC_Contact_String__c     = pc.Contact.ContactString,
-                        FEC_Contact_ID__c         = pc.Contact.ContactId
-                    ));
-
-                   if( pc.Contact.Channel == FEC_ConstantCommon.EMAIL && String.isBlank(hist.FEC_Email__c)){
-                        String email = FEC_CommonUltils.normalizeEmailForField(
-                            pc.Contact.ContactString
-                        );
-                        if (String.isNotBlank(email)) {
-                            hist.FEC_Email__c = email;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.debug('### GetContactsList FAILED: ' + e.getMessage());
-        }
-
-        /* ---------- 3. RELATIVES LIST ---------- */
+        /* ---------- 2. RELATIVES LIST ---------- */
         FEC_GetRelativesList.ResponseWrapper relativesRes;
         try {
             relativesRes =
@@ -191,9 +137,6 @@ public without sharing class FEC_SecondaryController {
         /* =====================================================
          * BUILD DTO
          * ===================================================== */
-         if (!contactsToInsert.isEmpty()) {
-            insert contactsToInsert;
-        }
         SecondaryInfoDTO dto = mapToDTO(hist);
         dto.references = buildReferenceDTO(relativesRes);
         dto.contactList = buildContactDTO(hist.Id);
