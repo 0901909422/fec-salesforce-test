@@ -11,5 +11,8 @@
     <permissionSets>FEC_Common_System_Setting</permissionSets>
     <permissionSets>FEC_Permission_Set_Customer_Data_Management_User</permissionSets>
     <permissionSets>FEC_Case_Assignment_Management</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Inbound</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Internal</permissionSets>
+    <permissionSets>FEC_Interaction_Creation_or_Handling_Outbound</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
