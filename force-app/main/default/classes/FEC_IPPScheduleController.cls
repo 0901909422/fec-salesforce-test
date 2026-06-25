@@ -8,7 +8,9 @@ public with sharing class FEC_IPPScheduleController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Ipp Id'}));
         }
         FEC_IPP__c ippRecord = [
-            SELECT Id, FEC_Customer_History__c, FEC_IPP_Record_No__c, FEC_IPP_Plan__c
+            SELECT Id, FEC_Customer_History__c,
+                   FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c,
+                   FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Term__c
             FROM FEC_IPP__c
             WHERE Id = :ippId
             LIMIT 1
@@ -40,7 +42,7 @@ public with sharing class FEC_IPPScheduleController {
                        FEC_TSA_Code__c, FEC_TSA_Name__c,
                        FEC_Sales_Mode__c, FEC_ESign_Source__c,
                        FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
-                       FEC_IPP_Record_No__c, FEC_IPP_Plan__c
+                       FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Term__c
                 FROM FEC_IPP__c
                 WHERE Id = :ippId
                 LIMIT 1
@@ -58,7 +60,7 @@ public with sharing class FEC_IPPScheduleController {
                        FEC_TSA_Code__c, FEC_TSA_Name__c,
                        FEC_Sales_Mode__c, FEC_ESign_Source__c,
                        FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
-                       FEC_IPP_Record_No__c, FEC_IPP_Plan__c
+                       FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Term__c
                 FROM FEC_IPP__c
                 WHERE Id = :ippId
                 LIMIT 1
@@ -152,6 +154,7 @@ public with sharing class FEC_IPPScheduleController {
     }
 
     /** Update IPP từ kết quả Sales Info API (chỉ DML). */
+    @TestVisible
     private static void applySalesInfoDml(Id ippId, FEC_SalesInfoController.SalesInfoResult salesInfo) {
         if (ippId == null || salesInfo == null || !salesInfo.isSuccess) {
             return;
@@ -242,7 +245,7 @@ public with sharing class FEC_IPPScheduleController {
                 return ippList.isEmpty() ? 'API_RETURNED_NO_IPPS' : 'FILTER_EMPTY';
             }
             deleteExistingScheduleData(ippRecord.Id);
-            saveSchedulesToDatabase(filtered, ippRecord);
+            saveSchedulesToDatabase(resolveScheduleItemsForSave(filtered, ippRecord), ippRecord);
             return null;
         } catch (Exception e) {
             Database.rollback(sp);
@@ -298,6 +301,46 @@ public with sharing class FEC_IPPScheduleController {
 
         System.debug('### No IPP schedule matched by Record No or Plan');
         return filtered;
+    }
+
+    /**
+     * Chỉ giữ các kỳ có Opening Balance thực; nếu API trả nhiều block trùng RecordNo thì lấy block đầu theo Term.
+     */
+    @TestVisible
+    private static List<FEC_GetCardSecInfo.IPP> resolveScheduleItemsForSave(
+        List<FEC_GetCardSecInfo.IPP> matched,
+        FEC_IPP__c ippRecord
+    ) {
+        if (matched == null || matched.isEmpty()) {
+            return new List<FEC_GetCardSecInfo.IPP>();
+        }
+
+        List<FEC_GetCardSecInfo.IPP> valid = new List<FEC_GetCardSecInfo.IPP>();
+        for (FEC_GetCardSecInfo.IPP ipp : matched) {
+            if (ipp.OpeningBalance != null && ipp.OpeningBalance != 0) {
+                valid.add(ipp);
+            }
+        }
+        if (valid.isEmpty()) {
+            return matched;
+        }
+
+        Integer termLimit = null;
+        if (ippRecord != null && ippRecord.FEC_IPP_Term__c != null && ippRecord.FEC_IPP_Term__c > 0) {
+            termLimit = ippRecord.FEC_IPP_Term__c.intValue();
+        } else if (valid[0].term != null && valid[0].term > 0) {
+            termLimit = valid[0].term.intValue();
+        }
+        if (termLimit == null || valid.size() <= termLimit) {
+            return valid;
+        }
+
+        List<FEC_GetCardSecInfo.IPP> trimmed = new List<FEC_GetCardSecInfo.IPP>();
+        for (Integer i = 0; i < termLimit; i++) {
+            trimmed.add(valid[i]);
+        }
+        System.debug('### resolveScheduleItemsForSave: trimmed ' + valid.size() + ' -> ' + trimmed.size() + ' (term=' + termLimit + ')');
+        return trimmed;
     }
 
     /** Xóa schedule cũ của IPP trước khi sync. */

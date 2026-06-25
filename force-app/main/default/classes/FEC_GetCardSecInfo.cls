@@ -686,13 +686,20 @@ public with sharing class FEC_GetCardSecInfo {
         Decimal monthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyPrincipal');
         Decimal monthlyInterest = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyInterest');
   
-        // Mỗi kỳ (1-36): OPENING_BALANCE_k, PAYMENT_AMT_k, MONTHLY_PRINCIPAL_k, MONTHLY_INTEREST_k
-        for (Integer k = 1; k <= 36; k++) {
+        // Mỗi kỳ (1..Term hoặc tối đa 36): chỉ lấy kỳ có OPENING_BALANCE_k khác 0
+        Integer maxK = 36;
+        if (term != null && term > 0) {
+            maxK = Math.min(term.intValue(), 36);
+        }
+        for (Integer k = 1; k <= maxK; k++) {
             String keyOpening = 'OPENING_BALANCE_' + k;
             String valOpening = FEC_CommonUltils.getXmlValue(ippNode, keyOpening);
             if (String.isNotBlank(valOpening) && valOpening.trim() != '') {
                 try {
                     Decimal openingK = Decimal.valueOf(valOpening.trim());
+                    if (openingK == 0) {
+                        continue;
+                    }
                     Decimal paymentK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'PAYMENT_AMT_' + k);
                     Decimal principalK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_PRINCIPAL_' + k);
                     Decimal interestK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_INTEREST_' + k);
