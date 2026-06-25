@@ -328,12 +328,13 @@ public with sharing class FEC_CardPaymentController {
             dto.loanBalance = loanBalance;
             dto.fullPaymentWithoutIPP = fullPaymentWithoutIPP;
             dto.fullIPPPaymentAmount = fullIPPPaymentAmount;
-            if (shouldTreatAllZeroTotalsAsApiFailure(customerHistoryId, dto)) {
-                throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
-            }
         } catch (AuraHandledException e) {
             throw e;
         } catch (Exception e) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+        }
+
+        if (shouldTreatAllZeroTotalsAsApiFailure(customerHistoryId, dto)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
 
@@ -465,28 +466,17 @@ public with sharing class FEC_CardPaymentController {
         return (rec != null ? rec.trim() : '') + '_' + (plan != null ? plan.trim() : '');
     }
 
-    /** Bỏ qua CardPlan không có Rec và Plan — tránh insert bản ghi rỗng từ API. */
-    public static Boolean isSaveableCardPlan(FEC_GetCardPlanInfo.CardPlan plan) {
-        if (plan == null) {
-            return false;
+    /** Key upsert: plan có Rec/Plan dùng key thường; plan shell rỗng dùng EMPTY_{index}. */
+    public static String buildCardPlanSyncKeyForApiPlan(FEC_GetCardPlanInfo.CardPlan plan, Integer emptyPlanIndex) {
+        if (String.isBlank(plan.recordNumber) && String.isBlank(plan.planNumber)) {
+            return 'EMPTY_' + String.valueOf(emptyPlanIndex);
         }
-        return String.isNotBlank(plan.recordNumber) || String.isNotBlank(plan.planNumber);
+        return buildCardPlanSyncKey(plan.recordNumber, plan.planNumber);
     }
 
-    public static void deleteEmptyCardPaymentRecords(Id customerHistoryId) {
-        if (customerHistoryId == null) {
-            return;
-        }
-        List<FEC_Card_Payment__c> emptyRows = [
-            SELECT Id
-            FROM FEC_Card_Payment__c
-            WHERE FEC_Customer_History__c = :customerHistoryId
-            AND (FEC_Rec__c = NULL OR FEC_Rec__c = '')
-            AND (FEC_Plan__c = NULL OR FEC_Plan__c = '')
-        ];
-        if (!emptyRows.isEmpty()) {
-            delete emptyRows;
-        }
+    /** Lưu mọi CardPlan từ API (kể cả shell rỗng) để UI hiển thị đầy đủ. */
+    public static Boolean isSaveableCardPlan(FEC_GetCardPlanInfo.CardPlan plan) {
+        return plan != null;
     }
 
     private static FEC_EmeaAccountInqService.EmeaInput buildEmeaAccountInqInput(String accountNumber) {
@@ -772,23 +762,32 @@ public with sharing class FEC_CardPaymentController {
         }
         
         Map<String, FEC_Card_Payment__c> existingByKey = new Map<String, FEC_Card_Payment__c>();
+        Integer existingEmptyIndex = 0;
         for (FEC_Card_Payment__c existing : [
             SELECT Id, FEC_Rec__c, FEC_Plan__c
             FROM FEC_Card_Payment__c
             WHERE FEC_Customer_History__c = :customerHistoryId
         ]) {
-            existingByKey.put(buildCardPlanSyncKey(existing.FEC_Rec__c, existing.FEC_Plan__c), existing);
+            if (String.isBlank(existing.FEC_Rec__c) && String.isBlank(existing.FEC_Plan__c)) {
+                existingByKey.put('EMPTY_' + String.valueOf(existingEmptyIndex++), existing);
+            } else {
+                existingByKey.put(buildCardPlanSyncKey(existing.FEC_Rec__c, existing.FEC_Plan__c), existing);
+            }
         }
 
         List<FEC_Card_Payment__c> recordsToInsert = new List<FEC_Card_Payment__c>();
         List<FEC_Card_Payment__c> recordsToUpdate = new List<FEC_Card_Payment__c>();
         Boolean showIppAccruedInterest = resolveShowIppAccruedInterest(customerHistoryId);
+        Integer emptyPlanIndex = 0;
 
         for (FEC_GetCardPlanInfo.CardPlan p : planList) {
             if (!isSaveableCardPlan(p)) {
                 continue;
             }
-            String key = buildCardPlanSyncKey(p.recordNumber, p.planNumber);
+            String key = buildCardPlanSyncKeyForApiPlan(p, emptyPlanIndex);
+            if (String.isBlank(p.recordNumber) && String.isBlank(p.planNumber)) {
+                emptyPlanIndex++;
+            }
             FEC_Card_Payment__c record;
             if (existingByKey.containsKey(key)) {
                 record = existingByKey.get(key);
@@ -807,7 +806,6 @@ public with sharing class FEC_CardPaymentController {
             if (!recordsToUpdate.isEmpty()) {
                 update recordsToUpdate;
             }
-            deleteEmptyCardPaymentRecords(customerHistoryId);
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
