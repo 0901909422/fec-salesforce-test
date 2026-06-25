@@ -97,25 +97,23 @@
             var renderResolvedTemplate = function(resolvedSubject, resolvedBody) {
                 component.set('v.titleBaseBody', resolvedBody);
                 var displayBody = title ? helper.replaceDanhXung(resolvedBody, title) : resolvedBody;
-                // Extract <style> block from template so it can be re-injected when sending/previewing email.
-                // Quill strips <style> tags, so we store it separately and prepend it back before sending.
                 var extracted = helper.extractTemplateStyleBlock(displayBody);
                 component.set('v.templateStyleBlock', extracted.style);
                 var bodyForEditor = helper.cleanBody(extracted.body);
-                component.set('v.body', bodyForEditor);
-                component.set('v.rawBody', bodyForEditor); // luu HTML hien thi de gui email
+                var quoteBody = component.get('v.replyQuoteBody') || '';
+                var fullEditorBody = bodyForEditor + (quoteBody ? '<p><br></p>' + quoteBody : '');
+                component.set('v.body', fullEditorBody);
+                component.set('v.rawBody', bodyForEditor);
                 if (window._fecQuill) {
                     var _q = window._fecQuill;
                     window.setTimeout(function() {
-                        helper._setEditorHtml(component, _q, bodyForEditor);
+                        helper._setEditorHtml(component, _q, fullEditorBody);
                     }, 50);
                 }
                 if (resolvedSubject) {
                     component.set('v.subject', resolvedSubject);
                 }
-            };
-
-            var resolveAction = component.get('c.resolveEmailTemplate');
+            };            var resolveAction = component.get('c.resolveEmailTemplate');
             resolveAction.setParams({
                 caseId: component.get('v.recordId'),
                 subject: templateSubject,
@@ -144,7 +142,14 @@
             component.set('v.templateStyleBlock', '');
             component.set('v.subject', '');
             component.set('v.attachments', []);
-            if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
+            var quoteBody2 = component.get('v.replyQuoteBody') || '';
+            var restoreBody = '<div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>' + (quoteBody2 ? quoteBody2 : '');
+            component.set('v.body', restoreBody);
+            component.set('v.rawBody', '');
+            if (window._fecQuill) {
+                var _q2 = window._fecQuill;
+                window.setTimeout(function() { helper._setEditorHtml(component, _q2, restoreBody); }, 50);
+            }
             // Khi bỏ chọn template, khôi phục subject gốc (RE:/FW: + originalSubject)
             var prefix2 = component.get('v.replyPrefix') || '';
             var orig = component.get('v.originalSubject') || '';
@@ -176,15 +181,19 @@
 
     handleReply: function(component, event, helper) {
         var isServiceCase = component.get('v.isServiceCase');
-        var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
-        var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
-        var orig = emailSubject || component.get('v.originalSubject');
+        var ds = event.currentTarget ? event.currentTarget.dataset : {};
+        var orig = ds.subject || component.get('v.originalSubject');
+        var cleanOrig = helper.normalizeReplySubject(orig);
         component.set('v.replyPrefix', 'RE: ');
-        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
+        component.set('v.subject', cleanOrig ? 'RE: <' + cleanOrig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
+        var quoteBody = helper.buildQuotedBody('', { from: ds.from, to: ds.to, cc: ds.cc, date: ds.date, subject: ds.subject, body: ds.body });
+        component.set('v.replyQuoteBody', quoteBody);
+        var editorInit = '<div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>' + quoteBody;
+        component.set('v.body', editorInit);
         if (isServiceCase) {
-            if (emailFrom) component.set('v.serviceCaseToEmail', emailFrom);
+            if (ds.from) component.set('v.serviceCaseToEmail', ds.from);
         } else {
             var toEmail = component.get('v.toEmail');
             if (toEmail && component.get('v.toTags').length === 0) {
@@ -192,47 +201,47 @@
             }
         }
         component.set('v.showCompose', true);
-        var body = component.get('v.body') || '';
-        window.setTimeout($A.getCallback(function() { helper.initQuill(component, body); }), 150);
-    },
-
-    handleReplyAll: function(component, event, helper) {
+        window.setTimeout($A.getCallback(function() { helper.initQuill(component, editorInit); }), 150);
+    },    handleReplyAll: function(component, event, helper) {
         var isServiceCase = component.get('v.isServiceCase');
-        var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
-        var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
-        var orig = emailSubject || component.get('v.originalSubject');
+        var ds = event.currentTarget ? event.currentTarget.dataset : {};
+        var orig = ds.subject || component.get('v.originalSubject');
+        var cleanOrig = helper.normalizeReplySubject(orig);
         component.set('v.replyPrefix', 'RE: ');
-        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
+        component.set('v.subject', cleanOrig ? 'RE: <' + cleanOrig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
+        var quoteBody = helper.buildQuotedBody('', { from: ds.from, to: ds.to, cc: ds.cc, date: ds.date, subject: ds.subject, body: ds.body });
+        component.set('v.replyQuoteBody', quoteBody);
+        var editorInit = '<div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>' + quoteBody;
+        component.set('v.body', editorInit);
         if (isServiceCase) {
-            if (emailFrom) component.set('v.serviceCaseToEmail', emailFrom);
+            if (ds.from) component.set('v.serviceCaseToEmail', ds.from);
         } else {
-            var toEmail = component.get('v.toEmail');
-            if (toEmail && component.get('v.toTags').length === 0) {
-                component.set('v.toTags', [toEmail]);
-            }
+            var toTags = [];
+            if (ds.from) toTags.push(ds.from);
+            component.set('v.toTags', toTags);
+            if (ds.cc) component.set('v.ccEmail', ds.cc);
         }
         component.set('v.showCompose', true);
-        var body = component.get('v.body') || '';
-        window.setTimeout($A.getCallback(function() { helper.initQuill(component, body); }), 150);
-    },
-
-    handleForward: function(component, event, helper) {
-        var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
-        var orig = emailSubject || component.get('v.originalSubject');
+        window.setTimeout($A.getCallback(function() { helper.initQuill(component, editorInit); }), 150);
+    },    handleForward: function(component, event, helper) {
+        var ds = event.currentTarget ? event.currentTarget.dataset : {};
+        var orig = ds.subject || component.get('v.originalSubject');
+        var cleanOrig = helper.normalizeReplySubject(orig);
         component.set('v.replyPrefix', 'FW: ');
-        component.set('v.subject', orig ? 'FW: <' + orig + '>' : '');
+        component.set('v.subject', cleanOrig ? 'FW: <' + cleanOrig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
+        var quoteBody = helper.buildQuotedBody('', { from: ds.from, to: ds.to, cc: ds.cc, date: ds.date, subject: ds.subject, body: ds.body });
+        component.set('v.replyQuoteBody', quoteBody);
+        var editorInit = '<div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>' + quoteBody;
+        component.set('v.body', editorInit);
         component.set('v.toTags', []);
         component.set('v.serviceCaseToEmail', '');
         component.set('v.showCompose', true);
-        var body = component.get('v.body') || '';
-        window.setTimeout($A.getCallback(function() { helper.initQuill(component, body); }), 150);
-    },
-
-    onToKeydown: function(component, event, helper) {
+        window.setTimeout($A.getCallback(function() { helper.initQuill(component, editorInit); }), 150);
+    },    onToKeydown: function(component, event, helper) {
         var key = event.keyCode || event.which;
         if (key === 13 || key === 188 || key === 9 || key === 32) {
             event.preventDefault();
@@ -382,19 +391,26 @@
                 existing.forEach(function(e) { if (e._contentDocumentId) existingDocIds[e._contentDocumentId] = true; if (e.name) existingNames[(e.name || '').toLowerCase()] = true; });
                 var duplicateFound = false;
                 var toAdd = [];
-                var MAX_SIZE = 5 * 1024 * 1024; // 5MB - Salesforce email attachment limit
+                var MAX_FILE = 25 * 1024 * 1024; // 25MB per file
+                var MAX_TOTAL = 25 * 1024 * 1024; // 25MB total
+                var existingTotal = 0;
+                existing.forEach(function(e) { existingTotal += (e.size || 0); });
+                var rejectedTooLarge = false;
+                var rejectedTotal = false;
+                var addedTotal = 0;
                 uploaded.forEach(function(a) {
                     if ((a.contentDocumentId && existingDocIds[a.contentDocumentId]) || (a.fileName && existingNames[(a.fileName || '').toLowerCase()])) { duplicateFound = true; return; }
-                // Check file size (base64 size ~ 4/3 of raw)
-                if (a.base64Data) {
-                    var estimatedSize = Math.floor(a.base64Data.length * 0.75);
-                    if (estimatedSize > MAX_SIZE) {
-                        helper.showEmailToast(component, 'error', 'Error', 'File exceeds 5MB limit: ' + a.fileName);
-                        return;
-                    }
-                }
-                    toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _contentDocumentId: a.contentDocumentId, _mime: a.mimeType, size: a.contentSize || 0 }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
+                    var fileSize = a.contentSize || 0;
+                    if (fileSize > MAX_FILE) { rejectedTooLarge = true; return; }
+                    if (existingTotal + addedTotal + fileSize > MAX_TOTAL) { rejectedTotal = true; return; }
+                    toAdd.push({ name: a.fileName, size: fileSize, _fromStandardUpload: true, _contentDocumentId: a.contentDocumentId, _mime: a.mimeType });
+                    addedTotal += fileSize;
+                    if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true;
+                    if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
                 });
+                if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
+                if (rejectedTooLarge) helper.showEmailToast(component, 'error', 'File too large', 'File exceeds the 25 MB limit.');
+                if (rejectedTotal) helper.showEmailToast(component, 'error', 'Total too large', 'Total attachment size exceeds the 25 MB limit.');
                 if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
                 if (toAdd.length) component.set('v.attachments', existing.concat(toAdd));
                 component.set('v.selectedCaseFileIds', []);
@@ -426,19 +442,34 @@
                 existing.forEach(function(e) { if (e._contentDocumentId) existingDocIds[e._contentDocumentId] = true; if (e.name) existingNames[(e.name || '').toLowerCase()] = true; });
                         var duplicateFound = false;
                         var toAdd = [];
-                        var MAX_SIZE = 5 * 1024 * 1024; // 5MB - Salesforce email attachment limit
+                        var MAX_FILE = 25 * 1024 * 1024; // 25MB per file
+                        var MAX_TOTAL = 25 * 1024 * 1024; // 25MB total
+                        var existingTotal = 0;
+                        existing.forEach(function(e) { existingTotal += (e.size || 0); });
+                        var rejectedTooLarge = false;
+                        var rejectedTotal = false;
+                        var addedTotal = 0;
                         uploaded.forEach(function(a) {
                             if ((a.contentDocumentId && existingDocIds[a.contentDocumentId]) || (a.fileName && existingNames[(a.fileName || '').toLowerCase()])) { duplicateFound = true; return; }
-                        // Check file size (base64 size ~ 4/3 of raw)
-                        if (a.base64Data) {
-                            var estimatedSize = Math.floor(a.base64Data.length * 0.75);
-                            if (estimatedSize > MAX_SIZE) {
-                                helper.showEmailToast(component, 'error', 'Error', 'File exceeds 5MB limit: ' + a.fileName);
+                            var fileSize = a.contentSize || 0;
+                            // Per-file check: 25MB
+                            if (fileSize > MAX_FILE) {
+                                rejectedTooLarge = true;
                                 return;
                             }
-                        }
-                            toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _contentDocumentId: a.contentDocumentId, _mime: a.mimeType, size: a.contentSize || 0 }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
+                            // Total check: existing + toAdd + this file
+                            if (existingTotal + addedTotal + fileSize > MAX_TOTAL) {
+                                rejectedTotal = true;
+                                return;
+                            }
+                            toAdd.push({ name: a.fileName, size: fileSize, _fromStandardUpload: true, _contentDocumentId: a.contentDocumentId, _mime: a.mimeType });
+                            addedTotal += fileSize;
+                            if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true;
+                            if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
                         });
+                        if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
+                        if (rejectedTooLarge) helper.showEmailToast(component, 'error', 'File too large', 'File exceeds the 25 MB limit.');
+                        if (rejectedTotal) helper.showEmailToast(component, 'error', 'Total too large', 'Total attachment size exceeds the 25 MB limit.');
                         if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
                         if (toAdd.length) component.set('v.attachments', existing.concat(toAdd));
                         try {

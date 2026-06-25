@@ -838,47 +838,39 @@ public without sharing class FEC_CustomEmailService {
 
             if (attachments != null && !attachments.isEmpty()) {
                 List<Messaging.EmailFileAttachment> emailAttachments = new List<Messaging.EmailFileAttachment>();
-                // Collect contentDocumentIds that need ContentVersion lookup (no base64 provided)
+                // Split: base64 use EmailFileAttachment; ContentDocumentId use setEntityAttachments to keep original file type.
                 Set<Id> docIdsToFetch = new Set<Id>();
                 for (AttachmentWrapper att : attachments) {
-                    if (String.isBlank(att.base64Data) && String.isNotBlank(att.contentDocumentId)) {
+                    if (String.isBlank(att.fileName)) continue;
+                    if (String.isNotBlank(att.base64Data)) {
+                        if (att.base64Data.length() > 7000000) {
+                            throw new AuraHandledException('File exceeds 5MB limit: ' + att.fileName);
+                        }
+                        Messaging.EmailFileAttachment efa = new Messaging.EmailFileAttachment();
+                        efa.setFileName(att.fileName);
+                        efa.setBody(EncodingUtil.base64Decode(att.base64Data));
+                        emailAttachments.add(efa);
+                    } else if (String.isNotBlank(att.contentDocumentId)) {
                         try { docIdsToFetch.add((Id) att.contentDocumentId); } catch (Exception idEx) {}
                     }
                 }
-                // Batch query ContentVersion once for all docIds (avoids per-attachment SOQL)
-                Map<String, ContentVersion> cvByDocId = new Map<String, ContentVersion>();
+                List<Id> entityAttachmentIds = new List<Id>();
                 if (!docIdsToFetch.isEmpty()) {
                     for (ContentVersion cv : [
-                        SELECT ContentDocumentId, Title, FileExtension, VersionData, FileType
+                        SELECT Id, ContentDocumentId
                         FROM ContentVersion
                         WHERE ContentDocumentId IN :docIdsToFetch AND IsLatest = true
                     ]) {
-                        cvByDocId.put(String.valueOf(cv.ContentDocumentId), cv);
+                        entityAttachmentIds.add(cv.Id);
                     }
-                }
-                for (AttachmentWrapper att : attachments) {
-                    if (String.isBlank(att.fileName)) continue;
-                    Messaging.EmailFileAttachment efa = new Messaging.EmailFileAttachment();
-                    efa.setFileName(att.fileName);
-                    Blob fileBlob = null;
-                    if (String.isNotBlank(att.base64Data)) {
-                        fileBlob = EncodingUtil.base64Decode(att.base64Data);
-                    } else if (String.isNotBlank(att.contentDocumentId)) {
-                        ContentVersion cv = cvByDocId.get(att.contentDocumentId);
-                        if (cv != null) fileBlob = cv.VersionData;
-                    }
-                    if (fileBlob == null) continue;
-                    efa.setBody(fileBlob);
-                    if (String.isNotBlank(att.mimeType)) {
-                        efa.setContentType(att.mimeType);
-                    }
-                    emailAttachments.add(efa);
                 }
                 if (!emailAttachments.isEmpty()) {
                     mail.setFileAttachments(emailAttachments);
                 }
+                if (!entityAttachmentIds.isEmpty()) {
+                    mail.setEntityAttachments(entityAttachmentIds);
+                }
             }
-
             // 6. Send
             System.debug('### About to sendEmail: from=' + fromEmail + ' to=' + toEmail);
             mail.setWhatId(caseId); // Link email to Case for Email-to-Case routing
