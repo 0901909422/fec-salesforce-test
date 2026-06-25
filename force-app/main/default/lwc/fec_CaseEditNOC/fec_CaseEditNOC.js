@@ -518,7 +518,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     });
   }
 
-  /** Case draft: reload trang → xóa NOC DB + UI; đã submit / sau API success → giữ nguyên. 
+  /** Case draft: reload trang → xóa NOC DB + UI; đã submit / import batch / sau API success → giữ nguyên.
    * Toannd61
    */
   _shouldClearNocOnPageLoad(caseRecord) {
@@ -526,7 +526,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this._isPointsRedemptionModalConfirmedInStorage()) {
       return false;
     }
-    if (!caseRecord || caseRecord.FEC_Is_Submited__c === true || caseRecord.FEC_Is_Call_API_Success__c === true) {
+    if (
+      !caseRecord ||
+      caseRecord.FEC_Is_Submited__c === true ||
+      caseRecord.FEC_Is_Call_API_Success__c === true ||
+      caseRecord.FEC_IsImported__c === true
+    ) {
       return false;
     }
     //linhdev 11/06/26 fix jira FECREDIT_CSM_2025_KH-1893 — giữ NOC đã Save & Close (có draft marker trên Case)
