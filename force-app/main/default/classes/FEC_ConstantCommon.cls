@@ -1078,6 +1078,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String ERROR_SAVING_SEARCH_HISTORY = 'Error saving search history';
     public static final String STATUS_ACTIVE = 'Còn hiệu lực';
     public static final String STATUS_EXPIRED = 'Hết hiệu lực';
+    public static final String STATUS_INSURANCE_CANCELLED = 'Đã hủy';
+    public static final String STATUS_INSURANCE_NOT_ON_CONTRACT = 'Chưa lên HĐ bảo hiểm';
     
     public static final String CASE_SUBCHANNEL_MOBILE_APP = 'Mobile App';
     

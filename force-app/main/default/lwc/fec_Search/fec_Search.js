@@ -1053,7 +1053,7 @@ async fetchBancaInsurance(ids) {
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
       EffectiveDate: el.effectiveDate,
-      Status: deriveInsuranceStatus(el.expireDate, el.cancelDate),
+      Status: deriveInsuranceStatus(el.expireDate, el.cancelDate, el.effectiveDate),
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
     }));
@@ -1092,7 +1092,7 @@ async fetchBancaInsuranceByPhone(phones) {
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
       EffectiveDate: el.effectiveDate,
-      Status: deriveInsuranceStatus(el.expireDate, el.cancelDate),
+      Status: deriveInsuranceStatus(el.expireDate, el.cancelDate, el.effectiveDate),
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
     }));
@@ -2249,7 +2249,7 @@ hasAnySearchCriteria(params) {
                       PremiumFee: element.collectedPremiumFee,
                       PaymentId:  element.paymentID,
                       EffectiveDate:  element.effectiveDate,
-                      Status: deriveInsuranceStatus(element.expireDate, element.cancelDate),
+                      Status: deriveInsuranceStatus(element.expireDate, element.cancelDate, element.effectiveDate),
                       PolicyNumber:  element.policyNumber,
                     })
                   });
