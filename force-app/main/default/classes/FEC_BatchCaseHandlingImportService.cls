@@ -22,6 +22,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_RISK_LEVEL = 'Giá trị Mức độ rủi ro không tồn tại trong Datagroup.';
     private static final String ERR_INVALID_REQUIRED_ACTION = 'Giá trị Hành động cần thiết không tồn tại trong Datagroup.';
     private static final String ERR_IMPORT_PROCESSING_TIMEOUT = 'Import quá thời gian xử lý (quá 1 giờ). Vui lòng thử lại.';
+    private static final String ERR_IMPORT_ROW_NOT_COMPLETED = 'Dòng chưa được xử lý apply (import chưa hoàn tất).';
     private static final String ERR_ROUTING_CONFLICT = 'Cùng Case ID có nhiều Routing Action khác nhau trong file import.';
     private static final String ERR_TEMPLATE_FILE_MISMATCH = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
     private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT = 'Payment đánh giá yêu cầu đóng hợp đồng';
@@ -130,7 +131,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     @TestVisible
-    private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_BASE_HOURS = 1;
+    @TestVisible
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS_PER_500_ROWS = 1;
+    @TestVisible
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_MAX_HOURS = 24;
     // 28/05/2026 11:20 linhdev - tối đa 5 case/transaction apply (FEC_CaseBusinessService.run ~8-12 SOQL/row) tránh 101
     @TestVisible
     public static final Integer IMPORT_APPLY_MAX_ROWS_PER_CHUNK = 5;
@@ -260,8 +265,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (batchRow == null) {
             return;
         }
-        Integer failedCount = countFailedImportRows(rowResults);
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
+        Integer unprocessedCount = countUnprocessedImportRows(rowResults);
+        markUnprocessedImportRows(rowResults, ERR_IMPORT_ROW_NOT_COMPLETED);
+        Integer failedCount = countFailedImportRows(rowResults);
+        Integer successCount = countSuccessImportRows(rowResults);
         String failureReason = FEC_ConstantCommon.STR_EMPTY;
         String finalStatus = 'Processed';
         if (totalCount == 0) {
@@ -270,13 +278,18 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         } else if (failedCount == totalCount) {
             finalStatus = 'Failure';
             failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+        } else if (successCount == 0) {
+            finalStatus = 'Failure';
+            failureReason = System.Label.FEC_BCH_ImportFailed;
+        } else if (unprocessedCount > 0) {
+            failureReason = ERR_IMPORT_ROW_NOT_COMPLETED;
         }
         putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
         putBatchCountFields(
             fieldMap,
             batchRow,
             totalCount,
-            totalCount - failedCount < 0 ? 0 : totalCount - failedCount,
+            successCount,
             failedCount
         );
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
@@ -309,7 +322,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             fieldMap,
             new List<String>{ 'FEC_Uploaded_On__c' }
         );
-        Datetime cutoff = Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_HOURS);
+        Datetime cutoff = Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_MAX_HOURS);
         List<String> whereParts = new List<String>{
             statusField + ' = \'Processing\'',
             'CreatedById = :scopeUserId'
@@ -336,7 +349,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         String timeoutReason = resolveImportProcessingTimeoutReason();
         for (SObject staleRow : staleRows) {
-            failBatchImportRecord((Id) staleRow.get('Id'), timeoutReason, null);
+            Id batchId = (Id) staleRow.get('Id');
+            if (!isBatchImportProcessingExpired(batchId)) {
+                continue;
+            }
+            failBatchImportRecord(batchId, timeoutReason, null);
         }
     }
 
@@ -356,8 +373,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             fieldMap,
             new List<String>{ 'FEC_Uploaded_On__c' }
         );
+        String totalRecordsField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }
+        );
         List<String> selectParts = new List<String>{ 'Id', statusField, 'CreatedDate' };
         FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, uploadedOnField);
+        FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, totalRecordsField);
         List<SObject> rows = Database.query(
             'SELECT ' +
                 String.join(selectParts, ', ') +
@@ -383,7 +405,48 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (startedOn == null) {
             return false;
         }
-        return startedOn < Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_HOURS);
+        Integer totalRowCount = resolveBatchImportTotalRowCount(row, fieldMap);
+        Integer timeoutHours = resolveImportProcessingTimeoutHours(totalRowCount);
+        return startedOn < Datetime.now().addHours(-timeoutHours);
+    }
+
+    public static Integer resolveImportProcessingTimeoutHours(Integer totalRowCount) {
+        if (totalRowCount == null || totalRowCount <= 0) {
+            return IMPORT_PROCESSING_TIMEOUT_BASE_HOURS;
+        }
+        Integer extraHours = Math.max(
+            0,
+            ((totalRowCount + 499) / 500) - 1
+        ) * IMPORT_PROCESSING_TIMEOUT_HOURS_PER_500_ROWS;
+        return Math.min(
+            IMPORT_PROCESSING_TIMEOUT_MAX_HOURS,
+            IMPORT_PROCESSING_TIMEOUT_BASE_HOURS + extraHours
+        );
+    }
+
+    private static Integer resolveBatchImportTotalRowCount(
+        SObject batchRow,
+        Map<String, Schema.SObjectField> fieldMap
+    ) {
+        if (batchRow == null || fieldMap == null || fieldMap.isEmpty()) {
+            return 0;
+        }
+        String totalField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }
+        );
+        if (String.isBlank(totalField)) {
+            return 0;
+        }
+        Object totalVal = batchRow.get(totalField);
+        if (totalVal == null) {
+            return 0;
+        }
+        try {
+            return Integer.valueOf(String.valueOf(totalVal));
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     public static void failBatchImportRecord(
@@ -402,10 +465,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String failureReason = String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason;
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
         if (totalCount > 0) {
+            markUnprocessedImportRows(rowResults, failureReason);
             // 28/05/2026 16:35 linhdev - nếu còn ít nhất 1 row success thì batch status phải là Processed để đồng bộ đúng với file Result
             Integer failedCount = countFailedImportRows(rowResults);
-            Integer successCount = totalCount - failedCount < 0 ? 0 : totalCount - failedCount;
-            String finalStatus = failedCount < totalCount ? 'Processed' : 'Failure';
+            Integer successCount = countSuccessImportRows(rowResults);
+            String finalStatus = successCount > 0 ? 'Processed' : 'Failure';
             String finalFailureReason = finalStatus == 'Failure' ? failureReason : FEC_ConstantCommon.STR_EMPTY;
             putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
             putBatchCountFields(fieldMap, batchRow, totalCount, successCount, failedCount);
@@ -1599,6 +1663,81 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         return n;
+    }
+
+    public static Integer countSuccessImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        Integer n = 0;
+        if (rows == null || rows.isEmpty()) {
+            return n;
+        }
+        for (FEC_BatchCaseHandlingImportRow r : rows) {
+            if (r != null && isImportRowAppliedSuccessStatus(r.status)) {
+                n += 1;
+            }
+        }
+        return n;
+    }
+
+    public static Integer countUnprocessedImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        Integer n = 0;
+        if (rows == null || rows.isEmpty()) {
+            return n;
+        }
+        for (FEC_BatchCaseHandlingImportRow r : rows) {
+            if (isImportRowUnprocessed(r)) {
+                n += 1;
+            }
+        }
+        return n;
+    }
+
+    public static void markUnprocessedImportRows(
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        String reason
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        String failureReason = String.isBlank(reason) ? ERR_IMPORT_ROW_NOT_COMPLETED : reason;
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (!isImportRowUnprocessed(row)) {
+                continue;
+            }
+            row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+            row.errors = failureReason;
+        }
+    }
+
+    public static List<FEC_BatchCaseHandlingImportRow> prepareImportRowsForApplyChain(
+        List<FEC_BatchCaseHandlingImportRow> rows
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            return rows;
+        }
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (row == null) {
+                continue;
+            }
+            row.originalHeaders = null;
+            row.originalCells = null;
+            row.originalColumnIndexes = null;
+        }
+        return rows;
+    }
+
+    public static String serializeImportRowsForApplyChain(List<FEC_BatchCaseHandlingImportRow> rows) {
+        return JSON.serialize(prepareImportRowsForApplyChain(rows));
+    }
+
+    private static Boolean isImportRowUnprocessed(FEC_BatchCaseHandlingImportRow row) {
+        return row != null &&
+            shouldApplyImportRow(row) &&
+            !isImportRowAppliedSuccessStatus(row.status) &&
+            row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+    }
+
+    private static Boolean isImportRowAppliedSuccessStatus(String rowStatus) {
+        return rowStatus == System.Label.FEC_Batch_Case_Handling_Success;
     }
 
     // 30/05/2026 18:30 linhdev - đọc remark từ file upload gốc trước validate (LWC/JSON có thể thiếu chuỗi dài)

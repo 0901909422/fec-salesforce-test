@@ -59,4 +59,25 @@ private class FEC_CaseAssignmentTriggerHandler_Test {
             [SELECT FEC_Status__c FROM FEC_Case_Assignment__c WHERE Id = :assignment.Id].FEC_Status__c
         );
     }
+
+    @IsTest
+    static void testHandleAfterInsert_batchImportApplyInProgress_skipsEnqueue() {
+        FEC_Case_Assignment__c assignment = buildAssignment(
+            FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE
+        );
+        insert assignment;
+
+        FEC_BatchCaseHandlingImportService.batchImportApplyInProgress = true;
+        try {
+            Test.startTest();
+            FEC_CaseAssignmentTriggerHandler.handleAfterInsert(
+                new List<FEC_Case_Assignment__c>{ assignment }
+            );
+            Test.stopTest();
+        } finally {
+            FEC_BatchCaseHandlingImportService.batchImportApplyInProgress = false;
+        }
+
+        System.assertNotEquals(null, assignment.Id);
+    }
 }

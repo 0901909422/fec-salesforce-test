@@ -130,6 +130,35 @@ private class FEC_RoutingActionHistoryTrigHandler_Test {
     }
 
     @IsTest
+    static void testProcessNotification_batchImportApplyInProgress_skipsEnqueue() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Resolved'
+        );
+        insert history;
+
+        Test.startTest();
+        FEC_BatchCaseHandlingImportService.batchImportApplyInProgress = true;
+        try {
+            FEC_RoutingActionHistoryTriggerHandler.processNotification(
+                new List<FEC_Routing_Action_History__c>{ history }
+            );
+        } finally {
+            FEC_BatchCaseHandlingImportService.batchImportApplyInProgress = false;
+        }
+        Integer enqueuedInTxn = Limits.getQueueableJobs();
+        Test.stopTest();
+
+        System.assertEquals(
+            0,
+            enqueuedInTxn,
+            'Batch import apply không được enqueue notification — phải giữ slot cho ImportQueueable chain.'
+        );
+    }
+
+    @IsTest
     static void testAfterUpdate_runsHandlerPaths() {
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(

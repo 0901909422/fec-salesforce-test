@@ -54,6 +54,9 @@ public without sharing class FEC_CaseAssignmentTriggerHandler {
         if (suppressImmediateDistributionEnqueue) {
             return;
         }
+        if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+            return;
+        }
         Set<Id> continuousAssignmentIds =
             FEC_CaseAssignmentAutoDistributeService.filterAssignmentIdsForImmediateActivation(
                 assignmentIds
