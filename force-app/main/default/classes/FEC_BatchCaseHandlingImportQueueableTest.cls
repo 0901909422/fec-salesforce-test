@@ -428,6 +428,81 @@ private class FEC_BatchCaseHandlingImportQueueableTest {
         return row;
     }
 
+    @IsTest
+    static void queueableWithOutcomesJson_restoresRowStatus() {
+        Id batchId = insertProcessingBatch('OutcomesJsonApply.xlsx');
+        List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>{
+            buildFailedRow(),
+            buildApplicableRow('500000000000002AAA')
+        };
+        String outcomesJson =
+            '{"0":{"status":"' +
+            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed +
+            '","errors":"prior"},"1":{"status":"' +
+            System.Label.FEC_Batch_Case_Handling_Success +
+            '","errors":""},"bad-key":{"status":"X","errors":"y"}}';
+
+        Test.startTest();
+        System.enqueueJob(
+            new FEC_BatchCaseHandlingImportQueueable(
+                batchId,
+                JSON.serialize(rows),
+                outcomesJson,
+                false,
+                0
+            )
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(
+            'Processing',
+            String.valueOf(queryBatch(batchId).get('FEC_Status__c'))
+        );
+    }
+
+    @IsTest
+    static void queueableExpiredProcessingBatch_marksFailed() {
+        Id batchId = insertProcessingBatch('ExpiredProcessing.xlsx');
+        Test.setCreatedDate(batchId, Datetime.now().addHours(-72));
+        List<FEC_BatchCaseHandlingImportRow> rows = new List<FEC_BatchCaseHandlingImportRow>{
+            buildApplicableRow('500000000000003AAA')
+        };
+
+        Test.startTest();
+        System.enqueueJob(
+            new FEC_BatchCaseHandlingImportQueueable(
+                batchId,
+                JSON.serialize(rows),
+                null,
+                false,
+                0
+            )
+        );
+        Test.stopTest();
+
+        SObject batchRow = queryBatch(batchId);
+        System.assertNotEquals('Processing', String.valueOf(batchRow.get('FEC_Status__c')));
+    }
+
+    @IsTest
+    static void queueableNullBatchAndBlankRows_finalizesSafely() {
+        Test.startTest();
+        System.enqueueJob(
+            new FEC_BatchCaseHandlingImportQueueable(null, null, null, false, 0)
+        );
+        System.enqueueJob(
+            new FEC_BatchCaseHandlingImportQueueable(
+                insertProcessingBatch('BlankRows.xlsx'),
+                '[]',
+                null,
+                false,
+                0
+            )
+        );
+        Test.stopTest();
+        System.assert(true, 'Null/blank queueable payloads should not throw.');
+    }
+
     private static FEC_BatchCaseHandlingImportRow buildValidateRow(String caseIdSearch, String routingAction) {
         FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
         row.caseIdSearch = caseIdSearch;

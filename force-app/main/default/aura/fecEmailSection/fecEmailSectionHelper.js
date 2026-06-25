@@ -1533,18 +1533,85 @@
                 tableStyle += (tableStyle ? ';' : '') + 'max-width:100%;width:100%;box-sizing:border-box';
                 table.setAttribute('style', tableStyle);
             }
+            var textBlocks = holder.querySelectorAll('p, div');
+            for (var b = 0; b < textBlocks.length; b++) {
+                var block = textBlocks[b];
+                var tagName = (block.tagName || '').toLowerCase();
+                var blockStyle = block.getAttribute('style') || '';
+                blockStyle += (blockStyle ? ';' : '') + 'margin:0;padding:0;line-height:1.5';
+                if (tagName === 'p') {
+                    blockStyle += ';mso-margin-top-alt:0;mso-margin-bottom-alt:0';
+                }
+                block.setAttribute('style', blockStyle);
+            }
             return holder.innerHTML;
         } catch (e) {
             return html;
         }
     },
-    cleanBody: function(html) {
+    normalizeReplySubject: function(subject) {
+        if (!subject) return '';
+        var s = String(subject).trim();
+        var changed = true;
+        while (changed) {
+            changed = false;
+            if (/^(RE|FW|FWD)\s*:\s*/i.test(s)) {
+                s = s.replace(/^(RE|FW|FWD)\s*:\s*/i, '').trim();
+                changed = true;
+            }
+            if (s.length > 1 && s.charAt(0) === '<' && s.charAt(s.length - 1) === '>') {
+                s = s.slice(1, -1).trim();
+                changed = true;
+            }
+        }
+        return s.trim();
+    },    buildQuoteHeader: function(email) {
+        if (!email) return '';
+        var lines = [];
+        if (email.from) lines.push('From: ' + email.from);
+        else if (email.fromAddress) lines.push('From: ' + email.fromAddress);
+        if (email.to) lines.push('To: ' + email.to);
+        else if (email.toAddress) lines.push('To: ' + email.toAddress);
+        if (email.cc) lines.push('Cc: ' + email.cc);
+        if (email.date) lines.push('Date: ' + email.date);
+        if (email.subject) lines.push('Subject: ' + email.subject);
+        return '<div style="margin-top:12px;width:500px;font-family:&quot;Times New Roman&quot;,serif;font-size:12px;color:#666;line-height:1.5;">' +
+            '________________________________________________________________<br>' +
+            (lines.length ? lines.join('<br>') + '<br><br>' : '') +
+            '</div>';
+    },
+    buildQuotedBody: function(currentBody, email) {
+        var header = this.buildQuoteHeader(email);
+        var quotedEmail = email ? (email.body || '') : '';
+        return (currentBody ? currentBody + '<br><br>' : '') + header + (quotedEmail || '');
+    },
+    buildEmailBodyForTransport: function(component) {
+        var body = '';
+        if (window._fecQuill) {
+            body = window._fecQuill.root.innerHTML;
+            var text = window._fecQuill.getText().trim();
+            if (!text && !window._fecQuill.root.querySelector('table,img')) {
+                body = component.get('v.body') || '';
+            }
+        } else {
+            body = component.get('v.body') || '';
+        }
+        body = this.normalizeEditorHtmlForEmail(body);
+        // Editor da chua day du draft + quote, khong can ghep them
+        var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
+        if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
+            body = this.normalizeEditorHtmlForEmail(storedBody);
+        }
+        var styleBlock = component.get('v.templateStyleBlock') || '';
+        if (styleBlock) body = styleBlock + body;
+        return body;
+    },    cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
             .replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '')
             // Collapse 3+ consecutive <br> into single
             .replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
-        // Strip leading whitespace/empty lines
+        // Strip leading whitespace/empty lines, but keep tables intact
         result = result.replace(/^(\s*<p[^>]*>\s*(<br\s*\/?>\s*)?<\/p>\s*)+/i, '');
         return result.trim();
     },

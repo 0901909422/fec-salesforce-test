@@ -55,6 +55,7 @@ public without sharing class FEC_ServiceCaseEmailService {
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(toEmail.split(','));
             if (String.isNotBlank(ccEmail)) {
+                ccEmail = ccEmail.replace(';', ',');
                 List<String> ccList = new List<String>();
                 for (String cc : ccEmail.split(',')) { if (String.isNotBlank(cc.trim())) ccList.add(cc.trim()); }
                 if (!ccList.isEmpty()) mail.setCcAddresses(ccList);
@@ -71,18 +72,102 @@ public without sharing class FEC_ServiceCaseEmailService {
             // 5. Set From + ReplyTo = Email Service Address để khách reply về Salesforce
             setFromAndReplyTo(mail, fromEmail);
 
-            // 6. Attachments
+            // Validate attachment sizes: per-file 5MB, total 25MB (Salesforce email limits)
             if (attachments != null && !attachments.isEmpty()) {
-                List<Messaging.EmailFileAttachment> efas = new List<Messaging.EmailFileAttachment>();
+                Integer totalSize = 0;
                 for (AttachmentWrapper att : attachments) {
-                    if (String.isBlank(att.base64Data) || String.isBlank(att.fileName)) continue;
-                    Messaging.EmailFileAttachment efa = new Messaging.EmailFileAttachment();
-                    efa.setFileName(att.fileName);
-                    efa.setBody(EncodingUtil.base64Decode(att.base64Data));
-                    if (String.isNotBlank(att.mimeType)) efa.setContentType(att.mimeType);
-                    efas.add(efa);
+                    if (String.isNotBlank(att.base64Data)) {
+                        // Base64 size ~ 4/3 of raw; 5MB raw ~ 6.67MB base64
+                        if (att.base64Data.length() > 7000000) {
+                            throw new AuraHandledException('File exceeds 5MB limit: ' + att.fileName);
+                        }
+                        totalSize += att.base64Data.length();
+                    }
+                }
+                // Base64 size ~ 4/3 of raw; 25MB raw ~ 33.3MB base64
+                if (totalSize > 33000000) {
+                    throw new AuraHandledException('Total attachment size exceeds 25MB limit. Please reduce file size.');
+                }
+            }
+
+            // 6. Attachments
+            List<String> downloadLinkHtml = new List<String>();
+            if (attachments != null && !attachments.isEmpty()) {
+                // base64 (template/local) use EmailFileAttachment; ContentDocumentId split by size: <=2MB attach, >2MB use link.
+                List<Messaging.EmailFileAttachment> efas = new List<Messaging.EmailFileAttachment>();
+                Set<Id> docIdsToFetch = new Set<Id>();
+                Map<Id, String> docIdToFileName = new Map<Id, String>();
+                for (AttachmentWrapper att : attachments) {
+                    if (String.isBlank(att.fileName)) continue;
+                    if (String.isNotBlank(att.base64Data)) {
+                        if (att.base64Data.length() > 7000000) {
+                            throw new AuraHandledException('File exceeds 5MB limit: ' + att.fileName);
+                        }
+                        Messaging.EmailFileAttachment efa = new Messaging.EmailFileAttachment();
+                        efa.setFileName(att.fileName);
+                        efa.setBody(EncodingUtil.base64Decode(att.base64Data));
+                        efas.add(efa);
+                    } else if (String.isNotBlank(att.contentDocumentId)) {
+                        try {
+                            Id docId = (Id) att.contentDocumentId;
+                            docIdsToFetch.add(docId);
+                            docIdToFileName.put(docId, att.fileName);
+                        } catch (Exception idEx) {}
+                    }
+                }
+                // Query ContentVersion to get ContentSize and Id for splitting
+                Map<Id, Long> docIdToSize = new Map<Id, Long>();
+                Map<Id, Id> docIdToCvId = new Map<Id, Id>();
+                Map<Id, Id> cvIdToDocId = new Map<Id, Id>();
+                if (!docIdsToFetch.isEmpty()) {
+                    for (ContentVersion cv : [
+                        SELECT Id, ContentDocumentId, ContentSize
+                        FROM ContentVersion
+                        WHERE ContentDocumentId IN :docIdsToFetch AND IsLatest = true
+                    ]) {
+                        docIdToSize.put(cv.ContentDocumentId, cv.ContentSize);
+                        docIdToCvId.put(cv.ContentDocumentId, cv.Id);
+                        cvIdToDocId.put(cv.Id, cv.ContentDocumentId);
+                    }
+                }
+                // Split attachments: <=2MB attach directly; >2MB create public link
+                Set<Id> entityAttachmentIds = new Set<Id>();
+                if (!docIdsToFetch.isEmpty()) {
+                    List<ContentDistribution> distsToInsert = new List<ContentDistribution>();
+                    for (Id docId : docIdsToFetch) {
+                        Long size = docIdToSize.get(docId);
+                        if (size != null && size <= 2 * 1024 * 1024) {
+                            // Small file: attach via setEntityAttachments
+                            Id cvId = docIdToCvId.get(docId);
+                            if (cvId != null) entityAttachmentIds.add(cvId);
+                        } else {
+                            // Large file: create ContentDistribution link
+                            Id cvId = docIdToCvId.get(docId);
+                            if (cvId != null) {
+                                ContentDistribution cd = new ContentDistribution();
+                                cd.ContentVersionId = cvId;
+                                cd.Name = docIdToFileName.get(docId);
+                                cd.PreferencesAllowOriginalDownload = true;
+                                cd.PreferencesLinkLatestVersion = true;
+                                cd.PreferencesNotifyOnVisit = false;
+                                distsToInsert.add(cd);
+                            }
+                        }
+                    }
+                    if (!distsToInsert.isEmpty()) {
+                        insert distsToInsert;
+                        for (ContentDistribution cd : [SELECT Id, ContentVersionId, DistributionPublicUrl FROM ContentDistribution WHERE Id IN :distsToInsert]) {
+                            String fName = docIdToFileName.get(cvIdToDocId.get(cd.ContentVersionId));
+                            downloadLinkHtml.add('<a href="' + cd.DistributionPublicUrl + '">' + fName + '</a>');
+                        }
+                    }
                 }
                 if (!efas.isEmpty()) mail.setFileAttachments(efas);
+                if (!entityAttachmentIds.isEmpty()) mail.setEntityAttachments(new List<Id>(entityAttachmentIds));
+                if (!downloadLinkHtml.isEmpty()) {
+                    String linkSection = '<p><strong>Attachments:</strong><br>' + String.join(downloadLinkHtml, '<br>') + '</p>';
+                    mail.setHtmlBody(mail.getHtmlBody() + linkSection);
+                }
             }
             // 7. Send
             List<Messaging.SendEmailResult> results = Messaging.sendEmail(
@@ -112,8 +197,26 @@ public without sharing class FEC_ServiceCaseEmailService {
                 // Store outgoing email attachments on the EmailMessage history record
                 if (attachments != null && !attachments.isEmpty()) {
                     List<ContentVersion> cvs = new List<ContentVersion>();
+                    List<ContentDocumentLink> links = new List<ContentDocumentLink>();
+                    Set<Id> linkedDocIds = new Set<Id>();
                     for (AttachmentWrapper att : attachments) {
-                        if (String.isBlank(att.base64Data) || String.isBlank(att.fileName)) continue;
+                        if (String.isBlank(att.fileName)) continue;
+                        if (String.isNotBlank(att.contentDocumentId)) {
+                            try {
+                                Id docId = (Id) att.contentDocumentId;
+                                if (!linkedDocIds.contains(docId)) {
+                                    links.add(new ContentDocumentLink(
+                                        ContentDocumentId = docId,
+                                        LinkedEntityId = em.Id,
+                                        ShareType = 'V',
+                                        Visibility = 'AllUsers'
+                                    ));
+                                    linkedDocIds.add(docId);
+                                }
+                            } catch (Exception idEx) {}
+                            continue;
+                        }
+                        if (String.isBlank(att.base64Data)) continue;
                         ContentVersion cv = new ContentVersion();
                         cv.Title = att.fileName.contains('.') ? att.fileName.substringBeforeLast('.') : att.fileName;
                         cv.PathOnClient = att.fileName;
@@ -127,8 +230,8 @@ public without sharing class FEC_ServiceCaseEmailService {
                             FROM ContentVersion
                             WHERE Id IN :cvs
                         ];
-                        List<ContentDocumentLink> links = new List<ContentDocumentLink>();
                         for (ContentVersion cv : insertedCvs) {
+                            if (cv.ContentDocumentId == null || linkedDocIds.contains(cv.ContentDocumentId)) continue;
                             links.add(new ContentDocumentLink(
                                 ContentDocumentId = cv.ContentDocumentId,
                                 LinkedEntityId = em.Id,
@@ -136,8 +239,8 @@ public without sharing class FEC_ServiceCaseEmailService {
                                 Visibility = 'AllUsers'
                             ));
                         }
-                        if (!links.isEmpty()) insert links;
                     }
+                    if (!links.isEmpty()) insert links;
                 }
             } catch (Exception emEx) {
                 System.debug('EmailMessage insert skipped: ' + emEx.getMessage());
