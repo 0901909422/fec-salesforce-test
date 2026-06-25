@@ -91,10 +91,12 @@ public without sharing class FEC_ServiceCaseEmailService {
             }
 
             // 6. Attachments
+            List<String> downloadLinkHtml = new List<String>();
             if (attachments != null && !attachments.isEmpty()) {
-                // Split: base64 use EmailFileAttachment; ContentDocumentId use setEntityAttachments to keep original file type.
+                // base64 (template/local) use EmailFileAttachment; ContentDocumentId split by size: <=2MB attach, >2MB use link.
                 List<Messaging.EmailFileAttachment> efas = new List<Messaging.EmailFileAttachment>();
                 Set<Id> docIdsToFetch = new Set<Id>();
+                Map<Id, String> docIdToFileName = new Map<Id, String>();
                 for (AttachmentWrapper att : attachments) {
                     if (String.isBlank(att.fileName)) continue;
                     if (String.isNotBlank(att.base64Data)) {
@@ -106,22 +108,66 @@ public without sharing class FEC_ServiceCaseEmailService {
                         efa.setBody(EncodingUtil.base64Decode(att.base64Data));
                         efas.add(efa);
                     } else if (String.isNotBlank(att.contentDocumentId)) {
-                        try { docIdsToFetch.add((Id) att.contentDocumentId); } catch (Exception idEx) {}
+                        try {
+                            Id docId = (Id) att.contentDocumentId;
+                            docIdsToFetch.add(docId);
+                            docIdToFileName.put(docId, att.fileName);
+                        } catch (Exception idEx) {}
                     }
                 }
-                // Query ContentVersion IDs (setEntityAttachments requires ContentVersion Id, not ContentDocument Id)
-                List<Id> entityAttachmentIds = new List<Id>();
+                // Query ContentVersion to get ContentSize and Id for splitting
+                Map<Id, Long> docIdToSize = new Map<Id, Long>();
+                Map<Id, Id> docIdToCvId = new Map<Id, Id>();
+                Map<Id, Id> cvIdToDocId = new Map<Id, Id>();
                 if (!docIdsToFetch.isEmpty()) {
                     for (ContentVersion cv : [
-                        SELECT Id, ContentDocumentId
+                        SELECT Id, ContentDocumentId, ContentSize
                         FROM ContentVersion
                         WHERE ContentDocumentId IN :docIdsToFetch AND IsLatest = true
                     ]) {
-                        entityAttachmentIds.add(cv.Id);
+                        docIdToSize.put(cv.ContentDocumentId, cv.ContentSize);
+                        docIdToCvId.put(cv.ContentDocumentId, cv.Id);
+                        cvIdToDocId.put(cv.Id, cv.ContentDocumentId);
+                    }
+                }
+                // Split attachments: <=2MB attach directly; >2MB create public link
+                Set<Id> entityAttachmentIds = new Set<Id>();
+                if (!docIdsToFetch.isEmpty()) {
+                    List<ContentDistribution> distsToInsert = new List<ContentDistribution>();
+                    for (Id docId : docIdsToFetch) {
+                        Long size = docIdToSize.get(docId);
+                        if (size != null && size <= 2 * 1024 * 1024) {
+                            // Small file: attach via setEntityAttachments
+                            Id cvId = docIdToCvId.get(docId);
+                            if (cvId != null) entityAttachmentIds.add(cvId);
+                        } else {
+                            // Large file: create ContentDistribution link
+                            Id cvId = docIdToCvId.get(docId);
+                            if (cvId != null) {
+                                ContentDistribution cd = new ContentDistribution();
+                                cd.ContentVersionId = cvId;
+                                cd.Name = docIdToFileName.get(docId);
+                                cd.PreferencesAllowOriginalDownload = true;
+                                cd.PreferencesLinkLatestVersion = true;
+                                cd.PreferencesNotifyOnVisit = false;
+                                distsToInsert.add(cd);
+                            }
+                        }
+                    }
+                    if (!distsToInsert.isEmpty()) {
+                        insert distsToInsert;
+                        for (ContentDistribution cd : [SELECT Id, ContentVersionId, DistributionPublicUrl FROM ContentDistribution WHERE Id IN :distsToInsert]) {
+                            String fName = docIdToFileName.get(cvIdToDocId.get(cd.ContentVersionId));
+                            downloadLinkHtml.add('<a href="' + cd.DistributionPublicUrl + '">' + fName + '</a>');
+                        }
                     }
                 }
                 if (!efas.isEmpty()) mail.setFileAttachments(efas);
-                if (!entityAttachmentIds.isEmpty()) mail.setEntityAttachments(entityAttachmentIds);
+                if (!entityAttachmentIds.isEmpty()) mail.setEntityAttachments(new List<Id>(entityAttachmentIds));
+                if (!downloadLinkHtml.isEmpty()) {
+                    String linkSection = '<p><strong>Attachments:</strong><br>' + String.join(downloadLinkHtml, '<br>') + '</p>';
+                    mail.setHtmlBody(mail.getHtmlBody() + linkSection);
+                }
             }
             // 7. Send
             List<Messaging.SendEmailResult> results = Messaging.sendEmail(
