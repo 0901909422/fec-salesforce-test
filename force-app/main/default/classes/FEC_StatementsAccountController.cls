@@ -362,36 +362,42 @@ public without sharing class FEC_StatementsAccountController {
             return;
         }
 
-        FEC_CommonUltils.beginDeferredApiLogging();
+        FEC_GetCardFinancialTransactions.ResponseWrapper apiRes;
         try {
-            FEC_GetCardFinancialTransactions.ResponseWrapper apiRes =
-                FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    ctx.accountNumber,
-                    ctx.apiFromDate,
-                    ctx.apiToDate
-                );
-
-            List<FEC_GetCardFinancialTransactions.FinancialTransaction> billedRows =
-                filterBilledTransactionsForStatement(
-                    apiRes != null ? apiRes.Transactions : null,
-                    ctx.prevStmtDate,
-                    ctx.stmtEnd
-                );
-
-            if (billedRows.isEmpty() && apiRes != null) {
-                billedRows = filterBilledTransactionsWithValidPostDate(apiRes.Transactions);
-            }
-
-            if (!billedRows.isEmpty()) {
-                upsertBilledFromFinancial(ctx.customerHistoryId, ctx.statementId, billedRows);
-            }
+            apiRes = FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                ctx.accountNumber,
+                ctx.apiFromDate,
+                ctx.apiToDate
+            );
         } catch (Exception e) {
-            System.debug('### BILLED GetCardFinancialTransactions failed: ' + e.getMessage());
-        } finally {
-            FEC_CommonUltils.flushDeferredApiLogs();
+            System.debug('### BILLED API sync skipped: ' + e.getMessage());
+            return;
+        }
+
+        if (apiRes == null || apiRes.Transactions == null || apiRes.Transactions.isEmpty()) {
+            return;
+        }
+
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> billedRows =
+            filterBilledTransactionsForStatement(
+                apiRes.Transactions,
+                ctx.prevStmtDate,
+                ctx.stmtEnd
+            );
+
+        if (billedRows.isEmpty()) {
+            billedRows = filterBilledTransactionsWithValidPostDate(apiRes.Transactions);
+        }
+
+        if (!billedRows.isEmpty()) {
+            upsertBilledFromFinancial(
+                ctx.customerHistoryId,
+                ctx.statementId,
+                billedRows
+            );
         }
     }
 
@@ -492,7 +498,6 @@ public without sharing class FEC_StatementsAccountController {
         if (apiRows == null || apiRows.isEmpty()) {
             return billedRows;
         }
-
         for (FEC_GetCardFinancialTransactions.FinancialTransaction ft : apiRows) {
             if (ft == null) {
                 continue;
@@ -501,10 +506,11 @@ public without sharing class FEC_StatementsAccountController {
             if (postDate == null) {
                 continue;
             }
-            if (prevStmtDate != null && postDate <= prevStmtDate) {
-                continue;
-            }
-            if (stmtEnd != null && postDate > stmtEnd) {
+            if (prevStmtDate != null) {
+                if (postDate <= prevStmtDate || postDate > stmtEnd) {
+                    continue;
+                }
+            } else if (postDate > stmtEnd) {
                 continue;
             }
             billedRows.add(ft);
@@ -534,7 +540,7 @@ public without sharing class FEC_StatementsAccountController {
     private static List<BilledTransactionDTO> loadBilledTransactionsFromDb(Id statementId) {
         Map<String, String> helpTexts =
             FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
-        Map<String, BilledTransactionDTO> deduped = new Map<String, BilledTransactionDTO>();
+        Map<String, BilledTransactionDTO> byKey = new Map<String, BilledTransactionDTO>();
 
         for (FEC_Transaction__c t : [
             SELECT Id,
@@ -553,6 +559,11 @@ public without sharing class FEC_StatementsAccountController {
             WHERE FEC_Statement__c = :statementId
             ORDER BY FEC_Post_Date__c DESC, FEC_Effective_Date__c DESC, CreatedDate DESC
         ]) {
+            String key = billedTxnKey(t);
+            if (key != null && byKey.containsKey(key)) {
+                continue;
+            }
+
             BilledTransactionDTO dto = new BilledTransactionDTO();
             dto.helpTexts = helpTexts;
             dto.Id = t.Id;
@@ -568,106 +579,113 @@ public without sharing class FEC_StatementsAccountController {
             dto.currencyCode = t.FEC_Currency_Code__c;
             dto.otpSent = t.FEC_OTP_Sent__c;
 
-            String key = billedTxnKey(t);
-            if (key == null) {
-                deduped.put(String.valueOf(t.Id), dto);
-            } else if (!deduped.containsKey(key)) {
-                deduped.put(key, dto);
+            if (key != null) {
+                byKey.put(key, dto);
+            } else {
+                byKey.put(String.valueOf(t.Id), dto);
             }
         }
-        return deduped.values();
+        return byKey.values();
     }
 
-    private static void upsertBilledFromFinancial(
+    private static Map<String, Id> upsertBilledFromFinancial(
         Id customerHistoryId,
         Id statementId,
         List<FEC_GetCardFinancialTransactions.FinancialTransaction> rows
     ) {
+        Map<String, Id> idsByKey = new Map<String, Id>();
         if (rows == null || rows.isEmpty()) {
-            return;
+            return idsByKey;
         }
 
         Map<String, FEC_Transaction__c> existingByKey = new Map<String, FEC_Transaction__c>();
-        for (FEC_Transaction__c oldRec : [
+        Map<String, FEC_Transaction__c> existingByMatchKey = new Map<String, FEC_Transaction__c>();
+        List<FEC_Transaction__c> duplicateDeletes = new List<FEC_Transaction__c>();
+
+        for (FEC_Transaction__c tx : [
             SELECT Id,
-                FEC_Post_Date__c,
-                FEC_Transaction_Amount__c,
-                FEC_Credit_Debit_Flag__c,
-                FEC_Transaction_Code__c,
-                FEC_Authorization_Code__c,
-                FEC_Transaction_Plan__c
+                   FEC_Post_Date__c,
+                   FEC_Transaction_Amount__c,
+                   FEC_Credit_Debit_Flag__c,
+                   FEC_Transaction_Code__c,
+                   FEC_Authorization_Code__c,
+                   FEC_Transaction_Plan__c,
+                   FEC_Statement__c
             FROM FEC_Transaction__c
-            WHERE FEC_Statement__c = :statementId
+            WHERE FEC_Customer_History__c = :customerHistoryId
+              AND (FEC_Statement__c = :statementId OR FEC_Statement__c = NULL)
         ]) {
-            String key = billedTxnKey(oldRec);
+            String key = billedTxnKey(tx);
             if (key != null) {
-                existingByKey.put(key, oldRec);
+                if (existingByKey.containsKey(key)) {
+                    duplicateDeletes.add(tx);
+                } else {
+                    existingByKey.put(key, tx);
+                }
+            }
+            String matchKey = billedTxnMatchKey(tx);
+            if (matchKey != null && !existingByMatchKey.containsKey(matchKey)) {
+                existingByMatchKey.put(matchKey, tx);
             }
         }
 
-        Map<String, FEC_Transaction__c> upsertMap = new Map<String, FEC_Transaction__c>();
+        Map<String, FEC_Transaction__c> toSave = new Map<String, FEC_Transaction__c>();
         for (FEC_GetCardFinancialTransactions.FinancialTransaction ft : rows) {
-            if (ft == null) {
-                continue;
-            }
             String key = billedTxnKey(ft);
             if (key == null) {
                 continue;
             }
 
-            FEC_Transaction__c rec = buildBilledTransactionRecord(
-                customerHistoryId,
-                statementId,
-                ft
-            );
-            if (rec == null) {
-                continue;
+            FEC_Transaction__c rec;
+            if (toSave.containsKey(key)) {
+                rec = toSave.get(key);
+            } else if (existingByKey.containsKey(key)) {
+                rec = existingByKey.get(key);
+            } else {
+                String matchKey = billedTxnMatchKey(ft);
+                rec = existingByMatchKey.containsKey(matchKey)
+                    ? existingByMatchKey.get(matchKey)
+                    : new FEC_Transaction__c(FEC_Customer_History__c = customerHistoryId);
             }
-            if (existingByKey.containsKey(key)) {
-                rec.Id = existingByKey.get(key).Id;
+
+            Date postDate = FEC_CommonUltils.toDateStr(ft.PostingDate);
+            Date effDate = FEC_CommonUltils.toDateStr(ft.TRNXDateAndTime);
+            if (effDate == null) {
+                effDate = postDate;
             }
-            upsertMap.put(key, rec);
-        }
 
-        if (!upsertMap.isEmpty()) {
-            upsert upsertMap.values();
-        }
-    }
-
-    private static FEC_Transaction__c buildBilledTransactionRecord(
-        Id customerHistoryId,
-        Id statementId,
-        FEC_GetCardFinancialTransactions.FinancialTransaction ft
-    ) {
-        Date postDate = FEC_CommonUltils.toDateStr(ft.PostingDate);
-        Date effDate = FEC_CommonUltils.toDateStr(ft.TRNXDateAndTime);
-        if (effDate == null) {
-            effDate = postDate;
-        }
-        if (postDate == null && effDate == null) {
-            return null;
-        }
-
-        return new FEC_Transaction__c(
-            FEC_Customer_History__c = customerHistoryId,
-            FEC_Statement__c = statementId,
-            FEC_Effective_Date__c = effDate,
-            FEC_Post_Date__c = postDate,
-            FEC_Transaction_Amount__c = ft.TRNXAmount,
-            FEC_Merchant_Description__c = String.isBlank(ft.MerchantName)
+            rec.FEC_Statement__c = statementId;
+            rec.FEC_Effective_Date__c = effDate;
+            rec.FEC_Post_Date__c = postDate;
+            rec.FEC_Transaction_Amount__c = ft.TRNXAmount;
+            rec.FEC_Merchant_Description__c = String.isBlank(ft.MerchantName)
                 ? ft.Description
-                : ft.MerchantName,
-            FEC_Credit_Debit_Flag__c = ft.CreditDebitFlag,
-            FEC_Transaction_Plan__c = ft.Plan,
-            FEC_Transaction_Code__c = ft.TransactionCode,
-            FEC_Authorization_Code__c = ft.AuthCode,
-            FEC_Merchant_Category_Code__c = ft.MCC,
-            FEC_Reference_Number__c = ft.RRN,
-            FEC_Currency_Code__c = ft.TRNXCurrencyCode,
-            FEC_OTP_Sent__c = ft.OTPSent == null
+                : ft.MerchantName;
+            rec.FEC_Credit_Debit_Flag__c = ft.CreditDebitFlag;
+            rec.FEC_Transaction_Plan__c = ft.Plan;
+            rec.FEC_Transaction_Code__c = ft.TransactionCode;
+            rec.FEC_Authorization_Code__c = normalizeBilledKeyToken(ft.AuthCode);
+            rec.FEC_Currency_Code__c = ft.TRNXCurrencyCode;
+            rec.FEC_OTP_Sent__c = ft.OTPSent == null
                 ? null
-                : (ft.OTPSent == 1 ? 'Yes' : (ft.OTPSent == 0 ? 'No' : 'N/A'))
-        );
+                : (ft.OTPSent == 1 ? 'Yes' : (ft.OTPSent == 0 ? 'No' : 'N/A'));
+
+            toSave.put(key, rec);
+        }
+
+        if (!duplicateDeletes.isEmpty()) {
+            delete duplicateDeletes;
+        }
+        if (!toSave.isEmpty()) {
+            upsert toSave.values();
+            for (FEC_Transaction__c rec : toSave.values()) {
+                String key = billedTxnKey(rec);
+                if (key != null) {
+                    idsByKey.put(key, rec.Id);
+                }
+            }
+        }
+        return idsByKey;
     }
 
     private static BilledTransactionDTO toBilledDto(
@@ -688,7 +706,7 @@ public without sharing class FEC_StatementsAccountController {
         dto.transactionPlan = ft.Plan;
         dto.transactionCode = ft.TransactionCode;
         dto.authorizationCode = ft.AuthCode;
-        dto.merchantCategoryCode = ft.MCC;
+        dto.merchantCategoryCode = null;
         dto.currencyCode = ft.TRNXCurrencyCode;
         dto.otpSent = ft.OTPSent == null
             ? null
@@ -718,6 +736,24 @@ public without sharing class FEC_StatementsAccountController {
         );
     }
 
+    private static String billedTxnMatchKey(FEC_GetCardFinancialTransactions.FinancialTransaction ft) {
+        return buildBilledTxnMatchKey(
+            FEC_CommonUltils.toDateStr(ft.PostingDate),
+            ft.TRNXAmount,
+            ft.CreditDebitFlag,
+            ft.TransactionCode
+        );
+    }
+
+    private static String billedTxnMatchKey(FEC_Transaction__c tx) {
+        return buildBilledTxnMatchKey(
+            tx.FEC_Post_Date__c,
+            tx.FEC_Transaction_Amount__c,
+            tx.FEC_Credit_Debit_Flag__c,
+            tx.FEC_Transaction_Code__c
+        );
+    }
+
     private static String buildBilledTxnKey(
         Date postDate,
         Decimal amount,
@@ -737,15 +773,30 @@ public without sharing class FEC_StatementsAccountController {
             + '|' + normalizeBilledKeyToken(plan);
     }
 
-    private static String normalizeBilledKeyToken(String value) {
-        return String.isBlank(value) ? '' : value.trim();
+    private static String buildBilledTxnMatchKey(
+        Date postDate,
+        Decimal amount,
+        String creditDebitFlag,
+        String transactionCode
+    ) {
+        if (postDate == null || amount == null) {
+            return null;
+        }
+        return formatBilledKeyDate(postDate)
+            + '|' + formatBilledKeyAmount(amount)
+            + '|' + normalizeBilledKeyToken(creditDebitFlag)
+            + '|' + normalizeBilledKeyToken(transactionCode);
     }
 
-    private static String formatBilledKeyDate(Date value) {
-        return value == null ? '' : String.valueOf(value);
+    private static String formatBilledKeyDate(Date postDate) {
+        return String.valueOf(postDate);
     }
 
     private static String formatBilledKeyAmount(Decimal amount) {
-        return amount == null ? '' : String.valueOf(amount.setScale(2));
+        return amount.setScale(2).toPlainString();
+    }
+
+    private static String normalizeBilledKeyToken(String value) {
+        return String.isBlank(value) ? '' : value.trim();
     }
 }

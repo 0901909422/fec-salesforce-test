@@ -122,6 +122,7 @@ public without sharing class FEC_SecondaryController {
 
         /* ---------- 2. CONTACT LIST ---------- */
          List<FEC_Contact_List__c> contactsToInsert = new List<FEC_Contact_List__c>();
+        Set<String> seenContactKeys = new Set<String>();
 
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper contactRes =
@@ -140,6 +141,16 @@ public without sharing class FEC_SecondaryController {
                     contactRes.CustomerBasicInfo.PreferredContacts) {
 
                     if (pc == null || pc.Contact == null) continue;
+
+                    String contactKey = buildContactDedupeKey(
+                        pc.Contact.Channel,
+                        pc.Contact.CommunicationType,
+                        pc.Contact.ContactString
+                    );
+                    if (seenContactKeys.contains(contactKey)) {
+                        continue;
+                    }
+                    seenContactKeys.add(contactKey);
 
                     contactsToInsert.add(new FEC_Contact_List__c(
                         FEC_Customer_History__c   = hist.Id,
@@ -372,6 +383,7 @@ public without sharing class FEC_SecondaryController {
    private static List<ContactDTO> buildContactDTO(Id customerHistoryId) {
 
         List<ContactDTO> result = new List<ContactDTO>();
+        Set<String> seenContactKeys = new Set<String>();
 
         if (customerHistoryId == null) {
             return result;
@@ -387,6 +399,16 @@ public without sharing class FEC_SecondaryController {
         ];
 
         for (FEC_Contact_List__c c : contactRecords) {
+            String contactKey = buildContactDedupeKey(
+                c.FEC_Channel__c,
+                c.FEC_Communication_Type__c,
+                c.FEC_Contact_String__c
+            );
+            if (seenContactKeys.contains(contactKey)) {
+                continue;
+            }
+            seenContactKeys.add(contactKey);
+
             ContactDTO dto = new ContactDTO();
             dto.channel = c.FEC_Channel__c;
             dto.communicationType = c.FEC_Communication_Type__c;
@@ -407,5 +429,17 @@ public without sharing class FEC_SecondaryController {
         dto.mobileAppAccount = h.FEC_Mobile_App_Account__c;
         dto.email            = h.FEC_Email__c;
         return dto;
+    }
+
+    private static String buildContactDedupeKey(
+        String channel,
+        String communicationType,
+        String contactString
+    ) {
+        return String.join(new List<String>{
+            channel == null ? '' : channel.trim(),
+            communicationType == null ? '' : communicationType.trim(),
+            contactString == null ? '' : contactString.trim()
+        }, '|');
     }
 }
