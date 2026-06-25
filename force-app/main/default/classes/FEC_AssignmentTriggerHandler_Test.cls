@@ -133,4 +133,35 @@ private class FEC_AssignmentTriggerHandler_Test {
         Case updatedCase = [SELECT Id, FEC_Assignment_Users__c FROM Case WHERE Id = :c1.Id];
         System.assertEquals('FEC_Test_Queue_Name', updatedCase.FEC_Assignment_Users__c, 'Phải lưu tên Queue khi OwnerId bằng null');
     }
+
+    @IsTest
+    static void testBatchHandlingBypass_skipsAssignmentTriggerSync() {
+        Case c1 = [SELECT Id FROM Case WHERE Subject = 'Test Case 1' LIMIT 1];
+        User u2 = [SELECT Id FROM User WHERE Alias = 'usr2' LIMIT 1];
+        FEC_Assignment__c assign = [
+            SELECT Id, FEC_Assignment_Owner__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :c1.Id
+            LIMIT 1
+        ];
+
+        update new Case(Id = c1.Id, FEC_Assignment_Users__c = 'KEEP_BCH');
+
+        FEC_BatchCaseHandlingImportService.batchHandlingTriggerBypass = true;
+        try {
+            Test.startTest();
+            assign.FEC_Assignment_Owner__c = u2.Id;
+            update assign;
+            Test.stopTest();
+        } finally {
+            FEC_BatchCaseHandlingImportService.batchHandlingTriggerBypass = false;
+        }
+
+        Case updatedCase = [SELECT FEC_Assignment_Users__c FROM Case WHERE Id = :c1.Id];
+        System.assertEquals(
+            'KEEP_BCH',
+            updatedCase.FEC_Assignment_Users__c,
+            'Khi bật batch-handling bypass thì Assignment trigger không sync side effects lên Case'
+        );
+    }
 }

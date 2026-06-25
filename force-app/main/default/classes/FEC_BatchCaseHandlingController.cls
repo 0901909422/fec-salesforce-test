@@ -2,7 +2,6 @@ public without sharing class FEC_BatchCaseHandlingController {
     private static final String OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     private static final Integer MAX_ROWS = 200;
     private static final Integer MAX_ATTACHMENT_CASE_SET = 1000;
-    private static final Integer MAX_EXPORT_ROWS = 100000;
     private static final Integer EXPORT_CURSOR_PAGE_SIZE = 1000;
     private static final String PROPERTY_GROUP_PREDEFINED = 'PREDEFINED';
     private static final String PROPERTY_GROUP_CASE_FIELD = 'CASE_FIELD';
@@ -1310,6 +1309,22 @@ public without sharing class FEC_BatchCaseHandlingController {
             }
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
+                Integer applicableCount = FEC_BatchCaseHandlingImportService.countApplicableImportRows(rowResults);
+                // 25/06/2026 linhdev - import lớn: stage rows + Batch Apex để giảm queueable-chain 1 row/job
+                if (FEC_BatchCaseHandlingImportService.shouldApplyImportWithBatch(applicableCount)) {
+                    FEC_BCH_ImportWorkItemService.stageRows((Id) batchRow.get('Id'), rowResults);
+                    Database.executeBatch(
+                        new FEC_BCH_ImportApplyBatch((Id) batchRow.get('Id'), cofOrGsr),
+                        FEC_BatchCaseHandlingImportService.IMPORT_BATCH_APPLY_SCOPE_SIZE
+                    );
+                    out.success = true;
+                    out.message = System.Label.FEC_BCH_Import_Submitted;
+                    out.batchRecordId = (Id) batchRow.get('Id');
+                    out.contentDocumentId = insertedCv.ContentDocumentId;
+                    out.status = 'Processing';
+                    out.resultRowsJson = JSON.serialize(rowResults);
+                    return out;
+                }
                 // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
                 if (FEC_BatchCaseHandlingImportService.shouldProcessImportSynchronously(rowResults)) {
                     FEC_BatchCaseHandlingImportService.processApplicableImportRowsSync(
