@@ -18,12 +18,29 @@ public with sharing class FEC_CustomSyncCallout {
     public static List<FEC_integration_service_log__c> sendRequest(FEC_Custom_Sync__c cus, FEC_integration_service_log__c log, List<SObject> scope, Map<Id, Map<String, Object>> mapDynamicData) {
         List<FEC_integration_service_log__c> resultLogs = new List<FEC_integration_service_log__c>();
         log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
+        
+        // LƯU TOÀN BỘ RECORD IDS TRƯỚC KHI CALL API (Mặc định coi như tất cả đều failed)
+        List<String> allRecordIds = new List<String>();
+        if (scope != null && !scope.isEmpty()) {
+            for (SObject record : scope) {
+                allRecordIds.add(String.valueOf(record.get('Id')));
+            }
+            log.Records__c = JSON.serialize(allRecordIds);
+        }
+        log.FEC_Bix_Is_Success__c = false; // Mặc định là failed
+        
         try {   
             CustomSyncSetting__c apiSetting = CustomSyncSetting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Custom_Sync_Bix'); 
 
-            // Truyền mapDynamicData vào hàm toJson
-            String jsonBody = toJson(cus, scope, mapDynamicData);
+            String jsonBody = null;
+            // Build json body for table AdditionalProperties
+            if (cus.FEC_Table_Name__c == 'BIX_FECS_AdditionalProperties') {
+                jsonBody = FEC_CustomSyncAdditionalData.getAdditionalInfoJson(scope, cus.FEC_Table_Name__c);
+            } else {
+                // Truyền mapDynamicData vào hàm toJson
+                jsonBody = toJson(cus, scope, mapDynamicData);
+            }
             
             log.FEC_Endpoint__c = apiSetting?.Endpoint__c + apiConfig?.FEC_Endpoint__c;
             log.FEC_Method__c = 'POST'; 
@@ -53,8 +70,52 @@ public with sharing class FEC_CustomSyncCallout {
                     log.FEC_Bix_Is_Success__c = (totalSuccess != null && totalSuccess > 0);
                     Integer totalFailed = data.get('totalFailed') != null ? Integer.valueOf(String.valueOf(data.get('totalFailed'))) : 0;
                     
+                    // XỬ LÝ TRƯỜNG HỢP 100% SUCCESS (totalFailed = 0)
+                    if (totalFailed == 0 && totalSuccess > 0) {
+                        Map<String, String> extIdToSfId = new Map<String, String>();
+                        for (SObject record : scope) {
+                            String extId = null;
+                            try {
+                                extId = (String) record.get('FEC_ID_Search__c');
+                            } catch (Exception e) {
+                                // Field không tồn tại
+                            }
+                            String sfId = String.valueOf(record.get('Id'));
+                            if (extId != null) {
+                                extIdToSfId.put(extId, sfId);
+                            } else {
+                                extIdToSfId.put(sfId, sfId);
+                            }
+                        }
+                        
+                        List<Object> successRecords = (List<Object>) data.get('successRecords');
+                        List<String> successSfIds = new List<String>();
+                        if (successRecords != null) {
+                            for (Object sr : successRecords) {
+                                String extId = (String) sr;
+                                if (extIdToSfId.containsKey(extId)) {
+                                    successSfIds.add(extIdToSfId.get(extId));
+                                }
+                            }
+                        }
+                        
+                        // FALLBACK: Nếu không map được, dùng tất cả IDs từ scope
+                        if (successSfIds.isEmpty() && successRecords != null && !successRecords.isEmpty()) {
+                            for (SObject record : scope) {
+                                successSfIds.add(String.valueOf(record.get('Id')));
+                            }
+                        }
+                        
+                        log.Records__c = JSON.serialize(successSfIds);
+                        log.FEC_Bix_Is_Success__c = true;
+                        resultLogs.add(log);
+                        return resultLogs;
+                    }
+                    
                     if (totalFailed > 0) {
-                         Map<String, String> extIdToSfId = new Map<String, String>();
+                        Map<String, String> extIdToSfId = new Map<String, String>();
+                        Map<String, String> sfIdToExtId = new Map<String, String>(); // Reverse map
+                        
                         for (SObject record : scope) {
                             // Ưu tiên FEC_ID_Search__c làm external ID, fallback sang Salesforce Id
                             String extId = null;
@@ -64,8 +125,10 @@ public with sharing class FEC_CustomSyncCallout {
                                 // Field không tồn tại trên object này → dùng Id
                             }
                             String sfId = String.valueOf(record.get('Id'));
+                            
                             if (extId != null) {
                                 extIdToSfId.put(extId, sfId);
+                                sfIdToExtId.put(sfId, extId);
                             } else {
                                 // Fallback: dùng Salesforce Id làm key mapping
                                 extIdToSfId.put(sfId, sfId);
@@ -94,9 +157,40 @@ public with sharing class FEC_CustomSyncCallout {
                         }
 
                         List<String> failedSfIds = new List<String>();
+                        Set<String> unmappedFailedIds = new Set<String>(); // Track IDs không map được
+                        
                         for (String extId : failedExtIds) {
                             if (extIdToSfId.containsKey(extId)) {
                                 failedSfIds.add(extIdToSfId.get(extId));
+                            } else {
+                                unmappedFailedIds.add(extId); // Không tìm thấy mapping
+                            }
+                        }
+                        
+                        // FALLBACK: Nếu không map được, dùng scope IDs trừ đi success
+                        if (failedSfIds.isEmpty() && !failedExtIds.isEmpty()) {
+                            // Tạo Set của successSfIds để loại trừ nhanh
+                            Set<String> successSet = new Set<String>(successSfIds);
+                            for (SObject record : scope) {
+                                String sfId = String.valueOf(record.get('Id'));
+                                if (!successSet.contains(sfId)) {
+                                    failedSfIds.add(sfId);
+                                }
+                            }
+                        }
+                        
+                        // FALLBACK cấp 2: Nếu cả success và fail đều không map được
+                        // Dùng totalSuccess và totalFailed để phân bổ
+                        if (successSfIds.isEmpty() && failedSfIds.isEmpty() && scope != null && !scope.isEmpty()) {
+                            Integer successCount = 0;
+                            for (SObject record : scope) {
+                                String sfId = String.valueOf(record.get('Id'));
+                                if (successCount < totalSuccess) {
+                                    successSfIds.add(sfId);
+                                    successCount++;
+                                } else {
+                                    failedSfIds.add(sfId);
+                                }
                             }
                         }
 
@@ -153,9 +247,15 @@ public with sharing class FEC_CustomSyncCallout {
             log.FEC_Status_Code__c = '500'; 
             String errorMsg = 'Exception: FEC_CustomSyncCallout Line: ' + e.getLineNumber() + ' - ' + e.getMessage();
             log.FEC_Error_Message__c = errorMsg.length() > 255 ? errorMsg.substring(0, 255) : errorMsg;
+            log.FEC_Bix_Is_Success__c = false;
+            // Records__c đã được set ở đầu hàm với toàn bộ scope (failed)
             System.debug(errorMsg);
         }
-        resultLogs.add(log);
+        
+        // FALLBACK CUỐI CÙNG: Nếu không có log nào được tạo, trả về log mặc định với toàn bộ scope (failed)
+        if (resultLogs.isEmpty()) {
+            resultLogs.add(log);
+        }
         return resultLogs;
     } 
 
