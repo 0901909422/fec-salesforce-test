@@ -11,6 +11,8 @@
 ****************************************************************************************/
  
 public with sharing class FEC_GetRelativesList {
+
+    public static FEC_ResponseLog responseLog;
  
     // =========================================================================
     // RESPONSE MODELS
@@ -48,44 +50,76 @@ public with sharing class FEC_GetRelativesList {
         String dateTimeStr,
         String cifNumber
     ) {
+        validateRequest(transID, requestorId, dateTimeStr, cifNumber);
+
+        String soapBody = buildSoapRequest(
+            transID,
+            requestorId,
+            dateTimeStr,
+            cifNumber
+        );
+
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Relatives_List');
+
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_RELATIVES_LIST_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
         try {
- 
-            validateRequest(transID, requestorId, dateTimeStr, cifNumber);
- 
-            String soapBody = buildSoapRequest(
-                transID,
-                requestorId,
-                dateTimeStr,
-                cifNumber
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                null,
+                soapBody
             );
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Relatives_List');
- 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_RELATIVES_LIST_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
- 
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetRelativesList',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
+
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
                 );
             }
- 
+
             ResponseWrapper response = parseResponse(res.getBody());
- 
+
             if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
- 
+
             return response;
- 
         } catch (Exception ex) {
-            System.debug('### GET RELATIVES LIST ERROR: ' + ex.getMessage());
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             throw ex;
+        } finally {
+            logApiResponse();
+        }
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
         }
     }
 
