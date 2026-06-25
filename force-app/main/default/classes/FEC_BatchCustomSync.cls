@@ -26,7 +26,14 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
             0 
         );  
         startTime  = cus.FEC_End_At__c ?? toDate.addHours(-1);
-        return Database.getQueryLocator(getFields(cus));
+        System.debug('Batch Start Time: ' + startTime + ' || Batch End Time: ' + toDate);
+        if (cus.FEC_Table_Name__c == 'BIX_FECS_AdditionalProperties') {
+            System.debug('Executing Additional Properties Batch with Dynamic Query');
+            return Database.getQueryLocator(FEC_CustomSyncAdditionalData.getAdditionalNeedToSync(cus, startTime, toDate));
+        } else {
+            System.debug('Executing Main Batch with Dynamic Query');
+            return Database.getQueryLocator(getFields(cus));
+        }
     } 
     
     global void execute(Database.BatchableContext bc, List<sObject> scope) { 
