@@ -13,6 +13,8 @@
 public with sharing class FEC_GetCustomerInfoBasic {
  
     private static final String CIF_NS ='http://fecredit.com.vn/CIF_CustomerInfo';
+
+    public static FEC_ResponseLog responseLog;
     
     /* =====================================================
        RESPONSE MODELS
@@ -110,37 +112,72 @@ public with sharing class FEC_GetCustomerInfoBasic {
         String dateTimeStr,
         String cifNumber
     ) {
+        validateRequest(transId, requestorId, dateTimeStr, cifNumber);
+
+        String soapBody = buildSoapRequest(
+            transId,
+            requestorId,
+            dateTimeStr,
+            cifNumber
+        );
+
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Info_Basic');
+
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_CUSTOMER_INFO_BASIC_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
         try {
- 
-            validateRequest(transId, requestorId, dateTimeStr, cifNumber);
- 
-            String soapBody = buildSoapRequest(
-                transId,
-                requestorId,
-                dateTimeStr,
-                cifNumber
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                null,
+                soapBody
             );
- 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Info_Basic');
- 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_CUSTOMER_INFO_BASIC_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-            
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetCustomerInfoBasic',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
+
             if (res.getStatusCode() != 200) {
-                throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
+                );
             }
             if (String.isBlank(res.getBody())) {
                 throw new CalloutException(System.Label.FEC_MSG_Response_Null);
             }
- 
+
             return parseResponse(res.getBody());
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             System.debug('### GET CUSTOMER INFO BASIC ERROR: ' + ex.getMessage());
             throw ex;
+        } finally {
+            logApiResponse();
+        }
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
         }
     }
 
