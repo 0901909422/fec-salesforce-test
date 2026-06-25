@@ -28,5 +28,7 @@
     <permissionSets>FEC_Interaction_Creation_or_Handling_Outbound</permissionSets>
     <permissionSets>FEC_Interaction_Creation_or_Handling_F2F</permissionSets>
     <permissionSets>FEC_Interaction_Creation_or_Handling_Letter</permissionSets>
+    <permissionSets>FEC_View_Interaction_Highlight_on_Case_Handling_Intearction_Tab</permissionSets>
+    <permissionSets>FEC_View_Interaction_Infor_on_Case_Handling_Intearction_Tab</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
