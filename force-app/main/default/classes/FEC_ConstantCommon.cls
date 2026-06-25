@@ -48,6 +48,16 @@ public with sharing class FEC_ConstantCommon {
     public static final String FOLLOW_UP_COMPACT_UNFOLLOW = 'U';
     /** Dấu phân tách giữa các entry trong FEC_Follow_Up_User__c */
     public static final String FOLLOW_UP_FIELD_DELIMITER = ';';
+    /** User Group (RD personas) không được phép Add Follow-Up User. */
+    public static final Set<String> FOLLOW_UP_ADD_USER_RESTRICTED_USER_GROUPS = new Set<String>{
+        'CO', 'CL', 'CP', 'PM', 'DS', 'TS', 'CA', 'IA', 'IT'
+    };
+    /** Permission Set Group label cho RD - IT Admin. */
+    public static final String PSG_LABEL_RD_IT_ADMIN = 'RD - IT Admin';
+    /** Permission Set Group developer names cho RD - IT Admin. */
+    public static final Set<String> PSG_DEV_NAMES_RD_IT_ADMIN = new Set<String>{
+        'FEC_PSG_RD_IT_Admin', 'PSG_RD_IT_Admin'
+    };
     
     public static final String DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss\'.0 GMT\'';
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
