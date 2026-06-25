@@ -101,7 +101,7 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
                 }
                 FEC_BatchCaseHandlingImportService.failBatchImportRecord(
                     batchRecordId,
-                    System.Label.FEC_BCH_ImportFailed,
+                    FEC_BatchCaseHandlingImportService.resolveImportQueueLimitExceededReason(),
                     applyOutcomes(allRows, outcomeByRowIndex)
                 );
                 return;

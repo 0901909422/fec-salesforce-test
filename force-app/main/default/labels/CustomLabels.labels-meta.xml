@@ -2515,6 +2515,14 @@
         <value>Case ID không tồn tại trong hệ thống</value>
     </labels>
     <labels>
+        <fullName>FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member</shortDescription>
+        <value>Người dùng không phải chủ sở hữu Case hoặc không phải là thành viên của Queue.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</fullName>
         <categories>Batch Case Handling</categories>
         <language>en_US</language>

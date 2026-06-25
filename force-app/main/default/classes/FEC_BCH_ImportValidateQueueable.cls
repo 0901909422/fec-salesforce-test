@@ -80,7 +80,7 @@ public without sharing class FEC_BCH_ImportValidateQueueable implements Queueabl
                 }
                 FEC_BatchCaseHandlingImportService.failBatchImportRecord(
                     batchRecordId,
-                    System.Label.FEC_BCH_ImportFailed,
+                    FEC_BatchCaseHandlingImportService.resolveImportQueueLimitExceededReason(),
                     rows
                 );
                 return;
