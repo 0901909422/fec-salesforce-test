@@ -694,4 +694,42 @@ private class FEC_CaseTriggerHandler_Test {
             loaded.FEC_Send_To__c
         );
     }
+
+    @IsTest
+    static void testBeforeAfterUpdate_batchHandlingBypass_skipsCaseTriggerSideEffects() {
+        Case row = new Case(
+            Subject = 'Batch Handling Trigger Bypass',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            FEC_Case_Status_History__c = '#1: Seed',
+            FEC_ID_Search__c = 'BHB-' + String.valueOf(System.currentTimeMillis())
+        );
+        insert row;
+
+        String beforeHistory = [
+            SELECT FEC_Case_Status_History__c
+            FROM Case
+            WHERE Id = :row.Id
+        ].FEC_Case_Status_History__c;
+
+        FEC_BatchCaseHandlingImportService.batchHandlingTriggerBypass = true;
+        try {
+            Test.startTest();
+            update new Case(
+                Id = row.Id,
+                Status = FEC_ConstantCommon.CASE_STATUS_PENDING,
+                FEC_Team__c = 'CC'
+            );
+            Test.stopTest();
+        } finally {
+            FEC_BatchCaseHandlingImportService.batchHandlingTriggerBypass = false;
+        }
+
+        Case loaded = [
+            SELECT Status, FEC_Case_Status_History__c
+            FROM Case
+            WHERE Id = :row.Id
+        ];
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_PENDING, loaded.Status);
+        System.assertEquals(beforeHistory, loaded.FEC_Case_Status_History__c);
+    }
 }

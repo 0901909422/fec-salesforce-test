@@ -183,6 +183,18 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     public static final Integer IMPORT_ASYNC_VALIDATE_MIN_ROWS = 5000;
     @TestVisible
     public static final Integer IMPORT_VALIDATE_MAX_ROWS_PER_CHUNK = 400;
+    // 25/06/2026 linhdev - import lớn dùng staging + batch apply để giảm queueable-chain 1 row/job
+    @TestVisible
+    public static final Integer IMPORT_BATCH_APPLY_MIN_ROWS = 300;
+    @TestVisible
+    public static final Integer IMPORT_BATCH_APPLY_SCOPE_SIZE = 5;
+    @TestVisible
+    public static final Integer IMPORT_RESULT_ARTIFACT_CHUNK_SIZE = 5000;
+    @TestVisible
+    public static final Integer IMPORT_RESULT_ARTIFACT_QUEUEABLE_CHUNK_SIZE = 2000;
+    // 25/06/2026 finalize theo summary khi volume lớn để tránh heap/CPU blow ở Batch.finish
+    @TestVisible
+    public static final Integer IMPORT_BATCH_APPLY_SUMMARY_ONLY_MIN_ROWS = 10000;
     // 08/06/2026 linhdev - ~8-12 SOQL/row runInternal; 2 row/transaction an toàn dưới ngưỡng 72%
     // 24/06/2026 phong - giảm xuống 1 row/transaction: resolve gọi thêm resolveAllAssignments (3-4 SOQL)
     // + trigger after-update (5-10 SOQL) → tổng thực tế 20-25 SOQL/row, 2 rows có thể vượt ngưỡng 72%
@@ -194,9 +206,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
     @TestVisible
     private static Boolean batchImportApplyInProgress = false;
+    @TestVisible
+    private static Boolean batchHandlingTriggerBypass = false;
 
     public static Boolean isBatchImportApplyInProgress() {
         return batchImportApplyInProgress == true;
+    }
+
+    public static Boolean isBatchHandlingTriggerBypass() {
+        return batchHandlingTriggerBypass == true;
     }
 
     public static Boolean shouldApplyImportRow(FEC_BatchCaseHandlingImportRow row) {
@@ -229,6 +247,66 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     public static Boolean shouldValidateImportAsynchronously(Integer rowCount) {
         return rowCount != null && rowCount > IMPORT_ASYNC_VALIDATE_MIN_ROWS;
+    }
+
+    public static Boolean shouldApplyImportWithBatch(Integer applicableRowCount) {
+        return applicableRowCount != null &&
+            applicableRowCount >= IMPORT_BATCH_APPLY_MIN_ROWS &&
+            FEC_BCH_ImportWorkItemService.isWorkItemObjectAvailable();
+    }
+
+    public static Boolean shouldFinalizeImportWithSummaryOnly(Integer totalRowCount) {
+        return totalRowCount != null &&
+            totalRowCount >= IMPORT_BATCH_APPLY_SUMMARY_ONLY_MIN_ROWS;
+    }
+
+    public static void finalizeBatchImportRecordFromSummary(
+        Id batchRecordId,
+        Integer totalCount,
+        Integer successCount,
+        Integer failedCount,
+        String failureReason
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Integer total = totalCount == null ? 0 : totalCount;
+        Integer success = successCount == null ? 0 : successCount;
+        Integer failed = failedCount == null ? 0 : failedCount;
+        String resolvedFailureReason = String.isBlank(failureReason)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : failureReason;
+
+        String finalStatus = 'Processed';
+        if (total == 0) {
+            finalStatus = 'Failure';
+            resolvedFailureReason = System.Label.FEC_BCH_RequireFile;
+        } else if (failed >= total) {
+            finalStatus = 'Failure';
+            if (String.isBlank(resolvedFailureReason)) {
+                resolvedFailureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+            }
+        } else if (success == 0) {
+            finalStatus = 'Failure';
+            if (String.isBlank(resolvedFailureReason)) {
+                resolvedFailureReason = ERR_IMPORT_ROW_NOT_COMPLETED;
+            }
+        }
+
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        SObject batchRow = newBatchRow(batchRecordId);
+        if (batchRow == null) {
+            return;
+        }
+        putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
+        putBatchCountFields(fieldMap, batchRow, total, success, failed);
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Failure_Reason__c' },
+            resolvedFailureReason
+        );
+        update batchRow;
     }
 
     @TestVisible
@@ -649,6 +727,114 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<FEC_BatchCaseHandlingImportRow> rowResults,
         String batchFailureReason
     ) {
+        persistBatchResultArtifactInternal(
+            batchRecordId,
+            rowResults,
+            batchFailureReason,
+            resolveBatchResultFileName(batchRecordId)
+        );
+    }
+
+    public static void persistBatchResultArtifactChunkedFromWorkItems(
+        Id batchRecordId,
+        String batchFailureReason,
+        Integer chunkSize
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Integer safeChunkSize = chunkSize == null || chunkSize < 1
+            ? IMPORT_RESULT_ARTIFACT_CHUNK_SIZE
+            : Math.min(chunkSize, IMPORT_RESULT_ARTIFACT_CHUNK_SIZE);
+        Integer afterRowIndex = -1;
+        Integer partNumber = 1;
+        String baseFileName = resolveBatchResultFileName(batchRecordId);
+        while (true) {
+            FEC_BCH_ImportWorkItemService.WorkItemChunkResult chunk =
+                FEC_BCH_ImportWorkItemService.loadRowsByBatchChunk(
+                    batchRecordId,
+                    afterRowIndex,
+                    safeChunkSize
+                );
+            if (chunk == null || chunk.rows == null || chunk.rows.isEmpty()) {
+                break;
+            }
+            persistBatchResultArtifactInternal(
+                batchRecordId,
+                chunk.rows,
+                batchFailureReason,
+                buildChunkResultFileName(baseFileName, partNumber)
+            );
+            if (chunk.hasMore != true) {
+                break;
+            }
+            if (chunk.lastRowIndex == null || chunk.lastRowIndex <= afterRowIndex) {
+                break;
+            }
+            afterRowIndex = chunk.lastRowIndex;
+            partNumber++;
+        }
+    }
+
+    public static void enqueueChunkedResultArtifactFromWorkItems(
+        Id batchRecordId,
+        String batchFailureReason,
+        Integer chunkSize
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Integer safeChunkSize = chunkSize == null || chunkSize < 1
+            ? IMPORT_RESULT_ARTIFACT_QUEUEABLE_CHUNK_SIZE
+            : Math.min(chunkSize, IMPORT_RESULT_ARTIFACT_CHUNK_SIZE);
+        System.enqueueJob(
+            new FEC_BCH_ResultArtifactQueueable(
+                batchRecordId,
+                batchFailureReason,
+                -1,
+                1,
+                safeChunkSize
+            )
+        );
+    }
+
+    public static String resolveChunkResultFileName(
+        Id batchRecordId,
+        Integer partNumber
+    ) {
+        return buildChunkResultFileName(resolveBatchResultFileName(batchRecordId), partNumber);
+    }
+
+    public static void persistBatchResultArtifactWithFileName(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason,
+        String resultFileName
+    ) {
+        persistBatchResultArtifactInternal(
+            batchRecordId,
+            rowResults,
+            batchFailureReason,
+            resultFileName
+        );
+    }
+
+    private static String buildChunkResultFileName(String baseFileName, Integer partNumber) {
+        String normalizedBase = String.isBlank(baseFileName) ? 'Import_Result.xlsx' : baseFileName;
+        Integer safePart = partNumber == null || partNumber < 1 ? 1 : partNumber;
+        String baseNoExt = FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(normalizedBase);
+        if (String.isBlank(baseNoExt)) {
+            baseNoExt = 'Import_Result';
+        }
+        return baseNoExt + '_Part' + String.valueOf(safePart) + '.xlsx';
+    }
+
+    private static void persistBatchResultArtifactInternal(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason,
+        String resultFileName
+    ) {
         if (batchRecordId == null) {
             return;
         }
@@ -660,7 +846,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (sourceContentVersionId != null && rowResults != null && !rowResults.isEmpty()) {
                 rowResults = enrichImportRowsLayoutFromSourceFile(sourceContentVersionId, rowResults);
             }
-            String fileName = resolveBatchResultFileName(batchRecordId);
+            String fileName = String.isBlank(resultFileName)
+                ? resolveBatchResultFileName(batchRecordId)
+                : resultFileName;
             Boolean cofOrGsr = isCofOrGsrImportRows(rowResults);
             List<List<String>> sheetRows = null;
             try {
@@ -2853,10 +3041,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return;
         }
         batchImportApplyInProgress = true;
+        batchHandlingTriggerBypass = true;
         try {
             applyCaseHandlingUpdatesCore(rows, cofOrGsr);
         } finally {
             batchImportApplyInProgress = false;
+            batchHandlingTriggerBypass = false;
         }
     }
 
@@ -3230,6 +3420,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 // 28/05/2026 11:20 linhdev - sync multi-chunk: defer row khi gần 101 SOQL (chunk sau xử lý tiếp)
                 // 25/06/2026 linhdev - queueable 1 row/hop: không đánh Failed ảo; vẫn runInternal (tránh chỉ 1 dòng Success)
                 if (shouldYieldImportGovernorLimits() && !System.isQueueable()) {
+                    if (System.isBatch()) {
+                        rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                        rr.errors = appendError(
+                            rr.errors,
+                            resolveImportQueueLimitExceededReason()
+                        );
+                    }
                     continue;
                 }
                 if (!skipCaseRun) {
@@ -4322,7 +4519,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         }
         if (String.isBlank(rowStatus)) {
-            return FEC_ConstantCommon.STR_EMPTY;
+            return System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         }
         return System.Label.FEC_Batch_Case_Handling_Success;
     }

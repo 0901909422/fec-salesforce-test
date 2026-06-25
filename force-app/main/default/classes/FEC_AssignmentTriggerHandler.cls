@@ -9,6 +9,9 @@ public without sharing class FEC_AssignmentTriggerHandler {
         if (isSyncingAssignmentManagerList || newList == null || newList.isEmpty()) {
             return;
         }
+        if (FEC_BatchCaseHandlingImportService.isBatchHandlingTriggerBypass()) {
+            return;
+        }
 
         Set<Id> caseIds = new Set<Id>();
         Map<Id, Id> caseIdToNewOwnerUserId = new Map<Id, Id>();
@@ -27,6 +30,9 @@ public without sharing class FEC_AssignmentTriggerHandler {
 
     public static void handleAfterUpdate(List<FEC_Assignment__c> newList, Map<Id, FEC_Assignment__c> oldMap) {
         if (isSyncingAssignmentManagerList || newList == null || newList.isEmpty() || oldMap == null) {
+            return;
+        }
+        if (FEC_BatchCaseHandlingImportService.isBatchHandlingTriggerBypass()) {
             return;
         }
 
