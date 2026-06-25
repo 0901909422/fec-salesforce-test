@@ -156,9 +156,13 @@ private class FEC_CreateInteractionManualHandler_Test {
         }
 
         System.runAs(runAsUser) {
+            // Outbound PSG cũng gồm FEC_Interaction_Creation_or_Handling_Inbound nên không dùng Inbound ở case negative.
             System.assertEquals(false,
-                FEC_CreateInteractionManualHandler.hasChannelPermission(FEC_ConstantCommon.CHANNEL_INBOUND_NAME),
-                'User chỉ có PSG Outbound không được quyền channel Inbound.');
+                FEC_CreateInteractionManualHandler.hasChannelPermission(FEC_ConstantCommon.CHANNEL_CHAT_NAME),
+                'User chỉ có PSG Outbound không được quyền channel Chat.');
+            System.assertEquals(true,
+                FEC_CreateInteractionManualHandler.hasChannelPermission(FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME),
+                'User có PSG Outbound phải có quyền channel Outbound.');
         }
     }
 }
