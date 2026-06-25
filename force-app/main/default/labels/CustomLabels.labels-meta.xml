@@ -2061,6 +2061,22 @@
         <value>Import request has been submitted.</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_Import_Err_Not_Case_Owner_Or_Queue_Member</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Err_Not_Case_Owner_Or_Queue_Member</shortDescription>
+        <value>Người dùng không phải chủ sở hữu Case hoặc không phải là thành viên của Queue.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Import_Err_Not_Assignment_Owner_Or_Queue_Member</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Err_Not_Assignment_Owner_Or_Queue_Member</shortDescription>
+        <value>Người dùng không phải chủ sở hữu Assignment hoặc không phải là thành viên của Queue.</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_InvalidFileFormat</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
@@ -2497,6 +2513,14 @@
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found</shortDescription>
         <value>Case ID không tồn tại trong hệ thống</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member</shortDescription>
+        <value>Người dùng không phải chủ sở hữu Case hoặc không phải là thành viên của Queue.</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</fullName>

@@ -215,7 +215,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         String queueId = subDecision;
         List<Group> groups = [
-            SELECT Id, Name
+            SELECT Id, Name, DeveloperName
             FROM
             GROUP
             WHERE Id = :queueId
@@ -285,6 +285,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         
         assignment.FEC_Assignment_Owner__c = null;
+        //23/06/26 PhongBT: update fec_team__c tại đây cho assignment route to không phải import
+        assignment.FEC_Team__c = resolveTeamByQueueDeveloperName(queue == null ? null : queue.DeveloperName);
         update assignment;
         syncAssignmentUsersToCase(caseRecord.Id, assignmentId);
         insertHistoryRouteTo(caseRecord.Id, assignmentId, FEC_ConstantCommon.ACTION_ROUTE_TO_DISPLAY, remark);
@@ -946,6 +948,21 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         LIMIT 1
     ];
         return g != null && !g.isEmpty() ? g.get(0).Id : null;
+    }
+
+    private static String resolveTeamByQueueDeveloperName(String queueDeveloperName) {
+        if (String.isBlank(queueDeveloperName)) {
+            return null;
+        }
+
+        List<FEC_Team_Queue__c> teamQueues = [
+            SELECT FEC_Team__c
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c = :queueDeveloperName
+            LIMIT 1
+        ];
+
+        return teamQueues.isEmpty() ? null : teamQueues[0].FEC_Team__c;
     }
     
     

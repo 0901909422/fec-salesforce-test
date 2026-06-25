@@ -152,281 +152,41 @@ public without sharing class FEC_MainInfoController {
             LIMIT 1
         ];
 
-        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
-            c.FEC_Product_Type__r.Name,
-            hist.FEC_Account_Number__c,
-            hist.FEC_Contract_Number__c
-        );
-        String productTypeName = c.FEC_Product_Type__r.Name;
         String cifNumber = hist.FEC_CIF_Number__c;
-        String contractNumber = hist.FEC_Contract_Number__c;
-        /* ===== CACHE HIT ===== */
-        if (String.isNotBlank(hist.FEC_API_Cache__c)) {
-            MainInfoDTO cached = (MainInfoDTO) JSON.deserialize(
+
+        MainInfoDTO dto;
+        Boolean fromCache = String.isNotBlank(hist.FEC_API_Cache__c);
+        if (fromCache) {
+            dto = (MainInfoDTO) JSON.deserialize(
                 hist.FEC_API_Cache__c,
                 MainInfoDTO.class
             );
-            /* Luôn lấy địa chỉ từ FEC_Address_Info__c — không tin mảng addresses trong JSON cache (dễ lệch sau khi đồng bộ API / map PERMNENT). */
-            cached.addresses = buildAddressDTOListForCase(hist.Id);
-
-            if (cached.addresses != null && !cached.addresses.isEmpty()) {
-                String effectiveCifForPending = String.isNotBlank(cifNumber)
-                    ? cifNumber
-                    : cached.cifNumber;
-                String newPhone = null;
-                String cardMailingInd = null;
-                Map<String, PendingAddressApiMeta> pendingApiMeta =
-                    new Map<String, PendingAddressApiMeta>();
-                FEC_CommonUltils.beginDeferredApiLogging();
-                try {
-                    newPhone = resolvePrimaryPhoneForCacheHitCalloutOnly(
-                        cached, hist, productTypeName, accountNumber, contractNumber
-                    );
-                    cardMailingInd = resolveCardMailingIndCalloutOnly(
-                        productTypeName,
-                        accountNumber,
-                        c.FEC_Selected_Address__c == null
-                    );
-                    pendingApiMeta = prefetchPendingAddressApiMeta(
-                        c.Id,
-                        effectiveCifForPending,
-                        null
-                    );
-                } finally {
-                    FEC_CommonUltils.flushDeferredApiLogs();
-                }
-                Boolean histNeedsUpdate = false;
-                if (String.isNotBlank(newPhone)) {
-                    hist.FEC_Primary_Phone__c = newPhone;
-                    histNeedsUpdate = true;
-                }
-                Boolean mailingFlagsUpdated = false;
-                if (String.isNotBlank(cardMailingInd)) {
-                    try {
-                        syncMailingAddressFlagsFromCardMailingInd(hist.Id, cardMailingInd);
-                        mailingFlagsUpdated = true;
-                        cached.addresses = buildAddressDTOListForCase(hist.Id);
-                    } catch (Exception e) {
-                        System.debug('### MailingInd sync FAILED: ' + e.getMessage());
-                    }
-                }
-                if (histNeedsUpdate || mailingFlagsUpdated) {
-                    if (histNeedsUpdate) {
-                        hist.FEC_API_Cache__c = JSON.serialize(cached);
-                    }
-                    update hist;
-                }
-                applyCaseMailingContextToDto(cached, c);
-                applyAddressEligibilityToDto(cached, hist.Id, null);
-                applyPendingAddressFields(
-                    cached,
-                    c.Id,
-                    effectiveCifForPending,
-                    pendingApiMeta
-                );
-                applyCaseUpdatedInfoAddressFields(cached, c);
-                return cached;
-            }
-
-            // Cache có KH nhưng chưa có địa chỉ: mọi callout trước, DML sau.
-            String effectiveCif = String.isNotBlank(cifNumber)
-                ? cifNumber
-                : cached.cifNumber;
-            AddressUpdateResult addrResult = new AddressUpdateResult();
-            FEC_GetAddressesList.ResponseWrapper addrListRes = null;
-            String newPhoneAfterAddrSync = null;
-            String cardMailingIndAfterAddrSync = null;
-            Map<String, PendingAddressApiMeta> pendingApiMetaAfterSync =
-                new Map<String, PendingAddressApiMeta>();
-            if (String.isNotBlank(effectiveCif)) {
-                FEC_CommonUltils.beginDeferredApiLogging();
-                try {
-                    addrListRes = fetchAddressesListByCif(effectiveCif);
-                    cardMailingIndAfterAddrSync = resolveCardMailingIndCalloutOnly(
-                        productTypeName,
-                        accountNumber,
-                        c.FEC_Selected_Address__c == null
-                    );
-                    newPhoneAfterAddrSync = resolvePrimaryPhoneForCacheHitCalloutOnly(
-                        cached, hist, productTypeName, accountNumber, contractNumber
-                    );
-                    pendingApiMetaAfterSync = prefetchPendingAddressApiMeta(
-                        c.Id,
-                        effectiveCif,
-                        addrListRes
-                    );
-                } finally {
-                    FEC_CommonUltils.flushDeferredApiLogs();
-                }
-                try {
-                    addrResult = persistAddressesFromApiResponse(
-                        hist,
-                        addrListRes,
-                        accountNumber,
-                        productTypeName,
-                        true,
-                        c.FEC_Selected_Address__c != null,
-                        cardMailingIndAfterAddrSync
-                    );
-                    cached.addresses = buildAddressDTOListForCase(hist.Id);
-                    if (cached.addresses == null || cached.addresses.isEmpty()) {
-                        cached.addresses = addrResult.dtoList;
-                    }
-                    cached.addressUpdateNotEligibleTitle = null;
-                    cached.addressUpdateNotEligibleReasons = null;
-                    Boolean cacheNeedsSave =
-                        cached.addresses != null && !cached.addresses.isEmpty();
-                    if (String.isNotBlank(newPhoneAfterAddrSync)) {
-                        hist.FEC_Primary_Phone__c = newPhoneAfterAddrSync;
-                        cacheNeedsSave = true;
-                    }
-                    if (cacheNeedsSave) {
-                        hist.FEC_API_Cache__c = JSON.serialize(cached);
-                        update hist;
-                    }
-                    applyAddressEligibilityToDto(cached, hist.Id, addrResult);
-                } catch (Exception e) {
-                    System.debug('### GetAddressesList (cache + empty addresses resync) FAILED: ' + e.getMessage());
-                    applyAddressEligibilityToDto(cached, hist.Id, null);
-                }
-            } else {
-                applyAddressEligibilityToDto(cached, hist.Id, null);
-            }
-            applyCaseMailingContextToDto(cached, c);
-            applyPendingAddressFields(
-                cached,
-                c.Id,
-                effectiveCif,
-                pendingApiMetaAfterSync
+        } else {
+            dto = mapToDTO(hist);
+            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(
+                FEC_Customer_History__c.SObjectType
             );
-            applyCaseUpdatedInfoAddressFields(cached, c);
-            return cached;
         }
 
-        /* =====================================================
-         * CALL API — hoãn ghi FEC_API_Log__c; mọi callout xong rồi mới DML (addresses / hist / log).
-         * ===================================================== */
-        FEC_CommonUltils.beginDeferredApiLogging();
-        AddressUpdateResult addrResult = new AddressUpdateResult();
-        FEC_GetAddressesList.ResponseWrapper addrListRes = null;
-        String cardMailingIndForColdLoad = null;
-        String apiPhoneForColdLoad = null;
-        Map<String, PendingAddressApiMeta> pendingApiMetaForColdLoad =
-            new Map<String, PendingAddressApiMeta>();
-        try {
-            /* ===== 1. GetCustomerInfoBasic ===== */
-            try {
-                FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
-                    FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                        FEC_CommonUltils.generateTransactionId(),
-                        FEC_ConstantCommon.REQUESTOR_CRM,
-                        Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
-                        cifNumber
-                    );
-
-                if (basicRes != null && basicRes.CustomerBasicInfo != null) {
-                    hist.FEC_First_Name__c     = basicRes.CustomerBasicInfo.FirstName;
-                    hist.FEC_Middle_Name__c    = basicRes.CustomerBasicInfo.MiddleName;
-                    hist.FEC_Last_Name__c      = basicRes.CustomerBasicInfo.LastName;
-                    hist.FEC_Customer_Name__c  = basicRes.CustomerBasicInfo.FullName;
-                    hist.FEC_Date_of_Birth__c  = basicRes.CustomerBasicInfo.Birthday;
-                    hist.FEC_Gender__c         = basicRes.CustomerBasicInfo.Gender;
-                    hist.FEC_Marital_Status__c = basicRes.CustomerBasicInfo.MaritalStatus;
-                    hist.FEC_CIF_Number__c     = basicRes.CustomerBasicInfo.CIFNumber;
-                }
-            } catch (Exception e) {
-                System.debug('### GetCustomerInfoBasic FAILED: ' + e.getMessage());
-            }
-
-            try {
-                FEC_GetDocumentsList.ResponseWrapper docRes =
-                    FEC_GetDocumentsList.callGetDocumentsList(
-                        FEC_CommonUltils.generateTransactionId(),
-                        FEC_ConstantCommon.REQUESTOR_CRM,
-                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                        cifNumber
-                    );
-
-                if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
-                    hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].IDDocumentNumber;
-                    hist.FEC_Date_of_Issue__c           = docRes.Documents[0].IssueDate;
-                    hist.FEC_Place_of_Issue__c          = docRes.Documents[0].IssuePlace;
-                }
-            } catch (Exception e) {
-                System.debug('### GetDocumentsList FAILED: ' + e.getMessage());
-            }
-
-            /* ===== 2. GetAddressesList (trước GetCustomerList và trước DML đồng bộ địa chỉ) ===== */
-            try {
-                addrListRes = fetchAddressesListByCif(cifNumber);
-                cardMailingIndForColdLoad = resolveCardMailingIndCalloutOnly(
-                    productTypeName,
-                    accountNumber,
-                    c.FEC_Selected_Address__c == null
-                );
-            } catch (Exception e) {
-                System.debug('### GetAddressesList FAILED: ' + e.getMessage());
-            }
-
-            /* ===== 3. GetCustomerList ===== */
-            try {
-                apiPhoneForColdLoad = getPrimaryPhoneOnly(
-                    productTypeName,
-                    accountNumber,
-                    contractNumber
-                );
-            } catch (Exception e) {
-                System.debug('### GetCustomerList FAILED: ' + e.getMessage());
-            }
-
-            pendingApiMetaForColdLoad = prefetchPendingAddressApiMeta(
-                c.Id,
-                cifNumber,
-                addrListRes
-            );
-        } finally {
-            FEC_CommonUltils.flushDeferredApiLogs();
-        }
-
-        /* =====================================================
-         * DML
-         * ===================================================== */
-        try {
-            addrResult = persistAddressesFromApiResponse(
-                hist,
-                addrListRes,
-                accountNumber,
-                productTypeName,
-                true,
-                c.FEC_Selected_Address__c != null,
-                cardMailingIndForColdLoad
-            );
-        } catch (Exception e) {
-            System.debug('### persistAddressesFromApiResponse FAILED: ' + e.getMessage());
-        }
-        if (String.isNotBlank(apiPhoneForColdLoad)) {
-            hist.FEC_Primary_Phone__c = apiPhoneForColdLoad;
-        }
-        update hist;
-
-        MainInfoDTO dto = mapToDTO(hist);
+        applySyncedCustomerFieldsFromHistory(dto, hist);
         dto.addresses = buildAddressDTOListForCase(hist.Id);
-        if (dto.addresses == null || dto.addresses.isEmpty()) {
-            dto.addresses = addrResult.dtoList;
-        }
-        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
-        /* ===== SAVE CACHE (chỉ khi đã có địa chỉ) ===== */
-        dto.addressUpdateNotEligibleTitle = null;
-        dto.addressUpdateNotEligibleReasons = null;
-        if (dto.addresses != null && !dto.addresses.isEmpty()) {
-            hist.FEC_API_Cache__c = JSON.serialize(dto);
-            update hist;
+        String effectiveCif = String.isNotBlank(cifNumber) ? cifNumber : dto.cifNumber;
+        Map<String, PendingAddressApiMeta> pendingApiMeta =
+            prefetchPendingAddressApiMeta(c.Id, effectiveCif, null);
+
+        if (!fromCache) {
+            dto.addressUpdateNotEligibleTitle = null;
+            dto.addressUpdateNotEligibleReasons = null;
+            if (dto.addresses != null && !dto.addresses.isEmpty()) {
+                hist.FEC_API_Cache__c = JSON.serialize(dto);
+                update hist;
+            }
         }
 
         applyCaseMailingContextToDto(dto, c);
-        applyAddressEligibilityToDto(dto, hist.Id, addrResult);
-        applyPendingAddressFields(dto, c.Id, cifNumber, pendingApiMetaForColdLoad);
+        applyAddressEligibilityToDto(dto, hist.Id, null);
+        applyPendingAddressFields(dto, c.Id, effectiveCif, pendingApiMeta);
         applyCaseUpdatedInfoAddressFields(dto, c);
         return dto;
     }
@@ -911,7 +671,6 @@ public without sharing class FEC_MainInfoController {
         }
     }
 
-    /** Xóa cache Main Info để loadMainInfo gọi lại API (sau cập nhật địa chỉ). */
     @AuraEnabled
     public static void clearMainInfoCache(Id caseId) {
         if (caseId == null) {
@@ -1324,16 +1083,22 @@ public without sharing class FEC_MainInfoController {
         if (needed.isEmpty() || String.isBlank(cifNumber)) {
             return new Map<String, PendingAddressApiMeta>();
         }
-        FEC_GetAddressesList.ResponseWrapper res = existingListRes;
-        if (res == null) {
-            try {
-                res = fetchAddressesListByCif(cifNumber);
-            } catch (Exception e) {
-                System.debug('### prefetchPendingAddressApiMeta FAILED: ' + e.getMessage());
-                return new Map<String, PendingAddressApiMeta>();
-            }
+        if (existingListRes != null) {
+            return buildPendingApiMetaMapFromAddressesResponse(
+                cifNumber,
+                existingListRes,
+                needed
+            );
         }
-        return buildPendingApiMetaMapFromAddressesResponse(cifNumber, res, needed);
+       
+        Map<String, PendingAddressApiMeta> outMap = new Map<String, PendingAddressApiMeta>();
+        for (String sfType : needed) {
+            PendingAddressApiMeta meta = new PendingAddressApiMeta();
+            meta.cifNumber = cifNumber;
+            meta.addressType = mapSfAddressTypeToApiCode(sfType);
+            outMap.put(sfType, meta);
+        }
+        return outMap;
     }
 
     private static final String FEC_COUNTRY_MASTER_LEGACY = '1'; // bộ master cũ
@@ -1352,7 +1117,6 @@ public without sharing class FEC_MainInfoController {
         return m;
     }
 
-    /** Remap country master 1 → 2 (cùng tên). */
     private static Id remapCountryIdToApiMaster(Id countryId, Map<Id, FEC_Country__c> countryById) {
         if (countryId == null || countryById == null || !countryById.containsKey(countryId)) {
             return null;
@@ -2678,7 +2442,6 @@ public without sharing class FEC_MainInfoController {
         return pendingId;
     }
 
-    /** Ghi isMailingAddress vào pending JSON trước khi lưu DB. */
     @TestVisible
     private static String ensureIsMailingAddressInPendingJson(
         String pendingAddressJson,
@@ -2803,20 +2566,32 @@ public without sharing class FEC_MainInfoController {
         }
     }
 
+    private static void applySyncedCustomerFieldsFromHistory(
+        MainInfoDTO dto,
+        FEC_Customer_History__c hist
+    ) {
+        if (dto == null || hist == null) {
+            return;
+        }
+        dto.fullName = hist.FEC_Customer_Name__c;
+        dto.firstName = hist.FEC_First_Name__c;
+        dto.middleName = hist.FEC_Middle_Name__c;
+        dto.lastName = hist.FEC_Last_Name__c;
+        dto.nationalIDPassportID = hist.FEC_National_ID_Passport_ID__c;
+        dto.placeOfIssue = hist.FEC_Place_of_Issue__c;
+        dto.dateOfIssue = hist.FEC_Date_of_Issue__c != null
+            ? String.valueOf(hist.FEC_Date_of_Issue__c)
+            : null;
+        dto.primaryPhone = hist.FEC_Primary_Phone__c;
+    }
+
     private static MainInfoDTO mapToDTO(FEC_Customer_History__c h) {
         MainInfoDTO d = new MainInfoDTO();
-        d.firstName = h.FEC_First_Name__c;
-        d.middleName = h.FEC_Middle_Name__c;
-        d.lastName = h.FEC_Last_Name__c;
-        d.fullName = h.FEC_Customer_Name__c;
+        applySyncedCustomerFieldsFromHistory(d, h);
         d.birthDate = h.FEC_Date_of_Birth__c;
         d.gender = h.FEC_Gender__c;
         d.maritalStatus = h.FEC_Marital_Status__c;
         d.cifNumber = h.FEC_CIF_Number__c;
-        d.nationalIDPassportID = h.FEC_National_ID_Passport_ID__c;
-        d.placeOfIssue = h.FEC_Place_of_Issue__c;
-        d.dateOfIssue = String.valueOf(h.FEC_Date_of_Issue__c);
-        d.primaryPhone = h.FEC_Primary_Phone__c;
         return d;
     }
 }

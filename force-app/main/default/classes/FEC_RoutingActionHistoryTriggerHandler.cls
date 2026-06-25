@@ -49,15 +49,19 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     isExecuting = true;
 
     try {
+      Boolean bypassNonEssentialAfterSave =
+        FEC_BatchCaseHandlingImportService.isBatchHandlingTriggerBypass();
       processNotification(newRecords);
       if (FEC_MrcDuplicateCaseService.isSuppressRoutingHistoryTriggerSideEffects()) {
         return;
       }
       handleUpdateCaseTeamsOnInsert(newRecords);
-      FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
-      // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
-      FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
-      FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
+      if (!bypassNonEssentialAfterSave) {
+        FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
+        // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
+        FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
+        FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
+      }
       //sendNotificationEmails(newRecords);
       // Moved from trigger body into handler (separation of concerns)
       FEC_AssignmentController.handle(newRecords);
@@ -100,6 +104,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   public static void processNotification(List<FEC_Routing_Action_History__c> newRecords) {
+    if (newRecords == null || newRecords.isEmpty()) {
+      return;
+    }
+    if (FEC_NotificationService.suppressForCaseSubmit) {
+      return;
+    }
+    // 25/06/2026 phong - BCH COF/GSR import chain: không enqueue notification khi đang apply batch (giữ slot Queueable cho ImportQueueable hop kế)
+    if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+      return;
+    }
     // Nếu đã ở async context rồi (Queueable/Batch/Future):
     // - Không gọi lại @future được (future method không được gọi từ context async khác).
     // - Gọi processNotificationEmails() trực tiếp tại đây vẫn đang nằm trong Trigger context
@@ -618,9 +632,13 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     isExecuting = true;
 
     try {
-      FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords, oldMap);
-      FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
-      sendNotificationEmails(newRecords);
+      Boolean bypassNonEssentialAfterSave =
+        FEC_BatchCaseHandlingImportService.isBatchHandlingTriggerBypass();
+      if (!bypassNonEssentialAfterSave) {
+        FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords, oldMap);
+        FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
+        sendNotificationEmails(newRecords);
+      }
       // Moved from trigger body into handler (separation of concerns)
       FEC_AssignmentController.handle(newRecords);
     } finally {

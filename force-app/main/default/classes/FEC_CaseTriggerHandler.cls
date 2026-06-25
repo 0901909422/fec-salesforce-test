@@ -84,6 +84,10 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/02 Toannd61
      */
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        // 25/06/2026 Batch Case Handling import: bypass before-update side effects không liên quan.
+        if (FEC_BatchCaseHandlingImportService.isBatchHandlingTriggerBypass()) {
+            return;
+        }
         // Luôn cập nhật participants kể cả khi isSystemUpdate=true (VD: executeCase thay Owner với isSystemUpdate)
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         // Batch/system chỉ patch vài field — bỏ qua before-handlers tránh đọc field chưa có trên Trigger.new
@@ -234,6 +238,11 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
+        // 25/06/2026 Batch Case Handling import: bỏ qua after-update side effects (notification/follow-up/auto distribute...).
+        if (FEC_BatchCaseHandlingImportService.isBatchHandlingTriggerBypass()) {
+            isExecuting = false;
+            return;
+        }
         
         updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);

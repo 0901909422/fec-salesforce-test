@@ -80,7 +80,7 @@ public without sharing class FEC_BCH_ImportValidateQueueable implements Queueabl
                 }
                 FEC_BatchCaseHandlingImportService.failBatchImportRecord(
                     batchRecordId,
-                    System.Label.FEC_BCH_ImportFailed,
+                    FEC_BatchCaseHandlingImportService.resolveImportQueueLimitExceededReason(),
                     rows
                 );
                 return;
@@ -128,7 +128,7 @@ public without sharing class FEC_BCH_ImportValidateQueueable implements Queueabl
             System.enqueueJob(
                 new FEC_BatchCaseHandlingImportQueueable(
                     batchRecordId,
-                    JSON.serialize(rows),
+                    FEC_BatchCaseHandlingImportService.serializeImportRowsForApplyChain(rows),
                     null,
                     cofOrGsr,
                     0

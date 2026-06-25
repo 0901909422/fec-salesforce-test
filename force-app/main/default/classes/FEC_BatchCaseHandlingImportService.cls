@@ -22,6 +22,27 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_RISK_LEVEL = 'Giá trị Mức độ rủi ro không tồn tại trong Datagroup.';
     private static final String ERR_INVALID_REQUIRED_ACTION = 'Giá trị Hành động cần thiết không tồn tại trong Datagroup.';
     private static final String ERR_IMPORT_PROCESSING_TIMEOUT = 'Import quá thời gian xử lý (quá 1 giờ). Vui lòng thử lại.';
+    private static final String ERR_IMPORT_ROW_NOT_COMPLETED = 'Dòng chưa được xử lý apply (import chưa hoàn tất).';
+    private static final String ERR_IMPORT_QUEUE_LIMIT_EXCEEDED =
+        'Không thể tiếp tục xử lý import do vượt giới hạn tài nguyên hệ thống. Vui lòng chia nhỏ file hoặc thử lại sau.';
+    private static final Integer BATCH_FAILURE_REASON_MAX_UNIQUE_ERRORS = 5;
+    private static final String ERR_IMPORT_ROW_REF_EMPTY = '[Dòng import]';
+    private static final String ERR_IMPORT_ROW_REF_EXCEL_PREFIX = 'dòng Excel ';
+    private static final String ERR_IMPORT_ROW_REF_CASE_ID_PREFIX = 'Case ID ';
+    private static final String ERR_IMPORT_ROW_REF_CASE_PREFIX = 'Case ';
+    private static final String ERR_IMPORT_VALIDATE_EXCEPTION_SUFFIX = ' Lỗi kiểm tra dữ liệu import: ';
+    private static final String ERR_IMPORT_EXCEPTION_NO_DETAIL = 'hệ thống không trả về mô tả lỗi.';
+    private static final String ERR_IMPORT_EXCEPTION_TYPE_PREFIX = 'loại lỗi ';
+    private static final String ERR_IMPORT_EXCEPTION_TYPE_NO_MESSAGE = ' (không có message chi tiết).';
+    private static final String ERR_IMPORT_APPLY_FAILURE_SUFFIX =
+        ' Import thất bại khi cập nhật Case/Routing — hệ thống không ghi nhận được nguyên nhân chi tiết. ';
+    private static final String ERR_IMPORT_APPLY_FAILURE_HINT =
+        'Vui lòng kiểm tra Case ID, Routing Action, Assignment ID và quyền xử lý Case.';
+    private static final String ERR_IMPORT_APPLY_FAILURE_HINT_CHECK_PREFIX = 'Vui lòng kiểm tra ';
+    private static final String ERR_IMPORT_APPLY_FAILURE_HINT_CHECK_SUFFIX = ', Assignment ID và quyền xử lý Case.';
+    private static final String ERR_IMPORT_ROUTING_ACTION_LABEL_PREFIX = 'Routing Action "';
+    private static final String ERR_IMPORT_ASSIGNMENT_ROUTING_ACTION_LABEL_PREFIX = 'Assignment Routing Action "';
+    private static final String ERR_IMPORT_ROUTING_ACTION_LABEL_SUFFIX = '"';
     private static final String ERR_ROUTING_CONFLICT = 'Cùng Case ID có nhiều Routing Action khác nhau trong file import.';
     private static final String ERR_TEMPLATE_FILE_MISMATCH = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
     private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT = 'Payment đánh giá yêu cầu đóng hợp đồng';
@@ -39,6 +60,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_CP_ASSESSMENT = 'Giá trị CP đánh giá yêu cầu không tồn tại trong Datagroup.';
     // 05/06/2026 16:00 linhdev - __Errors Export Result luôn hiển thị tiếng Việt
     private static final String ERR_GENERIC_APPLY = 'Xử lý dữ liệu thất bại.';
+    private static final String ERR_GENERIC_APPLY_REASON_PREFIX = 'Xử lý dữ liệu thất bại. Nguyên nhân: ';
+    private static final Integer IMPORT_RESULT_UNKNOWN_REASON_MAX_LEN = 300;
     private static final String ERR_IMPORT_RESULT_QUEUE_NOT_FOUND = 'Không tìm thấy Queue.';
     private static final String ERR_IMPORT_RESULT_CANT_FIND_NEXT_STAGE = 'Không tìm thấy stage tiếp theo.';
     private static final String ERR_IMPORT_RESULT_CANNOT_FIND_STAGE_CHANGE = 'Không tìm thấy Stage Change.';
@@ -59,6 +82,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_IMPORT_RESULT_SUFFIX_NOT_FOUND = '.';
     private static final String IMPORT_RESULT_EN_SUFFIX_INVALID = ' is invalid.';
     private static final String IMPORT_RESULT_EN_SUFFIX_NOT_FOUND = ' not found.';
+    private static final List<String> IMPORT_RESULT_TECHNICAL_ERROR_KEYWORDS = new List<String>{
+        'apex cpu time limit exceeded',
+        'too many soql queries',
+        'too many dml statements',
+        'too many dml rows',
+        'heap size too large',
+        'uncommitted work pending',
+        'nullpointerexception',
+        'list index out of bounds',
+        'internal salesforce.com error'
+    };
     // 05/06/2026 17:30 linhdev - lỗi resolve queue Assignment Route To khi import
     private static final String ERR_ASSIGNMENT_ROUTE_TO_QUEUE_UNKNOWN =
         'Không xác định được queue đích để cập nhật Assignment Route To.';
@@ -130,7 +164,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     @TestVisible
-    private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_BASE_HOURS = 1;
+    @TestVisible
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS_PER_500_ROWS = 1;
+    @TestVisible
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_MAX_HOURS = 24;
     // 28/05/2026 11:20 linhdev - tối đa 5 case/transaction apply (FEC_CaseBusinessService.run ~8-12 SOQL/row) tránh 101
     @TestVisible
     public static final Integer IMPORT_APPLY_MAX_ROWS_PER_CHUNK = 5;
@@ -145,6 +183,18 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     public static final Integer IMPORT_ASYNC_VALIDATE_MIN_ROWS = 5000;
     @TestVisible
     public static final Integer IMPORT_VALIDATE_MAX_ROWS_PER_CHUNK = 400;
+    // 25/06/2026 linhdev - import lớn dùng staging + batch apply để giảm queueable-chain 1 row/job
+    @TestVisible
+    public static final Integer IMPORT_BATCH_APPLY_MIN_ROWS = 300;
+    @TestVisible
+    public static final Integer IMPORT_BATCH_APPLY_SCOPE_SIZE = 5;
+    @TestVisible
+    public static final Integer IMPORT_RESULT_ARTIFACT_CHUNK_SIZE = 5000;
+    @TestVisible
+    public static final Integer IMPORT_RESULT_ARTIFACT_QUEUEABLE_CHUNK_SIZE = 2000;
+    // 25/06/2026 finalize theo summary khi volume lớn để tránh heap/CPU blow ở Batch.finish
+    @TestVisible
+    public static final Integer IMPORT_BATCH_APPLY_SUMMARY_ONLY_MIN_ROWS = 10000;
     // 08/06/2026 linhdev - ~8-12 SOQL/row runInternal; 2 row/transaction an toàn dưới ngưỡng 72%
     // 24/06/2026 phong - giảm xuống 1 row/transaction: resolve gọi thêm resolveAllAssignments (3-4 SOQL)
     // + trigger after-update (5-10 SOQL) → tổng thực tế 20-25 SOQL/row, 2 rows có thể vượt ngưỡng 72%
@@ -156,9 +206,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
     @TestVisible
     private static Boolean batchImportApplyInProgress = false;
+    @TestVisible
+    private static Boolean batchHandlingTriggerBypass = false;
 
     public static Boolean isBatchImportApplyInProgress() {
         return batchImportApplyInProgress == true;
+    }
+
+    public static Boolean isBatchHandlingTriggerBypass() {
+        return batchHandlingTriggerBypass == true;
     }
 
     public static Boolean shouldApplyImportRow(FEC_BatchCaseHandlingImportRow row) {
@@ -191,6 +247,66 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     public static Boolean shouldValidateImportAsynchronously(Integer rowCount) {
         return rowCount != null && rowCount > IMPORT_ASYNC_VALIDATE_MIN_ROWS;
+    }
+
+    public static Boolean shouldApplyImportWithBatch(Integer applicableRowCount) {
+        return applicableRowCount != null &&
+            applicableRowCount >= IMPORT_BATCH_APPLY_MIN_ROWS &&
+            FEC_BCH_ImportWorkItemService.isWorkItemObjectAvailable();
+    }
+
+    public static Boolean shouldFinalizeImportWithSummaryOnly(Integer totalRowCount) {
+        return totalRowCount != null &&
+            totalRowCount >= IMPORT_BATCH_APPLY_SUMMARY_ONLY_MIN_ROWS;
+    }
+
+    public static void finalizeBatchImportRecordFromSummary(
+        Id batchRecordId,
+        Integer totalCount,
+        Integer successCount,
+        Integer failedCount,
+        String failureReason
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Integer total = totalCount == null ? 0 : totalCount;
+        Integer success = successCount == null ? 0 : successCount;
+        Integer failed = failedCount == null ? 0 : failedCount;
+        String resolvedFailureReason = String.isBlank(failureReason)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : failureReason;
+
+        String finalStatus = 'Processed';
+        if (total == 0) {
+            finalStatus = 'Failure';
+            resolvedFailureReason = System.Label.FEC_BCH_RequireFile;
+        } else if (failed >= total) {
+            finalStatus = 'Failure';
+            if (String.isBlank(resolvedFailureReason)) {
+                resolvedFailureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+            }
+        } else if (success == 0) {
+            finalStatus = 'Failure';
+            if (String.isBlank(resolvedFailureReason)) {
+                resolvedFailureReason = ERR_IMPORT_ROW_NOT_COMPLETED;
+            }
+        }
+
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        SObject batchRow = newBatchRow(batchRecordId);
+        if (batchRow == null) {
+            return;
+        }
+        putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
+        putBatchCountFields(fieldMap, batchRow, total, success, failed);
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Failure_Reason__c' },
+            resolvedFailureReason
+        );
+        update batchRow;
     }
 
     @TestVisible
@@ -260,8 +376,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (batchRow == null) {
             return;
         }
-        Integer failedCount = countFailedImportRows(rowResults);
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
+        Integer unprocessedCount = countUnprocessedImportRows(rowResults);
+        markUnprocessedImportRows(rowResults, ERR_IMPORT_ROW_NOT_COMPLETED);
+        ensureFailedImportRowsHaveDetailErrors(rowResults);
+        Integer failedCount = countFailedImportRows(rowResults);
+        Integer successCount = countSuccessImportRows(rowResults);
         String failureReason = FEC_ConstantCommon.STR_EMPTY;
         String finalStatus = 'Processed';
         if (totalCount == 0) {
@@ -269,14 +389,25 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             failureReason = System.Label.FEC_BCH_RequireFile;
         } else if (failedCount == totalCount) {
             finalStatus = 'Failure';
-            failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+            failureReason = resolveBatchFailureReasonFromRows(
+                rowResults,
+                System.Label.FEC_BCH_Import_Rows_Invalid
+            );
+        } else if (successCount == 0) {
+            finalStatus = 'Failure';
+            failureReason = resolveBatchFailureReasonFromRows(
+                rowResults,
+                ERR_IMPORT_ROW_NOT_COMPLETED
+            );
+        } else if (unprocessedCount > 0) {
+            failureReason = ERR_IMPORT_ROW_NOT_COMPLETED;
         }
         putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
         putBatchCountFields(
             fieldMap,
             batchRow,
             totalCount,
-            totalCount - failedCount < 0 ? 0 : totalCount - failedCount,
+            successCount,
             failedCount
         );
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
@@ -309,7 +440,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             fieldMap,
             new List<String>{ 'FEC_Uploaded_On__c' }
         );
-        Datetime cutoff = Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_HOURS);
+        Datetime cutoff = Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_MAX_HOURS);
         List<String> whereParts = new List<String>{
             statusField + ' = \'Processing\'',
             'CreatedById = :scopeUserId'
@@ -336,7 +467,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         String timeoutReason = resolveImportProcessingTimeoutReason();
         for (SObject staleRow : staleRows) {
-            failBatchImportRecord((Id) staleRow.get('Id'), timeoutReason, null);
+            Id batchId = (Id) staleRow.get('Id');
+            if (!isBatchImportProcessingExpired(batchId)) {
+                continue;
+            }
+            failBatchImportRecord(batchId, timeoutReason, null);
         }
     }
 
@@ -356,8 +491,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             fieldMap,
             new List<String>{ 'FEC_Uploaded_On__c' }
         );
+        String totalRecordsField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }
+        );
         List<String> selectParts = new List<String>{ 'Id', statusField, 'CreatedDate' };
         FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, uploadedOnField);
+        FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, totalRecordsField);
         List<SObject> rows = Database.query(
             'SELECT ' +
                 String.join(selectParts, ', ') +
@@ -383,7 +523,48 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (startedOn == null) {
             return false;
         }
-        return startedOn < Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_HOURS);
+        Integer totalRowCount = resolveBatchImportTotalRowCount(row, fieldMap);
+        Integer timeoutHours = resolveImportProcessingTimeoutHours(totalRowCount);
+        return startedOn < Datetime.now().addHours(-timeoutHours);
+    }
+
+    public static Integer resolveImportProcessingTimeoutHours(Integer totalRowCount) {
+        if (totalRowCount == null || totalRowCount <= 0) {
+            return IMPORT_PROCESSING_TIMEOUT_BASE_HOURS;
+        }
+        Integer extraHours = Math.max(
+            0,
+            ((totalRowCount + 499) / 500) - 1
+        ) * IMPORT_PROCESSING_TIMEOUT_HOURS_PER_500_ROWS;
+        return Math.min(
+            IMPORT_PROCESSING_TIMEOUT_MAX_HOURS,
+            IMPORT_PROCESSING_TIMEOUT_BASE_HOURS + extraHours
+        );
+    }
+
+    private static Integer resolveBatchImportTotalRowCount(
+        SObject batchRow,
+        Map<String, Schema.SObjectField> fieldMap
+    ) {
+        if (batchRow == null || fieldMap == null || fieldMap.isEmpty()) {
+            return 0;
+        }
+        String totalField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }
+        );
+        if (String.isBlank(totalField)) {
+            return 0;
+        }
+        Object totalVal = batchRow.get(totalField);
+        if (totalVal == null) {
+            return 0;
+        }
+        try {
+            return Integer.valueOf(String.valueOf(totalVal));
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     public static void failBatchImportRecord(
@@ -399,13 +580,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (batchRow == null) {
             return;
         }
-        String failureReason = String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason;
+        String failureReason = resolveImportFailureReason(reason, rowResults);
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
         if (totalCount > 0) {
+            markUnprocessedImportRows(rowResults, failureReason);
+            ensureFailedImportRowsHaveDetailErrors(rowResults);
             // 28/05/2026 16:35 linhdev - nếu còn ít nhất 1 row success thì batch status phải là Processed để đồng bộ đúng với file Result
             Integer failedCount = countFailedImportRows(rowResults);
-            Integer successCount = totalCount - failedCount < 0 ? 0 : totalCount - failedCount;
-            String finalStatus = failedCount < totalCount ? 'Processed' : 'Failure';
+            Integer successCount = countSuccessImportRows(rowResults);
+            String finalStatus = successCount > 0 ? 'Processed' : 'Failure';
             String finalFailureReason = finalStatus == 'Failure' ? failureReason : FEC_ConstantCommon.STR_EMPTY;
             putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
             putBatchCountFields(fieldMap, batchRow, totalCount, successCount, failedCount);
@@ -544,11 +727,128 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<FEC_BatchCaseHandlingImportRow> rowResults,
         String batchFailureReason
     ) {
+        persistBatchResultArtifactInternal(
+            batchRecordId,
+            rowResults,
+            batchFailureReason,
+            resolveBatchResultFileName(batchRecordId)
+        );
+    }
+
+    public static void persistBatchResultArtifactChunkedFromWorkItems(
+        Id batchRecordId,
+        String batchFailureReason,
+        Integer chunkSize
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Integer safeChunkSize = chunkSize == null || chunkSize < 1
+            ? IMPORT_RESULT_ARTIFACT_CHUNK_SIZE
+            : Math.min(chunkSize, IMPORT_RESULT_ARTIFACT_CHUNK_SIZE);
+        Integer afterRowIndex = -1;
+        Integer partNumber = 1;
+        String baseFileName = resolveBatchResultFileName(batchRecordId);
+        while (true) {
+            FEC_BCH_ImportWorkItemService.WorkItemChunkResult chunk =
+                FEC_BCH_ImportWorkItemService.loadRowsByBatchChunk(
+                    batchRecordId,
+                    afterRowIndex,
+                    safeChunkSize
+                );
+            if (chunk == null || chunk.rows == null || chunk.rows.isEmpty()) {
+                break;
+            }
+            persistBatchResultArtifactInternal(
+                batchRecordId,
+                chunk.rows,
+                batchFailureReason,
+                buildChunkResultFileName(baseFileName, partNumber)
+            );
+            if (chunk.hasMore != true) {
+                break;
+            }
+            if (chunk.lastRowIndex == null || chunk.lastRowIndex <= afterRowIndex) {
+                break;
+            }
+            afterRowIndex = chunk.lastRowIndex;
+            partNumber++;
+        }
+    }
+
+    public static void enqueueChunkedResultArtifactFromWorkItems(
+        Id batchRecordId,
+        String batchFailureReason,
+        Integer chunkSize
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Integer safeChunkSize = chunkSize == null || chunkSize < 1
+            ? IMPORT_RESULT_ARTIFACT_QUEUEABLE_CHUNK_SIZE
+            : Math.min(chunkSize, IMPORT_RESULT_ARTIFACT_CHUNK_SIZE);
+        System.enqueueJob(
+            new FEC_BCH_ResultArtifactQueueable(
+                batchRecordId,
+                batchFailureReason,
+                -1,
+                1,
+                safeChunkSize
+            )
+        );
+    }
+
+    public static String resolveChunkResultFileName(
+        Id batchRecordId,
+        Integer partNumber
+    ) {
+        return buildChunkResultFileName(resolveBatchResultFileName(batchRecordId), partNumber);
+    }
+
+    public static void persistBatchResultArtifactWithFileName(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason,
+        String resultFileName
+    ) {
+        persistBatchResultArtifactInternal(
+            batchRecordId,
+            rowResults,
+            batchFailureReason,
+            resultFileName
+        );
+    }
+
+    private static String buildChunkResultFileName(String baseFileName, Integer partNumber) {
+        String normalizedBase = String.isBlank(baseFileName) ? 'Import_Result.xlsx' : baseFileName;
+        Integer safePart = partNumber == null || partNumber < 1 ? 1 : partNumber;
+        String baseNoExt = FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(normalizedBase);
+        if (String.isBlank(baseNoExt)) {
+            baseNoExt = 'Import_Result';
+        }
+        return baseNoExt + '_Part' + String.valueOf(safePart) + '.xlsx';
+    }
+
+    private static void persistBatchResultArtifactInternal(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason,
+        String resultFileName
+    ) {
         if (batchRecordId == null) {
             return;
         }
         try {
-            String fileName = resolveBatchResultFileName(batchRecordId);
+            Id sourceContentVersionId = querySourceImportContentVersionId(batchRecordId);
+            if (sourceContentVersionId == null) {
+                sourceContentVersionId = querySourceContentVersionFromBatchFileLinks(batchRecordId);
+            }
+            if (sourceContentVersionId != null && rowResults != null && !rowResults.isEmpty()) {
+                rowResults = enrichImportRowsLayoutFromSourceFile(sourceContentVersionId, rowResults);
+            }
+            String fileName = String.isBlank(resultFileName)
+                ? resolveBatchResultFileName(batchRecordId)
+                : resultFileName;
             Boolean cofOrGsr = isCofOrGsrImportRows(rowResults);
             List<List<String>> sheetRows = null;
             try {
@@ -763,7 +1063,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 new List<String>{
                     rowValue(resolveImportResultStatusLabel(row.status)),
                     // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
-                    rowValue(localizeImportResultErrors(row.errors))
+                    rowValue(resolveImportRowResultErrors(row))
                 }
             );
         }
@@ -840,16 +1140,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (parsedRows == null || parsedRows.isEmpty()) {
             return new List<FEC_BatchCaseHandlingImportRow>();
         }
-        String failureError = String.isBlank(batchFailureReason)
-            ? System.Label.FEC_BCH_ImportFailed
-            : batchFailureReason;
+        String failureError = resolveImportFailureReason(batchFailureReason, null);
         for (FEC_BatchCaseHandlingImportRow row : parsedRows) {
             if (row == null) {
                 continue;
             }
             row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
             // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
-            row.errors = localizeImportResultErrors(failureError);
+            if (String.isBlank(row.errors)) {
+                row.errors = localizeImportResultErrors(failureError);
+            }
             row.recordId = FEC_ConstantCommon.STR_EMPTY;
         }
         return parsedRows;
@@ -1008,7 +1308,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
                 cols.add(rowValue(resolveImportResultStatusLabel(row.status)));
                 // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
-                cols.add(rowValue(localizeImportResultErrors(row.errors)));
+                cols.add(rowValue(resolveImportRowResultErrors(row)));
                 sheetRows.add(cols);
             }
         } else if (String.isNotBlank(batchFailureReason)) {
@@ -1020,7 +1320,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
             failureRow.add('Failed');
             // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
-            failureRow.add(rowValue(localizeImportResultErrors(batchFailureReason)));
+            failureRow.add(
+                rowValue(
+                    localizeImportResultErrors(
+                        resolveImportFailureReason(batchFailureReason, null)
+                    )
+                )
+            );
             sheetRows.add(failureRow);
         } else {
             return null;
@@ -1050,7 +1356,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
         failureRow.add(
             localizeImportResultErrors(
-                String.isBlank(batchFailureReason) ? System.Label.FEC_BCH_ImportFailed : batchFailureReason
+                resolveImportFailureReason(batchFailureReason, null)
             )
         );
         sheetRows.add(failureRow);
@@ -1153,7 +1459,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 cells,
                 resultInsertIndex,
                 rowValue(resolveImportResultStatusLabel(row.status)),
-                rowValue(row.errors)
+                rowValue(resolveImportRowResultErrors(row))
             );
             sheetRows.add(cells);
         }
@@ -1599,6 +1905,261 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         return n;
+    }
+
+    public static Integer countSuccessImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        Integer n = 0;
+        if (rows == null || rows.isEmpty()) {
+            return n;
+        }
+        for (FEC_BatchCaseHandlingImportRow r : rows) {
+            if (r != null && isImportRowAppliedSuccessStatus(r.status)) {
+                n += 1;
+            }
+        }
+        return n;
+    }
+
+    public static Integer countUnprocessedImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        Integer n = 0;
+        if (rows == null || rows.isEmpty()) {
+            return n;
+        }
+        for (FEC_BatchCaseHandlingImportRow r : rows) {
+            if (isImportRowUnprocessed(r)) {
+                n += 1;
+            }
+        }
+        return n;
+    }
+
+    public static void markUnprocessedImportRows(
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        String reason
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        String failureReason = String.isBlank(reason) ? ERR_IMPORT_ROW_NOT_COMPLETED : reason;
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (!isImportRowUnprocessed(row)) {
+                continue;
+            }
+            row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+            if (String.isBlank(row.errors)) {
+                row.errors = failureReason;
+            }
+        }
+    }
+
+    public static String resolveImportQueueLimitExceededReason() {
+        return ERR_IMPORT_QUEUE_LIMIT_EXCEEDED;
+    }
+
+    public static String resolveBatchFailureReasonFromRows(
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        String fallbackReason
+    ) {
+        String fromRows = summarizeUniqueImportRowErrors(rows, BATCH_FAILURE_REASON_MAX_UNIQUE_ERRORS);
+        if (String.isNotBlank(fromRows)) {
+            return fromRows;
+        }
+        if (String.isNotBlank(fallbackReason) && !isGenericBatchImportFailureMessage(fallbackReason)) {
+            return fallbackReason;
+        }
+        return String.isBlank(fallbackReason) ? FEC_ConstantCommon.STR_EMPTY : fallbackReason;
+    }
+
+    public static String resolveImportRowResultErrors(FEC_BatchCaseHandlingImportRow row) {
+        if (row == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (String.isNotBlank(row.errors)) {
+            String resolved = resolveImportRowErrorsFromStoredValue(row);
+            if (String.isNotBlank(resolved)) {
+                return resolved;
+            }
+        }
+        if (row.status == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+            return formatImportRowApplyFailureWithoutDetail(row);
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    public static void ensureFailedImportRowsHaveDetailErrors(List<FEC_BatchCaseHandlingImportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (row == null) {
+                continue;
+            }
+            if (row.status == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed &&
+                String.isBlank(row.errors)) {
+                row.errors = formatImportRowApplyFailureWithoutDetail(row);
+            }
+        }
+    }
+
+    private static String resolveImportRowErrorsFromStoredValue(FEC_BatchCaseHandlingImportRow row) {
+        if (row == null || String.isBlank(row.errors)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (!row.errors.contains(IMPORT_ERROR_SEPARATOR)) {
+            return resolveSingleImportRowStoredError(row, row.errors.trim());
+        }
+        List<String> parts = row.errors.split(IMPORT_ERROR_SEPARATOR);
+        List<String> resolvedParts = new List<String>();
+        Integer genericCount = 0;
+        Integer storedCount = 0;
+        for (String part : parts) {
+            String trimmed = part == null ? FEC_ConstantCommon.STR_EMPTY : part.trim();
+            if (String.isBlank(trimmed)) {
+                continue;
+            }
+            storedCount++;
+            if (isGenericBatchImportFailureMessage(trimmed)) {
+                genericCount++;
+                continue;
+            }
+            String resolved = localizeImportResultError(trimmed);
+            if (String.isNotBlank(resolved)) {
+                resolvedParts.add(resolved);
+            }
+        }
+        if (!resolvedParts.isEmpty()) {
+            return appendImportRowReferenceIfMissing(row, String.join(resolvedParts, IMPORT_ERROR_SEPARATOR));
+        }
+        if (storedCount > 0 && genericCount == storedCount) {
+            return formatImportRowApplyFailureWithoutDetail(row);
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static String resolveSingleImportRowStoredError(
+        FEC_BatchCaseHandlingImportRow row,
+        String storedError
+    ) {
+        if (String.isBlank(storedError)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (isGenericBatchImportFailureMessage(storedError)) {
+            return formatImportRowApplyFailureWithoutDetail(row);
+        }
+        return appendImportRowReferenceIfMissing(row, localizeImportResultError(storedError));
+    }
+
+    private static String appendImportRowReferenceIfMissing(
+        FEC_BatchCaseHandlingImportRow row,
+        String message
+    ) {
+        if (String.isBlank(message)) {
+            return message;
+        }
+        String trimmed = message.trim();
+        if (trimmed.startsWith('[')) {
+            return trimmed;
+        }
+        return buildImportRowReference(row) + ' ' + trimmed;
+    }
+
+    private static String resolveImportFailureReason(
+        String reason,
+        List<FEC_BatchCaseHandlingImportRow> rows
+    ) {
+        String resolved = String.isBlank(reason)
+            ? resolveBatchFailureReasonFromRows(rows, ERR_IMPORT_ROW_NOT_COMPLETED)
+            : reason;
+        if (isGenericBatchImportFailureMessage(resolved)) {
+            resolved = resolveBatchFailureReasonFromRows(rows, resolved);
+        }
+        return resolved;
+    }
+
+    @TestVisible
+    private static Boolean isGenericBatchImportFailureMessage(String message) {
+        if (String.isBlank(message)) {
+            return true;
+        }
+        return message == System.Label.FEC_BCH_ImportFailed
+            || message == System.Label.FEC_BCH_Import_Rows_Invalid;
+    }
+
+    private static String summarizeUniqueImportRowErrors(
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        Integer maxUnique
+    ) {
+        if (rows == null || rows.isEmpty() || maxUnique == null || maxUnique <= 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Set<String> seen = new Set<String>();
+        List<String> ordered = new List<String>();
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (row == null || String.isBlank(row.errors)) {
+                continue;
+            }
+            List<String> parts = row.errors.contains(IMPORT_ERROR_SEPARATOR)
+                ? row.errors.split(IMPORT_ERROR_SEPARATOR)
+                : new List<String>{ row.errors };
+            for (String part : parts) {
+                String trimmed = part == null ? FEC_ConstantCommon.STR_EMPTY : part.trim();
+                if (String.isBlank(trimmed) || seen.contains(trimmed)) {
+                    continue;
+                }
+                seen.add(trimmed);
+                ordered.add(trimmed);
+                if (ordered.size() >= maxUnique) {
+                    break;
+                }
+            }
+            if (ordered.size() >= maxUnique) {
+                break;
+            }
+        }
+        if (ordered.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Integer totalFailed = countFailedImportRows(rows);
+        String summary = String.join(ordered, IMPORT_ERROR_SEPARATOR);
+        if (totalFailed > ordered.size()) {
+            summary += IMPORT_ERROR_SEPARATOR +
+                '(và ' +
+                String.valueOf(totalFailed - ordered.size()) +
+                ' lỗi khác trên các dòng import)';
+        }
+        return summary;
+    }
+
+    public static List<FEC_BatchCaseHandlingImportRow> prepareImportRowsForApplyChain(
+        List<FEC_BatchCaseHandlingImportRow> rows
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            return rows;
+        }
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (row == null) {
+                continue;
+            }
+            row.originalHeaders = null;
+            row.originalCells = null;
+            row.originalColumnIndexes = null;
+        }
+        return rows;
+    }
+
+    public static String serializeImportRowsForApplyChain(List<FEC_BatchCaseHandlingImportRow> rows) {
+        return JSON.serialize(prepareImportRowsForApplyChain(rows));
+    }
+
+    private static Boolean isImportRowUnprocessed(FEC_BatchCaseHandlingImportRow row) {
+        return row != null &&
+            shouldApplyImportRow(row) &&
+            !isImportRowAppliedSuccessStatus(row.status) &&
+            row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+    }
+
+    private static Boolean isImportRowAppliedSuccessStatus(String rowStatus) {
+        return rowStatus == System.Label.FEC_Batch_Case_Handling_Success;
     }
 
     // 30/05/2026 18:30 linhdev - đọc remark từ file upload gốc trước validate (LWC/JSON có thể thiếu chuỗi dài)
@@ -2146,6 +2707,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
 
             if (matched != null && ctx.cofOrGsr != true) {
+                String ownerAccessErr = validateNonCofGsrCaseImportOwnerAccess(matched, ctx);
+                if (String.isNotBlank(ownerAccessErr)) {
+                    errs.add(ownerAccessErr);
+                }
                 FEC_BatchCaseHandlingImportProfile.ImportScope importScope =
                     FEC_BatchCaseHandlingImportProfile.resolveForCase(
                         resolveImportValidateBusinessProcessCode(matched, ctx),
@@ -2251,12 +2816,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
 
             } catch (Exception rowEx) {
-                addImportError(
-                    errs,
-                    String.isNotBlank(rowEx.getMessage())
-                        ? rowEx.getMessage()
-                        : System.Label.FEC_BCH_ImportFailed
-                );
+                addImportError(errs, formatImportRowValidateException(rr, rowEx));
             }
 
             if (!errs.isEmpty()) {
@@ -2481,10 +3041,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return;
         }
         batchImportApplyInProgress = true;
+        batchHandlingTriggerBypass = true;
         try {
             applyCaseHandlingUpdatesCore(rows, cofOrGsr);
         } finally {
             batchImportApplyInProgress = false;
+            batchHandlingTriggerBypass = false;
         }
     }
 
@@ -2511,6 +3073,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     OwnerId,
                     FEC_Current_Case_Stage__c,
                     FEC_Assignment_Count__c,
+                    FEC_Assignment_Users__c,
                     FEC_Final_Status__c,
                     FEC_Current_Case_Stage__r.FEC_Code__c,
                     FEC_Business_Process__r.FEC_Code__c,
@@ -2520,6 +3083,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             ]);
         // 28/05/2026 11:20 linhdev - preload stage screen sau clearCache để resolve routing không query lặp / Route To
         preloadImportStageScreensForApply(caseLiteById);
+        // 25/06/2026 PhongBT: preload login user info cho ownership check COF/GSR (tránh query lặp trong loop)
+        Id loginUserId = UserInfo.getUserId();
+        Set<Id> loginUserQueueIds = cofOrGsr == true
+            ? FEC_AssignmentListHandler.getCurrentUserQueueIds(loginUserId)
+            : new Set<Id>();
+        Set<String> loginUserQueueNames = cofOrGsr == true
+            ? FEC_AssignmentListHandler.getCurrentUserQueues(loginUserId)
+            : new Set<String>();
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
         Map<String, Map<String, String>> picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
@@ -2570,6 +3141,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
             if (cofOrGsr == true && String.isNotBlank(rr.routingAction)) {
                 Case caseForRoutingRule = caseLiteById.get(caseId);
+                // 25/06/2026 PhongBT: Check ownership cho COF/GSR trước khi xử lý
+                String ownershipError = validateCofGsrImportRowOwnership(caseForRoutingRule, loginUserQueueIds, loginUserId, loginUserQueueNames);
+                if (String.isNotBlank(ownershipError)) {
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                    rr.errors = appendError(rr.errors, ownershipError);
+                    continue;
+                }
                 String routingBlockedByAssignment = validateCaseRoutingActionBlockedByAssignmentCount(
                     rr,
                     caseForRoutingRule
@@ -2839,10 +3417,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         skipCaseRun = true;
                     }
                 }
-                // 28/05/2026 11:20 linhdev - không gọi run khi gần 101 SOQL; row còn lại xử lý ở queueable chunk sau
-                if (shouldYieldImportGovernorLimits()) {
-                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-                    rr.errors = appendError(rr.errors, System.Label.FEC_BCH_ImportFailed);
+                // 28/05/2026 11:20 linhdev - sync multi-chunk: defer row khi gần 101 SOQL (chunk sau xử lý tiếp)
+                // 25/06/2026 linhdev - queueable 1 row/hop: không đánh Failed ảo; vẫn runInternal (tránh chỉ 1 dòng Success)
+                if (shouldYieldImportGovernorLimits() && !System.isQueueable()) {
+                    if (System.isBatch()) {
+                        rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                        rr.errors = appendError(
+                            rr.errors,
+                            resolveImportQueueLimitExceededReason()
+                        );
+                    }
                     continue;
                 }
                 if (!skipCaseRun) {
@@ -3486,6 +4070,31 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return String.valueOf(ownerId).startsWith(QUEUE_OWNER_ID_PREFIX);
     }
 
+    // 25/06/2026 linhdev - TH1: quy trình khác GSR/COF chỉ import khi user là Case Owner hoặc member Queue owner
+    @TestVisible
+    private static String validateNonCofGsrCaseImportOwnerAccess(
+        Case matched,
+        ImportValidateChunkContext ctx
+    ) {
+        if (matched == null || ctx == null || ctx.cofOrGsr == true || isCofOrGsrBusinessProcess(matched)) {
+            return null;
+        }
+        Id currentUserId = ctx.currentUserId;
+        Id caseOwnerId = matched.OwnerId;
+        if (currentUserId == null || caseOwnerId == null) {
+            return System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member;
+        }
+        if (caseOwnerId == currentUserId) {
+            return null;
+        }
+        if (isQueueCaseOwnerId(caseOwnerId) &&
+            ctx.currentUserQueueIds != null &&
+            ctx.currentUserQueueIds.contains(caseOwnerId)) {
+            return null;
+        }
+        return System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Owner_Or_Queue_Member;
+    }
+
     // 05/06/2026 14:00 linhdev - check Business Process COF/GSR theo từng Case (không chỉ cờ import batch)
     private static Boolean isCofOrGsrBusinessProcess(Case matched) {
         String bpCode = resolveCaseBusinessProcessCode(matched);
@@ -3534,6 +4143,71 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             && rr != null
             && String.isNotBlank(rr.assignmentRoutingAction)
             && String.isBlank(rr.routingAction);
+    }
+
+    // 25/06/2026 PhongBT: Validate ownership cho COF/GSR import theo rule:
+    // TH1 (FEC_Assignment_Count__c = 0): Case Owner = login user hoặc Queue mà user là thành viên
+    // TH2 (FEC_Assignment_Count__c > 0): FEC_Assignment_Users__c chứa User ID hoặc exact match tên Queue của user
+    @TestVisible
+    private static String validateCofGsrImportRowOwnership(
+        Case caseLite,
+        Set<Id> loginUserQueueIds,
+        Id loginUserId,
+        Set<String> loginUserQueueNames
+    ) {
+        if (caseLite == null) {
+            return null;
+        }
+        Decimal assignmentCount = caseLite.FEC_Assignment_Count__c;
+        boolean hasAssignment = assignmentCount != null && assignmentCount > 0;
+
+        if (!hasAssignment) {
+            // TH1: FEC_Assignment_Count__c = 0
+            // Case Owner phải là login user HOẶC là Queue mà login user là thành viên
+            Id ownerId = caseLite.OwnerId;
+            if (ownerId == loginUserId) {
+                return null;
+            }
+            if (loginUserQueueIds != null && loginUserQueueIds.contains(ownerId)) {
+                return null;
+            }
+            return System.Label.FEC_BCH_Import_Err_Not_Case_Owner_Or_Queue_Member;
+        }
+
+        // TH2: FEC_Assignment_Count__c > 0
+        // FEC_Assignment_Users__c chứa User ID HOẶC exact match tên Queue mà user là thành viên
+        String assignmentUsers = caseLite.FEC_Assignment_Users__c;
+        if (String.isBlank(assignmentUsers)) {
+            return System.Label.FEC_BCH_Import_Err_Not_Assignment_Owner_Or_Queue_Member;
+        }
+        String normalized = assignmentUsers.replace(';', ',');
+        Set<String> assignmentUserSet = new Set<String>();
+        for (String val : normalized.split(',')) {
+            String trimmed = val == null ? null : val.trim();
+            if (String.isNotBlank(trimmed)) {
+                assignmentUserSet.add(trimmed);
+            }
+        }
+        // Check User ID
+        if (loginUserId != null) {
+            String userIdStr = String.valueOf(loginUserId);
+            if (assignmentUserSet.contains(userIdStr)) {
+                return null;
+            }
+            // Salesforce ID 15 vs 18 ký tự
+            if (userIdStr.length() > 15 && assignmentUserSet.contains(userIdStr.substring(0, 15))) {
+                return null;
+            }
+        }
+        // Check exact match Queue name
+        if (loginUserQueueNames != null) {
+            for (String queueName : loginUserQueueNames) {
+                if (String.isNotBlank(queueName) && assignmentUserSet.contains(queueName)) {
+                    return null;
+                }
+            }
+        }
+        return System.Label.FEC_BCH_Import_Err_Not_Assignment_Owner_Or_Queue_Member;
     }
 
     //PhongBT 29/05/26: COF/GSR — Revert/Update/Escalate ở Routing Action (case) không được khi Case có Assignment.
@@ -3845,7 +4519,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         }
         if (String.isBlank(rowStatus)) {
-            return FEC_ConstantCommon.STR_EMPTY;
+            return System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         }
         return System.Label.FEC_Batch_Case_Handling_Success;
     }
@@ -4875,6 +5549,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return message;
         }
         String trimmed = message.trim();
+        if (isGenericBatchImportFailureMessage(trimmed)) {
+            return trimmed;
+        }
         String mapped = mapKnownEnglishImportResultError(trimmed);
         if (String.isNotBlank(mapped)) {
             return mapped;
@@ -4882,7 +5559,158 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (isLikelyVietnameseImportResultMessage(trimmed)) {
             return trimmed;
         }
-        return ERR_GENERIC_APPLY;
+        return formatGenericImportFailureWithReason(trimmed);
+    }
+
+    private static String formatGenericImportFailureWithReason(String rawReason) {
+        String reason = normalizeUnknownImportReason(rawReason);
+        if (String.isBlank(reason)) {
+            return ERR_GENERIC_APPLY;
+        }
+        return ERR_GENERIC_APPLY_REASON_PREFIX + reason;
+    }
+
+    private static String normalizeUnknownImportReason(String rawReason) {
+        if (String.isBlank(rawReason)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String normalized = rawReason.trim().replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ');
+        normalized = normalized.replaceAll('\\s+', ' ');
+        if (normalized.length() <= IMPORT_RESULT_UNKNOWN_REASON_MAX_LEN) {
+            return normalized;
+        }
+        return normalized.substring(0, IMPORT_RESULT_UNKNOWN_REASON_MAX_LEN) + '...';
+    }
+
+    private static String buildImportRowReference(FEC_BatchCaseHandlingImportRow row) {
+        if (row == null) {
+            return ERR_IMPORT_ROW_REF_EMPTY;
+        }
+        List<String> parts = new List<String>();
+        if (row.originalDataRowIndex != null && row.originalDataRowIndex >= 0) {
+            parts.add(ERR_IMPORT_ROW_REF_EXCEL_PREFIX + String.valueOf(row.originalDataRowIndex + 1));
+        }
+        String caseIdToken = resolveBusinessCaseIdTokenForReference(row);
+        if (String.isNotBlank(caseIdToken)) {
+            parts.add(ERR_IMPORT_ROW_REF_CASE_ID_PREFIX + caseIdToken);
+        }
+        if (parts.isEmpty()) {
+            return ERR_IMPORT_ROW_REF_EMPTY;
+        }
+        return '[' + String.join(parts, ', ') + ']';
+    }
+
+    private static String resolveBusinessCaseIdTokenForReference(FEC_BatchCaseHandlingImportRow row) {
+        if (row == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (String.isNotBlank(row.caseIdSearch)) {
+            return row.caseIdSearch.trim();
+        }
+        String originalCaseId = cellTextAtOriginalLayout(row, findCaseIdHeaderIndex(row.originalHeaders));
+        if (String.isNotBlank(originalCaseId)) {
+            return originalCaseId.trim();
+        }
+        if (isLikelyBusinessCaseIdToken(row.recordId)) {
+            return row.recordId.trim();
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static Boolean isLikelyBusinessCaseIdToken(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        String trimmed = value.trim();
+        if (trimmed.startsWith('500')) {
+            return false;
+        }
+        return Pattern.matches('^[A-Za-z]-.+$', trimmed);
+    }
+
+    private static String resolveExceptionDetail(Exception ex) {
+        if (ex == null) {
+            return ERR_IMPORT_EXCEPTION_NO_DETAIL;
+        }
+        if (String.isNotBlank(ex.getMessage())) {
+            return sanitizeImportExceptionMessage(ex.getMessage().trim());
+        }
+        String typeName = ex.getTypeName();
+        if (String.isNotBlank(typeName)) {
+            return ERR_IMPORT_EXCEPTION_TYPE_PREFIX + typeName + ERR_IMPORT_EXCEPTION_TYPE_NO_MESSAGE;
+        }
+        return ERR_IMPORT_EXCEPTION_NO_DETAIL;
+    }
+
+    private static String sanitizeImportExceptionMessage(String message) {
+        if (String.isBlank(message)) {
+            return ERR_IMPORT_EXCEPTION_NO_DETAIL;
+        }
+        String candidate = stripTechnicalExceptionPrefix(message);
+        return localizeImportResultError(candidate);
+    }
+
+    private static String stripTechnicalExceptionPrefix(String message) {
+        if (String.isBlank(message)) {
+            return message;
+        }
+        Integer splitPos = message.indexOf(':');
+        if (splitPos <= 0 || splitPos >= message.length() - 1) {
+            return message;
+        }
+        String prefix = message.substring(0, splitPos).trim();
+        if (!isTechnicalExceptionPrefix(prefix)) {
+            return message;
+        }
+        String suffix = message.substring(splitPos + 1).trim();
+        return String.isBlank(suffix) ? message : suffix;
+    }
+
+    private static Boolean isTechnicalExceptionPrefix(String prefix) {
+        if (String.isBlank(prefix)) {
+            return false;
+        }
+        String normalized = prefix.toLowerCase();
+        return normalized.contains('exception')
+            || normalized.contains('error')
+            || normalized.contains('field_custom_validation_exception')
+            || normalized.contains('system.')
+            || normalized.contains('dml')
+            || normalized.contains('query');
+    }
+
+    @TestVisible
+    private static String formatImportRowValidateException(
+        FEC_BatchCaseHandlingImportRow row,
+        Exception ex
+    ) {
+        return buildImportRowReference(row) +
+            ERR_IMPORT_VALIDATE_EXCEPTION_SUFFIX +
+            resolveExceptionDetail(ex);
+    }
+
+    private static String formatImportRowApplyFailureWithoutDetail(FEC_BatchCaseHandlingImportRow row) {
+        String rowRef = buildImportRowReference(row);
+        List<String> hints = new List<String>();
+        if (String.isNotBlank(row == null ? null : row.routingAction)) {
+            hints.add(
+                ERR_IMPORT_ROUTING_ACTION_LABEL_PREFIX +
+                    row.routingAction.trim() +
+                    ERR_IMPORT_ROUTING_ACTION_LABEL_SUFFIX
+            );
+        } else if (row != null && String.isNotBlank(row.assignmentRoutingAction)) {
+            hints.add(
+                ERR_IMPORT_ASSIGNMENT_ROUTING_ACTION_LABEL_PREFIX +
+                    row.assignmentRoutingAction.trim() +
+                    ERR_IMPORT_ROUTING_ACTION_LABEL_SUFFIX
+            );
+        }
+        String hintSuffix = hints.isEmpty()
+            ? ERR_IMPORT_APPLY_FAILURE_HINT
+            : ERR_IMPORT_APPLY_FAILURE_HINT_CHECK_PREFIX +
+                String.join(hints, ', ') +
+                ERR_IMPORT_APPLY_FAILURE_HINT_CHECK_SUFFIX;
+        return rowRef + ERR_IMPORT_APPLY_FAILURE_SUFFIX + hintSuffix;
     }
 
     private static String mapKnownEnglishImportResultError(String trimmed) {
@@ -4917,7 +5745,22 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (norm.contains('field_custom_validation_exception')) {
             return ERR_IMPORT_RESULT_VALIDATION_FAILED;
         }
+        if (isTechnicalImportResultMessage(norm)) {
+            return ERR_IMPORT_QUEUE_LIMIT_EXCEEDED;
+        }
         return null;
+    }
+
+    private static Boolean isTechnicalImportResultMessage(String normalizedMessage) {
+        if (String.isBlank(normalizedMessage)) {
+            return false;
+        }
+        for (String keyword : IMPORT_RESULT_TECHNICAL_ERROR_KEYWORDS) {
+            if (normalizedMessage.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Boolean isLikelyVietnameseImportResultMessage(String trimmed) {
