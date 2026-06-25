@@ -35,4 +35,7 @@
         <value>1</value>
     </filters>
     <label>My Team</label>
+    <sharedTo>
+        <group>FEC_My_Team_List_View</group>
+    </sharedTo>
 </ListView>

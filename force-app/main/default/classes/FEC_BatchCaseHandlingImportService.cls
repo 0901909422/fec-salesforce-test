@@ -146,8 +146,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     @TestVisible
     public static final Integer IMPORT_VALIDATE_MAX_ROWS_PER_CHUNK = 400;
     // 08/06/2026 linhdev - ~8-12 SOQL/row runInternal; 2 row/transaction an toàn dưới ngưỡng 72%
+    // 24/06/2026 phong - giảm xuống 1 row/transaction: resolve gọi thêm resolveAllAssignments (3-4 SOQL)
+    // + trigger after-update (5-10 SOQL) → tổng thực tế 20-25 SOQL/row, 2 rows có thể vượt ngưỡng 72%
+    // dẫn đến shouldYieldImportGovernorLimits() = true cho row thứ 2, row đó bị Failed dù case hợp lệ
     @TestVisible
-    public static final Integer IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE = 2;
+    public static final Integer IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE = 1;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
@@ -1997,7 +2000,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             // 05/06/2026 18:30 linhdev - tránh __Errors báo nhập cả 2 routing khi user chỉ nhập Assignment Routing Action
             sanitizeCofGsrCaseRoutingBleedFromAssignment(rr);
             rr.recordId = FEC_ConstantCommon.STR_EMPTY;
-            rr.status = System.Label.FEC_Batch_Case_Handling_Success;
+            // 24/06/2026 phong - không set Success tại validate time; chỉ set sau khi apply thực sự thành công
+            // để tránh file result hiện "Success" cho rows chưa được xử lý (queueable chain bị cắt / exception)
+            rr.status = null;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;
             output.add(rr);
         }
@@ -2856,6 +2861,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     }
                     // 04/06/2026 16:45 linhdev - queueable gọi runInternal; tránh AuraHandledException crash import Processing
                     FEC_CaseBusinessService.runInternal(methodKey, runParams);
+                    // 24/06/2026 phong - xác nhận apply thành công; tránh nhầm với status=null (chưa xử lý) khi export Result
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Success;
                     //08/06/2026 dungLTdev: Excel Routing Action = Resolve — tạo FEC_Routing_Action_History__c sau run thành công.
                     if (assignmentOnly != true &&
                         methodKey == FEC_CaseBusinessService.RESOLVE) {
@@ -2874,6 +2881,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(rr.errors, ex.getMessage());
                 continue;
+            }
+            // 24/06/2026 phong - skipCaseRun path (COF/GSR assignment-only) không đi qua runInternal
+            // nên cần set Success ở đây; !skipCaseRun path đã set ngay sau runInternal thành công
+            if (String.isBlank(rr.status)) {
+                rr.status = System.Label.FEC_Batch_Case_Handling_Success;
             }
             Case d2cUpdate = buildD2CCaseUpdate(caseId, rr, caseFieldMap, picklistValueByNormByField);
             if (d2cUpdate != null) {
@@ -3494,6 +3506,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     // 05/06/2026 14:00 linhdev - quy trình không GSR/COF Resolve/Reject/Update: owner Queue → chuyển OwnerId sang Login User
+    // 24/06/2026 - COF/GSR giữ owner Queue; FEC_CaseBusinessService bỏ qua owner check khi batch import + owner Queue
     private static void transferQueueOwnedCaseToLoginUserForNonCofGsrProcess(
         Id caseId,
         String methodKey,

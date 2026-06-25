@@ -45,6 +45,10 @@ public without sharing class FEC_FollowUpController {
             
             // Query Case
             Case caseRecord = [SELECT Id, OwnerId, CreatedById, Status FROM Case WHERE Id = :caseId LIMIT 1];
+            Boolean isOwner = caseRecord.OwnerId == currentUserId;
+            Boolean isRdItAdmin = isRdItAdminUser(currentUserId);
+            User currentUser = [SELECT FEC_User_Group__c FROM User WHERE Id = :currentUserId LIMIT 1];
+            Boolean canAddUserFollow = evaluateCanAddUserFollow(isOwner, isRdItAdmin, currentUser.FEC_User_Group__c);
             
             // Query Active Watcher
             List<FEC_Watcher__c> activeWatchers = [
@@ -78,7 +82,9 @@ public without sharing class FEC_FollowUpController {
                 'isFollowing' => isFollowing,
                 'followType' => followType,
                 'canUnfollow' => canUnfollow,
-                'isOwner' => caseRecord.OwnerId == currentUserId,
+                'isOwner' => isOwner,
+                'isRdItAdmin' => isRdItAdmin,
+                'canAddUserFollow' => canAddUserFollow,
                 'isCreator' => caseRecord.CreatedById == currentUserId,
                 'status' => caseRecord.Status
             };
@@ -187,7 +193,7 @@ public without sharing class FEC_FollowUpController {
     
     /**
      * @description Thêm user được chọn (từ modal Select Follow-Up User) vào danh sách follow-up và bảng Watcher Information.
-     * Chỉ Case Owner mới gọi được. Nếu user đã có watcher đang active → Noti-02 (FEC_MSG_FollowUp_Not02_User_Already_Watcher).
+     * Chỉ Case Owner hoặc RD - IT Admin mới gọi được. Nếu user đã có watcher đang active → Noti-02 (FEC_MSG_FollowUp_Not02_User_Already_Watcher).
      * Ngược lại: tạo/cập nhật FEC_Watcher__c, thêm Case Team, cập nhật FEC_Follow_Up_User__c và publish event để LWC Watchers Information refresh.
      */
     @AuraEnabled
@@ -198,8 +204,14 @@ public without sharing class FEC_FollowUpController {
             }
             String currentUserId = UserInfo.getUserId();
             Case caseRecord = [SELECT Id, OwnerId, FEC_Follow_Up_User__c FROM Case WHERE Id = :caseId LIMIT 1];
-            if (caseRecord.OwnerId != currentUserId) {
+            Boolean isOwner = caseRecord.OwnerId == currentUserId;
+            Boolean isRdItAdmin = isRdItAdminUser(currentUserId);
+            if (!isOwner && !isRdItAdmin) {
                 throw new AuraHandledException(System.Label.FEC_MSG_FollowUp_Owner_Only);
+            }
+            User currentUser = [SELECT FEC_User_Group__c FROM User WHERE Id = :currentUserId LIMIT 1];
+            if (!evaluateCanAddUserFollow(isOwner, isRdItAdmin, currentUser.FEC_User_Group__c)) {
+                throw new AuraHandledException(System.Label.FEC_MSG_FollowUp_Add_User_Not_Allowed);
             }
             String picklistValue = convertToPicklistValue(followType);
             List<User> targetUsers = [SELECT Id, Email, UserRole.Name FROM User WHERE Id = :targetUserId AND IsActive = true LIMIT 1];
@@ -666,5 +678,40 @@ public without sharing class FEC_FollowUpController {
             System.debug('Error searching users: ' + e.getMessage());
             return new List<Map<String, String>>();
         }
+    }
+
+    @TestVisible
+    private static Boolean canCurrentUserAddFollowUpUser(String userGroup) {
+        return !FEC_ConstantCommon.FOLLOW_UP_ADD_USER_RESTRICTED_USER_GROUPS.contains(userGroup);
+    }
+
+    @TestVisible
+    private static Boolean evaluateCanAddUserFollow(Boolean isOwner, Boolean isRdItAdmin, String userGroup) {
+        if (isRdItAdmin) {
+            return true;
+        }
+        return isOwner && canCurrentUserAddFollowUpUser(userGroup);
+    }
+
+    @TestVisible
+    private static Boolean isRdItAdminUser(Id userId) {
+        if (userId == null) {
+            return false;
+        }
+        for (PermissionSetAssignment psa : [
+            SELECT PermissionSetGroup.MasterLabel, PermissionSetGroup.DeveloperName
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :userId AND PermissionSetGroupId != NULL
+            LIMIT 200
+        ]) {
+            if (psa.PermissionSetGroup == null) {
+                continue;
+            }
+            if (FEC_ConstantCommon.PSG_LABEL_RD_IT_ADMIN.equals(psa.PermissionSetGroup.MasterLabel)
+                || FEC_ConstantCommon.PSG_DEV_NAMES_RD_IT_ADMIN.contains(psa.PermissionSetGroup.DeveloperName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

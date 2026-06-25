@@ -60,7 +60,11 @@ public without sharing class FEC_ServiceCaseEmailService {
                 if (!ccList.isEmpty()) mail.setCcAddresses(ccList);
             }
             mail.setSubject(subjectWithThread);
-            mail.setHtmlBody(body != null ? body : '');
+            // tungnm37 fix: Convert internal Salesforce image URLs (header/footer) sang public ContentDistribution URL
+            // de Gmail/Outlook khong bi chan anh khi hien thi email
+            String publicizedBody = FEC_CustomEmailService.publicizeImagesForEmail(body != null ? body : '');
+            publicizedBody = FEC_CustomEmailService.wrapEmailBodyForConsistentWidth(publicizedBody);
+            mail.setHtmlBody(publicizedBody);
             mail.setSaveAsActivity(false);
             // Không setWhatId để tránh Salesforce tự tạo EmailMessage thêm lần nữa
 
@@ -80,7 +84,6 @@ public without sharing class FEC_ServiceCaseEmailService {
                 }
                 if (!efas.isEmpty()) mail.setFileAttachments(efas);
             }
-
             // 7. Send
             List<Messaging.SendEmailResult> results = Messaging.sendEmail(
                 new List<Messaging.SingleEmailMessage>{ mail }, false
@@ -99,7 +102,7 @@ public without sharing class FEC_ServiceCaseEmailService {
                 em.ToAddress   = toEmail;
                 if (String.isNotBlank(ccEmail)) em.CcAddress = ccEmail;
                 em.Subject     = subjectWithThread;
-                em.HtmlBody    = body;
+                em.HtmlBody    = publicizedBody;
                 em.TextBody    = body != null ? body.replaceAll('<[^>]+>', '') : '';
                 em.Incoming    = false;
                 em.Status      = '3';
@@ -173,4 +176,3 @@ public without sharing class FEC_ServiceCaseEmailService {
         return FEC_CustomEmailService.getFromAddresses(caseId);
     }
 }
-

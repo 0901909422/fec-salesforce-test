@@ -34,6 +34,7 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
     showModal = false;
     showUserModal = false;
     isCaseOwner = false;
+    canAddUserFollow = false;
 
     userSearchTerm = '';
     userSearchResults = [];
@@ -305,6 +306,7 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
                 this.currentFollowType = result.followType || '';
                 this.caseStatus = result.status || '';
                 this.isCaseOwner = result.isOwner === true;
+                this.canAddUserFollow = result.canAddUserFollow === true;
                 
                 // Pre-select followType:
                 // 1. Nếu Case đã Resolved → chỉ cho phép UNTIL_UNFOLLOW

@@ -116,7 +116,8 @@ private class FEC_BancaController_Test {
             FEC_User_ID__c = USER_EXISTING,
             FEC_Buyer_Name__c = 'Nguyen Van A',
             FEC_Premium_Fee__c = 500000,
-            FEC_Expiry_Date__c = Date.today().addDays(365)
+            FEC_Expiry_Date__c = Date.today().addDays(365),
+            FEC_Effective_Date__c = Date.today().addDays(-30)
         );
     }
 
@@ -321,7 +322,7 @@ private class FEC_BancaController_Test {
     @IsTest
     static void loadInsuranceDetail_success() {
         FEC_Insurance_Info__c insurance = [
-            SELECT Id, FEC_Expiry_Date__c, FEC_Cancel_Date__c
+            SELECT Id, FEC_Expiry_Date__c, FEC_Cancel_Date__c, FEC_Effective_Date__c
             FROM FEC_Insurance_Info__c
             WHERE FEC_User_ID__c = :USER_EXISTING
             LIMIT 1
@@ -340,7 +341,8 @@ private class FEC_BancaController_Test {
         System.assertEquals(
             FEC_CommonUltils.deriveInsuranceStatus(
                 insurance.FEC_Expiry_Date__c,
-                insurance.FEC_Cancel_Date__c
+                insurance.FEC_Cancel_Date__c,
+                insurance.FEC_Effective_Date__c
             ),
             detail.status
         );
@@ -352,7 +354,8 @@ private class FEC_BancaController_Test {
         FEC_Insurance_Info__c insurance = new FEC_Insurance_Info__c(
             FEC_Customer_History__c = cs.FEC_Account_or_Contract__c,
             FEC_User_ID__c = 'USER_CANCELLED',
-            FEC_Cancel_Date__c = Date.today()
+            FEC_Cancel_Date__c = Date.today(),
+            FEC_Effective_Date__c = Date.today().addDays(-60)
         );
         insert insurance;
 
@@ -363,7 +366,8 @@ private class FEC_BancaController_Test {
         System.assertEquals(
             FEC_CommonUltils.deriveInsuranceStatus(
                 insurance.FEC_Expiry_Date__c,
-                insurance.FEC_Cancel_Date__c
+                insurance.FEC_Cancel_Date__c,
+                insurance.FEC_Effective_Date__c
             ),
             detail.status
         );
@@ -375,7 +379,8 @@ private class FEC_BancaController_Test {
         FEC_Insurance_Info__c insurance = new FEC_Insurance_Info__c(
             FEC_Customer_History__c = cs.FEC_Account_or_Contract__c,
             FEC_User_ID__c = 'USER_EXPIRED',
-            FEC_Expiry_Date__c = Date.today().addDays(-1)
+            FEC_Expiry_Date__c = Date.today().addDays(-1),
+            FEC_Effective_Date__c = Date.today().addDays(-365)
         );
         insert insurance;
 
@@ -386,7 +391,8 @@ private class FEC_BancaController_Test {
         System.assertEquals(
             FEC_CommonUltils.deriveInsuranceStatus(
                 insurance.FEC_Expiry_Date__c,
-                insurance.FEC_Cancel_Date__c
+                insurance.FEC_Cancel_Date__c,
+                insurance.FEC_Effective_Date__c
             ),
             detail.status
         );

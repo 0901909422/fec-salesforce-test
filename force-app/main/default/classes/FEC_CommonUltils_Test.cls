@@ -405,12 +405,20 @@ private class FEC_CommonUltils_Test {
         System.assertNotEquals(null, FEC_CommonUltils.mapApiContractStatusToPicklist('ACTIVE'));
         System.assertNotEquals(null, FEC_CommonUltils.parseDateTime(Datetime.now()));
         System.assertEquals(
-            FEC_ConstantCommon.STATUS_EXPIRED,
-            FEC_CommonUltils.deriveInsuranceStatus(Date.today().addDays(30), Date.today())
+            FEC_ConstantCommon.STATUS_INSURANCE_CANCELLED,
+            FEC_CommonUltils.deriveInsuranceStatus(
+                Date.today().addDays(30),
+                Date.today(),
+                Date.today().addDays(-10)
+            )
         );
         System.assertEquals(
             FEC_ConstantCommon.STATUS_ACTIVE,
-            FEC_CommonUltils.deriveInsuranceStatus(Date.today().addDays(30), null)
+            FEC_CommonUltils.deriveInsuranceStatus(
+                Date.today().addDays(30),
+                null,
+                Date.today().addDays(-10)
+            )
         );
         System.assertEquals('Digital', FEC_CommonUltils.resolveCardType('2', null));
         System.assertEquals('Physical', FEC_CommonUltils.resolveCardType('0', null));

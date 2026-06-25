@@ -64,7 +64,7 @@
 
                 <!-- Modal Footer -->
                 <div class="slds-modal__footer">
-                    <template if:true={isCaseOwner}>
+                    <template if:true={canAddUserFollow}>
                     <button 
                         class="slds-button slds-button_neutral custom-select-user-btn"
                         onclick={handleSelectUser}>

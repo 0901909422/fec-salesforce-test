@@ -96,6 +96,7 @@ public without sharing class FEC_MainInfoAccountController {
 
         String accountNumber;
         String cifNumber;
+        String historyAccountNumber;
 
         /* ========= 1. TRY LOCAL ========= */
         if (c.FEC_Account_or_Contract__c != null) {
@@ -105,6 +106,7 @@ public without sharing class FEC_MainInfoAccountController {
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
             ];
+            historyAccountNumber = acc.FEC_Account_Number__c;
             accountNumber = FEC_CommonUltils.resolveAccountNumber(
                 c.FEC_Product_Type__r.Name,
                 acc.FEC_Account_Number__c,
@@ -119,6 +121,7 @@ public without sharing class FEC_MainInfoAccountController {
         FEC_EmeaAccountInqService.EmeaResult emeaRes;
         FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
         String dealIdFromProductList;
+        Date accountOpenDateFromProductList;
 
         FEC_CommonUltils.beginDeferredApiLogging();
         try {
@@ -205,11 +208,14 @@ public without sharing class FEC_MainInfoAccountController {
                 && cardRes.CardBasicInfo.MainCard != null)
                 ? cardRes.CardBasicInfo.MainCard.AccountNumber
                 : accountNumber;
-            dealIdFromProductList = resolveDealIdFromProductList(
+            ProductListOverlay productListOverlay = resolveProductListOverlay(
                 cifNumber,
+                historyAccountNumber,
                 null,
                 acctForDealMatch
             );
+            dealIdFromProductList = productListOverlay.dealId;
+            accountOpenDateFromProductList = productListOverlay.accountOpenDate;
         } finally {
             FEC_CommonUltils.flushDeferredApiLogs();
         }
@@ -221,11 +227,12 @@ public without sharing class FEC_MainInfoAccountController {
             emeaRes,
             appRes,
             cardSecRes,
-            dealIdFromProductList
+            dealIdFromProductList,
+            accountOpenDateFromProductList
         );
 
         MainInfoDTO dto = fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
-        applyDealIdToDto(dto, dealIdFromProductList);
+        applyProductListToDto(dto, dealIdFromProductList, accountOpenDateFromProductList);
         return dto;
     }
 
@@ -413,6 +420,7 @@ public without sharing class FEC_MainInfoAccountController {
         FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper mcms;
         FEC_EmeaAccountInqService.EmeaResult emeaRes;
         String dealIdFromProductList;
+        Date accountOpenDateFromProductList;
 
         FEC_CommonUltils.beginDeferredApiLogging();
         try {
@@ -452,11 +460,14 @@ public without sharing class FEC_MainInfoAccountController {
                 emeaRes = null;
             }
 
-            dealIdFromProductList = resolveDealIdFromProductList(
+            ProductListOverlay productListOverlay = resolveProductListOverlay(
                 cifNumber,
+                accountNumberForDeal,
                 applicationIdForDeal,
                 accountNumberForDeal
             );
+            dealIdFromProductList = productListOverlay.dealId;
+            accountOpenDateFromProductList = productListOverlay.accountOpenDate;
         } finally {
             FEC_CommonUltils.flushDeferredApiLogs();
         }
@@ -465,7 +476,7 @@ public without sharing class FEC_MainInfoAccountController {
 
         MainInfoDTO dto = fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
         overlayEmeaFinancialsOnDto(dto, emeaRes);
-        applyDealIdToDto(dto, dealIdFromProductList);
+        applyProductListToDto(dto, dealIdFromProductList, accountOpenDateFromProductList);
         return dto;
     }
 
@@ -556,13 +567,20 @@ public without sharing class FEC_MainInfoAccountController {
         return fin;
     }
 
-    private static String resolveDealIdFromProductList(
+    private class ProductListOverlay {
+        String dealId;
+        Date accountOpenDate;
+    }
+
+    private static ProductListOverlay resolveProductListOverlay(
         String cifNumber,
+        String historyAccountNumber,
         String applicationId,
-        String accountNumber
+        String accountNumberForDeal
     ) {
+        ProductListOverlay result = new ProductListOverlay();
         if (String.isBlank(cifNumber)) {
-            return null;
+            return result;
         }
 
         try {
@@ -570,41 +588,65 @@ public without sharing class FEC_MainInfoAccountController {
                 FEC_GetProductListCallout.callService(cifNumber);
 
             if (res == null || res.products == null || res.products.isEmpty()) {
-                return null;
+                return result;
+            }
+
+            if (String.isNotBlank(historyAccountNumber)) {
+                String normalizedHistoryAccount = historyAccountNumber.trim();
+                for (FEC_GetProductListCallout.ProductInfo p : res.products) {
+                    if (p.accountNumber != null
+                        && normalizedHistoryAccount == p.accountNumber.trim()
+                        && String.isNotBlank(p.dateApplied)) {
+                        result.accountOpenDate = FEC_CommonUltils.parseDate(p.dateApplied);
+                        break;
+                    }
+                }
             }
 
             if (String.isNotBlank(applicationId)) {
                 for (FEC_GetProductListCallout.ProductInfo p : res.products) {
                     if (applicationId == p.applicationId) {
-                        return p.dealId;
+                        result.dealId = p.dealId;
+                        return result;
                     }
                 }
             }
 
-            if (String.isNotBlank(accountNumber)) {
-                String normalizedAccount = accountNumber.trim();
+            if (String.isNotBlank(accountNumberForDeal)) {
+                String normalizedAccount = accountNumberForDeal.trim();
                 for (FEC_GetProductListCallout.ProductInfo p : res.products) {
                     if (p.accountNumber != null
                         && normalizedAccount == p.accountNumber.trim()) {
-                        return p.dealId;
+                        result.dealId = p.dealId;
+                        return result;
                     }
                 }
             }
 
             if (res.products.size() == 1
                 && String.isNotBlank(res.products[0].dealId)) {
-                return res.products[0].dealId;
+                result.dealId = res.products[0].dealId;
             }
         } catch (Exception e) {
             System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
         }
 
-        return null;
+        return result;
     }
 
-    private static void applyDealIdToDto(MainInfoDTO dto, String dealId) {
-        if (dto != null && String.isNotBlank(dealId)) {
+    private static void applyProductListToDto(
+        MainInfoDTO dto,
+        String dealId,
+        Date accountOpenDate
+    ) {
+        if (dto == null) {
+            return;
+        }
+        if (String.isNotBlank(dealId)) {
             dto.contractNumber = dealId;
+        }
+        if (accountOpenDate != null) {
+            dto.accountOpenDate = FEC_CommonUltils.formatDate(accountOpenDate);
         }
     }
 
@@ -637,7 +679,8 @@ public without sharing class FEC_MainInfoAccountController {
         FEC_EmeaAccountInqService.EmeaResult emeaRes,
         FEC_GetApplicationsList.ResponseWrapper appRes,
         FEC_GetCardSecInfo.ResponseWrapper cardSecRes,
-        String dealId
+        String dealId,
+        Date accountOpenDate
     ) {
         if (accountId == null) return;
 
@@ -703,19 +746,7 @@ public without sharing class FEC_MainInfoAccountController {
                 ecomFlag = cardSecRes.CardSecInfo.MainCardPlastic.EcomActiveFlag;
             }
 
-        Date accountOpenDateParsed = null;
-        if (appRes != null
-            && appRes.Applications != null
-            && !appRes.Applications.isEmpty()
-            && a != null
-            && String.isNotBlank(a.ApplicationID)) {
-            for (FEC_GetApplicationsList.ApplicationInfo appInfo : appRes.Applications) {
-                if (a.ApplicationID == appInfo.ApplicationID) {
-                    accountOpenDateParsed = appInfo.DateStatus;
-                    break;
-                }
-            }
-        }
+        Date accountOpenDateParsed = accountOpenDate;
 
         String localUse;
         if (emeaRes != null) {

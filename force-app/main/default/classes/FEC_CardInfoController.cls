@@ -72,22 +72,18 @@ public with sharing class FEC_CardInfoController {
             dto.otherCards = mapOtherCardsToDTO(queryOtherCards(customerHistoryId));
         }
 
-        Boolean hasCd = dto.cardDeliveries != null && !dto.cardDeliveries.isEmpty();
-        Boolean hasOc = dto.otherCards != null && !dto.otherCards.isEmpty();
-
         if (String.isNotBlank(accountNumber) && customerHistoryId != null) {
             try {
                 FEC_GetCardSecInfo.ResponseWrapper res = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
                 if (res != null && res.Sys != null && res.Sys.Code == 1 && res.CardSecInfo != null) {
                     FEC_GetCardSecInfo.CardSecInfo info = res.CardSecInfo;
-                    if (!hasCd && info.CardsDeliveries != null && !info.CardsDeliveries.isEmpty()) {
+                    if (info.CardsDeliveries != null && !info.CardsDeliveries.isEmpty()) {
                         try {
-                            insertCardDeliveriesFromCardSecInfo(info.CardsDeliveries, caseId, customerHistoryId);
+                            upsertCardDeliveriesFromCardSecInfo(info.CardsDeliveries, c.Id, customerHistoryId);
                         } catch (Exception ex) {
-                            System.debug('Insert Card Deliveries: ' + ex.getMessage());
+                            System.debug('Upsert Card Deliveries: ' + ex.getMessage());
                         }
                     }
-                    // Luôn upsert SupplementaryCards để đồng bộ Gender và các field mới từ API
                     if (info.SupplementaryCards != null && !info.SupplementaryCards.isEmpty()) {
                         try {
                             upsertSupplementaryCards(info.SupplementaryCards, customerHistoryId);
@@ -102,9 +98,7 @@ public with sharing class FEC_CardInfoController {
 
             FEC_GetCardSecInfo.logApiResponse();
 
-            if (!hasCd) {
-                dto.cardDeliveries = mapCardDeliveriesToDTO(queryCardDeliveries(customerHistoryId));
-            }
+            dto.cardDeliveries = mapCardDeliveriesToDTO(queryCardDeliveries(customerHistoryId));
             dto.otherCards = mapOtherCardsToDTO(queryOtherCards(customerHistoryId));
         }
 
@@ -183,62 +177,113 @@ public with sharing class FEC_CardInfoController {
         }
     }
 
-    private static List<FEC_Card_Delivery__c> insertCardDeliveriesFromCardSecInfo(
+    /** Upsert CardsDeliveries từ API: khớp theo toàn bộ field, không dedupe, không xóa DB. */
+    private static void upsertCardDeliveriesFromCardSecInfo(
         List<FEC_GetCardSecInfo.CardsDelivery> deliveries,
-        String caseId,
+        Id caseId,
         Id customerHistoryId
     ) {
         if (deliveries == null || deliveries.isEmpty() || customerHistoryId == null) {
-            return new List<FEC_Card_Delivery__c>();
+            return;
         }
 
-        Set<String> inDb = new Set<String>();
-        for (FEC_Card_Delivery__c x : [
-            SELECT FEC_Card_Number__c FROM FEC_Card_Delivery__c
+        List<FEC_Card_Delivery__c> inDb = [
+            SELECT Id, FEC_Card_Number__c, FEC_Issue_Date__c, FEC_Type_of_Issue__c,
+                   FEC_Delivery_Status__c, FEC_Delivery_Date__c, FEC_Recipient__c,
+                   FEC_Tracking_Number__c, FEC_Delivery_Note__c
+            FROM FEC_Card_Delivery__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-        ]) {
-            if (String.isNotBlank(x.FEC_Card_Number__c)) {
-                inDb.add(x.FEC_Card_Number__c);
-            }
-        }
+        ];
 
         List<FEC_Card_Delivery__c> toInsert = new List<FEC_Card_Delivery__c>();
-        Set<String> seen = new Set<String>();
+        List<FEC_Card_Delivery__c> toUpdate = new List<FEC_Card_Delivery__c>();
+        Set<Id> claimedIds = new Set<Id>();
 
-        for (FEC_GetCardSecInfo.CardsDelivery d : deliveries) {
-            if (String.isBlank(d.CardNumber)) {
-                continue;
-            }
-            String masked = FEC_CommonUltils.maskCardNumber(d.CardNumber);
-            if (seen.contains(masked) || inDb.contains(masked)) {
-                continue;
-            }
-            seen.add(masked);
+        for (FEC_GetCardSecInfo.CardsDelivery item : deliveries) {
+            String cardNumber = normalizeCardNumber(item.CardNumber);
+            FEC_Card_Delivery__c match = findUnclaimedCardDeliveryMatch(
+                inDb, item, cardNumber, claimedIds
+            );
 
-            FEC_Card_Delivery__c rec = new FEC_Card_Delivery__c();
-            rec.FEC_Card_Number__c = masked;
-            rec.FEC_Case__c = caseId;
-            rec.FEC_Customer_History__c = customerHistoryId;
-            rec.FEC_Type_of_Issue__c = d.KindOfIssue;
-            rec.FEC_Delivery_Status__c = d.FinalSt;
-            rec.FEC_Recipient__c = d.Recipient;
-            rec.FEC_Tracking_Number__c = d.TrackingNo;
-            rec.FEC_Delivery_Note__c = d.DelayNotes;
-            rec.FEC_Issue_Date__c = parseIssueDateFromCardSecInfo(d.IssuelastUpdate);
-            rec.FEC_Delivery_Date__c = parseDeliveryDate(d.DeliveryDate);
-            toInsert.add(rec);
+            if (match != null) {
+                applyCardDeliveryToRecord(match, item, cardNumber, caseId);
+                claimedIds.add(match.Id);
+                toUpdate.add(match);
+            } else {
+                FEC_Card_Delivery__c rec = new FEC_Card_Delivery__c();
+                rec.FEC_Customer_History__c = customerHistoryId;
+                applyCardDeliveryToRecord(rec, item, cardNumber, caseId);
+                toInsert.add(rec);
+            }
         }
 
-        if (toInsert.isEmpty()) {
-            return new List<FEC_Card_Delivery__c>();
-        }
         try {
-            insert toInsert;
-            return toInsert;
+            if (!toInsert.isEmpty()) {
+                insert toInsert;
+            }
+            if (!toUpdate.isEmpty()) {
+                update toUpdate;
+            }
         } catch (Exception ex) {
-            System.debug('insertCardDeliveriesFromCardSecInfo: ' + ex.getMessage());
+            System.debug('upsertCardDeliveriesFromCardSecInfo: ' + ex.getMessage());
             throw new AuraHandledException(ex.getMessage());
         }
+    }
+
+    private static String normalizeCardNumber(String cardNumber) {
+        if (String.isBlank(cardNumber)) {
+            return null;
+        }
+        return FEC_CommonUltils.maskCardNumber(cardNumber.trim());
+    }
+
+    private static FEC_Card_Delivery__c findUnclaimedCardDeliveryMatch(
+        List<FEC_Card_Delivery__c> pool,
+        FEC_GetCardSecInfo.CardsDelivery item,
+        String cardNumber,
+        Set<Id> claimedIds
+    ) {
+        for (FEC_Card_Delivery__c rec : pool) {
+            if (rec.Id == null || claimedIds.contains(rec.Id)) {
+                continue;
+            }
+            if (cardDeliveryMatchesApi(rec, item, cardNumber)) {
+                return rec;
+            }
+        }
+        return null;
+    }
+
+    private static Boolean cardDeliveryMatchesApi(
+        FEC_Card_Delivery__c rec,
+        FEC_GetCardSecInfo.CardsDelivery item,
+        String cardNumber
+    ) {
+        return normalizeCardNumber(rec.FEC_Card_Number__c) == cardNumber
+            && rec.FEC_Issue_Date__c == parseIssueDateFromCardSecInfo(item.IssuelastUpdate)
+            && rec.FEC_Type_of_Issue__c == item.KindOfIssue
+            && rec.FEC_Tracking_Number__c == item.TrackingNo
+            && rec.FEC_Delivery_Date__c == parseDeliveryDate(item.DeliveryDate)
+            && rec.FEC_Delivery_Status__c == item.FinalSt
+            && rec.FEC_Recipient__c == item.Recipient
+            && rec.FEC_Delivery_Note__c == item.DelayNotes;
+    }
+
+    private static void applyCardDeliveryToRecord(
+        FEC_Card_Delivery__c rec,
+        FEC_GetCardSecInfo.CardsDelivery item,
+        String cardNumber,
+        Id caseId
+    ) {
+        rec.FEC_Card_Number__c = cardNumber;
+        rec.FEC_Case__c = caseId;
+        rec.FEC_Type_of_Issue__c = item.KindOfIssue;
+        rec.FEC_Delivery_Status__c = item.FinalSt;
+        rec.FEC_Recipient__c = item.Recipient;
+        rec.FEC_Tracking_Number__c = item.TrackingNo;
+        rec.FEC_Delivery_Note__c = item.DelayNotes;
+        rec.FEC_Issue_Date__c = parseIssueDateFromCardSecInfo(item.IssuelastUpdate);
+        rec.FEC_Delivery_Date__c = parseDeliveryDate(item.DeliveryDate);
     }
 
     private static Date parseIssueDateFromCardSecInfo(String raw) {
@@ -278,7 +323,7 @@ public with sharing class FEC_CardInfoController {
         return null;
     }
 
-    /** Upsert SupplementaryCards từ API: insert mới, update Gender + fields cho record cũ. */
+    /** Upsert SupplementaryCards từ API: khớp theo toàn bộ field, không dedupe, không xóa DB. */
     private static void upsertSupplementaryCards(
         List<FEC_GetCardSecInfo.SupplementaryCard> suppList,
         Id customerHistoryId
@@ -287,55 +332,32 @@ public with sharing class FEC_CardInfoController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Customer History ID'}));
         }
 
-        Map<String, FEC_Other_Card__c> inDb = new Map<String, FEC_Other_Card__c>();
-        for (FEC_Other_Card__c x : [
+        List<FEC_Other_Card__c> inDb = [
             SELECT Id, FEC_Card_Number__c, FEC_Gender__c, FEC_Block_Code__c,
                    FEC_Cardholder__c, FEC_Plastic_ID__c, FEC_Embossing_Name__c,
                    FEC_Expiry_Date__c, FEC_Card_Activation_Date__c, FEC_Issue_Date__c
             FROM FEC_Other_Card__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-        ]) {
-            String key = normalizeOtherCardNumber(x.FEC_Card_Number__c);
-            if (String.isNotBlank(key)) {
-                inDb.put(key, x);
-            }
-        }
+        ];
 
         List<FEC_Other_Card__c> toInsert = new List<FEC_Other_Card__c>();
         List<FEC_Other_Card__c> toUpdate = new List<FEC_Other_Card__c>();
-        Set<String> seen = new Set<String>();
+        Set<Id> claimedIds = new Set<Id>();
 
         for (FEC_GetCardSecInfo.SupplementaryCard item : suppList) {
             String cardNumber = normalizeOtherCardNumber(item.CardNumber);
-            if (String.isBlank(cardNumber) || seen.contains(cardNumber)) {
-                continue;
-            }
-            seen.add(cardNumber);
+            FEC_Other_Card__c match = findUnclaimedOtherCardMatch(
+                inDb, item, cardNumber, claimedIds
+            );
 
-            if (inDb.containsKey(cardNumber)) {
-                FEC_Other_Card__c rec = inDb.get(cardNumber);
-                rec.FEC_Gender__c = item.Gender;
-                rec.FEC_Block_Code__c = item.BlockCode;
-                rec.FEC_Cardholder__c = item.CardholderName;
-                rec.FEC_Plastic_ID__c = item.PlasticIndicator;
-                rec.FEC_Embossing_Name__c = item.EmbossingName;
-                rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
-                rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
-                rec.FEC_Issue_Date__c = item.CardIssueDate;
-                rec.FEC_Card_Number__c = cardNumber;
-                toUpdate.add(rec);
+            if (match != null) {
+                applySupplementaryCardToRecord(match, item, cardNumber);
+                claimedIds.add(match.Id);
+                toUpdate.add(match);
             } else {
                 FEC_Other_Card__c rec = new FEC_Other_Card__c();
                 rec.FEC_Customer_History__c = customerHistoryId;
-                rec.FEC_Card_Number__c = cardNumber;
-                rec.FEC_Cardholder__c = item.CardholderName;
-                rec.FEC_Plastic_ID__c = item.PlasticIndicator;
-                rec.FEC_Embossing_Name__c = item.EmbossingName;
-                rec.FEC_Block_Code__c = item.BlockCode;
-                rec.FEC_Gender__c = item.Gender;
-                rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
-                rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
-                rec.FEC_Issue_Date__c = item.CardIssueDate;
+                applySupplementaryCardToRecord(rec, item, cardNumber);
                 toInsert.add(rec);
             }
         }
@@ -402,5 +424,54 @@ public with sharing class FEC_CardInfoController {
             return null;
         }
         return FEC_CommonUltils.maskCardNumber(cardNumber.trim());
+    }
+
+    private static FEC_Other_Card__c findUnclaimedOtherCardMatch(
+        List<FEC_Other_Card__c> pool,
+        FEC_GetCardSecInfo.SupplementaryCard item,
+        String cardNumber,
+        Set<Id> claimedIds
+    ) {
+        for (FEC_Other_Card__c rec : pool) {
+            if (rec.Id == null || claimedIds.contains(rec.Id)) {
+                continue;
+            }
+            if (otherCardMatchesApi(rec, item, cardNumber)) {
+                return rec;
+            }
+        }
+        return null;
+    }
+
+    private static Boolean otherCardMatchesApi(
+        FEC_Other_Card__c rec,
+        FEC_GetCardSecInfo.SupplementaryCard item,
+        String cardNumber
+    ) {
+        return normalizeOtherCardNumber(rec.FEC_Card_Number__c) == cardNumber
+            && rec.FEC_Issue_Date__c == item.CardIssueDate
+            && rec.FEC_Card_Activation_Date__c == item.CardActivationDate
+            && rec.FEC_Expiry_Date__c == FEC_CommonUltils.parseDate(item.ExpiryDate)
+            && rec.FEC_Block_Code__c == item.BlockCode
+            && rec.FEC_Plastic_ID__c == item.PlasticIndicator
+            && rec.FEC_Embossing_Name__c == item.EmbossingName
+            && rec.FEC_Cardholder__c == item.CardholderName
+            && rec.FEC_Gender__c == item.Gender;
+    }
+
+    private static void applySupplementaryCardToRecord(
+        FEC_Other_Card__c rec,
+        FEC_GetCardSecInfo.SupplementaryCard item,
+        String cardNumber
+    ) {
+        rec.FEC_Card_Number__c = cardNumber;
+        rec.FEC_Cardholder__c = item.CardholderName;
+        rec.FEC_Plastic_ID__c = item.PlasticIndicator;
+        rec.FEC_Embossing_Name__c = item.EmbossingName;
+        rec.FEC_Block_Code__c = item.BlockCode;
+        rec.FEC_Gender__c = item.Gender;
+        rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
+        rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
+        rec.FEC_Issue_Date__c = item.CardIssueDate;
     }
 }

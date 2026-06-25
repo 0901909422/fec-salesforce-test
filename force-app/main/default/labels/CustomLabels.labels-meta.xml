@@ -11363,6 +11363,14 @@
         <value>Chỉ Case Owner mới có thể thêm Follow-Up User.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Add_User_Not_Allowed</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User role cannot add Follow-Up User</shortDescription>
+        <value>Role của bạn không có quyền thêm Follow-Up User.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_FollowUp_Please_Select_User</fullName>
         <categories>Follow-Up</categories>
         <language>en_US</language>

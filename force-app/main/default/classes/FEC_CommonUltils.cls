@@ -2121,14 +2121,22 @@ public with sharing class FEC_CommonUltils {
     return FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.get(normalizedKey);
   }
 
-  public static String deriveInsuranceStatus(Date expiryDate, Date cancelDate) {
+  public static String deriveInsuranceStatus(
+    Date expiryDate,
+    Date cancelDate,
+    Date effectiveDate
+  ) {
+    if (effectiveDate == null) {
+      return FEC_ConstantCommon.STATUS_INSURANCE_NOT_ON_CONTRACT;
+    }
     if (cancelDate != null) {
-        return FEC_ConstantCommon.STATUS_EXPIRED;
+      return FEC_ConstantCommon.STATUS_INSURANCE_CANCELLED;
     }
-    if (expiryDate != null && Date.today() > expiryDate) {
-        return FEC_ConstantCommon.STATUS_EXPIRED;
+    Date yesterday = Date.today().addDays(-1);
+    if (expiryDate != null && yesterday <= expiryDate) {
+      return FEC_ConstantCommon.STATUS_ACTIVE;
     }
-    return FEC_ConstantCommon.STATUS_ACTIVE;
+    return FEC_ConstantCommon.STATUS_EXPIRED;
   }
 
   public static String resolveCardType(String digitalCardIndicator, String plasticId) {

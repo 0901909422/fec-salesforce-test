@@ -52,6 +52,8 @@ private class FEC_UpdateCustomerContact_Test {
                 FEC_Account_or_Contract__c = ch.Id,
                 FEC_Original_Info_Phone_Number__c = '0901234567',
                 FEC_Updated_Info_Phone_Number__c = '0909876543',
+                FEC_Original_Info_Phone_Type__c = 'Mobile',
+                FEC_Updated_Info_Phone_Type__c = 'Mobile',
                 FEC_Original_Info_Email__c = 'test@example.com',
                 FEC_Updated_Info_Email__c = 'updated@example.com'
             );
@@ -63,7 +65,8 @@ private class FEC_UpdateCustomerContact_Test {
         FEC_Contact_List__c contact = new FEC_Contact_List__c(
             FEC_Customer_History__c = ch.Id,
             FEC_Contact_ID__c = 'C001',
-            FEC_Communication_Type__c = 'Phone',
+            FEC_Channel__c = 'Phone',
+            FEC_Communication_Type__c = 'Mobile',
             FEC_Contact_String__c = '0901234567'
         );
         insert contact;
@@ -136,31 +139,20 @@ private class FEC_UpdateCustomerContact_Test {
     }
 
     @IsTest
-    static void testUpdateValue_EmailUpdate() {
-        Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Channel__c FROM Case LIMIT 1];
-        FEC_Customer_History__c ch = [
-            SELECT Id
-            FROM FEC_Customer_History__c
-            WHERE Id = :c.FEC_Account_or_Contract__c
-            LIMIT 1
-        ];
-
-        insert new FEC_Contact_List__c(
-            FEC_Customer_History__c = ch.Id,
-            FEC_Contact_ID__c = 'E001',
-            FEC_Communication_Type__c = 'Email',
-            FEC_Contact_String__c = 'test@example.com'
-        );
-
+    static void testUpdateValue_EmailUpdate_ThrowsNotSupported() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
         Test.setMock(HttpCalloutMock.class, new SoapMock());
 
+        Boolean threw = false;
         Test.startTest();
-        FEC_UpdateCustomerContact.UpdateContactResult res =
+        try {
             FEC_UpdateCustomerContact.updateValue(c.Id, FEC_UpdateCustomerContact.EMAIL_UPDATE);
+        } catch (Exception e) {
+            threw = true;
+        }
         Test.stopTest();
 
-        System.assertNotEquals(null, res);
-        System.assertEquals(true, res.success);
+        System.assertEquals(true, threw, 'Email Update không được hỗ trợ qua API Mobile.');
     }
 
     @IsTest
@@ -242,15 +234,15 @@ private class FEC_UpdateCustomerContact_Test {
 
     @IsTest
     static void testValidation_InvalidChannelAndContactString() {
-        // invalid channel
+        // channel quá dài
         FEC_UpdateCustomerContact.CustomerContactRequest req1 = new FEC_UpdateCustomerContact.CustomerContactRequest();
         req1.CIFNumber = 'CIF123';
-        req1.Channel = 'INVALID_CHANNEL_X';
+        req1.Channel = 'X'.repeat(256);
         req1.CommunicationType = FEC_ConstantCommon.PHONE;
         req1.ContactString = '0901234567';
         try {
             FEC_UpdateCustomerContact.updateCustomerContact(req1);
-            System.assert(false, 'Phải ném exception khi Channel invalid.');
+            System.assert(false, 'Phải ném exception khi Channel vượt max length.');
         } catch (Exception e) {
             System.assertNotEquals(null, e.getMessage());
         }
@@ -301,6 +293,102 @@ private class FEC_UpdateCustomerContact_Test {
     }
 
     @IsTest
+    static void testGetMatchingContactList_PicksLargestContactIdAmongDuplicates() {
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c,
+                   FEC_Original_Info_Phone_Number__c, FEC_Original_Info_Phone_Type__c
+            FROM Case
+            LIMIT 1
+        ];
+        FEC_Customer_History__c ch = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+
+        insert new List<FEC_Contact_List__c>{
+            new FEC_Contact_List__c(
+                FEC_Customer_History__c = ch.Id,
+                FEC_Contact_ID__c = '4320772567',
+                FEC_Channel__c = 'Phone',
+                FEC_Communication_Type__c = 'Work Phone',
+                FEC_Contact_String__c = '84377021595'
+            ),
+            new FEC_Contact_List__c(
+                FEC_Customer_History__c = ch.Id,
+                FEC_Contact_ID__c = '4320772568',
+                FEC_Channel__c = 'Phone',
+                FEC_Communication_Type__c = 'Mobile',
+                FEC_Contact_String__c = '84377021595'
+            ),
+            new FEC_Contact_List__c(
+                FEC_Customer_History__c = ch.Id,
+                FEC_Contact_ID__c = '4320772570',
+                FEC_Channel__c = 'Phone',
+                FEC_Communication_Type__c = 'Mobile',
+                FEC_Contact_String__c = '84377021595'
+            ),
+            new FEC_Contact_List__c(
+                FEC_Customer_History__c = ch.Id,
+                FEC_Contact_ID__c = '4320772572',
+                FEC_Channel__c = 'Phone',
+                FEC_Communication_Type__c = 'Mobile',
+                FEC_Contact_String__c = '84377021595'
+            ),
+            new FEC_Contact_List__c(
+                FEC_Customer_History__c = ch.Id,
+                FEC_Contact_ID__c = '4320772575',
+                FEC_Channel__c = 'Phone',
+                FEC_Communication_Type__c = 'Work Phone',
+                FEC_Contact_String__c = '84377021595'
+            )
+        };
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                FEC_Original_Info_Phone_Number__c = '84377021595',
+                FEC_Original_Info_Phone_Type__c = 'Mobile'
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        c = [
+            SELECT Id, FEC_Account_or_Contract__c,
+                   FEC_Original_Info_Phone_Number__c, FEC_Original_Info_Phone_Type__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+
+        Test.startTest();
+        List<FEC_Contact_List__c> phoneMatch = FEC_UpdateCustomerContact.getMatchingContactList(
+            c,
+            FEC_UpdateCustomerContact.PHONE_UPDATE
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, phoneMatch.size(), 'Phải chọn đúng 1 contact khớp.');
+        System.assertEquals(
+            '4320772572',
+            phoneMatch[0].FEC_Contact_ID__c,
+            'Phải lấy FEC_Contact_ID__c lớn nhất trong các bản ghi Mobile khớp SĐT.'
+        );
+        System.assertEquals(
+            'Mobile',
+            phoneMatch[0].FEC_Communication_Type__c,
+            'Phải lấy CommunicationType Mobile.'
+        );
+        System.assertEquals(
+            'Phone',
+            phoneMatch[0].FEC_Channel__c,
+            'Phải lấy FEC_Channel__c từ bản ghi Mobile đã match.'
+        );
+    }
+
+    @IsTest
     static void testGetMatchingContactList() {
         Case c = [
             SELECT Id, FEC_Account_or_Contract__c,
@@ -311,66 +399,55 @@ private class FEC_UpdateCustomerContact_Test {
         ];
 
         Test.startTest();
-        List<FEC_Contact_List__c> phoneMatch = FEC_UpdateCustomerContact.getMatchingContactList(c, FEC_UpdateCustomerContact.PHONE_UPDATE);
-        List<FEC_Contact_List__c> emailMatch = FEC_UpdateCustomerContact.getMatchingContactList(c, FEC_UpdateCustomerContact.EMAIL_UPDATE);
+        List<FEC_Contact_List__c> phoneMatch = FEC_UpdateCustomerContact.getMatchingContactList(
+            c,
+            FEC_UpdateCustomerContact.PHONE_UPDATE
+        );
+        List<FEC_Contact_List__c> emailMatch = FEC_UpdateCustomerContact.getMatchingContactList(
+            c,
+            FEC_UpdateCustomerContact.EMAIL_UPDATE
+        );
         Test.stopTest();
 
-        System.assert(phoneMatch.size() > 0, 'Phải tìm thấy contact phone.');
+        System.assert(phoneMatch.size() > 0, 'Phải tìm thấy contact Mobile.');
+        System.assertEquals(0, emailMatch.size(), 'Email Update không match contact list.');
     }
 
     @IsTest
-    static void testResolveChannelForApi() {
-        String channel = validChannel();
-        Case customerCase = new Case(
-            FEC_Channel__c = channel,
-            RecordType = new RecordType(
-                DeveloperName = FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
-            )
-        );
-        Case internalCase = new Case(
-            FEC_Channel__c = channel,
-            RecordType = new RecordType(
-                DeveloperName = FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
-            )
-        );
-
-        Test.startTest();
-        System.assertEquals(
-            channel,
-            FEC_UpdateCustomerContact.resolveChannelForApi(customerCase),
-            'Customer_Case phải gửi FEC_Channel__c.'
-        );
-        System.assertEquals(
-            FEC_ConstantCommon.CHANNEL_INTERNAL,
-            FEC_UpdateCustomerContact.resolveChannelForApi(internalCase),
-            'Internal_Case phải gửi Internal.'
-        );
-        Test.stopTest();
-    }
-
-    @IsTest
-    static void testUpdateValue_InternalCase_SendsInternalChannel() {
-        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)) {
-            return;
-        }
-
-        Case c = [
-            SELECT Id, FEC_Account_or_Contract__c
-            FROM Case
-            LIMIT 1
-        ];
-        Id internalRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME).getRecordTypeId();
-
+    static void testUpdateValue_NonMobilePhoneUpdate_Throws() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
             update new Case(
                 Id = c.Id,
-                RecordTypeId = internalRtId
+                FEC_Original_Info_Phone_Type__c = 'Work Phone',
+                FEC_Updated_Info_Phone_Type__c = 'Work Phone'
             );
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
+
+        Boolean threw = false;
+        Test.startTest();
+        try {
+            FEC_UpdateCustomerContact.updateValue(c.Id, FEC_UpdateCustomerContact.PHONE_UPDATE);
+        } catch (Exception e) {
+            threw = true;
+        }
+        Test.stopTest();
+
+        System.assertEquals(true, threw, 'Work Phone không được gọi API qua luồng Mobile.');
+    }
+
+    @IsTest
+    static void testUpdateValue_SendsContactListChannelAndCommunicationType() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Contact_List__c contact = [
+            SELECT FEC_Channel__c, FEC_Communication_Type__c
+            FROM FEC_Contact_List__c
+            WHERE FEC_Contact_ID__c = 'C001'
+            LIMIT 1
+        ];
 
         SoapCaptureMock captureMock = new SoapCaptureMock();
         Test.setMock(HttpCalloutMock.class, captureMock);
@@ -382,10 +459,20 @@ private class FEC_UpdateCustomerContact_Test {
 
         System.assertEquals(true, res.success);
         System.assert(
+            captureMock.requestBody.contains('<ContactId>C001</ContactId>'),
+            'Mobile phải gửi ContactId từ FEC_Contact_List__c.'
+        );
+        System.assert(
             captureMock.requestBody.contains(
-                '<Channel>' + FEC_ConstantCommon.CHANNEL_INTERNAL + '</Channel>'
+                '<Channel>' + contact.FEC_Channel__c + '</Channel>'
             ),
-            'Internal_Case phải gửi Channel=Internal trong SOAP request.'
+            'Phải gửi Channel từ FEC_Contact_List__c.'
+        );
+        System.assert(
+            captureMock.requestBody.contains(
+                '<CommunicationType>' + contact.FEC_Communication_Type__c + '</CommunicationType>'
+            ),
+            'Phải gửi CommunicationType từ FEC_Contact_List__c.'
         );
     }
 }

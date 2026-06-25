@@ -1466,6 +1466,78 @@
             return html;
         }
     },
+    extractTemplateStyleBlock: function(html) {
+        if (!html) return { style: '', body: html || '' };
+        try {
+            var styleMatches = html.match(/<style[\s\S]*?<\/style>/gi) || [];
+            var style = '';
+            for (var i = 0; i < styleMatches.length; i++) {
+                style += styleMatches[i] + '\n';
+            }
+            var body = html.replace(/<style[\s\S]*?<\/style>/gi, '');
+            return { style: style, body: body };
+        } catch (e) {
+            return { style: '', body: html };
+        }
+    },
+    normalizeEditorHtmlForEmail: function(html) {
+        if (!html) return '';
+        try {
+            var holder = document.createElement('div');
+            holder.innerHTML = html;
+            var fonts = this.FONTS || [];
+            var sizes = this.SIZES || [];
+            var fontMap = {};
+            var sizeMap = {};
+            for (var i = 0; i < fonts.length; i++) { if (fonts[i].v) fontMap['ql-font-' + fonts[i].v] = fonts[i].f; }
+            for (var j = 0; j < sizes.length; j++) { if (sizes[j].v) sizeMap['ql-size-' + sizes[j].v] = sizes[j].v; }
+            var nodes = holder.querySelectorAll('[class]');
+            for (var k = 0; k < nodes.length; k++) {
+                var el = nodes[k];
+                var cls = el.className || '';
+                if (!cls) continue;
+                var classes = cls.split(/\s+/);
+                var newStyle = el.getAttribute('style') || '';
+                for (var m = 0; m < classes.length; m++) {
+                    var c = classes[m];
+                    if (fontMap[c]) {
+                        newStyle += (newStyle ? ';' : '') + 'font-family:' + fontMap[c];
+                    } else if (sizeMap[c]) {
+                        newStyle += (newStyle ? ';' : '') + 'font-size:' + sizeMap[c];
+                    } else if (c === 'ql-align-right') {
+                        newStyle += (newStyle ? ';' : '') + 'text-align:right';
+                    } else if (c === 'ql-align-center') {
+                        newStyle += (newStyle ? ';' : '') + 'text-align:center';
+                    } else if (c === 'ql-align-justify') {
+                        newStyle += (newStyle ? ';' : '') + 'text-align:justify';
+                    } else if (c.indexOf('ql-indent-') === 0) {
+                        var n = parseInt(c.replace('ql-indent-', ''), 10);
+                        if (n > 0) newStyle += (newStyle ? ';' : '') + 'padding-left:' + (n * 3) + 'em';
+                    }
+                }
+                if (newStyle) el.setAttribute('style', newStyle);
+                el.removeAttribute('class');
+            }
+            var imgs = holder.querySelectorAll('img');
+            for (var i2 = 0; i2 < imgs.length; i2++) {
+                var img = imgs[i2];
+                var imgStyle = img.getAttribute('style') || '';
+                imgStyle += (imgStyle ? ';' : '') + 'max-width:100%;width:100%;height:auto;display:block;box-sizing:border-box';
+                img.setAttribute('style', imgStyle);
+                img.removeAttribute('height');
+            }
+            var tables = holder.querySelectorAll('table');
+            for (var t = 0; t < tables.length; t++) {
+                var table = tables[t];
+                var tableStyle = table.getAttribute('style') || '';
+                tableStyle += (tableStyle ? ';' : '') + 'max-width:100%;width:100%;box-sizing:border-box';
+                table.setAttribute('style', tableStyle);
+            }
+            return holder.innerHTML;
+        } catch (e) {
+            return html;
+        }
+    },
     cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
