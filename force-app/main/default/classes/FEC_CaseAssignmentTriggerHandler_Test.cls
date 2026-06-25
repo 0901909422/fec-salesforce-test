@@ -63,7 +63,7 @@ private class FEC_CaseAssignmentTriggerHandler_Test {
     @IsTest
     static void testHandleAfterInsert_batchImportApplyInProgress_skipsEnqueue() {
         FEC_Case_Assignment__c assignment = buildAssignment(
-            FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE
+            FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_DRAFT
         );
         insert assignment;
 

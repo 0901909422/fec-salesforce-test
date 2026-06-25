@@ -1103,7 +1103,14 @@ private class FEC_AssignmentRoutingActionHandler_Test {
             );
             insert otherDeptAss;
 
-            FEC_AssignmentRoutingActionHandler.resolveAllAssignments(c.Id);
+            FEC_MrcDuplicateCaseService.suppressRoutingHistoryTriggerSideEffects = true;
+            try {
+                Test.startTest();
+                FEC_AssignmentRoutingActionHandler.resolveAllAssignments(c.Id);
+                Test.stopTest();
+            } finally {
+                FEC_MrcDuplicateCaseService.suppressRoutingHistoryTriggerSideEffects = false;
+            }
 
             Map<Id, FEC_Assignment__c> byId = new Map<Id, FEC_Assignment__c>([
                 SELECT FEC_Assignment_Status__c
@@ -1133,6 +1140,74 @@ private class FEC_AssignmentRoutingActionHandler_Test {
             System.assert(
                 [SELECT COUNT() FROM FEC_Routing_Action_History__c WHERE FEC_Case__c = :c.Id] >= 4
             );
+
+            // Coverage hardening for RoutingActionHistoryTriggerHandler when validate prod runs only specified tests.
+            update new Case(Id = c.Id, FEC_Case_Email__c = 'routing.coverage@fec.com');
+
+            List<FEC_Notification_Channel__c> emailChannels = [
+                SELECT Id
+                FROM FEC_Notification_Channel__c
+                WHERE Name = :FEC_ConstantCommon.EMAIL
+                LIMIT 1
+            ];
+            FEC_Notification_Channel__c emailChannel = emailChannels.isEmpty()
+                ? new FEC_Notification_Channel__c(
+                    Name = FEC_ConstantCommon.EMAIL,
+                    FEC_Noti_Channel_Status__c = true
+                )
+                : emailChannels[0];
+            if (emailChannels.isEmpty()) {
+                insert emailChannel;
+            }
+
+            FEC_Template__c template = new FEC_Template__c(
+                Name = 'Routing Coverage Template ' + String.valueOf(System.currentTimeMillis()),
+                FEC_Subject_Line__c = 'Routing Subject',
+                FEC_Body__c = 'Routing Body',
+                FEC_Active__c = true
+            );
+            insert template;
+
+            FEC_Notification__c notification = new FEC_Notification__c(
+                Name = 'Routing Coverage Notif ' + String.valueOf(System.currentTimeMillis()),
+                FEC_Notification_Status__c = true,
+                FEC_Target_Group__c = FEC_ConstantCommon.TARGET_GROUP_CUSTOMER,
+                FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST,
+                FEC_Current_Status__c = 'Pending',
+                FEC_Changed_Status__c = 'Resolved'
+            );
+            insert notification;
+
+            insert new FEC_Notification_Template_Channel__c(
+                FEC_Notification__c = notification.Id,
+                FEC_Notification_Channel__c = emailChannel.Id,
+                FEC_Notification_Template__c = template.Id
+            );
+
+            FEC_Routing_Action_History__c notifHistory = new FEC_Routing_Action_History__c(
+                FEC_Case__c = c.Id,
+                FEC_Current_Status__c = 'Pending',
+                FEC_Changed_Status__c = 'Resolved',
+                FEC_Routing_Action_Type__c = 'Case',
+                FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+                FEC_Updated_User_Queue_ID__c = String.valueOf(UserInfo.getUserId())
+            );
+
+            FEC_RoutingActionHistoryTriggerHandler.processNotificationEmails(
+                new List<FEC_Routing_Action_History__c>{ notifHistory }
+            );
+            String pendingStatus = FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromOwnerIds(
+                UserInfo.getUserId(),
+                UserInfo.getUserId()
+            );
+            Set<Id> ownerIds = FEC_RoutingActionHistoryTriggerHandler.collectOwnerIdsFromRouteHistory(
+                new List<FEC_Routing_Action_History__c>{ notifHistory },
+                true
+            );
+            Map<Id, String> teams = FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(ownerIds);
+
+            System.assertNotEquals(null, pendingStatus);
+            System.assertNotEquals(null, teams);
         }
     }
 

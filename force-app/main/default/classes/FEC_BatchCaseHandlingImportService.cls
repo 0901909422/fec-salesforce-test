@@ -255,9 +255,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             FEC_BCH_ImportWorkItemService.isWorkItemObjectAvailable();
     }
 
+    @TestVisible
+    private static Integer testSummaryOnlyMinRowsOverride;
+
     public static Boolean shouldFinalizeImportWithSummaryOnly(Integer totalRowCount) {
-        return totalRowCount != null &&
-            totalRowCount >= IMPORT_BATCH_APPLY_SUMMARY_ONLY_MIN_ROWS;
+        Integer minRows = testSummaryOnlyMinRowsOverride != null
+            ? testSummaryOnlyMinRowsOverride
+            : IMPORT_BATCH_APPLY_SUMMARY_ONLY_MIN_ROWS;
+        return totalRowCount != null && totalRowCount >= minRows;
     }
 
     public static void finalizeBatchImportRecordFromSummary(
