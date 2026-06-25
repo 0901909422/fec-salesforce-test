@@ -234,6 +234,40 @@ private class FEC_BCH_AssignmentResolveReject_Test {
         System.assertNotEquals(null, row);
     }
 
+    @IsTest
+    static void testSyncMainCaseResolveWhenNoActiveAssignments() {
+        Case c = [SELECT Id, Status FROM Case LIMIT 1];
+        FEC_Assignment__c asg = [SELECT Id FROM FEC_Assignment__c LIMIT 1];
+
+        FEC_BCH_AssignmentResolveRejectService.ResolveRejectContext ctx =
+            new FEC_BCH_AssignmentResolveRejectService.ResolveRejectContext();
+        ctx.caseId = c.Id;
+        ctx.assignmentId = asg.Id;
+
+        Test.startTest();
+        FEC_BCH_AssignmentResolveRejectService.applyResolveRejectAssignmentsBulk(
+            new List<FEC_BCH_AssignmentResolveRejectService.ResolveRejectContext>{ ctx }
+        );
+        Set<Id> resolvedCaseIds = FEC_BCH_AssignmentResolveRejectService.syncMainCaseResolveWhenNoActiveAssignments(
+            new Set<Id>{ c.Id }
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, resolvedCaseIds.contains(c.Id));
+        Case refreshed = [SELECT Status FROM Case WHERE Id = :c.Id];
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED, refreshed.Status);
+    }
+
+    @IsTest
+    static void testSyncMainCaseResolveWhenNoActiveAssignments_EmptyInput() {
+        Test.startTest();
+        Set<Id> resolvedCaseIds = FEC_BCH_AssignmentResolveRejectService.syncMainCaseResolveWhenNoActiveAssignments(
+            null
+        );
+        Test.stopTest();
+        System.assertEquals(true, resolvedCaseIds.isEmpty());
+    }
+
     private static FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem buildImportItem(
         Id assignmentId,
         Id caseId,

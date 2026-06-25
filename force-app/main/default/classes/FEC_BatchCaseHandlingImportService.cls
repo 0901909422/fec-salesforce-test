@@ -3419,7 +3419,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     } else if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
                         skipCaseRun = true;
                     } else if (FEC_BCH_AssignmentResolveRejectService.isResolveOrRejectMethodKey(methodKey)) {
-                        skipCaseRun = true;
+                        // 26/06/2026 phong - COF/GSR không có Assignment: assignmentRoutingAction Resolve → resolve Case-level
+                        Boolean hasAssignmentKey = cofOrGsr == true && String.isNotBlank(rr.assignmentId);
+                        Case caseLiteForSkip = caseLiteById.get(caseId);
+                        Decimal assignmentCount = caseLiteForSkip == null ? null : caseLiteForSkip.FEC_Assignment_Count__c;
+                        if (hasAssignmentKey || (assignmentCount != null && assignmentCount > 0)) {
+                            skipCaseRun = true;
+                        }
                     }
                 }
                 // 28/05/2026 11:20 linhdev - sync multi-chunk: defer row khi gần 101 SOQL (chunk sau xử lý tiếp)
@@ -3542,6 +3548,43 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         FEC_BCH_AssignmentResolveRejectService.applyImportBulk(validAssignmentResolveRejectItems);
+        // 26/06/2026 phong - assignment Resolve bulk: resolve main Case + history khi không còn assignment active
+        Set<Id> assignmentResolveCaseIds = new Set<Id>();
+        Map<Id, FEC_BatchCaseHandlingImportRow> resolveRowByCaseId = new Map<Id, FEC_BatchCaseHandlingImportRow>();
+        for (FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem item : validAssignmentResolveRejectItems) {
+            if (item == null ||
+                item.caseId == null ||
+                item.row == null ||
+                item.methodKey != FEC_CaseBusinessService.RESOLVE) {
+                continue;
+            }
+            assignmentResolveCaseIds.add(item.caseId);
+            if (!resolveRowByCaseId.containsKey(item.caseId)) {
+                resolveRowByCaseId.put(item.caseId, item.row);
+            }
+        }
+        Set<Id> mainCaseResolvedFromAssignmentIds =
+            FEC_BCH_AssignmentResolveRejectService.syncMainCaseResolveWhenNoActiveAssignments(
+                assignmentResolveCaseIds
+            );
+        for (Id resolvedCaseId : mainCaseResolvedFromAssignmentIds) {
+            FEC_BatchCaseHandlingImportRow resolveRow = resolveRowByCaseId.get(resolvedCaseId);
+            if (resolveRow == null) {
+                continue;
+            }
+            Case caseLiteForResolve = caseLiteById.get(resolvedCaseId);
+            Id stageIdForResolvedCase = caseLiteForResolve == null
+                ? null
+                : caseLiteForResolve.FEC_Current_Case_Stage__c;
+            FEC_BCC_ImportResolveHistService.collectItem(
+                resolveHistoryItems,
+                resolveRow,
+                resolvedCaseId,
+                stageIdForResolvedCase,
+                caseLiteForResolve == null ? null : caseLiteForResolve.FEC_Current_Case_Stage__r?.FEC_Code__c,
+                caseLiteForResolve == null ? null : caseLiteForResolve.FEC_Final_Status__c
+            );
+        }
         List<FEC_BCH_AssignmentRevertService.ImportRevertItem> validAssignmentRevertItems =
             new List<FEC_BCH_AssignmentRevertService.ImportRevertItem>();
         for (FEC_BCH_AssignmentRevertService.ImportRevertItem item : assignmentRevertItems) {
