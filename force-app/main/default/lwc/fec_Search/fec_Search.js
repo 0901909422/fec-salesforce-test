@@ -113,6 +113,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   fieldPermissions;
   errorCalloutIsurance;
   _customers = [];
+  hasCustomerHistories = false;
+  skipSearchInternalCase = false;
 
   FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
@@ -457,9 +459,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.isTestApiCase = data?.FEC_Is_Test_API__c === true;
       this.interactionChannel = data?.FEC_Channel__c;
       this.interactionEmail = data?.FEC_Interaction_Email__c;
-      this.isDisplay = this.hasPermission === true &&
-        data.Customer_Histories__r === undefined &&
-        data.FEC_Skip_Search_Internal_Case__c === false;
+      this.hasCustomerHistories = Array.isArray(data.Customer_Histories__r)
+        ? data.Customer_Histories__r.length > 0
+        : !!data.Customer_Histories__r;
+      this.skipSearchInternalCase = data.FEC_Skip_Search_Internal_Case__c === true;
+      this.updateIsDisplay();
+      this.loadPermission(this.interactionChannel);
     } else if (error) {
       // Xử lý lỗi (tương đương phần .catch cũ)
       console.error("Error fetching case data:", error);
@@ -498,6 +503,10 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.interactionChannel = result?.FEC_Channel__c;
       this.interactionEmail = result?.FEC_Interaction_Email__c;
       this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
+      this.hasCustomerHistories = Array.isArray(result?.Customer_Histories__r)
+        ? result.Customer_Histories__r.length > 0
+        : !!result?.Customer_Histories__r;
+      this.skipSearchInternalCase = result?.FEC_Skip_Search_Internal_Case__c === true;
       this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c']
         ? (result.FEC_National_ID_Passport_ID__c || result.FEC_Search_National_ID__c)
         : null;
@@ -506,7 +515,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Interaction_Email__c : null;
-      this.loadPermission(this.interactionChannel)
+      await this.loadPermission(this.interactionChannel);
       //this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress) {
         await this.processSearch();
@@ -520,10 +529,28 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     }
   }
 
-   async loadPermission(channel) {
-    this.hasPermission = await hasChannelPermission({
-      channel:channel,
-    });
+  updateIsDisplay() {
+    if (!this.recordId) {
+      this.isDisplay = true;
+      return;
+    }
+
+    this.isDisplay =
+      this.hasPermission === true &&
+      this.hasCustomerHistories === false &&
+      this.skipSearchInternalCase === false;
+  }
+
+  async loadPermission(channel) {
+    try {
+      this.hasPermission = await hasChannelPermission({
+        channel: channel,
+      });
+    } catch (e) {
+      this.hasPermission = false;
+      console.error("hasChannelPermission error:", e);
+    }
+    this.updateIsDisplay();
   }
 
   get isDisabledNationalId() {
