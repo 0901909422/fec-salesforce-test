@@ -4,7 +4,7 @@ public without sharing class FEC_CreateInteractionManualHandler {
         @AuraEnabled public Id caseId { get; set; }
         @AuraEnabled public String linkId { get; set; }
         @AuraEnabled public String caseNo { get; set; }
-
+        
         public CreateInteractionManualResponse(Id caseId, String linkId, String caseNo) {
             this.caseId = caseId;
             this.linkId = linkId;
@@ -23,4 +23,46 @@ public without sharing class FEC_CreateInteractionManualHandler {
         return new CreateInteractionManualResponse(response.caseId, response.linkId, response.caseNo);
     }
     
+    @AuraEnabled
+    public static Boolean hasChannelPermission(String channel) {
+        
+        if (String.isBlank(channel)) {
+            return false;
+        }
+        
+        Set<Id> psgIds = new Set<Id>();
+        
+        List<PermissionSetAssignment> assignments = [
+            SELECT PermissionSetGroupId
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :UserInfo.getUserId()
+            AND PermissionSetGroupId != null
+        ];
+        
+        for (PermissionSetAssignment psa : assignments) {
+            psgIds.add(psa.PermissionSetGroupId);
+        }
+        
+        if (psgIds.isEmpty()) {
+            return false;
+        }
+        
+        List<PermissionSetGroupComponent> components = [
+            SELECT PermissionSet.Name
+            FROM PermissionSetGroupComponent
+            WHERE PermissionSetGroupId IN :psgIds
+        ];
+        
+        String channelLower = channel.toLowerCase();
+        
+        for (PermissionSetGroupComponent component : components) {
+            if (component.PermissionSet != null
+                && component.PermissionSet.Name != null
+            && component.PermissionSet.Name.toLowerCase().contains(channelLower)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }
