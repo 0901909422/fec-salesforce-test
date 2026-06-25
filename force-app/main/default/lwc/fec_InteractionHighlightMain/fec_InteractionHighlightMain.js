@@ -11,6 +11,7 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import canExecuteUbankEmailInteraction from "@salesforce/apex/FEC_CaseExecuteService.canExecuteUbankEmailInteraction";
+import hasChannelPermission from "@salesforce/apex/FEC_CreateInteractionManualHandler.hasChannelPermission";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import isInteractionEmailActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked";
 import isInteractionPhoneActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked";
@@ -20,6 +21,7 @@ import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_
 import VALIDATE_INTERACTION_CHAT from "@salesforce/messageChannel/FEC_Validate_Interaction_Chat__c";
 
 import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
+import CHANNEL from "@salesforce/schema/Case.FEC_Channel__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
@@ -93,6 +95,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   customerType;
   ownerId;
   interactionOwnerId;
+  channel;
+  hasPermission = false;
   _resetDone = false;
 
   // ===============================
@@ -138,6 +142,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       OWNERID,
       FEC_ID_SEARCH,
       CAN_EXECUTE,
+      CHANNEL,
     ],
   })
   wiredCase({ data, error }) {
@@ -152,6 +157,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
       this.ownerId = getFieldValue(data, OWNERID);
       this.canExecuteFlag = getFieldValue(data, CAN_EXECUTE);
+      this.channel = getFieldValue(data, CHANNEL);
       this.refreshUbankExecuteAccess();
 
       const fecIdSearch = getFieldValue(data, FEC_ID_SEARCH);
@@ -162,6 +168,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       if (this.recordTypeId) {
         this.loadRecordType();
       }
+      console.log(this.channel);
+      console.log(typeof this.loadPermission);
+      console.log(this.loadPermission);
+      this.loadPermission(this.channel);
 
       this.tryResetViewMode();
     } else if (error) {
@@ -202,7 +212,19 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  async loadPermission(channel) {
+    console.log("loadPermission", channel);
+    this.hasPermission = await hasChannelPermission({
+      channel,
+    });
+  }
+
   get showWrapupAndCreateCase() {
+    //0. Check user có permission set không
+    if (!this.hasPermission) {
+      return false;
+    }
+
     // 1. Chỉ người sở hữu (Owner) mới được quyền thấy nút
     if (!this.isOwner) {
       return false;
@@ -235,6 +257,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get showExecute() {
+    //0. Check user có permission set không
+    if (!this.hasPermission) {
+      return false;
+    }
     // Owner or Ubank Email queue member can execute.
     if (
       !this.isOwner &&
@@ -288,6 +314,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get showHighlight() {
+    if (!this.hasPermission) {
+      return false;
+    }
+
     if (this.isInternalCase) {
       return false;
     }

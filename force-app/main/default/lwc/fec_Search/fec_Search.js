@@ -70,7 +70,7 @@ import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Custom
 import SEARCH_PRODUCTS_FIELD from "@salesforce/schema/Case.FEC_Search_Products__c";
 import { CurrentPageReference } from 'lightning/navigation';
 import { formatDateTimeVNShort, normalizePhone, formatDateVNI, deriveInsuranceStatus } from 'c/fec_CommonUtils';
-
+import hasChannelPermission from "@salesforce/apex/FEC_CreateInteractionManualHandler.hasChannelPermission";
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
     'FEC_Search_Phone_Number__c',
@@ -90,6 +90,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   nationalId;
   phoneNumber;
   isDisplay = false;
+  hasPermission = false;
   applicationId;
   contractNumber;
   accountNumber;
@@ -456,7 +457,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.isTestApiCase = data?.FEC_Is_Test_API__c === true;
       this.interactionChannel = data?.FEC_Channel__c;
       this.interactionEmail = data?.FEC_Interaction_Email__c;
-      this.isDisplay =
+      this.isDisplay = this.hasPermission === true &&
         data.Customer_Histories__r === undefined &&
         data.FEC_Skip_Search_Internal_Case__c === false;
     } else if (error) {
@@ -505,6 +506,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Interaction_Email__c : null;
+      this.loadPermission(this.interactionChannel)
       //this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress) {
         await this.processSearch();
@@ -517,6 +519,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.isDisplay = true;
     }
   }
+
+   async loadPermission(channel) {
+    this.hasPermission = await hasChannelPermission({
+      channel:channel,
+    });
+  }
+
   get isDisabledNationalId() {
     return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_National_ID__c'] : true;
   }

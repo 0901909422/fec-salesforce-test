@@ -11,6 +11,21 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Search_National_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Search_Phone_Number__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Additional_Info__c.FEC_Statement_Fee__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_B2_Contract__c.FEC_Channel__c</field>
         <readable>true</readable>
@@ -128,6 +143,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Cash_24_Contract__c.FEC_Sold_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Description__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
