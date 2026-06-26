@@ -475,6 +475,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Highlight_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -482,7 +489,7 @@
                 <componentName>fecInteractionInfo</componentName>
                 <identifier>c_fecInteractionInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 OR 2</booleanFilter>
+                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -493,6 +500,11 @@
                         <operator>EQUAL</operator>
                         <rightValue>Outbound</rightValue>
                     </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Infor_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -501,7 +513,7 @@
                 <componentName>fecInteractionEmailInfo</componentName>
                 <identifier>c_fecInteractionEmailInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 4) OR (2 AND 3)</booleanFilter>
+                    <booleanFilter>(1 AND 4) OR (2 AND 3) AND 5</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -522,6 +534,11 @@
                         <operator>NE</operator>
                         <rightValue>dichvukhachhang@fecredit.com.vn</rightValue>
                     </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Infor_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -530,7 +547,7 @@
                 <componentName>fec_InteractionInfoF2F_Letter</componentName>
                 <identifier>c_fec_InteractionInfoF2F_Letter</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 OR 2 OR 3 OR (4 AND 6)) AND 5</booleanFilter>
+                    <booleanFilter>(1 OR 2 OR 3 OR (4 AND 6)) AND 5 AND  7</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -561,6 +578,11 @@
                         <operator>NE</operator>
                         <rightValue>Internal Email</rightValue>
                     </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Infor_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -569,10 +591,16 @@
                 <componentName>fecInteractionChatInfo</componentName>
                 <identifier>c_fecInteractionChatInfo</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Chat</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Infor_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -582,7 +610,7 @@
                 <componentName>fec_InteractionMyCaseInfo</componentName>
                 <identifier>c_fec_InteractionMyCaseInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 2) OR 3</booleanFilter>
+                    <booleanFilter>((1 AND 2) OR 3) AND 4</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -598,6 +626,11 @@
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
                     </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Infor_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -606,7 +639,7 @@
                 <componentName>fecInteractionEmailInfoUbank</componentName>
                 <identifier>c_fecInteractionEmailInfoUbank</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -616,6 +649,11 @@
                         <leftValue>{!Record.FEC_Interaction__r.FEC_Send_To__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>dichvukhachhang@fecredit.com.vn</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_Interaction_Infor_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -631,7 +669,7 @@
                 <componentName>fec_KYC</componentName>
                 <identifier>c_fec_KYC</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
                     <criteria>
                         <leftValue>{!$User.FEC_User_Group__c}</leftValue>
                         <operator>NE</operator>
@@ -671,6 +709,11 @@
                         <leftValue>{!$User.FEC_User_Group__c}</leftValue>
                         <operator>NE</operator>
                         <rightValue>IA</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_KYC_on_Case_Handling_Interaction_Tab}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -2349,7 +2392,7 @@
                 <componentName>flexipage:tabset</componentName>
                 <identifier>flexipage_tabset2</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -2359,6 +2402,11 @@
                         <leftValue>{!Record.FEC_Account_or_Contract__r.FEC_Customer_Type__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Existing</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$Permission.CustomPermission.FEC_View_C360_on_Case_Handling}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

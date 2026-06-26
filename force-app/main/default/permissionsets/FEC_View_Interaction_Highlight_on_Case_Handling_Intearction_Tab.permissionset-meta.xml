@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>FEC_View_Interaction_Highlight_on_Case_Handling_Interaction_Tab</name>
+    </customPermissions>
+    <description>Xem thông tin Interaction Highlight trong tab thông tin Intearction Tab trên màn hình Case Handling</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>View Interaction Highlight on Case handling/Intearction Tab</label>
+    <license>Salesforce</license>
+</PermissionSet>
