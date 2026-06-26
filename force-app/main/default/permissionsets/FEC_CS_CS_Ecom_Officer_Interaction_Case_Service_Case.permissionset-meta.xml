@@ -75,6 +75,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Account_Number__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Account_or_Contract__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -356,6 +361,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Conversion_Fee__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Contract_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -703,7 +713,6 @@
         <field>Case.FEC_Is_Manager_For_Cur_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Is_Manual__c</field>
@@ -764,7 +773,6 @@
         <field>Case.FEC_KYC_Result__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_KYC_Status__c</field>
