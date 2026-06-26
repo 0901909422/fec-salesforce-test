@@ -574,7 +574,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             String productCode = record.FEC_Product_Code__c;
             // if (String.isBlank(productCode)) return null;
             
-            if (productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_CARD)) {
+            if (String.isNotBlank(productCode) && productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_CARD)) {
                 return record.FEC_Account_Number__c;
             }
             
