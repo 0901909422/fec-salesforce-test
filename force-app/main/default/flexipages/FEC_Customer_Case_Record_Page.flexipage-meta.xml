@@ -1928,7 +1928,6 @@
         <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Interaction History tab: sub-tab "All Service Cases" content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -1942,10 +1941,19 @@
                 <identifier>c_fec_ClosedServiceCases</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>displayMode</name>
+                    <value>serviceCases</value>
+                </componentInstanceProperties>
+                <componentName>fec_SearchArchiveInteraction</componentName>
+                <identifier>c_fec_SearchArchiveInteraction_cust_svc</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-cust-ih-sc-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Interaction History tab: sub-tab "All Interactions" content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -1953,10 +1961,15 @@
                 <identifier>c_fec_InteractionCases</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_SearchArchiveInteraction</componentName>
+                <identifier>c_fec_SearchArchiveInteraction_cust_int</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-cust-ih-interact-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Interaction History tab: tab definitions -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -1993,7 +2006,6 @@
         <name>Facet-cust-ih-tabs-def</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Interaction History tab body: tabset wrapping the sub-tabs -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2012,7 +2024,6 @@
         <name>Facet-a1b2c3d4-e5f6-7890-abcd-ef1234567890</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab: "Additional Info" sub-tab content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2023,7 +2034,6 @@
         <name>Facet-cust-add-info-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab: "Do Not Bother" sub-tab content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2034,7 +2044,6 @@
         <name>Facet-cust-dnb-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab: "Promotion/ Offer" sub-tab content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2091,7 +2100,6 @@
         <name>Facet-cust-promo-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab: "Collection Summary" sub-tab content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2142,7 +2150,6 @@
         <name>Facet-cust-coll-summary-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab: "Notifications History" sub-tab content -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2153,7 +2160,6 @@
         <name>Facet-cust-notif-content</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab: tab definitions (5 sub-tabs) -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -2232,7 +2238,6 @@
         <name>Facet-cust-add-tabs-def</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <!-- Additional Data tab body: tabset wrapping the 5 sub-tabs -->
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>

@@ -792,6 +792,16 @@
                 <identifier>c_fec_ClosedServiceCases</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>displayMode</name>
+                    <value>serviceCases</value>
+                </componentInstanceProperties>
+                <componentName>fec_SearchArchiveInteraction</componentName>
+                <identifier>c_fec_SearchArchiveInteraction_svc</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-55b87786-9603-4a09-a5ad-0ae86b7a620a</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -800,6 +810,12 @@
             <componentInstance>
                 <componentName>fec_InteractionCases</componentName>
                 <identifier>c_fec_InteractionCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_SearchArchiveInteraction</componentName>
+                <identifier>c_fec_SearchArchiveInteraction_int</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-0fe07583-2246-4568-9138-d8c30ea9b8f1</name>
